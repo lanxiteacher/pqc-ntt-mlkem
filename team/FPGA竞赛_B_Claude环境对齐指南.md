@@ -33,10 +33,21 @@ cd FPGA
 ls CLAUDE.md .gitignore refsim/ team/
 ```
 
-**关于联网**：仓库约 80 MB（主要是 `research/papers/` 的论文 PDF、`research/standards/`
-的标准文档，和 12 MB 的 KAT 题库），第一次 clone 会慢几分钟。
-之后每次 `git pull` 只传增量。编译产物（`*.exe` / `*.vvp`）已被 `.gitignore` 排除，
-每台机器自己编。
+**关于联网**：仓库约 **26 MB**（最大的是 11.5 MB 的 `mlkem_kat/kat_MLKEM_768.rsp`），
+第一次 clone 一两分钟。之后每次 `git pull` 只传增量。编译产物
+（`*.exe` / `*.vvp` / `__pycache__/`）已被 `.gitignore` 排除，每台机器自己编。
+
+⚠️ **`research/papers/` 不在仓库里**（47 MB 论文 PDF，版权属于各出版方，
+而本仓库最终要按竞赛要求转公开）。clone 下来你不会有这个目录 ——
+**这不影响复现**，复现靠 `refsim/` 的脚本 + `mlkem_kat/` + `kyber_ref/`。
+要看论文找 B 单独发（群文件/网盘）。
+
+⚠️ **行尾被 `.gitattributes` 锁死了：`* -text`，不做任何转换。**
+不要把它改成 `text=auto` 或 `eol=lf` —— 那两种都会在 checkout 时改写字节。
+Git for Windows 的安装器默认把 `core.autocrlf` 设成 `true`，一旦生效，
+clone 出来的 `refsim/batch/*.txt` 会**全变成 CRLF**，而参考实现外壳是用
+`"wb"` 写 LF 的 —— `diff` 就会报"256 行全不同"（数值却一个不差）。
+正是第四节第 1 条那个坑，只不过这次是 git 自动造的。
 
 ```bash
 git pull          # 每次开工前先拉
@@ -64,7 +75,8 @@ FPGA/
 │   ├── ref_rtl/…/pe1/         ← 开源 NTT 硬件基线（已通过 FIPS 203 验证）
 │   ├── kyber_ref/             ← C 参考实现 = 地面真值
 │   ├── mlkem_kat/             ← FIPS 203 官方考题 1000 条 + 黄金向量
-│   ├── papers/ standards/     ← 论文与标准
+│   ├── papers/                ← 论文 PDF【只在 B 本地，不进仓库，见第一节】
+│   ├── standards/             ← NIST FIPS 203/204/205（公有领域，进仓库）
 │   └── PQC-NTT_ML-KEM_技术资料汇编.md
 │
 ├── selection/                 ← 历史：选题过程（不删，不再动）

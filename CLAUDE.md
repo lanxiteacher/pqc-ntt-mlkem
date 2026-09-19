@@ -38,6 +38,10 @@ FPGA 竞赛项目：**AMD 赛道 · 3.3 自主选题（初级组）· 后量子�
 
 `research/ref_rtl/` 是**只读原件**，任何修改都在 `refsim/pe1/` 的副本上做。
 
+`research/papers/`（以及 `research/kyber_ref/papers/` 里的 PDF 和抓下来的网页）
+**不进仓库** —— 版权属于各出版方，而本仓库最终要按竞赛要求转公开；也不影响复现。
+规则和理由写在 `.gitignore` 里，别加回去。
+
 ## 跑验证
 
 ```bash
@@ -55,6 +59,9 @@ cd refsim && sh run_ntt_layers.sh         # 导出并机器验证 twiddle 层序
 
 1. **跨平台数据文件统一 LF 行尾，写文件用 `"wb"` 不用 `"w"`。**
    Windows 会把 `\n` 翻成 `\r\n`，导致 256 个数值全对、`diff` 却报"256 行全不同"。别用 `--strip-trailing-cr` 遮掩。
+   **仓库层已用 `.gitattributes` 的 `* -text` 兜住**（不做任何行尾转换，存什么取什么）。
+   Git for Windows 默认 `core.autocrlf=true`，会在 checkout 时把 LF 改写成 CRLF，
+   等于让每个队友重踩一遍这个坑。**不要**改成 `text=auto` 或 `eol=lf` —— 那两种都会改写字节。
 
 2. **testbench 里不要写无界 `while (done == 0)`。**
    单次跑没事，套进循环后任何一轮异常都会永久挂死而不是报错。加计数护栏。
