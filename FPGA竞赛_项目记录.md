@@ -122,13 +122,32 @@
 - [ ] **A、C 加为仓库管理员**（角色选「管理员」，**不是「开发者」**）——
       开发者只能推代码，改可见性/转移/删除只有仓库主能
 - [ ] **让 A、C clone** —— 发 `team/FPGA竞赛_B_Claude环境对齐指南.md` 第一节给他们
-- [ ] **定许可证**：MIT 还是 Apache-2.0（倾向 **Apache-2.0**，多一条专利授权条款，
-      对"硬件加速器"这类可能沾专利的选题更稳妥）。竞赛推荐这两个
+- [x] **定许可证：Apache-2.0**（2026-09-19）—— 竞赛明确推荐 MIT 或 Apache-2.0。
+      选它是因为与上游 `pq-crystals/kyber` 的双许可选项之一重合，且含**明示专利授权**，
+      对"硬件加速器"这类可能沾专利的选题更稳妥。
+      **顺带查清了全部上游组件的许可证**，结论是都可以自由再分发、无一是传染性许可：
+      `ref_rtl/kyber-polmul-hw/` = CC0 1.0（逐文件声明）｜
+      `ref_rtl/KyberButterflyCollection/` = CC0 1.0｜
+      `kyber_ref/` = CC0 1.0 或 Apache-2.0（双许可）｜
+      `mlkem_kat/` = MIT（Copyright (c) 2024 Krzysztof Kwiatkowski）｜
+      `standards/` = NIST，美国政府作品、公有领域
+- [x] **仓库门面补齐**（2026-09-19，`21cb044`）—— 根目录新增 `LICENSE`（Apache-2.0 全文，
+      取自 apache.org 原文，sha256 与官方逐字节一致、纯 LF）、`NOTICE`、
+      `README.md`（进度/快速开始/目录/验证链/覆盖边界/环境/许可证/分工）、
+      `THIRD_PARTY_LICENSES.md`
+- [ ] ⚠️ **`NOTICE` 里的作者姓名还是占位符 `<作者姓名待填>`** —— 提交作品前必须填
+- [ ] ⚠️ **`kyber-polmul-hw/README.md` 那句 "for academic research only"** 与该目录
+      逐文件的 CC0 声明不一致。已在 `THIRD_PARTY_LICENSES.md` 把两者并列写明、
+      按 CC0 理解。答辩可能被问到，口径要统一
+- [ ] **`research/kyber_ref/` 副本缺上游 LICENSE 文件** —— 未就地补齐（`research/` 是只读目录），
+      改为在 `THIRD_PARTY_LICENSES.md` 中全文列出上游许可证正文
 - [ ] **决定要不要挂 GitHub 镜像** —— 若挂，用**两个独立 remote**（`origin`=Gitee 日常、
       `github` 定期推），**不要**配成"push 一次推两边"：GitHub 一超时整条 push 报失败，
       会分不清哪边没推上去
-- [ ] 仓库根目录还缺 **`README.md`** 与 **`LICENSE`** —— 开源仓库的门面，
-      也是"文档与可复现 15 分"的入口。`refsim/README.md` 已是现成材料
+- [ ] **`research/mlkem_kat/_failed_attempts/` 有 4.9 MB 死文件**（整包 `kat_repo.tar.gz`、
+      切分片段 `parts_00~02`、`blob.json`、`try_raw.rsp`），是抓 KAT 时的中间产物，
+      已跟踪进版本控制，`.gitignore` 拦不住。要清得 `git rm --cached` 再让队友同步，
+      **不急，等 A、C 都 clone 过之后再说**
 
 ### 开放问题
 
@@ -244,3 +263,4 @@
 | 2026-09-19 | **报名完成**。Vivado 版本维持 **2024.2**（不跟正点原子教程退回 2020.2）。新增卡点：AMD 账号出口合规验证未通过，下载受阻，记录对策于 §五 |
 | 2026-09-19 | **完整多项式乘法（端到端）验证通过**：FULL（时域⊗时域）与 HALF（时域⊗NTT域）两条通路各 16 组 × 256 系数全过。该链**无缩放因子**，且反向印证了单运算层的 R / R⁻¹ 标定。`refsim/` 新增 `run_polmul_check.sh`；RTL 侧验证闭环从"三个单运算"扩展到"真正会跑的那条链" |
 | 2026-09-19 | **仓库建立并推送**：本地 `git init` + 首次提交，504 文件 / 26 MB，分支 `main`；已推到 Gitee 私有仓库 `gitee.com/lanxiteacher/pqc-ntt-mlkem`。两处防坑：① 加 `.gitattributes`（`* -text`）—— Git for Windows 默认 `core.autocrlf=true`，不堵住的话队友 clone 出来的 `batch/*.txt` 全变 CRLF，正是约定 1 那个坑，且看起来像谁手滑了；② `research/papers/` 等 50 MB 第三方论文 PDF 不进仓库（版权 + 仓库最终须转公开），`standards/` 保留（NIST 公有领域）。克隆已逐字节验证。另：根目录出现过私人令牌文件，已加 `.gitignore` 防线并核对历史确认未泄漏；**待办：A、C 加为管理员并 clone** |
+| 2026-09-19 | **许可证定为 Apache-2.0，仓库门面补齐**（`21cb044`）：根目录新增 `LICENSE` / `NOTICE` / `README.md` / `THIRD_PARTY_LICENSES.md`。查清全部上游许可证：`kyber-polmul-hw`、`KyberButterflyCollection` 为 **CC0 1.0**，`kyber_ref` 为 **CC0 或 Apache-2.0 双许可**，`mlkem_kat` 为 **MIT**，`standards` 为**公有领域** —— **无一是传染性许可**，故本作品可自由选 MIT/Apache-2.0。记录一处不一致：`kyber-polmul-hw/README.md` 有 "for academic research only" 一句，与逐文件 CC0 声明冲突，已在第三方清单里并列写明。**待办：`NOTICE` 里作者姓名仍是占位符** |
