@@ -1,0 +1,20 @@
+基于 FPGA 的后量子密码硬件加速平台
+Copyright 2026 <作者姓名待填>
+
+本作品依据 Apache License 2.0 发布，全文见同目录 LICENSE。
+
+本作品包含来自第三方的材料。各第三方组件的出处、版权人与许可证
+逐条列在 THIRD_PARTY_LICENSES.md，分发本作品时请一并保留该文件。
+
+其中与本作品源代码直接相关的两处是：
+
+  1. research/ref_rtl/kyber-polmul-hw/   多项式乘法硬件基线
+     Ahmet Can Mert, Ferhat Yaman
+     CC0 1.0 Universal（公有领域奉献）
+
+  2. research/kyber_ref/                 ML-KEM C 参考实现
+     pq-crystals/kyber
+     CC0 1.0 Universal 或 Apache License 2.0（双许可，任选其一）
+
+rtl/ 与 refsim/pe1/ 下的 RTL 是在 (1) 的基础上改造得到的，改动清单见
+refsim/README.md 第五节。
