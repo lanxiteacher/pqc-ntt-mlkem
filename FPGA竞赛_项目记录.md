@@ -11,7 +11,8 @@
 |---|---|
 | **选题** | 3.3 自主选题（初级组）· **面向后量子密码 ML-KEM 的 FPGA 加速核**（NTT/INTT/点乘） |
 | **已拿到** | ✅ 开源 NTT 硬件基线 `pe1/`，**NTT / INTT / 点乘 / 完整多项式乘法（端到端）均已用 FIPS 203 官方 KAT 验证通过**（各 4096/4096 系数，另加往返自检与阴性对照）｜✅ **Gitee 私有仓库已建并推送** `gitee.com/lanxiteacher/pqc-ntt-mlkem` |
-| **还差** | ⬜ Vivado 未装 ｜ ⬜ 板子未通 ｜ ⬜ 更外层的向量运算未验（见待办）｜ ⬜ A、C 尚未加入仓库 |
+| **还差** | ⬜ **板子未通**（全项目唯一没验过的一环，且初赛要交实物演示视频）｜ ⬜ 更外层的向量运算未验（见待办）｜ ⬜ A、C 尚未加入仓库 |
+| **本机** | **本机 = A 的工位**：Vivado 2020.2 与板子都在本机，综合/上板能做 |
 | **下一步** | 装 Vivado → 跑通 `19_uart_loopback`；RTL 侧补 `polyvec_basemul_acc` 那类累加点乘 |
 | **关键日期** | 报名截止 **9/22** ｜ 作品提交 **11/7** ｜ 决赛 11 月底 |
 | **队伍** | 3 人，**零基础**（未写过 Verilog、未上过板）；分工已出（A/B/C） |
@@ -45,7 +46,11 @@
 
 - Windows 11；工作目录 `C:\Users\l'x\Desktop\FPGA`
 - **iverilog 12.0 已装**，在 `/c/iverilog/bin`，**不在 PATH 里**
-- **Vivado ML Standard 2020.2 已装**（`E:\Xilinx\Vivado\2020.2`，在 A 那台插板子的机器上）
+- **Vivado ML Standard 2020.2 已装在本机**（`E:\xilinx\Vivado\2020.2`，可执行 `bin\vivado.bat`）
+  —— **本机就是 A 的工位**，综合 / 上板 / 时序 / 资源都能做（无 Vivado 的旧记述已作废）
+- 板子（领航者 7020）**接在本机**：板载 CH340C，串口号 **COM10**（`USB-SERIAL CH340`）；
+  ⚠️ COM 口存在 ≠ PL 通路通，需烧 `19_uart_loopback` + P5 跳 PL 档才确认
+- ⬜ **正点原子例程资料（含 `19_uart_loopback`）尚未拷到本机** —— 各下载目录都搜过，没有
 
 ---
 
@@ -314,4 +319,5 @@
 | 2026-09-19 | **许可证定为 Apache-2.0，仓库门面补齐**（`21cb044`）：根目录新增 `LICENSE` / `NOTICE` / `README.md` / `THIRD_PARTY_LICENSES.md`。查清全部上游许可证：`kyber-polmul-hw`、`KyberButterflyCollection` 为 **CC0 1.0**，`kyber_ref` 为 **CC0 或 Apache-2.0 双许可**，`mlkem_kat` 为 **MIT**，`standards` 为**公有领域** —— **无一是传染性许可**，故本作品可自由选 MIT/Apache-2.0。记录一处不一致：`kyber-polmul-hw/README.md` 有 "for academic research only" 一句，与逐文件 CC0 声明冲突，已在第三方清单里并列写明。**待办：`NOTICE` 里作者姓名仍是占位符** |
 | 2026-09-19 | **Vivado 实装 2020.2**（原定 2024.2），路径 `E:\Xilinx\Vivado\2020.2`，占用 42.25 GB，Cable Drivers 已勾；器件含 Zynq-7000 + Artix-7 / Kintex-7 / Virtex-7。**Vitis / Vitis_HLS 随装**（该安装器三者绑定，无法单独取消）——PS 走不走尚未定，但工具链已就位。AMD 账号出口合规卡点随之解除。版本理由见 §五 |
 | 2026-09-19 | **仓库基础架构排查，修掉一处"只在新 clone 上暴露"的可复现性缺陷**（`d2e3baf`）：判据改为"全新 clone 能不能跑通"，查出 `run_intt_pwm2_check.sh` 与 `run_polmul_check.sh` **在全新 clone 上必然 EXIT=1** —— `gen_batch_vectors.py` 需要三个参考工具 exe，而这两个脚本一个没编、一个只编了一个；`*.exe` 又被 `.gitignore` 挡住，**本机靠遗留 exe 永远看不出问题**。补齐编译步骤后，零 exe 起跑四条脚本全部 `EXIT=0` 且跑完工作区干净。同时确认 `.gitattributes` 的 `* -text` **确实生效**（模拟 `autocrlf=true` clone 验证过）。**遗留待办见 §四**：`选题指南.pdf` 入库的版权口径、提交者邮箱会随公开暴露、`skill/` 目录不存在（15 分项）、`.gitignore` 一条死规则 |
-| 2026-09-19 | **Vivado 装完的会话收尾入库**（本提交）：`CLAUDE.md`、`项目记录`、`选题指导`、`A 引导与计划`、`三人分工`、`pqc-ntt-guide.html` 六处同步 Vivado **2024.2 → 2020.2**，并把 AMD 账号卡点标为**已解除**。原定 2024.2 的决策行保留，加注"当日即被下行推翻"。**另：`选题指南.pdf` 移出仓库**（`8bca143`），提交者邮箱一项经确认**不处理** |
+| 2026-09-19 | **Vivado 装完的会话收尾入库**（`f81fbb6`）：`CLAUDE.md`、`项目记录`、`选题指导`、`A 引导与计划`、`三人分工`、`pqc-ntt-guide.html` 六处同步 Vivado **2024.2 → 2020.2**，并把 AMD 账号卡点标为**已解除**。原定 2024.2 的决策行保留，加注"当日即被下行推翻"。**另：`选题指南.pdf` 移出仓库**（`8bca143`），提交者邮箱一项经确认**不处理** |
+| 2026-09-19 | **纠正角色与机器记述** —— 确认 **用户 = A、本机 = A 的工位**：Vivado 2020.2 在 `E:\xilinx\Vivado\2020.2`、板子 CH340C 接在本机（**COM10**）。此前 `CLAUDE.md` 与本文写的"Vivado 在 A 那台机器上、**本机没有**、上板的事做不了"**是错的**，会把"跑通 `19_uart_loopback`"这条最关键的活挡在门外。已改正，并把角色写死进 `CLAUDE.md` 开头。另：**正点原子例程资料（含 `19_uart_loopback`）尚未拷到本机**，各下载目录已搜过 |
