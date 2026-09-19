@@ -14,7 +14,8 @@ FPGA 竞赛项目：**AMD 赛道 · 3.3 自主选题（初级组）· 后量子�
   **脚本里一律用 `$(dirname "$0")` 定位自己，不写死绝对路径**
 - **iverilog 12.0 在 `C:\iverilog\bin`，不在 PATH 里** —— 每次先 `export PATH="/c/iverilog/bin:$PATH"`
 - 还需要 **gcc**（编译 C 参考实现外壳）和 **python 3**（向量生成与比对）
-- **Vivado 2024.2 未安装**（装在 A 那台插板子的机器上）—— 综合/上板相关的事这里做不了
+- **Vivado ML Standard 2020.2 已装**（在 A 那台插板子的机器上，`E:\Xilinx\Vivado\2020.2`）
+  —— 本机没有，综合/上板相关的事这里做不了
 - **B 全程不需要板子和 Vivado**，进度不被 A 卡住 —— 见 `team/FPGA竞赛_B_引导与计划.md`
 
 ## 目录

@@ -75,10 +75,8 @@ ML-KEM 里最耗时的一步叫 **NTT**（数论变换），是个纯数学变�
 **已经验证过是对的**，直接拿它改造，别从零写。
 
 **要做的事**：
-1. **装 Vivado 2024.2**（装在自己那台插板子的机器上）
-   - 只勾 **Zynq-7000 + 7 Series**，取消 Vitis / UltraScale / PetaLinux
-   - **必须勾 Install Cable Drivers**，否则认得板子也连不上
-   - 装前确认磁盘空间（完整安装 30–50 GB）；不够就把 TEMP/TMP 指到空间大的盘
+1. ~~装 Vivado~~ ✅ **2026-09-19 已完成** —— **Vivado ML Standard 2020.2**
+   （`E:\Xilinx\Vivado\2020.2`，Cable Drivers 已勾，占用 42.25 GB）
    - 装完先跑通官方 `19_uart_loopback` 例程，确认工具链和板子都可用
 2. 读懂 `pe1/` 的蝶形单元和地址生成器（配套文档在《PQC-NTT 技术资料汇编》第一部分）
 3. 补出 **INTT** 和 **点乘** 两条通路（向量已备好，就等接进去）
