@@ -10,8 +10,8 @@
 | | |
 |---|---|
 | **选题** | 3.3 自主选题（初级组）· **面向后量子密码 ML-KEM 的 FPGA 加速核**（NTT/INTT/点乘） |
-| **已拿到** | ✅ 开源 NTT 硬件基线 `pe1/`，**NTT / INTT / 点乘 / 完整多项式乘法（端到端）均已用 FIPS 203 官方 KAT 验证通过**（各 4096/4096 系数，另加往返自检与阴性对照） |
-| **还差** | ⬜ Vivado 未装 ｜ ⬜ 板子未通 ｜ ⬜ 更外层的向量运算未验（见待办）｜ ⬜ Gitee 远程仓库未建（本地已 init + 首次提交，待 push） |
+| **已拿到** | ✅ 开源 NTT 硬件基线 `pe1/`，**NTT / INTT / 点乘 / 完整多项式乘法（端到端）均已用 FIPS 203 官方 KAT 验证通过**（各 4096/4096 系数，另加往返自检与阴性对照）｜✅ **Gitee 私有仓库已建并推送** `gitee.com/lanxiteacher/pqc-ntt-mlkem` |
+| **还差** | ⬜ Vivado 未装 ｜ ⬜ 板子未通 ｜ ⬜ 更外层的向量运算未验（见待办）｜ ⬜ A、C 尚未加入仓库 |
 | **下一步** | 装 Vivado → 跑通 `19_uart_loopback`；RTL 侧补 `polyvec_basemul_acc` 那类累加点乘 |
 | **关键日期** | 报名截止 **9/22** ｜ 作品提交 **11/7** ｜ 决赛 11 月底 |
 | **队伍** | 3 人，**零基础**（未写过 Verilog、未上过板）；分工已出（A/B/C） |
@@ -220,4 +220,4 @@
 | 2026-09-19 | **INTT 与点乘通过 FIPS 203 验证**（各 16 组 × 256 系数，全过），三项算核 RTL 侧验证闭环。关键发现：RTL 域约定与 C 参考实现**不一致**（INTT 差 R⁻¹、点乘差 R），非 bug；补了一条不依赖参考实现的往返自检。`refsim/` 新增 `run_intt_pwm2_check.sh` |
 | 2026-09-19 | **报名完成**。Vivado 版本维持 **2024.2**（不跟正点原子教程退回 2020.2）。新增卡点：AMD 账号出口合规验证未通过，下载受阻，记录对策于 §五 |
 | 2026-09-19 | **完整多项式乘法（端到端）验证通过**：FULL（时域⊗时域）与 HALF（时域⊗NTT域）两条通路各 16 组 × 256 系数全过。该链**无缩放因子**，且反向印证了单运算层的 R / R⁻¹ 标定。`refsim/` 新增 `run_polmul_check.sh`；RTL 侧验证闭环从"三个单运算"扩展到"真正会跑的那条链" |
-| 2026-09-19 | **仓库建立（本地）**：`git init` + 首次提交，504 文件 / 26 MB，分支 `main`。两处防坑：① 加 `.gitattributes`（`* -text`）—— Git for Windows 默认 `core.autocrlf=true`，不堵住的话队友 clone 出来的 `batch/*.txt` 全变 CRLF，正是约定 1 那个坑，且看起来像谁手滑了；② `research/papers/` 等 50 MB 第三方论文 PDF 不进仓库（版权 + 仓库最终须转公开），`standards/` 保留（NIST 公有领域）。克隆已逐字节验证。**待办：在 Gitee 建私有仓库后 push** |
+| 2026-09-19 | **仓库建立并推送**：本地 `git init` + 首次提交，504 文件 / 26 MB，分支 `main`；已推到 Gitee 私有仓库 `gitee.com/lanxiteacher/pqc-ntt-mlkem`。两处防坑：① 加 `.gitattributes`（`* -text`）—— Git for Windows 默认 `core.autocrlf=true`，不堵住的话队友 clone 出来的 `batch/*.txt` 全变 CRLF，正是约定 1 那个坑，且看起来像谁手滑了；② `research/papers/` 等 50 MB 第三方论文 PDF 不进仓库（版权 + 仓库最终须转公开），`standards/` 保留（NIST 公有领域）。克隆已逐字节验证。另：根目录出现过私人令牌文件，已加 `.gitignore` 防线并核对历史确认未泄漏；**待办：A、C 加为管理员并 clone** |
