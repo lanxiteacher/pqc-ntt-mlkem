@@ -148,6 +148,39 @@
       切分片段 `parts_00~02`、`blob.json`、`try_raw.rsp`），是抓 KAT 时的中间产物，
       已跟踪进版本控制，`.gitignore` 拦不住。要清得 `git rm --cached` 再让队友同步，
       **不急，等 A、C 都 clone 过之后再说**
+- [x] **仓库基础架构排查**（2026-09-19，`d2e3baf`）—— 判据是"**全新 clone 上能不能跑通**"，
+      查出 **`run_intt_pwm2_check.sh` 与 `run_polmul_check.sh` 在全新 clone 上必然失败**：
+      `gen_batch_vectors.py` 的 `__main__` 无条件跑 `gen_intt`/`gen_pwm2`/`gen_polmul`
+      三个生成器，需要 `ntt_once_tool`、`basemul_nttdomain_tool`、`polmul_full_tool`
+      三个 exe；但前者一行 gcc 都没有（只在注释里把 gcc 写成"依赖"），后者只编了一个。
+      而 `*.exe` 被 `.gitignore` 挡在仓库外 —— **本机因为躺着早先手工编译的 exe 而全绿，
+      这个问题在本机永远暴露不出来**，只有 clone 才报 `FileNotFoundError`。
+      已补齐编译步骤，并验证：零 exe 起跑，四条脚本全部 `EXIT=0`，跑完 `git status` 干净
+- [ ] **已核实无问题、无需再查的几项**（2026-09-19）—— `.gitattributes` 的 `* -text`
+      **确实生效**（用 `-c core.autocrlf=true` 模拟队友 clone 验证，LF 仍是 LF）；
+      脚本全部用 `$(dirname "$0")`、无写死绝对路径；全部跟踪文件扫过无凭据；
+      `docs/` `demo/` `assets/` `host/` 各有一份 README，不是空壳。
+      **一处需知悉但当前不影响**：5 个文件（`refsim/batch/ntt_batch_in.txt`、`ntt_batch_exp.txt`、
+      `fntt_rtl_out.txt`、`pe1/fntt_batch_tb_dump.v`、`_refbuild/ref_out.txt`）是**内容本身
+      以 CRLF 提交**的，`-text` 忠实地保住了 CRLF，队友拿到的与仓库逐字节一致
+- [ ] ⚠️ **`选题指南.pdf`（950 KB）在仓库根目录且已跟踪** —— `.gitignore` 里为版权
+      排除了 47 MB 论文 PDF，主办方这份文件却进了仓库。转公开 = 再分发主办方材料，
+      提交前需确认口径（同类待核：`selection/FPGA竞赛_选题调研.docx`）
+- [ ] ⚠️ **提交者身份会随公开暴露** —— 7 个提交均为 `lanxiteacher <2978484060@qq.com>`；
+      且本文件内三处出现仓库地址与本机路径 `C:\Users\l'x\Desktop\FPGA`
+- [ ] **`research/gen_out.txt` 是生成物入库**，内容是含本机绝对路径的日志
+      （`C:\Users\l'x\Desktop\FPGA\rtl\zetas_tables_verified.v`）。队友重跑会因路径不同
+      把 `git status` 弄脏。未找到它的生成者，像是手工重定向出来的
+- [ ] **`.gitignore` 里 `refsim/tmp_*.txt` 是条死规则** —— 实测**不匹配**
+      `refsim/_scratch/tmp_*.txt`。`_scratch/` 本身是故意提交的（有 README 说明来历），
+      问题在这条规则从未生效过、会误导下一个看到它的人
+- [ ] **`.gitignore` 的 `*.out` 规则过宽** —— 将来可能误伤同后缀的真实文件
+- [ ] ⚠️ **`skill/` 目录不存在** —— 对应"大模型协作与技能包 15 分"，`选题指导` §8.4
+      明说 AI 协作记录**"事后补不出来"**；`report/` 同样为空。另：§8.1 推荐的布局是
+      `src/ sim/ build/ board/ data/ skill/ report/`，与本仓库命名无一对应，
+      报告里宜附一张映射表
+- [ ] **`rtl/` 目前只有 2 个 twiddle 表（9225 字节）** —— A 的主责目录里没有 A 的交付物；
+      `host/` 同样只有一份 README。A、C clone 下来会看到自己的目录几乎是空的
 
 ### 开放问题
 
@@ -264,3 +297,4 @@
 | 2026-09-19 | **完整多项式乘法（端到端）验证通过**：FULL（时域⊗时域）与 HALF（时域⊗NTT域）两条通路各 16 组 × 256 系数全过。该链**无缩放因子**，且反向印证了单运算层的 R / R⁻¹ 标定。`refsim/` 新增 `run_polmul_check.sh`；RTL 侧验证闭环从"三个单运算"扩展到"真正会跑的那条链" |
 | 2026-09-19 | **仓库建立并推送**：本地 `git init` + 首次提交，504 文件 / 26 MB，分支 `main`；已推到 Gitee 私有仓库 `gitee.com/lanxiteacher/pqc-ntt-mlkem`。两处防坑：① 加 `.gitattributes`（`* -text`）—— Git for Windows 默认 `core.autocrlf=true`，不堵住的话队友 clone 出来的 `batch/*.txt` 全变 CRLF，正是约定 1 那个坑，且看起来像谁手滑了；② `research/papers/` 等 50 MB 第三方论文 PDF 不进仓库（版权 + 仓库最终须转公开），`standards/` 保留（NIST 公有领域）。克隆已逐字节验证。另：根目录出现过私人令牌文件，已加 `.gitignore` 防线并核对历史确认未泄漏；**待办：A、C 加为管理员并 clone** |
 | 2026-09-19 | **许可证定为 Apache-2.0，仓库门面补齐**（`21cb044`）：根目录新增 `LICENSE` / `NOTICE` / `README.md` / `THIRD_PARTY_LICENSES.md`。查清全部上游许可证：`kyber-polmul-hw`、`KyberButterflyCollection` 为 **CC0 1.0**，`kyber_ref` 为 **CC0 或 Apache-2.0 双许可**，`mlkem_kat` 为 **MIT**，`standards` 为**公有领域** —— **无一是传染性许可**，故本作品可自由选 MIT/Apache-2.0。记录一处不一致：`kyber-polmul-hw/README.md` 有 "for academic research only" 一句，与逐文件 CC0 声明冲突，已在第三方清单里并列写明。**待办：`NOTICE` 里作者姓名仍是占位符** |
+| 2026-09-19 | **仓库基础架构排查，修掉一处"只在新 clone 上暴露"的可复现性缺陷**（`d2e3baf`）：判据改为"全新 clone 能不能跑通"，查出 `run_intt_pwm2_check.sh` 与 `run_polmul_check.sh` **在全新 clone 上必然 EXIT=1** —— `gen_batch_vectors.py` 需要三个参考工具 exe，而这两个脚本一个没编、一个只编了一个；`*.exe` 又被 `.gitignore` 挡住，**本机靠遗留 exe 永远看不出问题**。补齐编译步骤后，零 exe 起跑四条脚本全部 `EXIT=0` 且跑完工作区干净。同时确认 `.gitattributes` 的 `* -text` **确实生效**（模拟 `autocrlf=true` clone 验证过）。**遗留待办见 §四**：`选题指南.pdf` 入库的版权口径、提交者邮箱会随公开暴露、`skill/` 目录不存在（15 分项）、`.gitignore` 一条死规则 |
