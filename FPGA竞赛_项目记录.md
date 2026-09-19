@@ -107,6 +107,29 @@
 - [ ] **再往外一层还没验** —— ML-KEM 解封装还差 `polyvec_basemul_acc_montgomery`
       那类**累加多个**点乘的向量运算、base case 乘法、以及 `poly_tomont`/`poly_reduce` 归位
 
+### 仓库与协作
+
+- [x] **建 Gitee 私有仓库并推送** —— `gitee.com/lanxiteacher/pqc-ntt-mlkem`
+      · **选 Gitee 而非 GitHub**：竞赛是国内赛事、**评委在国内**，GitHub 的 clone 与
+        raw 下载经常超时 —— 而"别人 clone 下来能复现"正是"文档与可复现 15 分"的载体
+        （`三人分工.md:113`）。GitHub 对中国大陆用户无账号限制，不是不能选，是访问不稳
+      · 加了 **`.gitattributes`（`* -text`）**：Git for Windows 默认 `core.autocrlf=true`，
+        不堵住的话队友 clone 出来的 `refsim/batch/*.txt` 全变 CRLF —— 正是约定 1 那个坑，
+        而且看起来像谁手滑了。**不要**改成 `text=auto` / `eol=lf`
+      · **`research/papers/`（47 MB）与 `kyber_ref/papers/` 的 PDF/网页不进仓库** ——
+        第三方版权，而仓库最终要按竞赛要求转公开。文件从 99 MB 降到 26 MB
+      · 已用"克隆到临时目录逐字节比对"验证过队友拿到的东西
+- [ ] **A、C 加为仓库管理员**（角色选「管理员」，**不是「开发者」**）——
+      开发者只能推代码，改可见性/转移/删除只有仓库主能
+- [ ] **让 A、C clone** —— 发 `team/FPGA竞赛_B_Claude环境对齐指南.md` 第一节给他们
+- [ ] **定许可证**：MIT 还是 Apache-2.0（倾向 **Apache-2.0**，多一条专利授权条款，
+      对"硬件加速器"这类可能沾专利的选题更稳妥）。竞赛推荐这两个
+- [ ] **决定要不要挂 GitHub 镜像** —— 若挂，用**两个独立 remote**（`origin`=Gitee 日常、
+      `github` 定期推），**不要**配成"push 一次推两边"：GitHub 一超时整条 push 报失败，
+      会分不清哪边没推上去
+- [ ] 仓库根目录还缺 **`README.md`** 与 **`LICENSE`** —— 开源仓库的门面，
+      也是"文档与可复现 15 分"的入口。`refsim/README.md` 已是现成材料
+
 ### 开放问题
 
 - 老师是否懂这个方向、能否指导
