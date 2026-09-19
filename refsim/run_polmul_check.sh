@@ -34,10 +34,20 @@ pe1/dt0.v pe1/dt1.v pe1/dt2.v pe1/dt3.v pe1/FA.v pe1/HA.v pe1/intmul.v \
 pe1/modadd.v pe1/modmul.v pe1/modred.v pe1/modsub.v pe1/shiftreg.v pe1/KyberHPM1PE.v"
 
 echo "═══ ① 编译参考工具 + 生成向量 ═══"
-gcc -O2 -Wall -I"$REF" -o polmul_full_tool.exe polmul_full_tool.c \
-    "$REF/poly.c" "$REF/polyvec.c" "$REF/ntt.c" "$REF/reduce.c" "$REF/cbd.c" \
-    "$REF/indcpa.c" "$REF/kem.c" "$REF/verify.c" "$REF/fips202.c" \
-    "$REF/symmetric-shake.c" "$KAT/randombytes_stub.c"
+# gen_batch_vectors.py 的 __main__ 无条件跑 gen_intt / gen_pwm2 / gen_polmul
+# 三个生成器，所以下面这三个工具**都得先编出来**。
+# 少编一个不会立刻报错，而是在跑到对应生成器时才抛 FileNotFoundError ——
+# 且 .exe 被 .gitignore 挡在仓库外，在本机靠遗留的 exe 看不出问题，
+# 只有全新 clone 才会暴露。三个一起编。
+LIBS="$REF/poly.c $REF/polyvec.c $REF/ntt.c $REF/reduce.c $REF/cbd.c \
+$REF/indcpa.c $REF/kem.c $REF/verify.c $REF/fips202.c \
+$REF/symmetric-shake.c $KAT/randombytes_stub.c"
+
+gcc -O2 -Wall -I"$REF" -o ntt_once_tool.exe          ntt_once_tool.c          $LIBS
+echo "  ✅ ntt_once_tool.exe"
+gcc -O2 -Wall -I"$REF" -o basemul_nttdomain_tool.exe basemul_nttdomain_tool.c $LIBS
+echo "  ✅ basemul_nttdomain_tool.exe"
+gcc -O2 -Wall -I"$REF" -o polmul_full_tool.exe       polmul_full_tool.c       $LIBS
 echo "  ✅ polmul_full_tool.exe"
 echo
 
