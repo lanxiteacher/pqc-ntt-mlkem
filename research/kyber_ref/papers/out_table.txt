@@ -1,0 +1,195 @@
+Information 2024, 15, 400                                                                                        12 of 15
+
+                                 wall-clock time was omitted for simplicity since it differs from NTT by a few clock cycles
+
+                                 at most. The cycles reported for "Both NTT and INTT" designs are in NTT/INTT format
+
+                                 (i.e., 126/127 means 126 clock cycles for NTT and 127 clock cycles for INTT), unless both of
+
+                                 them are the same or the work did not report it clearly. The ATP metric, where a smaller
+
+                                 value indicates better hardware utilization efficiency, is calculated as the product of time
+
+                                 in µs and the respective resource utilized, for instance, LUT ATP := Time (µs) × LUTs and
+
+                                 FF ATP := Time (µs) × FFs. For the methods that have a configurable number of parallel
+
+                                 butterfly units, the notation [c] ×n indicates the n-parallel butterfly units design of the
+
+                                 method [c].
+
+                                      In Table 1, for the NTT-only cores, the  core uses 429 LUTs, 538 FFs, and 4 BRAMs with
+
+                                 two parallel butterfly units (unroll factor 2), achieving a hardware efficiency of 441.87 LUT
+
+                                 ATP and 554.14 FF ATP with 459 cycles of latency. The  core, with a single butterfly, using
+
+                                 only 379 LUTs, 414 FFs, with 910 cycles latency, achieved 792.11 LUT ATP and 865.25 FF
+
+                                 ATP, which is worse than  but only uses a single BRAM as the ROM quarter square look-up
+
+                                 table for the butterfly unit. Note that it is possible to not unroll the design  and run with
+
+                                 just a single butterfly unit; however, this still requires four BRAMs due to the nature of
+
+                                 the approach, that is, four ROMs shared between two butterflies via two different ports.
+
+                                 In the  design, each butterfly has a dedicated ROM; hence, there are more rooms to scale
+
+                                 in the quarter square method. And, finally, the hybrid core , which supports both NTT
+
+                                 and INTT and is based on the  design, only requires slightly more resources at 541 LUTs
+
+                                 (595.10 ATP), 680 FFs (748.00 ATP,) and two-cycle latency penalty, where both INTT and
+
+                                 NTT take 461 cycles to finish.
+
+                                 Table 1. Result comparison with other lightweight NTT-core methods.
+
+               Mode        LUTs  FFs   DSPs      BRAMs           Freq   Cycles   Time   Platform      LUT        FF
+
+                                                 (18 Kb)         (MHz)           (µs)                 ATP        ATP
+
+This () ×2                 429   538   0               4         446    459      1.03   Artix-7       441.87     554.14
+
+This () ×1                 379   414   0               1         435    910      2.05   Artix-7       792.11     865.26
+
+(quarter sq.)
+
+[23] (FNTT)                9187  9328  0               0         100    1410     14.10  Virtex-7      129,536.7  131,524.8
+
+This () ×2                 541   680   0               4         417    461      1.10   Artix-7       595.10     748.00
+
+[27]                       810   717   4               2         222    324      1.46   Artix-7       1182.60    1046.82
+
+[21]                       609   640   2               4         257    490      1.91   Artix-7       1163.19    1222.40
+
+[22]                       1154  1031  2               0         300    456      1.52   Zynq US+      1754.08    1567.12
+
+[26] ×1                    360   145   3               2         115    940      8.17   Artix-7       2941.20    1184.65
+
+[26] ×2                    737   290   6               4         115    474      4.12   Artix-7       3036.44    1194.80
+
+[28] ×1                    948   325   1               5         190    904      4.76   Artix-7       4512.48    1547.00
+
+[28] ×4                    2543  792   4               18        182    232/233  1.27   Artix-7       3229.61    1005.84
+
+[28] ×16                   9508  2684  16              70        172    69/71    0.40   Artix-7       3803.20    1073.60
+
+[29]                       1737  1167  2               3         161    512      3.18   Artix-7       5523.66    3711.06
+
+[23] (UNTT)                9298  9402  0               0         20     1410     70.50  Virtex-7      655,509.0  662,841.0
+
+[24]                       4969  1616  9               35        N/A    126/127  N/A    Artix-7       N/A        N/A
+
+[30]                       1243  562   11              7         118    933      7.91   Artix-7       9832.13    4445.42
+
+                                 : Only NTT,  :  both  NTT  and  INTT
+
+                                      For the NTT standalone cores, although a recent method [23] (FNTT) successfully
+
+                                 eliminated the usage of any DSP or BRAM, the approach heavily hinders the LUT and FF
+
+                                 utilization and frequency, which can only run at about 100 MHz even on the higher-end
+
+                                 Virtex-7 platform. Our  design is able to achieve more than 10× lower latency and more
+Information 2024, 15, 400                                                                               13 of 15
+
+                           than 200× smaller ATPs than [23] (FNTT). Furthermore, even the  design has almost 7×
+
+                           better latency and more than 100× better ATPs than the FNTT method [23] with the cost of
+
+                           only a single additional 18 Kb BRAM.
+
+                           For the hybrid design (NTT- and INTT-capable) comparison, thanks to the highly
+
+                           pipelined nature of the butterfly unit, our  design can run at a higher frequency (417 MHz)
+
+                           on the Artix-7 platform than the other methods, including [22] (300 MHz), which uses a
+
+                           much more recent and faster Zynq Ultrascale+ platform. The newly proposed modular
+
+                           multiplication methods can achieve better latency (1.10 µs) than all other methods except
+
+                           the fastest ×16 configuration in [28] (0.40 µs). However, [28] uses nearly 17.57× more LUTs
+
+                           and 17.5× more BRAMs than ours while being only 2.75× faster. Therefore, we achieved a
+
+                           6.39× more efficient LUT ATP and 1.44× more efficient FF ATP than [28] ×16.
+
+                           Compared to [26], which employs the same parallel butterflies strategy, our method
+
+                           achieved 3.71× and 1.37× better LUT and FF ATP in the ×1 configuration and 5.10× and
+
+                           1.60× better LUT and FF ATP in the ×2 configuration.
+
+                           Our design also achieved about 2× better LUT ATP and 1.5× better FF ATP than [21,27].
+
+                           In [27], the authors used two fewer BRAMs but at the cost of four DSPs and much higher
+
+                           LUTs and FFs usage, and latency was higher. The same apply for [22,28], which use fewer
+
+                           BRAMs at the expense of significantly more LUTs/FFs and two DSPs; hence, these methods
+
+                           are less efficient than our work in LUT and FF ATP.
+
+                           In [24], the authors did not report the exact maximum frequency that their design is
+
+                           able to run. Assuming that it could run at the same frequency as our  design at 417 MHz,
+
+                           which is a highly unlikely scenario given the nearly 5000 LUTs and 35 BRAMs utilized, the
+
+                           method in [24] would have 3.66× better latency than  while using 9.18× more LUTs and
+
+                           2.38× more FFs and thus would be more efficient in terms of FFs ATP but significantly
+
+                           worse in term of LUTs ATP.
+
+                           5. Conclusions
+
+                           In this paper, we proposed a new NTT architecture with a unique data access pattern
+
+                           along with a reorder buffer, making it suitable for a single, shallow-depth, simple and dual-
+
+                           port SRAM; in the FPGA architecture, this was mapped to abundant LUT-RAM resources.
+
+                           This allowed us to unroll the inner loop of the NTT by a factor of two and beyond (×4, ×8)
+
+                           to achieve lower latency without using significantly more resources in the control path.
+
+                           Furthermore, we proposed two new look-up table-based butterfly units, namely, multipli-
+
+                           cationless and quarter square multiplication, both with different tradeoffs in LUT/BRAM
+
+                           usage and eliminate the need for computing the full 12 × 12 product and subsequently the
+
+                           need for DSP utilization. Thanks to the new butterfly units, our whole design runs at a
+
+                           higher frequency (417 MHz), has good latency while maintaining excellent hardware usage
+
+                           efficiency (LUT/FF ATP), and is suitable for embedding in high-performance, lightweight
+
+                           CRYSTALS Kyber accelerators for more efficient polynomial multiplication.
+
+                           Author Contributions: Conceptualization, B.K.-D.-N.; Validation, B.K.-D.-N., N.T.B. and H.P.N.;
+
+                           Investigation, B.K.-D.-N., N.T.B. and H.P.N.; Writing--original draft, C.P.-Q.; Writing--review &
+
+                           editing, C.P.-Q., N.-T.T. and T.-T.H.; Supervision, C.P.-Q., N.-T.T., T.-T.H. and C.-K.P. All authors have
+
+                           read and agreed to the published version of the manuscript.
+
+                           Funding: This research is funded by Vietnam National University Ho Chi Minh City (VNU-HCM)
+
+                           under grant number NCM2021-20-02. We acknowledge Ho Chi Minh City University of Technology
+
+                           (HCMUT), VNU-HCM, for supporting this study.
+
+                           Informed Consent Statement: Not applicable.
+
+                           Data Availability Statement: The data presented in this study are available on request from the
+
+                           corresponding author.
+
+                           Conflicts of Interest: The authors declare no conflict of interest.
+

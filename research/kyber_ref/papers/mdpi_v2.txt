@@ -1,0 +1,801 @@
+information
+
+Article
+
+Compact and Low-Latency FPGA-Based Number Theoretic
+Transform Architecture for CRYSTALS Kyber Postquantum
+Cryptography Scheme
+
+Binh Kieu-Do-Nguyen 1,2,3 , Nguyen The Binh 1,2 , Cuong Pham-Quoc 1,2,* , Huynh Phuc Nghi 1,2 ,
+Ngoc-Thinh Tran 1,2 , Trong-Thuc Hoang 3 and Cong-Kha Pham 3
+
+                                        1 Faculty of Computer Science and Engineering, Ho Chi Minh City University of Technology (HCMUT),
+                                             268 Ly Thuong Kiet St., Dist. 10, Ho Chi Minh City 740050, Vietnam; binh@vlsilab.ee.uec.ac.jp (B.K.-D.-N.);
+                                             binh.nguyen288@hcmut.edu.vn (N.T.B.); nghihp@hcmut.edu.vn (H.P.N.); tnthinh@hcmut.edu.vn (N.-T.T.)
+
+                                        2 Computer Engineering Department, Vietnam National University--Ho Chi Minh City (VNU-HCM),
+                                             Thu Duc, Ho Chi Minh City 700000, Vietnam
+
+                                        3 Department of Computer and Network Engineering, University of Electro-Communications (UEC),
+                                             Tokyo 182-8585, Japan; hoangtt@uec.ac.jp (T.-T.H.); phamck@uec.ac.jp (C.-K.P.)
+
+                                        * Correspondence: cuongpham@hcmut.edu.vn
+
+Citation: Kieu-Do-Nguyen, B.;           Abstract: In the modern era of the Internet of Things (IoT), especially with the rapid development of
+The Binh, N.; Pham-Quoc, C.; Nghi,      quantum computers, the implementation of postquantum cryptography algorithms in numerous termi-
+H.P.; Tran, N.-T.; Hoang, T.-T.; Pham,  nals allows them to defend against potential future quantum attack threats. Lattice-based cryptography
+C.-K. Compact and Low-Latency           can withstand quantum computing attacks, making it a viable substitute for the currently prevalent
+FPGA-Based Number Theoretic             classical public-key cryptography technique. However, the algorithm's significant time complexity
+Transform Architecture for              places a substantial computational burden on the already resource-limited chip in the IoT terminal. In
+CRYSTALS Kyber Postquantum              lattice-based cryptography algorithms, the polynomial multiplication on the finite field is well known
+Cryptography Scheme. Information        as the most time-consuming process. Therefore, investigations into efficient methods for calculating
+2024, 15, 400. https://doi.org/         polynomial multiplication are essential for adopting these quantum-resistant lattice-based algorithms on
+10.3390/info15070400                    a low-profile IoT terminal. Number theoretic transform (NTT), a variant of fast Fourier transform (FFT),
+                                        is a technique widely employed to accelerate polynomial multiplication on the finite field to achieve a
+Academic Editor: Luca Ardito            subquadratic time complexity. This study presents an efficient FPGA-based implementation of number
+                                        theoretic transform for the CRYSTAL Kyber, a lattice-based public-key cryptography algorithm. Our
+Received: 8 May 2024                    hybrid design, which supports both forward and inverse NTT, is able run at high frequencies up to
+Revised: 26 June 2024                   417 MHz on a low-profile Artix7-XC7A100T and achieve a low latency of 1.10 µs while achieving state-
+Accepted: 8 July 2024                   of-the-art hardware efficiency, consuming only 541-LUTs, 680 FFs, and four 18 Kb BRAMs. This is made
+Published: 11 July 2024                 possible thanks to the newly proposed multilevel pipeline butterfly unit architecture in combination
+                                        with employing an effective coefficient accessing pattern.
+Copyright: © 2024 by the authors.
+Licensee MDPI, Basel, Switzerland.      Keywords: field-programmable gate array; postquantum cryptography; number theoretic transform;
+This article is an open access article  CRYSTALS Kyber; lightweight design
+distributed under the terms and
+conditions of the Creative Commons      1. Introduction
+Attribution (CC BY) license (https://         Security is a crucial concern in computer systems for safeguarding confidential data
+creativecommons.org/licenses/by/
+4.0/).                                  from the ever-changing landscape of cyber attacks. The conventional encryption methods,
+                                        which depend on intricate mathematical issues that pose challenges for classical computers
+                                        to answer, effectively fulfill their purpose of safeguarding sensitive data from malevolent
+                                        entities. Quantum computers, which rely on the principles of quantum physics, can disrupt
+                                        the equilibrium between defenders and attackers by significantly accelerating some cal-
+                                        culations. By implementing Shor's algorithm [1] and Grover's algorithm [2] on quantum
+                                        computers, standard public key cryptography (PKC) systems such as RSA [3] and elliptic
+                                        curve cryptography (ECC) [4] may be vulnerable. Therefore, replacing them with postquan-
+                                        tum cryptography (PQC) is necessary. CRYSTALS Kyber is a cryptographic algorithm
+
+Information 2024, 15, 400. https://doi.org/10.3390/info15070400  https://www.mdpi.com/journal/information
+Information 2024, 15, 400                                                                                                                                              2 of 15
+
+                           commonly referred to as Kyber. It is documented in the source [5]. The designation of Kyber
+                           as a postquantum key encapsulation mechanism (KEM) protocol is due to its classification
+                           within the family of lattice-based cryptography (LBC). The fundamental challenge that
+                           Kyber addresses is module learning with error (M-LWE). Kyber is a cryptographic system
+                           built on lattices and relies on the M-LWE problem. Kyber's security is based on the premise
+                           that addressing learning with error (LWE) problems is challenging, even for quantum com-
+                           puters. The hardness of the material contributes to its resistance to quantum cryptanalysis.
+                           Generally, systems based on the M-LWE offer enhanced security [6] and improved perfor-
+                           mance compared to LWE schemes [7]. In this method, polynomials are typically defined
+                           over the ring Zq[x]/(xn + 1), with the value n indicating the size of the public-key matrix
+                           and the security levels. Kyber provides three sets of parameters: Kyber-512, Kyber-768,
+                           and Kyber-1024. These factors define the dimensions of the mathematical entities employed
+                           and impact the algorithm's security and efficiency. The Kyber-768 algorithm provides an
+                           optimal equilibrium between robustness and effectiveness.
+
+                                 Performing polynomial multiplication within the ring is an expensive calculation, both in
+                           terms of hardware and software implementation. This holds true not only for the Kyber cryp-
+                           tography algorithm but also for other cryptographic algorithms. Polynomial multiplication
+                           can be computed using several algorithms, including the schoolbook algorithm [8­10], Karat-
+                           suba algorithm [11,12], Toom­Cook algorithm [13,14], and the number theoretictTransform
+                           (NTT) algorithm [15­17]. Of these algorithms, the schoolbook algorithm is the most basic
+                           and straightforward. However, it has a quadratic complexity of O(n2), where n represents
+                           the length of the polynomials. The Karatsuba algorithm employs the "divide-and-conquer"
+                           approach by splitting the original polynomial into two sections, resulting in a computa-
+                           tional complexity of O(n1.58). The Toom­Cook algorithm is an extension of the Karatsuba
+                           algorithm. The Toom­Cook algorithm differs from the Karatsuba algorithm by dividing
+                           the original polynomial into k parts. This division results in a complexity of O(nr), where
+                           r = logk(2k - 1). The discrete Fourier transform (DFT) can be employed for polynomial
+                           multiplication. However, the computational complexity of directly computing the DFT is
+                           O(n2), which is comparable to that of the schoolbook technique.
+
+                                 Over the past few decades, numerous efficient algorithms for calculating the DFT
+                           have been introduced, which are currently referred to as the fast Fourier transform (FFT).
+                           The concept of the FFT was initially formulated by Carl Friedrich Gauss in an unpublished
+                           manuscript in 1805 [18]. The FFT gained significant recognition in 1965 when Cooley
+                           and Tukey independently introduced the Cooley­Tukey method, a rapid technique for
+                           DFT. The NTT is a specific instance of DFT that operates on a finite field [19]. Similarly,
+                           the majority of FFT approaches can be utilized for NTT, leading to the development
+                           of efficient algorithms for number theoretic transformations. From an implementation
+                           perspective, the FFT and NTT are the most efficient techniques for calculating polynomial
+                           multiplication of large degrees. This is because they have a quasilinear complexity of
+                           O(n log n), which gives them a major advantage over other multiplication algorithms.
+                           However, due to the fact that the FFT is carried out in the complex domain, the floating point
+                           operations involved in the computation may introduce inaccuracies in rounding precision
+                           when multiplying two polynomials with integer coefficients. Conversely, the calculations
+                           involved in NTT computing exclusively utilize integers, circumventing any potential
+                           precision issues.
+
+                                 Most of the polynomials used in lattice-based schemes are created using integer coeffi-
+                           cients. It is evident that NTT is particularly well suited for implementing these schemes.
+                           Most schemes that utilize lattices with algebraic structures tend to favor NTT-based multi-
+                           plication because of its numerous benefits, in addition to its quasilinear complexity and
+                           utilization of integer arithmetic. Nevertheless, certain lattice-based techniques are unable
+                           to utilize NTT directly due to the parameter requirements imposed by NTT. NTT utilizes
+                           negative wrapped convolution (NWC). The current settings of Kyber, which is the sole
+                           KEM specified by the National Institute of Standards and Technology (NIST), only partially
+Information 2024, 15, 400                                                                                                                                              3 of 15
+
+                           satisfy the condition q  1 (mod n), therefore preventing the full utilization of the NTT
+                           based on the number theoretic cryptography approach.
+
+                                 The process of encrypting and decrypting in CRYSTALS Kyber is significantly de-
+                           pendent on performing polynomial multiplication within a certain mathematical ring.
+                           In order to address these problems, Kyber employs NTT to carry out a crucial operation
+                           with optimal efficiency. NTT functions as an optimization tool. It converts polynomials
+                           from their standard form into an alternative representation that allows for significantly
+                           faster multiplication. Using NTT greatly enhances the velocity and effectiveness of poly-
+                           nomial multiplication in CRYSTALS Kyber. This results in accelerated key generation,
+                           encapsulation, and decapsulation procedures. The term "improve NTT" is used to enhance
+                           the overall performance of the CRYSTALS Kyber PQC scheme. In this study, we introduced
+                           a new NTT architecture to expedite the polynomial matrix­vector multiplication in Kyber.
+                           The supplied accelerator achieves reduced latency and resource consumption compared to
+                           current works on the same platform.
+
+                           1.1. Related Work
+
+                                 The first challenge with implementing iterative FFT or NTT, the Cooley­Tukey FFT
+                           algorithm [20] to be specific, is handling bit-reversed order preprocessing efficiently, which
+                           has a non-negligible impact on performance. Some studies, such as [21], addressed this
+                           problem by using a ping-pong memory access scheme between two BRAMs and were able
+                           to achieve a 3.95× faster and at least 1.5× smaller area time product (ATP) than the state-of-
+                           the-art methods. Another more recent work [22] approached the problem by arranging the
+                           coefficients into three FIFOs and is also able to achieve a BRAM-free NTT architecture. Most
+                           notably, a recent work [23] used registers to store the coefficients and used multiplexers to
+                           index them while completely eliminated both the use of BRAMs and DSPs. However, since the
+                           final goal of these transforms is to merely perform polynomial multiplication, there are some
+                           tricks that we can exploit. The reference implementation of CRYSTALS Kyber [5], which is
+                           implemented in software, suggests that we can directly perform the Cooley­Tukey FFT on the
+                           natural order in the forward pass, obtaining the result in bit-reversed order and performing
+                           pointwise multiplication in that order, and finally performing the Gentleman­Sande algorithm
+                           in the inverse to get the multiplication result in natural order.
+
+                                 The second challenge of implementing NTT is the butterfly unit, or efficiently handling
+                           modular multiplication or modular reduction of the product between a coefficient and
+                           the root of unity. The reference implementation [5] suggests that we replace all modular
+                           multiplications with Montgomery multiplication, basically performing all operations in an
+                           intermediate, reduction-friendly form and performing postprocessing in the end to obtain
+                           the result in standard form. A recent work [24] also utilized the traditional Montgomery
+                           multiplication approach and achieved a low cycle count for the NTT operation at only
+                           about 128 clock cycles. On the other hand, a work [25] developed a K-RED algorithm that
+                           can perform modular reduction efficiently and was optimized by [22] along with the three
+                           FIFOs strategy to achieve 16.7% higher hardware efficiency than the state-of-the-art method.
+                           Moreover, authors [26] proposed K2 - RED, which is based on K-RED and achieves better
+                           hardware resource utilization.
+
+                                 In general, all studies so far have mainly focused on finding the optimal data access
+                           pattern of the iterative FFT and optimizing the modular reduction on the butterfly unit
+                           to make the whole NTT core faster and/or more compact. In this paper, we propose a
+                           high-frequency, fully pipelined, butterfly-unit NTT accelerator architecture for CRYSTALS
+                           Kyber version 3, with n = 256 and q = 3329, for the FPGA platform, to achieve lower
+                           latency in the critical exchange process to which these operations belong.
+Information 2024, 15, 400                                                                                                                                              4 of 15
+
+                           1.2. Key Contributions
+
+                                 The key contributions in this work can be summarized as follows:
+
+                           1. We developed a new data accessing pattern on the NTT algorithm as well as ap-
+                                  propriate reordering in order to reduce the BRAM to just the LUT-RAM of the
+                                  FPGA Architecture, which can support shallow-depth and long-width requirements
+                                  for unrolling.
+
+                           2. We also proposed two novel butterfly units that are DSP-free and have low resource
+                                  utilization. The most expensive operation of the butterfly unit in NTT, in terms of
+                                  resources and time, is the modular multiplication of the coefficient with the root of unities.
+                                 The first approach we developed utilizes the fact that, with parameter q = 3329 < 212,
+                                  which means the coefficient is up to 12bits long, we can split the parameter to the sum of
+                                  multiple precomputed products with the roots of unity and can completely eliminate the
+                                  full multiplication and as well as the need for dedicated storage for the root of unitie .
+
+                           3. The second butterfly unit we constructed utilizes quarter square multiplication to per-
+                                 form modular multiplication xy = (x + y)2/4 - (x - y)2/4, by realizing the fact that
+                                 although a 12 × 12 multiplication typically requires a 224-depth look-up table, 12 - bit
+                                  squares only requires 212. Therefore, by replacing multiplication by squares with ad-
+                                  ditional processing, we can fit the quarter squares on a single dual-port ROM that fits
+                                 neatly onto one BRAM. This approach also avoids the need for the full 12 × 12 product
+                                  to be computed and reduced.
+
+                           4. We developed a detailed pipelined butterfly unit based on the proposed approach
+                                  with a short critical path that can thus operate at a higher frequency.
+
+                           5. Finally, we synthesized place and route (PnR) and verified its functionality on an
+                                  Xilinx Artix-7 FPGA, which can run at up to 417 MHz.
+
+                           2. Background Knowledge
+
+                                 FFT traditionally operates on the vector of complex numbers and can be utilized
+                           to perform fast convolution with subquadratic time complexity. Fortunately, the same
+                           algorithm can be applied on an n - 1-degree polynomial with coefficients in any finite field
+                           Zq with the nth root of unity to achieve fast multiplication. The variant of the FFT that
+                           operates on the finite field is called the NTT.
+
+                                 For CRYSTALS Kyber version 2 and later, the parameters are q = 3329 and n = 256,
+                           and the polynomial is operated on the ring Z3329[x]/(x256 + 1). However, since Z3329
+                           only has up to 256 primitive roots of unity, namely,  = 17, an NTT-based multiplication
+                           can only give us the result modulo x256 - 1. Therefore, the modulus is first factored as
+                           x256 + 1 = 1i=270(x2 - 2br7(i)+1) and the 256-coefficient polynomial is transformed to a
+                           vector of 128 degree-1 polynomial modulo x2 - 2br7(i)+1. The pointwise multiplication
+                           process now becomes "degree-1-wise" multiplication.
+
+                                 Furthermore, the traditional iterative FFT algorithm (Cooley­Tukey) requires bit-
+                           reversal preprocessing on both the forward and inverse transform; this introduces non-
+                           negligible impacts on hardware utilization and performance. Therefore, in the reference
+                           implementation of CRYSTALS Kyber, the forward transform (forward NTT) is performed
+                           using the Cooley­Tukey algorithm and outputs the result in reverse order, which then
+                           is used to perform pointwise multiplication in the same reversed order, and finally the
+                           Gentleman­Sande algorithm, which takes in reversed order vector, is used. The final result
+                           is output in natural order, as expected. The forward and inverse NTT algorithms are
+                           described in Algorithm 1 and Algorithm 2, respectively.
+Information 2024, 15, 400                                                                                                                                              5 of 15
+
+                              Algorithm 1: Cooley­Tukey forward NTT
+
+                                 Data: Polynomial r  Z3329[x] with 255 degrees
+                                 Data: Precomputed root of unities k
+                                 Result: Inplace transform of r = NTT(r), 128-binomial vector in reverse order
+                                 j  0; k  1;
+                                 for len from 128 to 2 step len = len/2 do
+
+                                     for start from 0 to 255 step start = j + len do
+                                            k ; k  k + 1;
+                                          for j from start to start + len - 1 do
+                                              t    r[j + len];
+                                              r[j + len]  r[j] - t;
+                                              r[j]  r[j] + t;
+                                          end
+
+                                      end
+                                 end
+
+                              Algorithm 2: Gentleman­Sande inverse NTT
+                                 Data: Vector of 128 binomials r in reverse order
+                                 Data: Precomputed root of unities k
+                                 Result: Inplace transform of r = INTT(r), a 255-degree polynomial in natural order
+                                 j  0; k  127;
+                                 for len from 2 to 128 step len = len  2 do
+                                     for start from 0 to 255 step start = j + len do
+                                            k ; k  k - 1;
+                                          for j from start to start + len - 1 do
+                                              t  r[j];
+                                              r[j + len]  (r[j + len] - t)  k  2-1;
+                                              r[j]  (r[j + len] + t)  2-1;
+                                          end
+                                      end
+                                 end
+
+                           3. Proposed NTT Architecture
+
+                                 The proposed NTT core design performs a number theoretic transform with param-
+                           eters n = 256, q = 3329 (CRYSTALS Kyber Version 3). Thus, each polynomial being
+                           transformed is a vector of 256 12-bit numbers. To improve the throughput, the core utilizes
+                           a single, simple dual-port SRAM, which has one read port and one write port, with a depth
+                           of 64 and a width of 48 bits; each entry stores four 12-bit polynomial coefficients to perform
+                           operations on two pairs of coefficients at a time.
+
+                                 On the Xilinx 7-series FPGA, this SRAM is inferred to multiple instances of LUT-RAM,
+                           and this design requires no BRAM usage on the device. Since the butterfly operation
+                           requires fetching the coefficient in a nonlinear manner, a special access pattern from the
+                           control/address generation and realignment from the realign buffer is required and is
+                           handled both in pre and postbuffer operation.
+
+                                 The butterfly calculation pipeline consists of fetching the data from outside (the first
+                           NTT iteration) or coefficient SRAM, going through the realign buffer to permute the data
+                           in the correct order and then feeding the butterfly unit to perform the butterfly calculation.
+                           After the operation, the coefficient is converted to either write back and write back the next
+                           iteration or stream out of the core in the last iteration of the NTT, as shown in Figure 1.
+
+                                 For I/O operations, the core takes in a stream of four 12-bit coefficients with a ready
+                           signal to indicate that it is ready to accept data, and when it is finished, the core outputs a
+                           stream of four 12-bit data with an associated data valid indication.
+Information 2024, 15, 400                                                                    6 of 15
+
+                           Figure 1. Control/data flow of the proposed NTT core.
+
+                           3.1. Butterfly Unit
+                                 In the forward NTT operatio described in Algorithm 1, the inner loop unit performs
+
+                           the operation (1), which is called a butterfly calculation.
+
+                           r[i]        = (r[i] + r[i + len][k]) mod q                        (1)
+
+                           r[i + len] = (r[i] - r[i + len][k]) mod q
+
+                           where k is an integer from 1 to 127; the table of  is precomputed and stored in ROM.
+                                 Similarly, the butterfly calculation of the inverse NTT (INTT) is defined in Equation (2).
+
+                           r[i]  = (r[i + len] + r[i])2-1 mod q                              (2)
+
+                           r[i + len] = (r[i + len] - r[i])[k]2-1 mod q
+
+                                 The most significant bottleneck of the butterfly unit is the modular multiplication of
+                           [k]. If we perform this operation naïvely, the steps involve a 12 × 12 multiplication, which
+                           is most efficiently achieved by using a DSP on FPGA and then somehow reducing this
+                           24-bit product mod q.
+
+                                 On the reference implementation of Kyber, which is optimized for AVX2 (software)
+                           version 2.0, this is achieved by performing the NTT and PWM in Montgomery form, replac-
+                           ing all modular multiplications with Montgomery multiplications, and then converting
+                           back to normal form at the INTT stage.
+
+                                 In this work, we developed two solutions with different hardware tradeoffs to perform
+                           this particular modular multiplication efficiently.
+
+                           3.1.1. Multiplicationless Method
+
+                                 This approach does not require the full multiplication of 12 × 12 for r[i + len][k] but
+                           instead uses a look-up table to achieve the modular multiplication. The multiplication of a
+                           12-bit unsigned number y[11 : 0] by [k], t = y[11 : 0][k], can be expanded as shown in
+                           Equation (3).
+
+                           t = y[11 : 9][k]29 + y[8 : 6][k]26 + y[5 : 3][k]23 + y[2 : 0][k]  (3)
+
+                                 Every term in Equation (3) has 1024 possible outcomes that are 12-bit each. Therefore,
+                           we can precompute all these terms and store them as four 1024 × 12 ROMs indexed by
+                           {i[0 : 2], k}, namely, luts9, luts6, luts3, and luts0, with the value, as described in Equation (4).
+                           Equation (3) now becomes Equation (5).
+
+                                       :  2],  k}]  :=  i  ×   [k]29  mod q
+                           luts9[{i[0
+                           
+
+                                       :  2],  k}]  :=  i  ×   [k]26  mod q                  (4)
+                           luts6[{i[0
+
+                           luts3[{i[0 : 2], k}] := i × [k]23 mod q
+                           
+
+                           
+                           luts0[{i[0 : 2], k}] := i × [k]20 mod q
+
+                           t = luts9[{y[11 : 9], k}] + luts9[{y[8 : 6], k}] + luts9[{y[5 : 3], k}] + luts0[{y[2 : 0], k}] (5)
+Information 2024, 15, 400                                                                                                                                              7 of 15
+
+                                 Therefore, by using the precomputed table, we eliminate the need to perform 12 × 12 mul-
+                           tiplication and the need to store the zeta array explicitly since it is already embedded in the
+                           multiplication look-up table. Equation (5) yields a 14-bit result, where 0  t  4(q - 1);
+                           to reduce it to mod q = 3329, we simply perform conditional subtraction by 2q and then by
+                           q. Thus, this variant of the butterfly unit is implemented as shown in Figure 2, where the
+                           modular multiplication is handled by a multiplicationless zeta[k] submodule implemented
+                           as shown in Figure 3; the luts0, luts3, luts6, and luts9 ROMs store the values described in
+                           Equation (4).
+
+                           Figure 2. Multiplicationless butterfly unit.
+
+                           Figure 3. Mult-less zeta[k] submodule.
+
+                                 This method requires either four single-port 2 KB ROMs per butterfly unit or four
+                           dual-port 2 KB ROMs per two butterfly units. Since Xilinx's BRAM does have the capability
+                           of being dual-port ROMs, this work used the latter forms to achieve higher throughput
+                           and the maximum utilization of Xilinx's BRAMs, where the two butterfly units share the
+                           same ROMs as the look-up table. In our testing, the synthesis tool was able to automatically
+                           fuse two identical single-port ROMs inside two instances of the butterfly unit into a single
+                           dual-port ROM without any explicit RTL code change.
+
+                           3.1.2. Quarter Square Multiplication Method
+
+                                 All 12 × 12 modular multiplications, ab mod q, could be naïvely stored and looked
+                           up by using a 224 × 12 ROM, which is very space-inefficient. On the other hand, a 12-bit
+                           modular square, x2 mod q, only requires a 212 × 12 ROM, realizing the quarter square
+                           multiplication identity (6) of two numbers x, y.
+
+                           (x + y)2 - (x - y)2 = (x2 + 2xy + y2) - (x2 - 2xy + y2) = xy  (6)
+                           4  4                                          4
+Information 2024, 15, 400                                                                              8 of 15
+
+                           We can algebraically transform a multiplication to a difference of two quarter squares
+
+                           using the identity (6). Since q = 3329 is an odd prime, the inverse of 4 modulo q exists,
+
+                           and the same identity (6) can be applied to perform modular multiplication (7) in the finite
+
+                           field Z3329.    ab mod q = (a + b)24-1 - (a - b)24-1 mod q
+
+                                                                                                       (7)
+
+                                 Therefore, the 12 × 12 modular multiplication ab mod q can be realized using a single
+                           212 × 12 quarter square ROM using the identity (7). Furthermore, the quarter squares for
+                           both sum a + b and difference a - b can be looked up simultaneously in a single clock cycle
+
+                           using a dual-port ROM, as shown in Equation (8).
+
+                           lutx24-1 mod q(n) := n24-1 mod q, 0  n < 212                                (8)
+
+                           ab mod q        = lutx24-1 mod q(a + b) - lutx24-1 mod q(a - b) mod q
+
+                                 Note that the depth of the ROM can be reduced by four by performing preprocessing
+
+                           and postprocessing. The first reduction factor of 2 is achieved by taking advantage of
+                           the symmetry of squares x2 = (-x)2; in the modular field, this means n2 = (q - n)2 =
+                           min(n, q - n)2 mod q. Thus, we only need to look up the quarter square of min(n, q - n),
+
+                           which is only up to (q - 1)/2 and is 11 bits wide.
+
+                                 The second reduction factor of 2 is achieved by further realizing the fact that the table
+                           saves both the even (2n)2/4 and odd (2n + 1)2/4 entries; the odd entries (2n + 1)2/4
+                           can be computed using the even entries (2n)2/4 by (2n + 1)2/4 = (2n)2/4 + n + 4-1.
+                           Therefore, the tables only need to store the even quarter squares, x2 for x up to q/4 (10-bit);
+                           to compute x24-1 mod q, we only look up the truncated number n = x[10 : 1] and then
+                           conditionally adding n + 4-1 if x is odd, as shown in Equation (9).
+
+                           lutx2 mod q(n)  := n2 mod q, 0  n < 210                                     (9)
+
+                           x[10 : 0]24-1 mod q = lutx2 mod q(x[10 : 1]) + x[0](x[10 : 1] + 4-1) mod q
+
+                                 Finally, with the preprocessing and postprocessing in place, we only need a single
+                           1024 × 12 dual-port ROM to store the quarter squares, which fits perfectly in a single
+                           2 KB true dual-port BRAM of Xilinx FPGA. This variant of the butterfly unit is imple-
+                           mented as shown in Figure 4. The modular multiplication is handled by a quarter square
+                           mul-mod submodule, implemented as whon in Figure 5. The wuarter square dual-port
+                           ROM stores the value of lutx2 mod q described in Equation (9). For simplicity, all trivial
+                           reductions modulo q are omitted. This method requires a single true dual-port 2 KB ROM
+                           per butterfly unit.
+
+                           Figure 4. Quarter square butterfly unit.
+Information 2024, 15, 400                                 9 of 15
+
+                           Figure 5. Quarter square Mul-mod submodule.
+
+                           3.1.3. Hybrid Butterfly Unit
+                                 Both the proposed butterfly units shown in Figures 2 and 4 only focus on the forward
+
+                           calculation in Equation (1). A slight modification can be made to allow the butterfly unit
+                           to support both the forward butterfly calculation in Equation (1) and the inverse butterfly
+                           calculation in Equation (2). This modified butterfly unit is called a hybrid butterfly unit
+                           and is implemented as shown in Figure 6.
+
+                           Figure 6. Hybrid butterfly unit.
+
+                                 The zeta[k] multiplier submodule can be any modular multiplication module, such as
+                           the ones in Figure 3 or Figure 5. With intt_sel signal, when asserted, the butterfly unit acts
+                           as an inverse NTT butterfly unit, as in Equation (10).
+
+                           xout      = (yin + xin)2-1
+                           
+
+                             yout    = (yin - xin)[k]2-1  (10)
+
+                                     =1
+                           intt_sel
+
+                                 Similarly, when intt_sel is deasserted, the butterfly unit acts as a forward NTT butterfly
+                           unit, as in Equation (11).
+
+                             xout      = xin + yin[k]
+                             
+
+                             yout      = xin - yin[k]     (11)
+
+                                       =0
+                             intt_sel
+Information 2024, 15, 400                                                                                             10 of 15
+
+                                 Note that the multiplications by the inverse of 2 modulo q in Equation (10), a2-1,
+                           can simply be achieved by realizing that, if a is even, then a2-1  a  1 (mod q),
+
+                           where a  1 is the result of the unsigned binary presentation of a shifted right by 1.
+
+                           It can also be defined  as a  1      :=    a  .  When a is odd,  then  a  +  q  is  even,  and  thus
+                           a2-1  a2-1 + q2-1       (a +  q)2-1        2
+                                                                 (a + q)  1 (mod q).
+
+                           Therefore, all modular multiplications by 2-1 are efficient, as shown in Equation (12).
+
+                                                   a2-1 mod q = (a + qa[0])  1 mod q                                       (12)
+
+                           3.2. Realign Buffer
+
+                                 The butterfly unit requires the data to be accessed in a special way; for instance, we
+                           need to access the coefficient at offset j and offset j + len to perform a single butterfly
+                           operation. Special handling is necessary when working with a single SRAM with a single
+                           read port. To handle this without compromising the throughput of the butterfly unit,
+                           the core's SRAM must support fetching the double-width coefficient or 24 bits. The core
+                           fetches the data at position j, j + 1 in the odd cycles and j + len, j + len + 1 in the very
+                           next even cycles; the data are reordered to interleaved form r[j], r[j + len] and output
+                           to the butterfly unit, as shown in Figure 7. Since each butterfly unit requires a pair of
+                           coefficient and the read port supplies two coefficients on each cycle, with proper data
+                           ordering, a pipelined butterfly unit is fully utilized. The same principle can be applied to
+                           the output of the butterfly unit and the write port of the SRAM; the data are realigned to
+                           contiguous form r[j], r[j + 1] and written back to the SRAM.
+
+                           Figure 7. Proposed data access pattern.
+
+                           4. Experimental Results
+                           4.1. Experimental Setup
+
+                                 To verify the functionality and the performance of the NTT core under ideal conditions,
+                           we created a test bench with the core top as the unit test and interfaced with it using an
+                           AXI-like handshake mechanism. For the input side, after reasserting reset, we provided
+                           the core with a continuous stream of input data as the coefficient of the polynomial on
+                           which we needed the core to operate. Eventually, the core was finished and a data_out_-
+                           valid signal was asserted to provide a stream of output data as the transformed result.
+                           The operation latency was as the number of cycles between the first in_data_valid from the
+                           test bench assertion up until the last assertion of out_data_valid (the previous result data).
+                           Furthermore, the result was then checked with the expected result to make sure the core
+                           was working correctly; this was particularly handy when we were in the process of rapidly
+                           tweaking the core to fix the violated path to achieve higher frequency.
+Information 2024, 15, 400                                                                                                                                             11 of 15
+
+                                 The top verification module is shown in Figure 8. A UART transceiver was used
+                           receive the test data and send back the result, which was then checked against the expected
+                           result. The other end of the UART communication was a desktop computer running a
+                           UART test driver software that transmitted test polynomials randomly and then checked for
+                           the FPGA's NTT result for any error. The test driver algorithm is described in Algorithm 3.
+
+                              Algorithm 3: UART software driver
+                                 Data: Test polynomial t (512 bytes): handle to FPGA UART interface uHandle
+                                 Result: 0 on success, g == NTT(t), -1 otherwise
+                                 g  malloc(512);
+                                 ret  0;
+                                 write(uHandle, t, 512);
+                                 t  NTT(t);
+                                 read(uHandle, g, 512);
+                                 if memcmp(g, t, 512) != 0 then
+                                     ret  -1;
+                                 end
+                                 free(g);
+                                 return ret;
+
+                           Figure 8. Verification module.
+
+                           4.2. Results and Comparison
+
+                           In this work, we had three variants of the NTT core. The first two were the NTT-only
+
+                           cores with each proposed butterfly unit, namely,  and , respectively; these cores only
+
+                           support the forward NTT operation. However, since there are not many method that
+
+                           only support forward NTT, to make our result more comparable, we adopted the hybrid
+
+                           butterfly unit (Figure 6) for the multiplicationless strategy to support both inverse and
+
+                           forward NTT on the fly via an intt_sel switch. This is called the  core; to be more specific,
+
+                           this modification involved the addition of two stages to the pipeline to switch between CT
+
+                           (Algorithm 1) and GS (Algorithm 2) butterfly.
+
+                           The utilization result is reported after being synthesized (with directive AreaOpti-
+
+                           mized_high) with PnR (with directive Explore) on NIST-recommended xc7a100tfgg676-3
+
+                           target device on Vivado 2023.2. The number of cycles was recorded from the experiment
+
+                           test bench and scaled with the maximum frequency on which the core could run to provide
+
+                           the wall-clock time latency Time (µs)  :=     Cycles  of each NTT operation.  The INTT
+                                                                      Freq(MHz)
+Information 2024, 15, 400                                                                                        12 of 15
+
+                                 wall-clock time was omitted for simplicity since it differs from NTT by a few clock cycles
+                                 at most. The cycles reported for "Both NTT and INTT" designs are in NTT/INTT format
+                                 (i.e., 126/127 means 126 clock cycles for NTT and 127 clock cycles for INTT), unless both of
+                                 them are the same or the work did not report it clearly. The ATP metric, where a smaller
+                                 value indicates better hardware utilization efficiency, is calculated as the product of time
+                                 in µs and the respective resource utilized, for instance, LUT ATP := Time (µs) × LUTs and
+                                 FF ATP := Time (µs) × FFs. For the methods that have a configurable number of parallel
+                                 butterfly units, the notation [c] ×n indicates the n-parallel butterfly units design of the
+                                 method [c].
+
+                                       In Table 1, for the NTT-only cores, the  core uses 429 LUTs, 538 FFs, and 4 BRAMs with
+                                 two parallel butterfly units (unroll factor 2), achieving a hardware efficiency of 441.87 LUT
+                                 ATP and 554.14 FF ATP with 459 cycles of latency. The  core, with a single butterfly, using
+                                 only 379 LUTs, 414 FFs, with 910 cycles latency, achieved 792.11 LUT ATP and 865.25 FF
+                                 ATP, which is worse than  but only uses a single BRAM as the ROM quarter square look-up
+                                 table for the butterfly unit. Note that it is possible to not unroll the design  and run with
+                                 just a single butterfly unit; however, this still requires four BRAMs due to the nature of
+                                 the approach, that is, four ROMs shared between two butterflies via two different ports.
+                                 In the  design, each butterfly has a dedicated ROM; hence, there are more rooms to scale
+                                 in the quarter square method. And, finally, the hybrid core , which supports both NTT
+                                 and INTT and is based on the  design, only requires slightly more resources at 541 LUTs
+                                 (595.10 ATP), 680 FFs (748.00 ATP,) and two-cycle latency penalty, where both INTT and
+                                 NTT take 461 cycles to finish.
+
+                                 Table 1. Result comparison with other lightweight NTT-core methods.
+
+               Mode        LUTs  FFs  DSPs  BRAMs     Freq        Cycles   Time   Platform              LUT          FF
+                                            (18 Kb)  (MHz)                 (µs)                          ATP        ATP
+                            429                                      459   1.03     Artix-7            441.87     554.14
+This () ×2                       538  0     4        446
+This () ×1                  379                                      910   2.05     Artix-7            792.11     865.26
+(quarter sq.)                    414  0     1        435
+[23] (FNTT)                9187                                     1410   14.10   Virtex-7           129,536.7  131,524.8
+This () ×2                  541  9328 0     0        100             461   1.10     Artix-7            595.10     748.00
+                            810                                      324   1.46     Artix-7            1182.60    1046.82
+      [27]                  609  680  0     4        417             490   1.91     Artix-7            1163.19    1222.40
+      [21]                 1154                                      456   1.52   Zynq US+             1754.08    1567.12
+      [22]                  360  717  4     2        222             940   8.17     Artix-7            2941.20    1184.65
+   [26] ×1                  737                                      474   4.12     Artix-7            3036.44    1194.80
+   [26] ×2                  948  640  2     4        257             904   4.76     Artix-7            4512.48    1547.00
+   [28] ×1                 2543                                   232/233  1.27     Artix-7            3229.61    1005.84
+   [28] ×4                 9508  1031 2     0        300           69/71   0.40     Artix-7            3803.20    1073.60
+  [28] ×16                 1737                                      512   3.18     Artix-7            5523.66    3711.06
+      [29]                 9298  145  3     2        115            1410   70.50   Virtex-7
+[23] (UNTT)                4969                                   126/127  N/A      Artix-7           655,509.0  662,841.0
+     [24]                  1243  290  6     4        115             933   7.91     Artix-7             N/A        N/A
+     [30]
+                                 325  1     5        190                                               9832.13    4445.42
+
+                                 792  4     18       182
+
+                                 2684 16    70       172
+
+                                 1167 2     3        161
+
+                                 9402 0     0        20
+
+                                 1616 9     35       N/A
+
+                                 562 11     7        118
+
+                                 : Only NTT, : both NTT and INTT
+
+                                       For the NTT standalone cores, although a recent method [23] (FNTT) successfully
+                                 eliminated the usage of any DSP or BRAM, the approach heavily hinders the LUT and FF
+                                 utilization and frequency, which can only run at about 100 MHz even on the higher-end
+                                 Virtex-7 platform. Our  design is able to achieve more than 10× lower latency and more
+Information 2024, 15, 400                                                                                                                                             13 of 15
+
+                           than 200× smaller ATPs than [23] (FNTT). Furthermore, even the  design has almost 7×
+                           better latency and more than 100× better ATPs than the FNTT method [23] with the cost of
+                           only a single additional 18 Kb BRAM.
+
+                                 For the hybrid design (NTT- and INTT-capable) comparison, thanks to the highly
+                           pipelined nature of the butterfly unit, our  design can run at a higher frequency (417 MHz)
+                           on the Artix-7 platform than the other methods, including [22] (300 MHz), which uses a
+                           much more recent and faster Zynq Ultrascale+ platform. The newly proposed modular
+                           multiplication methods can achieve better latency (1.10 µs) than all other methods except
+                           the fastest ×16 configuration in [28] (0.40 µs). However, [28] uses nearly 17.57× more LUTs
+                           and 17.5× more BRAMs than ours while being only 2.75× faster. Therefore, we achieved a
+                           6.39× more efficient LUT ATP and 1.44× more efficient FF ATP than [28] ×16.
+
+                                 Compared to [26], which employs the same parallel butterflies strategy, our method
+                           achieved 3.71× and 1.37× better LUT and FF ATP in the ×1 configuration and 5.10× and
+                           1.60× better LUT and FF ATP in the ×2 configuration.
+
+                                 Our design also achieved about 2× better LUT ATP and 1.5× better FF ATP than [21,27].
+                           In [27], the authors used two fewer BRAMs but at the cost of four DSPs and much higher
+                           LUTs and FFs usage, and latency was higher. The same apply for [22,28], which use fewer
+                           BRAMs at the expense of significantly more LUTs/FFs and two DSPs; hence, these methods
+                           are less efficient than our work in LUT and FF ATP.
+
+                                 In [24], the authors did not report the exact maximum frequency that their design is
+                           able to run. Assuming that it could run at the same frequency as our  design at 417 MHz,
+                           which is a highly unlikely scenario given the nearly 5000 LUTs and 35 BRAMs utilized, the
+                           method in [24] would have 3.66× better latency than  while using 9.18× more LUTs and
+                           2.38× more FFs and thus would be more efficient in terms of FFs ATP but significantly
+                           worse in term of LUTs ATP.
+
+                           5. Conclusions
+
+                                 In this paper, we proposed a new NTT architecture with a unique data access pattern
+                           along with a reorder buffer, making it suitable for a single, shallow-depth, simple and dual-
+                           port SRAM; in the FPGA architecture, this was mapped to abundant LUT-RAM resources.
+                           This allowed us to unroll the inner loop of the NTT by a factor of two and beyond (×4, ×8)
+                           to achieve lower latency without using significantly more resources in the control path.
+                           Furthermore, we proposed two new look-up table-based butterfly units, namely, multipli-
+                           cationless and quarter square multiplication, both with different tradeoffs in LUT/BRAM
+                           usage and eliminate the need for computing the full 12 × 12 product and subsequently the
+                           need for DSP utilization. Thanks to the new butterfly units, our whole design runs at a
+                           higher frequency (417 MHz), has good latency while maintaining excellent hardware usage
+                           efficiency (LUT/FF ATP), and is suitable for embedding in high-performance, lightweight
+                           CRYSTALS Kyber accelerators for more efficient polynomial multiplication.
+
+                           Author Contributions: Conceptualization, B.K.-D.-N.; Validation, B.K.-D.-N., N.T.B. and H.P.N.;
+                           Investigation, B.K.-D.-N., N.T.B. and H.P.N.; Writing--original draft, C.P.-Q.; Writing--review &
+                           editing, C.P.-Q., N.-T.T. and T.-T.H.; Supervision, C.P.-Q., N.-T.T., T.-T.H. and C.-K.P. All authors have
+                           read and agreed to the published version of the manuscript.
+
+                           Funding: This research is funded by Vietnam National University Ho Chi Minh City (VNU-HCM)
+                           under grant number NCM2021-20-02. We acknowledge Ho Chi Minh City University of Technology
+                           (HCMUT), VNU-HCM, for supporting this study.
+
+                           Informed Consent Statement: Not applicable.
+
+                           Data Availability Statement: The data presented in this study are available on request from the
+                           corresponding author.
+
+                           Conflicts of Interest: The authors declare no conflict of interest.
+Information 2024, 15, 400  14 of 15
+
+References
+
+1. Shor, P.W. Polynomial-Time Algorithms for Prime Factorization and Discrete Logarithms on a Quantum Computer.
+       SIAM J. Sci. Statist. Comput. 1997, 26, 1484­1509. [CrossRef]
+
+2. Grover, L.K. A Fast Quantum Mechanical Algorithm for Database Search. In Proceedings of the Twenty-Eighth Annual ACM
+       Symposium on Theory of Computing, Philadelphia, PA, USA, 22­24 May 1996; pp. 212­219.
+
+3. Rivest, R.L.; Shamir, A.; Adleman, L. A Method for Obtaining Digital Signatures and Public-key Cryptosystems. Commun. ACM
+       1978, 21, 120­126. [CrossRef]
+
+4. Miller, V.S. Use of Elliptic Curves in Cryptography. In Proceedings of the Advances in Cryptology (CRYPTO), Santa Barbara, CA,
+       USA, 18­22 August 1985; pp. 417­426.
+
+5. Bos, J.; Ducas, L.; Kiltz, E.; Lepoint, T.; Lyubashevsky, V.; Schanck, J.M.; Schwabe, P.; Seiler, G.; Stehle, D.D. CRYSTALS--Kyber:
+       A CCA-Secure Module-Lattice-Based KEM. In Proceedings of the European Symposium on Security and Privacy (EuroS&P),
+       London, UK, 24­26 April 2018; pp. 353­367.
+
+6. Lyubashevsky, V.; Peikert, C.; Regev, O. On Ideal Lattices and Learning with Errors Over Rings. In Proceedings of the Advances
+       in Cryptology (EUROCRYPT), Santa Barbara, CA, USA, 15­19 August 2010; pp. 1­23.
+
+7. Lindner, R.; Peikert, C. Better Key Sizes (and Attacks) for LWE-Based Encryption. In Proceedings of the Topics in Cryptology
+       (CT-RSA), San Francisco, CA, USA, 14­18 February 2011; pp. 319­339.
+
+8. Das, M.; Jajodia, B.B. Hardware Design of Optimized Large Integer Schoolbook Polynomial Multiplications on FPGA. In Proceedings
+       of the International SoC Design Conference (ISOCC), Gangneung-si, Republic of Korea, 19­22 October 2022; pp. 65­66.
+
+9. Zhang, Y.; Cui, Y.; Ni, Z.; Kundi, D.; Liu, D.; Liu, W. A Lightweight and Efficient Schoolbook Polynomial Multiplier for Saber.
+       In Proceedings of the IEEE International Symposium on Circuits and Systems (ISCAS), Austin, TX, USA, 27 May­1 June 2022;
+       pp. 2251­2255.
+
+10. Birgani, Y.A.; Timarchi, S.; Khalid, A. Area-Time-Efficient Scalable Schoolbook Polynomial Multiplier for Lattice-Based Cryptog-
+       raphy. IEEE Trans. Circ. Syst. II Express Briefs (TCAS-II) 2022, 69, 5079­5083. [CrossRef]
+
+11. Yang, S.; Liu, D.; Hu, A.; Li, A.; Zhang, J.; Li, X.; Lu, J.; Mo, C. An Instruction-configurable Post-quantum Cryptographic Processor
+       Towards NTRU. In Proceedings of the Asian Hardware Oriented Security and Trust Symposium (AsianHOST), Singapore, 14­16
+       December 2022; pp. 1­6.
+
+12. Wong, Z.Y.; Wong, D.C.K.; Lee, W.K.; Mok, K.M.; Yap, W.S.; Khalid, A. KaratSaber: New Speed Records for Saber Polynomial
+       Multiplication Using Efficient Karatsuba FPGA Architecture. IEEE Trans. Comput. 2023, 72, 1830­1842. [CrossRef]
+
+13. Ghosh, A.; Mera, J.M.B.; Karmakar, A.; Das, D.; Ghosh, S.; Verbauwhede, I.; Sen, S. A 334 µW 0.158 mm2 ASIC for Post-Quantum
+       Key-Encapsulation Mechanism Saber With Low-Latency Striding Toom­Cook Multiplication. IEEE J. Solid-State Circ. 2023,
+       58, 2383­2398. [CrossRef]
+
+14. Wang, J.; Yang, C.; Zhang, F.; Meng, Y.; Su, Y. TCPM: A Reconfigurable and Efficient Toom-Cook-Based Polynomial Multiplier Over
+       Rings Using a Novel Compressed Postprocessing Algorithm. IEEE Trans. Very Large Scale Integr. (Vlsi) Syst. 2023, 31, 1153­1166.
+       [CrossRef]
+
+15. Ye, Z.; Cheung, R.; Huang, K. PipeNTT: A Pipelined Number Theoretic Transform Architecture. IEEE Trans. Circ. Syst. II Express
+       Briefs (TCAS-II) 2022, 69, 4068­4072. [CrossRef]
+
+16. Xin, M.; Xu, C.; Huang, K.; Yu, H.; Yao, H.; Jiang, X.; Liu, D. Implementation of Number Theoretic Transform Unit for Polynomial
+       Multiplication of Lattice-based Cryptography. In Proceedings of the International Conference on Consumer Electronics and
+       Computer Engineering (ICCECE), Guangzhou, China, 14­16 January 2022; pp. 323­327.
+
+17. Nguyen, T.H.; Binh, K.D.N.; Pham, C.K.; Hoang, T.T. High-Speed NTT Accelerator for CRYSTAL-Kyber and CRYSTAL-Dilithium.
+       IEEE Access 2024, 12, 34918­34930. [CrossRef]
+
+18. Gauss, C.F. Nachlass: Theoria Interpolationis Methodo Nova Tractata. Carl Friedrich Gauss 1866, 3, 265­303.
+19. Pollard, J.M. The Fast Fourier Transform in a Finite Field. Math. Comput. 1971, 25, 365­374. [CrossRef]
+20. Cooley, J.W.; Tukey, J.W. An Algorithm for the Machine Calculation of Complex Fourier Series. Math. Comput. 1965, 19, 297­301.
+
+       [CrossRef]
+21. Zhang, C.; Liu, D.; Liu, X.; Zou, X.; Niu, G.; Liu, B.; Jiang, Q. Towards Efficient Hardware Implementation of NTT for Kyber on
+
+       FPGAs. In Proceedings of the 2021 IEEE International Symposium on Circuits and Systems (ISCAS), Daegu, Republic of Korea,
+       22­28 May 2021.
+22. Ni, Z.; Khalid, A.; Liu, W.; O'Neill, M. Towards a Lightweight CRYSTALS-Kyber in FPGAs: An Ultra-lightweight BRAM-free
+       NTT Core. In Proceedings of the IEEE International Symposium on Circuits and Systems 2023, Monterey, CA, USA, 21­25
+       May 2023.
+23. Imran, M.; Khan, S.; Khalid, A.; Rafferty, C.; Shah, Y.A.; Pagliarini, S.; Rashid, M.; O'Neill, M. Evaluating NTT/INTT Implement-
+       ation Styles for Post-Quantum Cryptography. IEEE Embed. Syst. Lett. 2024, early access. [CrossRef]
+24. Yang, H.; Chen, R.; Wang, Q.; Wu, Z.; Peng, W. Hardware Acceleration of NTT-Based Polynomial Multiplication in CRYSTALS-
+       Kyber. In Information Security and Cryptology; Ge, C., Yung, M., Eds.; Springer: Singapore, 2024; pp. 111­129.
+25. Longa, P.; Naehrig, M. Speeding Up the Number Theoretic Transform for Faster Ideal Lattice-Based Cryptography. Cryptology
+       ePrint Archive, Paper 2016/504, 2016. Available online: https://eprint.iacr.org/2016/504 (accessed on 7 July 2024).
+26. Niasar, M.B.; Azarderakhsh, R.; Kermani, M.M. Instruction-Set Accelerated Implementation of CRYSTALS-Kyber. IEEE Trans.
+       Circ. Syst. I Regul. Pap. (TCAS-I) 2021, 68, 4648­4659. [CrossRef]
+Information 2024, 15, 400  15 of 15
+
+27. Bisheh-Niasar, M.; Azarderakhsh, R.; Mozaffari-Kermani, M. High-Speed NTT-based Polynomial Multiplication Accelerator for
+       Post-Quantum Cryptography. In Proceedings of the 2021 IEEE 28th Symposium on Computer Arithmetic (ARITH), Lyngby,
+       Denmark, 14­16 June 2021.
+
+28. Yaman, F.; Mert, A.C.; Öztürk, E.; Savas, E. A Hardware Accelerator for Polynomial Multiplication Operation of CRYSTALS-
+       KYBER PQC Scheme. In Proceedings of the 2021 Design, Automation & Test in Europe Conference & Exhibition (DATE), Grenoble,
+       France, 1­5 February 2021.
+
+29. Xing, Y.; Li, S. A Compact Hardware Implementation of CCA-Secure Key Exchange Mechanism CRYSTALS-KYBER on FPGA.
+       IACR Trans. Cryptogr. Hardw. Embed. Syst. 2021, 2021, 328­356 [CrossRef]
+
+30. Matteo, S.D.; Sarno, I.; Saponara, S. CRYPHTOR: A Memory-Unified NTT-Based Hardware Accelerator for Post-Quantum
+       CRYSTALS Algorithms. IEEE Access 2024, 12, 25501­25511. [CrossRef]
+
+Disclaimer/Publisher's Note: The statements, opinions and data contained in all publications are solely those of the individual
+author(s) and contributor(s) and not of MDPI and/or the editor(s). MDPI and/or the editor(s) disclaim responsibility for any injury to
+people or property resulting from any ideas, methods, instructions or products referred to in the content.
+

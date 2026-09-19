@@ -1,0 +1,206 @@
+/*
+ * halfmul_batch_tb.v —— 批量对拍 RTL 的**半程多项式乘法**（ALL_HALF 通路）
+ *
+ *   A 在时域、B 已在 NTT 域  → FNTT(A) → PWM2 → INTT → 时域结果
+ *
+ * 与 fullmul_batch_tb.v 的差别只有两处：
+ *   1. **只做一次 FNTT**（只对 A）。B 已经是 NTT 域，直接进点乘。
+ *      ML-KEM 解封装里对已展开的密钥用的就是这种形态。
+ *   2. **B 用 load_b_i 灌**（"i" = 给 INTT 用），交织顺序 0,2,1,3,...，
+ *      硬件写进各 BRAM 的**高半区** —— 那正是 PWM2 期望在 B 侧找到数据的位置。
+ *      用 load_b_f 灌会静默错位（数据全在，位置不对），比对时表现为全错。
+ *
+ * 控制时序照抄作者版 KyberHPM1PE_test_ALL_HALF.v，改动同 fullmul 版：
+ * 16 组循环、有界等待、WAIT_DONE 任务。
+ *
+ * ⭐ 同 fullmul：这条链上也没有缩放因子，期望值直接逐比特比。
+ */
+
+`timescale 1ns / 1ps
+
+module halfmul_batch_tb();
+
+	parameter HP = 5;
+	parameter FP = (2*HP);          // 一个流水线周期
+	parameter PE_NUMBER = 1;
+	parameter NV = 16;              // 向量组数
+	parameter TIMEOUT = 3000;       // 单次等 done 的护栏（最长 FNTT_CC=904）
+
+	reg                     clk,reset;
+	reg                     load_a_f,load_a_i;
+	reg                     load_b_f,load_b_i;
+	reg                     read_a,read_b;
+	reg                     start_ab;
+	reg                     start_fntt,start_pwm2,start_intt;
+	reg  [12*PE_NUMBER-1:0] din;
+	wire [12*PE_NUMBER-1:0] dout;
+	wire                    done;
+
+	always #HP clk = ~clk;
+
+	// ------------------------------------------------------------ 数据
+	reg [11:0] vin_a [0:NV*256-1];   // 时域
+	reg [11:0] vin_b [0:NV*256-1];   // NTT 域
+	reg [11:0] vexp  [0:NV*256-1];   // 时域（乘积）
+
+	initial begin
+		$readmemh("batch/halfmul_a.txt"  , vin_a);
+		$readmemh("batch/halfmul_b.txt"  , vin_b);
+		$readmemh("batch/halfmul_exp.txt", vexp);
+	end
+
+	// ------------------------------------------------------------ 测试
+	integer v,k,m,e,guard,noise;
+	integer total_err;
+	integer timed_out;
+	reg [11:0] fout [0:255];
+
+	task WAIT_DONE;
+		begin
+			guard = 0;
+			while (done == 1'b0 && guard < TIMEOUT) begin
+				#FP;
+				guard = guard + 1;
+			end
+			timed_out = (guard >= TIMEOUT);
+		end
+	endtask
+
+	initial begin: MAIN
+		clk = 0; reset = 0;
+		load_a_f = 0; load_a_i = 0;
+		load_b_f = 0; load_b_i = 0;
+		read_a   = 0; read_b   = 0;
+		start_ab = 0;
+		start_fntt = 0; start_pwm2 = 0; start_intt = 0;
+		din = 0;
+
+		#200; reset = 1;
+		#200; reset = 0;
+		#100;
+		#1000;
+
+		total_err = 0;
+
+		for (v = 0; v < NV; v = v + 1) begin
+			// ---- 灌 A（load_a_f，顺序）--------------------------
+			load_a_f = 1;
+			#FP;
+			load_a_f = 0;
+
+			for (k = 0; k < 256; k = k + PE_NUMBER) begin
+				din = vin_a[v*256+k]; #FP;
+			end
+
+			#(2*FP);
+
+			// ---- 灌 B（load_b_i，交织顺序）⭐ 与 fullmul 不同 -----
+			load_b_i = 1;
+			#FP;
+			load_b_i = 0;
+
+			for (k = 0; k < 64; k = k + PE_NUMBER) begin
+				din = vin_b[v*256+4*k+0]; #FP;
+				din = vin_b[v*256+4*k+2]; #FP;
+				din = vin_b[v*256+4*k+1]; #FP;
+				din = vin_b[v*256+4*k+3]; #FP;
+			end
+
+			#(2*FP);
+
+			// ---- FNTT(A)（只有这一次）--------------------------
+			start_fntt = 1; start_ab = 0;
+			#FP;
+			start_fntt = 0; start_ab = 0;
+			#(2*FP);
+			WAIT_DONE;
+			if (timed_out) begin
+				$display("向量 %2d: ❌ FNTT(A) 超时", v);
+				total_err = total_err + 256;
+			end
+
+			// ---- PWM2（点乘）-----------------------------------
+			start_pwm2 = 1; start_ab = 0;
+			#FP;
+			start_pwm2 = 0; start_ab = 0;
+			#(2*FP);
+			WAIT_DONE;
+			if (timed_out) begin
+				$display("向量 %2d: ❌ PWM2 超时", v);
+				total_err = total_err + 256;
+			end
+
+			// ---- INTT ------------------------------------------
+			start_intt = 1; start_ab = 0;
+			#FP;
+			start_intt = 0; start_ab = 0;
+			#(2*FP);
+			WAIT_DONE;
+			if (timed_out) begin
+				$display("向量 %2d: ❌ INTT 超时", v);
+				total_err = total_err + 256;
+			end
+
+			if (timed_out) begin
+				#(10*FP);
+			end
+			else begin
+				#FP;
+
+				// ---- 读出（顺序 m, m+128）----------------------
+				read_a = 1;
+				#FP;
+				read_a = 0;
+				#(2*FP);
+
+				for (m = 0; m < 128; m = m + PE_NUMBER) begin
+					fout[m]     = dout; #FP;
+					fout[m+128] = dout; #FP;
+				end
+
+				#100;
+
+				// ---- 比对 -------------------------------------
+				e = 0; noise = 0;
+				for (m = 0; m < 256; m = m + 1) begin
+					if (fout[m] == vexp[v*256+m])
+						e = e + 1;
+					else begin
+						if (noise < 3) begin
+							$display("  向量 %2d [%3d]: 期望 %h 得到 %h", v, m, vexp[v*256+m], fout[m]);
+							noise = noise + 1;
+						end
+						total_err = total_err + 1;
+					end
+				end
+
+				if (e == 256)
+					$display("向量 %2d: ✅ 256/256", v);
+				else
+					$display("向量 %2d: ❌ %0d/256", v, e);
+
+				#(5*FP);
+			end
+		end
+
+		$display("");
+		if (total_err == 0)
+			$display("★ 全部 %0d 组半程乘法（HALF）通过 —— FNTT→PWM2→INTT 端到端与参考实现逐比特一致", NV);
+		else
+			$display("✗ 共 %0d 个系数不符", total_err);
+
+		$finish;
+	end
+
+	// ------------------------------------------------------------ UUT
+	KyberHPM1PE uut (clk,reset,
+		             load_a_f,load_a_i,
+		             load_b_f,load_b_i,
+		             read_a,read_b,
+	                 start_ab,
+		             start_fntt,start_pwm2,start_intt,
+		             din,
+		             dout,
+		             done);
+
+endmodule

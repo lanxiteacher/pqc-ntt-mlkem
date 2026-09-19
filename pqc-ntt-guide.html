@@ -1,0 +1,1224 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ML-KEM 加速核备赛指南</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground: #E9EBEE;
+    --surface: #FFFFFF;
+    --surface-2: #F3F5F7;
+    --ink: #151A20;
+    --ink-2: #3A434F;
+    --muted: #6B7583;
+    --rule: #D2D7DE;
+    --rule-soft: #E2E6EB;
+    --accent: #0C5C63;
+    --accent-soft: #DCEBEC;
+    --warn: #8A4A10;
+    --warn-soft: #F6E7D6;
+    --ok: #325C3C;
+    --ok-soft: #DFEBE1;
+
+    --f-display: "Fraunces", "Songti SC", Georgia, serif;
+    --f-body: "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --f-mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+
+    --measure: 68ch;
+    --pad: clamp(1.25rem, 4vw, 3.5rem);
+    --sp: clamp(2.5rem, 6vw, 5rem);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1216;
+      --surface: #161C22;
+      --surface-2: #1B222A;
+      --ink: #E4E8EC;
+      --ink-2: #BAC3CD;
+      --muted: #8B96A3;
+      --rule: #2B343E;
+      --rule-soft: #222A33;
+      --accent: #5FBFC4;
+      --accent-soft: #123336;
+      --warn: #D9A05B;
+      --warn-soft: #332614;
+      --ok: #7FB98C;
+      --ok-soft: #1C2E21;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0E1216;
+    --surface: #161C22;
+    --surface-2: #1B222A;
+    --ink: #E4E8EC;
+    --ink-2: #BAC3CD;
+    --muted: #8B96A3;
+    --rule: #2B343E;
+    --rule-soft: #222A33;
+    --accent: #5FBFC4;
+    --accent-soft: #123336;
+    --warn: #D9A05B;
+    --warn-soft: #332614;
+    --ok: #7FB98C;
+    --ok-soft: #1C2E21;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.7;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 var(--pad) 6rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  @media (min-width: 1020px) {
+    .wrap {
+      grid-template-columns: 210px minmax(0, 1fr);
+      column-gap: clamp(2.5rem, 5vw, 4.5rem);
+      align-items: start;
+    }
+    .masthead { grid-column: 1 / -1; }
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: clamp(3rem, 9vw, 6rem) 0 clamp(2rem, 5vw, 3rem);
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: var(--sp);
+  }
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+  }
+
+  .eyebrow span { white-space: nowrap; }
+
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: clamp(2rem, 5.2vw, 3.15rem);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 1.1rem;
+    max-width: 20ch;
+  }
+
+  .standfirst {
+    font-size: clamp(1.02rem, 1.7vw, 1.18rem);
+    color: var(--ink-2);
+    max-width: 56ch;
+    margin: 0 0 2rem;
+    text-wrap: pretty;
+  }
+
+  .factbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .fact {
+    font-family: var(--f-mono);
+    font-size: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.3rem 0.6rem;
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+
+  .fact b { color: var(--accent); font-weight: 600; }
+
+  /* ---------- nav ---------- */
+
+  .toc { display: none; }
+
+  @media (min-width: 1020px) {
+    .toc {
+      display: block;
+      position: sticky;
+      top: 2.5rem;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      border-left: 1px solid var(--rule);
+      padding-left: 1.1rem;
+    }
+    .toc-title {
+      font-family: var(--f-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 0.85rem;
+    }
+    .toc ol {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .toc a {
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      gap: 0.55rem;
+      border-left: 2px solid transparent;
+      margin-left: -1.1rem;
+      padding-left: 1.1rem;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .toc a:hover, .toc a:focus-visible {
+      color: var(--ink);
+      border-left-color: var(--accent);
+    }
+    .toc a span {
+      font-family: var(--f-mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      padding-top: 0.06em;
+    }
+  }
+
+  /* ---------- content ---------- */
+
+  main { min-width: 0; }
+
+  section { margin-bottom: var(--sp); scroll-margin-top: 1.5rem; }
+
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: clamp(1.35rem, 2.6vw, 1.72rem);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 1.1rem;
+    padding-top: 0.9rem;
+    border-top: 2px solid var(--ink);
+    display: flex;
+    gap: 0.7rem;
+    align-items: baseline;
+  }
+
+  h2 .num {
+    font-family: var(--f-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--accent);
+    flex: none;
+    padding-top: 0.3em;
+  }
+
+  h3 {
+    font-family: var(--f-body);
+    font-weight: 600;
+    font-size: 1.02rem;
+    letter-spacing: -0.005em;
+    margin: 2.2rem 0 0.7rem;
+    color: var(--ink);
+  }
+
+  p, li { max-width: var(--measure); text-wrap: pretty; }
+
+  p { margin: 0 0 1.05rem; }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  strong { font-weight: 600; }
+
+  code {
+    font-family: var(--f-mono);
+    font-size: 0.86em;
+    background: var(--surface-2);
+    border: 1px solid var(--rule-soft);
+    border-radius: 3px;
+    padding: 0.08em 0.34em;
+  }
+
+  ul, ol { padding-left: 1.35rem; margin: 0 0 1.05rem; }
+  li { margin-bottom: 0.4rem; }
+  li::marker { color: var(--accent); }
+
+  /* ---------- confidence chips ---------- */
+
+  .chip {
+    display: inline-block;
+    width: 0.6em;
+    height: 0.6em;
+    border-radius: 50%;
+    margin-left: 0.32em;
+    vertical-align: 0.02em;
+    flex: none;
+  }
+  .chip.ok   { background: var(--ok); }
+  .chip.todo { background: var(--warn); }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    margin: 0 0 1.6rem;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 0.45rem; }
+  .legend .chip { margin-left: 0; width: 0.6em; height: 0.6em; }
+
+  /* ---------- tables ---------- */
+
+  .tscroll {
+    overflow-x: auto;
+    margin: 1.4rem 0 1.8rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.88rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  th {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 0.7rem 0.95rem;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+    background: var(--surface-2);
+  }
+
+  td {
+    padding: 0.62rem 0.95rem;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  td.mono, th.mono, .mono { font-family: var(--f-mono); font-size: 0.84rem; }
+
+  .num-strong { font-family: var(--f-mono); font-weight: 600; color: var(--accent); }
+
+  /* ---------- callouts ---------- */
+
+  .callout {
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    border-radius: 0 4px 4px 0;
+    padding: 1.15rem 1.35rem;
+    margin: 1.5rem 0;
+  }
+  .callout > :last-child { margin-bottom: 0; }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.key  { border-left-color: var(--accent); background: var(--accent-soft); }
+
+  .callout-label {
+    font-family: var(--f-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.55rem;
+  }
+  .callout.warn .callout-label { color: var(--warn); }
+
+  /* ---------- traps ---------- */
+
+  .traps { display: flex; flex-direction: column; gap: 1.1rem; margin: 1.5rem 0; }
+
+  .trap {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--warn);
+    border-radius: 0 0 4px 4px;
+    padding: 1.2rem 1.35rem;
+  }
+  .trap > :last-child { margin-bottom: 0; }
+  .trap h4 {
+    font-family: var(--f-body);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.6rem;
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+  }
+  .trap h4 .tn {
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    color: var(--warn);
+    flex: none;
+  }
+
+  /* ---------- code ---------- */
+
+  pre {
+    font-family: var(--f-mono);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1rem 1.15rem;
+    overflow-x: auto;
+    margin: 1.2rem 0 1.6rem;
+  }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  .ascii {
+    font-family: var(--f-mono);
+    font-size: 0.74rem;
+    line-height: 1.5;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1.1rem;
+    overflow-x: auto;
+    margin: 1.4rem 0;
+    white-space: pre;
+    color: var(--ink-2);
+  }
+
+  /* ---------- roadmap ---------- */
+
+  .road { display: flex; flex-direction: column; gap: 0; margin: 1.5rem 0; }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+    padding: 1.05rem 0 1.05rem 1.5rem;
+    border-left: 2px solid var(--rule);
+    position: relative;
+  }
+  .stage:last-child { border-left-color: transparent; }
+
+  .stage::before {
+    content: "";
+    position: absolute;
+    left: -6px; top: 1.5rem;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--ground);
+    border: 2px solid var(--accent);
+  }
+  .stage.gate::before { background: var(--warn); border-color: var(--warn); }
+  .stage.final::before { background: var(--accent); }
+
+  @media (min-width: 620px) {
+    .stage { grid-template-columns: 104px minmax(0,1fr); gap: 0 1.25rem; align-items: baseline; }
+  }
+
+  .stage-when {
+    font-family: var(--f-mono);
+    font-size: 0.78rem;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .stage.gate .stage-when { color: var(--warn); }
+  .stage-what { font-size: 0.93rem; line-height: 1.55; }
+  .stage-what b { font-weight: 600; }
+  .stage-note {
+    font-size: 0.84rem;
+    color: var(--muted);
+    margin-top: 0.25rem;
+  }
+
+  /* ---------- footer ---------- */
+
+  .colophon {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.5rem;
+    margin-top: var(--sp);
+    font-size: 0.82rem;
+    color: var(--muted);
+    max-width: var(--measure);
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">
+      <span>全国大学生嵌入式芯片与系统设计竞赛 '2026</span>
+      <span>AMD 赛道 · 3.3 自主选题（初级组）</span>
+    </p>
+    <h1>面向 ML-KEM 的 NTT 硬件加速核</h1>
+    <p class="standfirst">
+      选题已锁定。这份文档是执行依据：数学常数、系统架构、七周路线、降级链、
+      以及一份踩坑清单 —— 前三条是写这份文档时真实踩出来的。
+    </p>
+    <div class="factbar">
+      <span class="fact">平台 <b>XC7Z020CLG400-2</b></span>
+      <span class="fact">q = <b>3329</b></span>
+      <span class="fact">n = <b>256</b></span>
+      <span class="fact">提交 <b>≈11/07</b></span>
+      <span class="fact">报名截止 <b>9/22</b></span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <p class="toc-title">目录</p>
+    <ol>
+      <li><a href="#c1"><span>01</span>为什么是这个题</a></li>
+      <li><a href="#c2"><span>02</span>范围界定</a></li>
+      <li><a href="#c3"><span>03</span>数学与常数</a></li>
+      <li><a href="#c4"><span>04</span>系统架构</a></li>
+      <li><a href="#c5"><span>05</span>平台与环境</a></li>
+      <li><a href="#c6"><span>06</span>七周路线</a></li>
+      <li><a href="#c7"><span>07</span>踩坑清单</a></li>
+      <li><a href="#c8"><span>08</span>交付物</a></li>
+      <li><a href="#c9"><span>09</span>待核实</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="c1">
+      <h2><span class="num">01</span>为什么是这个题</h2>
+
+      <p>
+        <strong>做一个 256 点的 ML-KEM 数论变换（NTT）硬件核：多项式进来，变换结果出去，
+        用官方测试向量逐点验证它对不对。</strong>
+        它小到能在七周内做完，又完整到能被官方标准独立判定对错 ——
+        这是本选题唯一、也是最大的价值。
+      </p>
+
+      <h3>赛道判断：你们之前搞错了</h3>
+      <p>
+        旧档案里写的赛道结构（基础能力 / 综合能力赛道）是 <strong>2025 年</strong>的。
+        2026 年指南的 AMD 赛道是三个，且<strong>「算法硬件加速」不再是独立赛道</strong>。
+      </p>
+
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr><th>赛道</th><th>核心考察</th><th>可用性</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">3.1 RTL/HLS 本地智能体</td>
+              <td>用本地开源大模型做硬件设计智能体，比通过率</td>
+              <td>✗ 需 Radeon 显卡；40% 分数压在隐藏评测集，零基础队风险是「接近零分」</td>
+            </tr>
+            <tr>
+              <td class="mono">3.2 具身智能</td>
+              <td>AI PC 端侧推理 + FPGA 实时控制，真实物理任务闭环</td>
+              <td>✗ 必须 AMD Ryzen AI PC；明写「FPGA 不能只作串口/GPIO 转接板」</td>
+            </tr>
+            <tr>
+              <td class="mono"><strong>3.3 自主选题（初级组）</strong></td>
+              <td>完整 FPGA 作品：功能正确性、性能与资源、创新性</td>
+              <td><strong>✓ 就是这里</strong>，器件范围含 Zynq-7000 SoC</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warn">
+        <span class="callout-label">报名前必查</span>
+        <p>
+          指南正文表格写「初级组：大学一年级至三年级在读本科生」。你们确认全队大一~大三、
+          队内无大四或研究生 → <strong>归初级组</strong>。
+          报名按队内最高学历归组，<strong>报名后不可更改</strong>。
+        </p>
+      </div>
+
+      <h3>评分权重：决定选题的那个 30 分</h3>
+
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr><th>评测项</th><th class="mono">权重</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>创新性与应用价值</strong></td><td class="num-strong">30</td></tr>
+            <tr><td>性能与资源优化效果</td><td class="num-strong">20</td></tr>
+            <tr><td>功能正确性与设计完整性</td><td class="num-strong">20</td></tr>
+            <tr><td>大模型协作与技能包</td><td class="num-strong">15</td></tr>
+            <tr><td>文档质量与可复现性</td><td class="num-strong">15</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        创新性单点占 30 分 —— 这意味着<strong>「选题的故事能不能立住」比「跑得多快」更值钱</strong>。
+        这直接改变了四个候选的排序。
+      </p>
+
+      <h3>为什么是 PQC-NTT，而不是原先推荐的 ESN</h3>
+      <p>
+        可行性分析推荐 ESN，理由是「11/7 能交货」——
+        那个判断在当时缺了评分权重这一维。补上后，决定性的一击来自可行性分析自己：
+      </p>
+
+      <div class="callout key">
+        <span class="callout-label">关键推理</span>
+        <p>
+          串口带宽比计算核慢 3–4 个数量级，所以
+          <strong>「快多少倍」的叙事在你们这套载体上天生站不住</strong>。
+          既然倍率讲不响，就必须换一个不靠倍率的故事 ——
+          而 NTT 恰好有：<strong>常量时间实现天然抗侧信道</strong>。
+          硬件的数据无关时序是软件 KEM 实现做不到的，这个卖点比「快 N 倍」硬得多，
+          且直接落在 30 分的创新性上。
+        </p>
+      </div>
+
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>候选</th>
+              <th>创新性 (30)</th>
+              <th>性能/资源 (20)</th>
+              <th>功能正确性 (20)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono"><strong>A PQC-NTT</strong></td>
+              <td>★★★★★</td>
+              <td>★★★★</td>
+              <td><strong>★★★★★</strong> 官方 KAT</td>
+            </tr>
+            <tr>
+              <td class="mono">B ESN</td>
+              <td>★★ 「这不就是 RNN」</td>
+              <td>★★★</td>
+              <td>★★★ 只有自建 golden model</td>
+            </tr>
+            <tr>
+              <td class="mono">C SNN</td>
+              <td>★★★★</td>
+              <td>★★ DSP 易打满</td>
+              <td>★★★</td>
+            </tr>
+            <tr>
+              <td class="mono">D HDC</td>
+              <td>★★★★</td>
+              <td>★★★</td>
+              <td>★★★★</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>被否决的方向，以及为什么</h3>
+      <p>
+        <strong>视觉防抖 EIS。</strong>开源界端到端代码确实不存在（实测 0~2 个不相关结果），
+        创新性很强 —— 但它输在另外三处：① 没有权威正确性判据（「画面看着稳」不是判据）；
+        ② 板级工作量（摄像头 I2C、DVP 或 MIPI 时序、DDR/VDMA、HDMI 时序）正是 AI 帮不了的部分；
+        ③ 厂商例程缺失。<strong>它输在「功能正确性」和「AI 杠杆」，不是输在「它是视觉」。</strong>
+      </p>
+    </section>
+
+    <section id="c2">
+      <h2><span class="num">02</span>范围界定</h2>
+
+      <p>把范围钉死，是这份文档最重要的功能之一。</p>
+
+      <h3>做</h3>
+      <div class="tscroll">
+        <table>
+          <thead><tr><th>模块</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">模乘单元</td><td>Montgomery 模乘 + 模约减（Barrett），<code>a·b·R⁻¹ mod q</code></td></tr>
+            <tr><td class="mono">蝶形单元</td><td>Cooley-Tukey / Gentleman-Sande 蝶形，可参数化流水级数</td></tr>
+            <tr><td class="mono">NTT 核</td><td>256 点正变换，<strong>参数化折叠度 k</strong>（并行蝶形数）</td></tr>
+            <tr><td class="mono">INTT 核</td><td>256 点逆变换 + 最终缩放</td></tr>
+            <tr><td class="mono"><strong>Python 黄金模型</strong></td><td>与 RTL 位精确对齐的参考模型，用于逐点对拍</td></tr>
+            <tr><td class="mono"><strong>KAT 对拍通路</strong></td><td>PS 喂向量 → PL 计算 → 读回 → PC 比对官方 <code>.rsp</code></td></tr>
+            <tr><td class="mono">片上自检 / 吞吐</td><td>LFSR 激励源 + 周期计数器（绕开串口带宽瓶颈）</td></tr>
+            <tr><td class="mono">折叠度扫描</td><td>k = 8 / 16 / 32 三档的吞吐 vs 面积对比表</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>不做</h3>
+      <p>
+        完整 ML-KEM 全流程（K-PKE 加解密、模幂、CBD 采样、压缩编码）、HLS、Linux、
+        摄像头、HDMI、DDR。
+      </p>
+
+      <div class="callout">
+        <span class="callout-label">为什么砍在这里</span>
+        <p>
+          最小可交付物是一个<strong>能被官方测试向量独立判定对错</strong>的模块。
+          「做没做成」不靠自评 —— 这条直接命中 20 分的「功能正确性与设计完整性」。
+        </p>
+      </div>
+    </section>
+
+    <section id="c3">
+      <h2><span class="num">03</span>数学与常数</h2>
+
+      <p class="legend">
+        <span><i class="chip ok"></i> 已验证 —— 独立计算 + 交叉核对</span>
+        <span><i class="chip todo"></i> 待核实 —— 来源单一或未核对</span>
+      </p>
+
+      <h3>参数总表</h3>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr><th>符号</th><th>值</th><th>含义</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">q</td><td class="num-strong">3329</td><td>模数（素数）</td><td><i class="chip ok"></i></td></tr>
+            <tr><td class="mono">n</td><td class="num-strong">256</td><td>多项式次数</td><td><i class="chip ok"></i></td></tr>
+            <tr><td class="mono">ζ</td><td class="num-strong">17</td><td>本原 256 次单位根</td><td><i class="chip ok"></i></td></tr>
+            <tr><td class="mono">R</td><td class="num-strong">2¹⁶ = 65536</td><td>Montgomery 基数</td><td><i class="chip ok"></i></td></tr>
+            <tr><td class="mono">QINV</td><td class="num-strong">62209</td><td>q⁻¹ mod 2¹⁶（校验 <code>q·QINV mod 2¹⁶ == 1</code> 通过）</td><td><i class="chip ok"></i></td></tr>
+            <tr><td class="mono">MONT</td><td class="num-strong">2285</td><td>zetas 生成种子，取中心化代表为 <strong>−1044</strong></td><td><i class="chip ok"></i></td></tr>
+            <tr><td class="mono">f</td><td class="num-strong">1441</td><td>INTT 缩放 = 128⁻¹ · R² mod q，以 <code>fqmul</code> 施加</td><td><i class="chip ok"></i></td></tr>
+            <tr><td class="mono">v</td><td class="num-strong">20159</td><td>Barrett 常数 <code>((1&lt;&lt;26) + q/2) / q</code></td><td><i class="chip ok"></i></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>三个必须先读懂的陷阱</h3>
+
+      <div class="traps">
+
+        <div class="trap">
+          <h4><span class="tn">陷阱 1</span>有符号中心化表示（int16，不是 uint16）</h4>
+          <p>
+            系数全部存成 <code>[−q/2, q/2]</code> 的<strong>有符号</strong>数，不是 <code>[0, q−1]</code>。
+            所以 <code>zetas[0]</code> 是 <strong>−1044</strong> 而不是 <strong>2285</strong>
+            —— 两者模 q 同余。<strong>用 uint16 存这张表，全盘皆错。</strong>
+          </p>
+        </div>
+
+        <div class="trap">
+          <h4><span class="tn">陷阱 2</span>Montgomery 域缩放 —— 我在调研时踩了这个坑</h4>
+          <p>
+            NTT 中间结果<strong>不等于</strong>标准域的值。每级蝶形的模乘都带一个 R⁻¹ 因子，
+            所以硬件输出的 NTT 结果带一个常数缩放（标准 NTT × 某个 2 的幂）。
+          </p>
+          <div class="callout warn">
+            <p>
+              <strong>绝对不要</strong>拿硬件 NTT 的输出和 Python 里「干净的 NTT 实现」逐点比
+              —— 永远对不上。这是「怎么调都差一个常数」的经典死循环。
+            </p>
+          </div>
+        </div>
+
+        <div class="trap">
+          <h4><span class="tn">陷阱 3</span>INTT 的缩放因子在哪个域</h4>
+          <p>
+            <code>1441</code> 是 <strong>128⁻¹ · R² mod q</strong>，
+            它必须配 <strong><code>fqmul</code>（Montgomery 模乘）</strong>使用，不是普通模乘，
+            而且只在<strong>逆变换的输出端</strong>施加一次。
+          </p>
+          <p>
+            实测：<code>fqmul(x, 1441)</code> 的效果 ≠ <code>x · 128⁻¹ mod q</code>，
+            而是 <code>x · R · 128⁻¹</code>（普通域 512）。
+            <strong>用错域 → 结果整体差一个 R，KAT 必挂，但仿真「看着很对」。</strong>
+          </p>
+        </div>
+
+      </div>
+
+      <h3>正确的对拍方法</h3>
+      <p><strong>不要比中间值，要比一个数学上唯一确定的东西。</strong>推荐顺序：</p>
+
+      <ol>
+        <li>
+          <strong>黄金模型先行</strong> —— Python 写一份<strong>和 RTL 用同一套算术</strong>的模型
+          （同样的有符号表示、同样的 Montgomery 约减、同样的域），
+          不要写「教科书版 NTT」。
+        </li>
+        <li>
+          <strong>三层对拍</strong>，越靠前越容易 debug：
+          <ul>
+            <li><strong>① 模乘单元</strong> —— 随机 (a,b)，硬件 == 黄金模型，精确相等</li>
+            <li><strong>② 多项式乘法</strong> —— <code>INTT(NTT(a) ⊙ NTT(b))</code>
+              对比<strong>普通学校式负循环卷积</strong>的 mod q 结果。
+              数学上唯一确定，不依赖任何实现约定 —— <strong>这是最好的中间判据</strong></li>
+            <li><strong>③ 官方 KAT</strong> —— 最终验收，<code>.rsp</code> 逐字节比对</li>
+          </ul>
+        </li>
+        <li>
+          <strong>basemul 的 checkpoint</strong>（若做到那步）：参考实现里该值依赖内部表示，
+          <strong>不要直接比数值，比「乘法结果 mod q 相等」</strong>。
+        </li>
+      </ol>
+
+      <h3>twiddle 表</h3>
+      <p>
+        完整 128 项 <code>zetas</code> 与 <code>zetas_inv</code> 见附件
+        <code>rtl/zetas_tables.v</code>。
+      </p>
+      <ul>
+        <li><strong><code>zetas</code>：已与 <code>ref/ntt.c</code> 源码前 32 项字节精确一致</strong><i class="chip ok"></i></li>
+        <li><strong><code>zetas_inv</code>：由 zetas 取模逆推导，满足 z · z⁻¹ ≡ 1 (mod q)</strong><i class="chip ok"></i></li>
+        <li><strong>但 <code>zetas_inv</code> 的层序未能复现</strong> —— 必须打开
+          <code>ref/ntt.c</code> 的 <code>invntt_tomont()</code> 确认每层取哪一段 twiddle、
+          按什么顺序递减<i class="chip todo"></i></li>
+      </ul>
+
+      <h3>参考实现的约减函数（逐字）</h3>
+<pre><code>int16_t montgomery_reduce(int32_t a) {
+  int16_t t;
+  t = (int16_t)a*QINV;
+  t = (a - (int32_t)t*KYBER_Q) &gt;&gt; 16;
+  return t;
+}
+
+int16_t barrett_reduce(int16_t a) {
+  int16_t t;
+  const int16_t v = ((1&lt;&lt;26) + KYBER_Q/2)/KYBER_Q;
+  t  = ((int32_t)v*a + (1&lt;&lt;25)) &gt;&gt; 26;
+  t *= KYBER_Q;
+  return a - t;
+}</code></pre>
+    </section>
+
+    <section id="c4">
+      <h2><span class="num">04</span>系统架构</h2>
+
+      <div class="ascii">PC ──UART(115200)──▶ PS (裸机 C) ──AXI-Lite──▶ PL
+                     · 收/发测试向量        ┌──────────────────────┐
+                     · 寄存器读写          │   NTT / INTT 核       │
+                     · 逐点对拍            │   参数化折叠 k        │
+                                           │   蝶形 × k 并行       │
+                     ┌─────────────────────┤   模乘/模约减单元     │
+                     │ 片上 LFSR 激励源     └──────────────────────┘
+                     │ (伪随机多项式)              │
+                     │ 结果校验 / 比对 ────────────┘
+                     └─▶ 周期计数器 → 读回</div>
+
+      <h3>两条通路</h3>
+      <div class="tscroll">
+        <table>
+          <thead><tr><th>通路</th><th>用途</th><th>为何这样设计</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>正确性通路</strong></td>
+              <td>PS 慢慢喂 KAT 向量、读结果回 PC 逐点对拍</td>
+              <td>115200 波特下 512 字节 ≈ 44 ms，慢但完全不影响正确性验证</td>
+            </tr>
+            <tr>
+              <td><strong>吞吐通路</strong></td>
+              <td>片上 LFSR 自生成激励 → 核全速跑 → 回读周期计数器</td>
+              <td><strong>绕开串口带宽瓶颈</strong>，测出的是内核吞吐，可与文献对比</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        <strong>两个数分开报</strong>：内核吞吐（不受链路限）+ 端到端吞吐（注明链路速率）。
+        诚实且专业。
+      </p>
+
+      <div class="callout key">
+        <span class="callout-label">本选题最大的优势</span>
+        <p>
+          板级工作量<strong>只有三件事</strong>：UART 回环、P5 跳帽、一个 AXI-Lite 寄存器组。
+          没有 DDR、没有 VDMA、没有摄像头、没有 HDMI。
+        </p>
+      </div>
+    </section>
+
+    <section id="c5">
+      <h2><span class="num">05</span>平台与环境</h2>
+
+      <h3>板卡事实</h3>
+      <div class="tscroll">
+        <table>
+          <thead><tr><th>项</th><th>值</th></tr></thead>
+          <tbody>
+            <tr><td>芯片</td><td class="mono">XC7Z020CLG400-2（Vivado 必须选这个，别套 Zybo / PYNQ-Z1 的 -1）</td></tr>
+            <tr><td>PL 时钟</td><td class="mono">50 MHz 单端（U18）。倍频算加分项，不作为计划前提</td></tr>
+            <tr><td>串口</td><td class="mono">底板 P5 跳线切 PS/PL。用 PS 侧则保持默认档</td></tr>
+            <tr><td>串口芯片</td><td class="mono">CH340C（已确认 COM10）</td></tr>
+            <tr><td>下载</td><td class="mono">无板载 USB-JTAG，需外接下载器（已确认在手）</td></tr>
+            <tr><td>资源</td><td class="mono">53,200 LUT / 106,400 FF / 220 DSP48E1 / 140 × 36Kb BRAM</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>工具链</h3>
+      <ul>
+        <li>Vivado ML Standard <strong>2024.2</strong>，装到 <code>E:\Xilinx\Vivado\2024.2</code>，
+          组件只勾 <strong>Zynq-7000 + 7 Series</strong>，<strong>必须勾 Install Cable Drivers</strong></li>
+        <li>工程路径<strong>必须纯英文</strong>（如 <code>C:\fpga\</code>）——
+          项目根目录含中文空格，不能直接建 Vivado 工程</li>
+      </ul>
+
+      <div class="callout warn">
+        <span class="callout-label">待核实</span>
+        <p>
+          指南 3.3.3.1 写「工具版本 Vivado/Vitis <strong>2026.1（推荐）或 2025.2</strong>，
+          用其他版本需在报告中说明并保证脚本可复现」。我们装的是 <strong>2024.2</strong>。
+          报名前上 fpgachina.cn 看本届《评分细则》确认。不拦路 —— 报告里写明版本理由即可。
+        </p>
+      </div>
+
+      <h3>资源预算</h3>
+      <div class="tscroll">
+        <table>
+          <thead><tr><th>资源</th><th>预算</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>DSP</td><td class="num-strong">32–64 / 220</td><td>32 个蝶形 × 1~2 DSP</td></tr>
+            <tr><td>BRAM</td><td class="num-strong">3–6 / 140</td><td>多项式存储 + twiddle ROM</td></tr>
+            <tr><td>LUT</td><td class="num-strong">5k–15k / 53,200</td><td>随折叠度变化</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        资源余量巨大 —— 你们有充足余量去做折叠度扫描，
+        而这本身就是「性能与资源优化效果」那 20 分的素材。<i class="chip todo"></i>
+      </p>
+    </section>
+
+    <section id="c6">
+      <h2><span class="num">06</span>七周路线</h2>
+
+      <p>起点 2026-09-18，报名截止 <strong>9/22</strong>，作品提交约 <strong>11/7</strong>。</p>
+
+      <div class="road">
+
+        <div class="stage">
+          <div class="stage-when">9/19 – 9/25</div>
+          <div>
+            <div class="stage-what">
+              <b>W0 · 地基</b> —— Vivado 装完；官方 <code>19_uart_loopback</code> 上板；
+              PS 裸机 UART 回环；<strong>AI 协作日志开张</strong>
+            </div>
+            <div class="stage-note">地基通了，全队开工</div>
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="stage-when">9/26 – 10/2</div>
+          <div>
+            <div class="stage-what">
+              <b>W1</b> —— <strong>打开 <code>ref/ntt.c</code> 抄 twiddle 层序</strong>；
+              Python 黄金模型；单个模乘单元 RTL 过仿真
+            </div>
+            <div class="stage-note">已有可演示模块</div>
+          </div>
+        </div>
+
+        <div class="stage gate">
+          <div class="stage-when">10/3 – 10/9</div>
+          <div>
+            <div class="stage-what">
+              <b>W2 · 决策点</b> —— 蝶形单元 + NTT 控制状态机（小点数先验证）
+            </div>
+            <div class="stage-note">模算术没通 → 走下面的降级链</div>
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="stage-when">10/10 – 10/23</div>
+          <div>
+            <div class="stage-what">
+              <b>W3–W4</b> —— 256 点 NTT/INTT 完整上板；PS 喂 KAT 对拍通过
+            </div>
+            <div class="stage-note">核心交付达成</div>
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="stage-when">10/24 – 10/30</div>
+          <div>
+            <div class="stage-what">
+              <b>W5</b> —— 折叠度扫描 + 片上吞吐测量 + 资源/时序报告
+            </div>
+            <div class="stage-note">数据齐了</div>
+          </div>
+        </div>
+
+        <div class="stage final">
+          <div class="stage-when">10/31 – 11/7</div>
+          <div>
+            <div class="stage-what">
+              <b>W6 · 交货</b> —— 演示视频 + 设计报告 + <strong>开源仓库 + skill 包</strong> + 缓冲
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <h3>W2 决策点与降级链</h3>
+      <p><strong>如果 10/9 时模算术仍未通</strong>，按顺序降级：</p>
+      <ol>
+        <li>
+          <strong>降级到「模乘单元 + 蝶形单元 + 完整测试/资源报告」</strong> ——
+          仍是一个完整作品（有正确性证据、有资源数据、有对比），只是叙事从「加速器」变成
+          「关键算术单元」。<strong>这仍然交得出手。</strong>
+        </li>
+        <li>
+          <strong>换推理核</strong> —— 串口闭环、PS 侧、对拍框架、激励源全部复用，
+          把 NTT 核换成 ESN/SNN 推理核。骨架不变，只换中间那块。
+        </li>
+        <li>
+          <strong>最坏情况</strong> —— 交「串口闭环 + 完整工程骨架 + 详细的失败分析报告」。
+          指南的设计报告明确要求「<strong>失败分析：哪些场景仍然做不好，原因是什么</strong>」
+          —— 诚实的技术复盘本身就在评分表里。
+        </li>
+      </ol>
+
+      <div class="callout">
+        <span class="callout-label">安全网</span>
+        <p>
+          这条降级链是选 NTT 的安全网。<strong>每天把进展录屏存档</strong>，
+          降级时才拿得出素材。
+        </p>
+      </div>
+    </section>
+
+    <section id="c7">
+      <h2><span class="num">07</span>踩坑清单</h2>
+
+      <p>
+        <strong>前三条是写这份文档时真实踩出来的。</strong>
+        规律：AI 能写 90% 的代码；剩下 10% 是概念理解、常数来源、板级调试 ——
+        那 10% 决定作品成不成，也正好是答辩时「哪些是你们做的」的答案。
+      </p>
+
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr><th class="mono">#</th><th>坑</th><th>现象</th><th>谁扛</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">1</td>
+              <td><strong>别让 AI 凭记忆写 twiddle 表</strong></td>
+              <td>我在调研中试图从记忆重建 NTT，twiddle 索引和层序<strong>反复对不上</strong>。只有从 <code>ref/ntt.c</code> 逐行抄才对</td>
+              <td><strong>人</strong>（去读源码）</td>
+            </tr>
+            <tr>
+              <td class="mono">2</td>
+              <td><strong>表要存 int16 有符号中心化</strong></td>
+              <td>用 uint16 存 → 全错</td>
+              <td>AI 辅助，<strong>人必须验</strong></td>
+            </tr>
+            <tr>
+              <td class="mono">3</td>
+              <td><strong>INTT 缩放因子所在域</strong></td>
+              <td><code>1441</code> 必须配 <code>fqmul</code>；用普通模乘 → 结果差一个 R，<strong>仿真看着对、KAT 必挂</strong></td>
+              <td><strong>人</strong></td>
+            </tr>
+            <tr>
+              <td class="mono">4</td>
+              <td>拿硬件 NTT 输出和「干净 Python NTT」逐点比</td>
+              <td>永远差一个常数因子，怎么调都对不上</td>
+              <td><strong>人</strong>（理解概念）</td>
+            </tr>
+            <tr>
+              <td class="mono">5</td>
+              <td>模约减的条件减写错</td>
+              <td>差一个符号或漏一次条件减 → 仿真过、上板全错</td>
+              <td>AI 易「几乎写对」，<strong>靠对拍抓</strong></td>
+            </tr>
+            <tr>
+              <td class="mono">6</td>
+              <td>位宽截断</td>
+              <td>中间结果溢出 int16 范围</td>
+              <td>AI 可写，<strong>靠仿真抓</strong></td>
+            </tr>
+            <tr>
+              <td class="mono">7</td>
+              <td>板上 P5 跳帽</td>
+              <td>串口发不出 / 收不到</td>
+              <td><strong>人</strong>（查原理图 V2.6）</td>
+            </tr>
+            <tr>
+              <td class="mono">8</td>
+              <td>XDC 引脚号版本</td>
+              <td>V1.2 的 J14/K18 vs V2.0 的 K14/M15</td>
+              <td><strong>人</strong>（对着自己板子核对）</td>
+            </tr>
+            <tr>
+              <td class="mono">9</td>
+              <td>工程路径含中文或空格</td>
+              <td>Vivado 各种诡异报错</td>
+              <td><strong>人</strong></td>
+            </tr>
+            <tr>
+              <td class="mono">10</td>
+              <td>时序违例</td>
+              <td>综合过了，上板不工作</td>
+              <td><strong>人</strong>（先保 50 MHz 跑通）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="c8">
+      <h2><span class="num">08</span>交付物</h2>
+
+      <h3>仓库结构</h3>
+<pre><code>&lt;project_name&gt;/
+├── README.md            # 项目简介 + 复现步骤
+├── src/                 # 设计源码（RTL / HLS / PS 侧软件）
+├── sim/                 # 仿真或验证脚本与结果
+├── build/               # 可复现的构建脚本 + 综合与实现报告
+├── board/               # 上板工程、运行脚本与实测输出
+├── data/                # 测试数据与参考结果
+├── skill/
+│   └── README.md        # 技能包
+└── report/              # 设计报告 + 大模型协作记录</code></pre>
+
+      <div class="callout warn">
+        <span class="callout-label">两条硬要求</span>
+        <p>
+          所有目录名与文件名<strong>必须纯英文</strong>（小写字母、数字、下划线或连字符），
+          不得出现中文、空格或特殊字符 —— 中文只出现在文件正文内容中。
+          代码<strong>必须开源</strong>（GitHub 或 Gitee），
+          <strong>推荐 MIT 或 Apache-2.0</strong>。
+        </p>
+      </div>
+
+      <h3>技能包（15 分那项）</h3>
+      <p>放 <code>skill/</code> 目录，含 <code>README.md</code> 说明每项的<strong>适用范围、使用方法、失效条件</strong>。至少要有：</p>
+      <ol>
+        <li><strong>提示词工作流</strong> —— 例如「从算法描述推导软硬划分」「根据综合报告定位瓶颈」的提示词模板</li>
+        <li><strong>踩坑清单</strong> —— 就是本文第 07 章，结构化整理</li>
+        <li><strong>校验脚本</strong> —— 自动比对黄金模型、检查资源与时序、验证工程可复现性</li>
+        <li><strong>工程骨架模板</strong> —— 下一个题目可直接套用</li>
+      </ol>
+      <p>
+        <strong>评价标准是可复用性</strong>：要写明「从哪些失败或观察中总结」「为什么有效」
+        「边界如何确定」。
+      </p>
+
+      <h3>指标汇总表（放 <code>metrics/</code>）</h3>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr><th>指标名称</th><th>类别</th><th>数值</th><th>单位</th><th>测量条件</th><th>证据文件</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>NTT 内核吞吐</td><td>核心</td><td class="mono">—</td><td>cycles</td><td>50 MHz，k=32</td><td class="mono">logs/throughput.csv</td></tr>
+            <tr><td>端到端延迟</td><td>核心</td><td class="mono">—</td><td>ms</td><td>起点/终点/链路速率</td><td class="mono">logs/latency.csv</td></tr>
+            <tr><td>KAT 通过率</td><td>核心</td><td class="mono">—</td><td>%</td><td>官方 .rsp</td><td class="mono">logs/kat.csv</td></tr>
+            <tr><td>LUT 占用</td><td>资源</td><td class="mono">—</td><td>%</td><td>post-PAR</td><td class="mono">report/util.rpt</td></tr>
+            <tr><td>DSP 占用</td><td>资源</td><td class="mono">—</td><td>%</td><td>post-PAR</td><td class="mono">report/util.rpt</td></tr>
+            <tr><td>最高频率 / WNS</td><td>资源</td><td class="mono">—</td><td>MHz / ns</td><td>post-PAR</td><td class="mono">report/timing.rpt</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout key">
+        <span class="callout-label">从第一天开始记</span>
+        <p>
+          <strong>① AI 协作记录</strong> —— 每条提示词、模型回答、
+          <strong>特别是自我纠错轨迹</strong>。报告明确要求，事后补不出来。<br>
+          <strong>② 阶段进展录屏</strong> —— 既是 debug 抓手，也是剪演示视频的素材。
+        </p>
+      </div>
+    </section>
+
+    <section id="c9">
+      <h2><span class="num">09</span>待核实清单</h2>
+
+      <p>写 RTL 前必须解决：</p>
+      <ul>
+        <li><strong>打开 <code>ref/ntt.c</code> 抄 <code>invntt_tomont()</code> 的 twiddle 层序</strong> ← 最高优先级</li>
+        <li>确认 <code>zetas_inv</code> 的每一项在层间如何索引（本次调研未复现）</li>
+        <li>确认 <code>basemul</code> / <code>poly_basemul_montgomery</code> 是否在范围内</li>
+        <li>下载官方 KAT 文件并确认格式（<code>.req</code> 含 count + 48 字节 seed；<code>.rsp</code> 含 count/seed/pk/sk/ct/ss）</li>
+        <li>上 fpgachina.cn 确认本届《评分细则》与 Vivado 版本要求</li>
+        <li>对着底板原理图 V2.6 核对 P5 丝印</li>
+      </ul>
+
+      <h3>参考资源</h3>
+      <ul>
+        <li>
+          <strong>pq-crystals/kyber 参考实现</strong> ——
+          <code>ref/ntt.c</code>、<code>ref/reduce.c</code>、<code>ref/params.h</code> 是必读三件套
+        </li>
+        <li>
+          Bertels, Norga, Verbauwhede, <em>A Better Kyber Butterfly for FPGAs</em>, FPL 2024
+          —— 49 LUT + 1 DSP 模约减；开源仓库 <code>axytho/KyberButterflyCollection</code>
+        </li>
+        <li>
+          《后量子密码算法 ML-KEM 快速数论变换的 FPGA 优化实现》——
+          Zynq-7000 平台，32 路并行蝶形，171 MHz
+        </li>
+        <li>PQShield《High-Performance NTT Hardware Accelerator to Support ML-KEM and ML-DSA》</li>
+        <li>官方文档：Vivado 综合 UG901 / 实现 UG904 / UltraFast UG949</li>
+      </ul>
+
+      <div class="colophon">
+        <p>
+          <strong>置信度说明。</strong>「已验证」指本次调研通过独立计算与交叉验证确认；
+          「待核实」指来源单一或未逐项核对；「推算」指资源预算与周期数估算，未实测。
+        </p>
+        <p>
+          <strong>数据来源限制。</strong>本次调研环境的 GitHub 内容拉取被网络策略拦截
+          （仅 HEAD 请求可通过），文献数据来自搜索引擎摘要片段，未能逐篇打开 PDF 核对原表。
+          所有常数均已通过独立计算复核，但文献中的资源与性能数字请勿当作承诺。
+          锁定方向后建议用学校 VPN 下载原文核对。
+        </p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+</body>
+</html>

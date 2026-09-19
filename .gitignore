@@ -1,0 +1,63 @@
+# ===== 编译产物（每台机器自己编，不进仓库）=====
+*.exe
+*.o
+*.obj
+*.vvp
+*.out
+gmon.out
+
+# ===== Python =====
+__pycache__/
+*.pyc
+
+# ===== refsim 的临时文件 =====
+refsim/tmp_*.txt
+
+# ===== 已废弃的 Round3 材料 =====
+# 见 research/已核实结论_修正选题指导文档.md：
+# Round3 的 KAT 不能用来验收 FIPS 203 ML-KEM，留着只会误导。
+# 本地保留，不进仓库。
+research/Kyber-Round3.zip
+research/_round3_extract/
+
+# ===== 第三方版权材料（不能进公开仓库）=====
+# 竞赛要求这个仓库最后必须开源（转公开）。research/papers/ 里是 22 篇论文的
+# PDF，共 47 MB，版权属于各出版方 —— 放进公开仓库不合适，也拖慢 clone。
+#
+# 不影响复现：复现靠 refsim/ 的脚本 + mlkem_kat/ + kyber_ref/，
+# 论文只是写"相关工作对比表"的参考资料。C 要用的话走群文件/网盘单独发。
+#
+# ⚠️ 必须在第一次 push 之前就想清楚：一旦推上去、队友 clone 过、后面又提交过，
+#    再想把 47 MB 从历史里挖掉，就得改写历史 + force push —— 正好撞上
+#    CLAUDE.md 第 5 条"不要 force push"。
+research/papers/
+
+# research/kyber_ref/papers/ 里混着下载的论文 PDF（MDPI、PQS shield 等）
+# 和抓下来的出版商网页，同一类问题，一并排除。
+# 但**保留**同目录下的 .txt —— 那些是从论文里抽出来的对比数据
+# （out_table.txt / pq_table.txt / pqshield.txt / mdpi_v*.txt），
+# 是 C 做"相关工作对比表"的原料，不是出版方的原件。
+research/kyber_ref/papers/*.pdf
+research/kyber_ref/papers/*.html
+
+# 注：research/standards/（NIST FIPS 203/204/205，5.4 MB）**保留**。
+# 那是美国政府作品、公有领域，可以公开；而且"我们实现的是哪份标准"
+# 本身就是复现材料，报告里也要引。
+
+# ===== Vivado =====
+*.jou
+*.str
+.Xil/
+*.cache/
+*.hw/
+*.sim/
+*.runs/
+*.ip_user_files/
+*.gen/
+*.srcs/sources_1/bd/*/ipshared/
+
+# ===== 编辑器 / 系统 =====
+.DS_Store
+Thumbs.db
+*.swp
+*~

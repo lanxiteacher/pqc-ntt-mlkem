@@ -1,0 +1,21 @@
+ML-KEM-768 (Kyber-768) NTT 黄金向量
+====================================
+ q = 3329,  n = 256,  向量数 = 16
+ 所有系数均为规范形式 [0, q)
+ .hex 文件每行一个系数（3 位十六进制），第 v 个向量第 i 个系数在第 v*n+i 行
+
+往返缩放：invntt(ntt(f)) = f * 2285  (mod q)
+  ✅ 所有向量、所有系数都满足同一个缩放因子（纯缩放，无畸变）
+
+文件对应关系
+------------
+  正变换：  ntt_in.hex   → ntt_out.hex
+  逆变换：  intt_in.hex  → intt_out.hex
+             （intt_in 就是上一条的 ntt_out，所以逆变换可直接复用正变换结果）
+  点乘：    basemul_a.hex, basemul_b.hex → basemul_out.hex
+             （a、b 是规范形式输入；输出是 a 与 b 各自做 NTT 后逐对相乘的结果）
+
+注意
+----
+  basemul_out 对应的是「两个 NTT 域多项式做 basemul」，不是「两个规范形式
+  多项式直接相乘」。硬件侧要么先各做一次 NTT，要么直接把 a/b 当 NTT 域用。

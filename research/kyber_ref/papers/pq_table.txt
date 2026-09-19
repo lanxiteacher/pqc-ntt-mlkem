@@ -1,0 +1,708 @@
+High-Performance NTT Hardware Accelerator to Support
+
+                                                          ML-KEM and ML-DSA
+
+                 Dur E Shahwar Kundi                                                                         Jose M. Bermudo Mera
+
+                                         PQShield                                                               PQShield
+
+                 Oxford, United Kingdom                                                                         Leuven, Belgium
+
+                 dur-e-shahwar.kundi@pqshield.com                                                            jose.mera@pqshield.com
+
+                       Pierre-Yves Strub                                                                     Michael Hutter
+
+                                         PQShield                                                               PQShield
+
+                                  Paris, France                                                                 Vienna, Austria
+
+                 pierre-yves.strub@pqshield.com                                                              michutte@gmail.com
+
+Abstract                                                                                       1  Introduction
+
+Large polynomial multiplications are crucial for Post-Quantum                                  The latest advances in the field of quantum computation have posed
+
+Cryptography standards like Module-Lattice-based Key Encapsu-                                  an imminent threat to the currently deployed Public-Key Infras-
+
+lation Mechanism (ML-KEM) and Module-Lattice-based Digital                                     tructure, underpinning digital security. The Shor's quantum al-
+
+Signature (ML-DSA). These multiplications, being complex, are                                  gorithm [18] will be able to solve the mathematical complexity
+
+often accelerated using the Number Theoretic Transform (NTT).                                  of current Public Key Encryption (PKE) algorithms via quantum
+
+This work presents a novel architecture of a high-performance                                  computers including factorization of large integers and solving
+
+NTT accelerator capable of performing both NTT and inverse NTT                                 discrete logarithms. In response, various government agencies have
+
+operations using a single set of hardware resources. The design                                acknowledged this threat. National Institute of Standards and Tech-
+
+makes use of a single butterfly configuration unit to reduce resource                          nology (NIST), in particular, started a standardization process in
+
+requirements and improve critical path. The Multi-path Delay Com-                              2016 to develop a new set of quantum-resistant cryptographic algo-
+
+mutator (MDC) strategy is employed to enable fully pipelined and                               rithms, known as Post-Quantum Cryptography (PQC) [16].
+
+parallel processing of multiple coefficients, supporting both ML-                                 In 2022, NIST finalized PQC standards for Key-Encapsulation
+
+KEM and ML-DSA computations. Practical results show that our                                   Mechanism (KEM) and Digital Signature (DSA) schemes [17]. Lattice-
+
+proposed NTT engine requires 3,821 LUTs, 2970 FFs, 20 DSPs, and                                based Cryptography (LBC) has stood out because of its strong
+
+5 BRAMs on an AMD Zynq UltraScale+ FPGA, and can run up to                                     foundation on hard mathematical problems and enhanced per-
+
+322 MHz. Our design provides the best Area-Time Product (ATP)                                  formance, leading to Module-Lattice-based KEM (ML-KEM) [7]
+
+among current NTT architectures.                                                               standard based on CRYSTALS-Kyber [3] and Module-Lattice-based
+
+                                                                                               DSA (ML-DSA) [8] standard based on CRYSTALS-Dilithium [4].
+
+CCS Concepts                                                                                   LBC constructions also support advanced security features like
+
+· Security and privacy  Digital signatures; Public key en-                                     Identity-based Encryption (IBE) [1], Fully Homomorphic Encryp-
+
+cryption; · Hardware  Hardware accelerators.                                                   tion (FHE)) [11], and Zero-Knowledge Proofs (ZKP) for the post-
+
+                                                                                               quantum era.
+
+Keywords                                                                                          The polynomial multiplication, a key operation in all these LBC
+
+Polynomial Multiplication, NTT, Multi-path Delay Commutator                                    schemes, involves convolution and modular arithmetic, making it
+
+(MDC), ML-KEM, ML-DSA, CRYSTALS-Kyber, CRYSTALS-Dilithium                                      the most computationally intensive task in these cryptosystems.
+
+                                                                                               Hardware acceleration of this operation is crucial for high perfor-
+
+ACM Reference Format:                                                                          mance, with the Number Theoretic Transform (NTT) being the pre-
+
+Dur E Shahwar Kundi, Jose M. Bermudo Mera, Pierre-Yves Strub, and Michael                      ferred method due to its quasi-linear complexity of O ( log()). The
+
+Hutter. 2024. High-Performance NTT Hardware Accelerator to Support ML-                         NTT is, in fact, the part of ML-KEM and ML-DSA standards [7, 8],
+
+KEM and ML-DSA. In Proceedings of the 2024 Workshop on Attacks and                             supporting lattice dimensions of  = 256 with moduli- of 12-bit
+
+Solutions in Hardware Security (ASHES '24), October 14­18, 2024, Salt Lake                     and 23-bit, respectively. Table 1 summarizes the frequency of for-
+
+City, UT, USA.. ACM, New York, NY, USA, 6 pages. https://doi.org/10.1145/                      ward and inverse NTT (iNTT) computations required for each
+
+3689939.3695785                                                                                parameter set in the respective standards. In contrast, FHE and ZKP
+
+Permission to make digital or hard copies of all or part of this work for personal or          require much larger parameters, with  ranging from 29 to 217 and
+
+classroom use is granted without fee provided that copies are not made or distributed          modulus- from 28-bit to 64-bit [13].
+
+for profit or commercial advantage and that copies bear this notice and the full citation         A high-speed NTT accelerator is essential for optimizing cryp-
+
+on the first page. Copyrights for components of this work owned by others than the
+
+author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or         tosystem's performance, as the design choice of it alone will sig-
+
+republish, to post on servers or to redistribute to lists, requires prior specific permission  nificantly impacts overall efficiency. This work introduces a high-
+
+and/or a fee. Request permissions from permissions@acm.org.                                    performance, unified NTT/iNTT accelerator that processes two
+
+ASHES '24, October 14­18, 2024, Salt Lake City, UT, USA.
+
+© 2024 Copyright held by the owner/author(s). Publication rights licensed to ACM.              coefficients in parallel and pipelined fashion via Multi-path Delay
+
+ACM ISBN 979-8-4007-1235-7/24/10                                                               Commutator (MDC) [19] strategy. The accelerator incorporates
+
+https://doi.org/10.1145/3689939.3695785
+ASHES '24, October 14­18, 2024, Salt Lake City, UT, USA.                  Dur E Shahwar Kundi, Jose M. Bermudo Mera, Pierre-Yves Strub, & Michael Hutter
+
+        Table 1: Frequency of NTT/iNTT operations.
+
+     Standard            Modulus                          NTT  iNTT            a  +                a+b            a       +       a+b
+
+     ML-KEM-512                                           10×  8×                 _                a-b                    _       (a - b)
+
+     ML-KEM-768          3329      256                    15×  11×             b                                  b
+
+     ML-KEM-1024                                          20×  14×
+
+     ML-DSA-44                                            32×  24×                (a)                                        (b)
+
+     ML-DSA-65           8380417   256                    44×  36×        Figure 1: (a) Cooley-Tukey (CT), (b) Gentleman-Sande (GS).
+
+     ML-DSA-87                                            60×  48×
+
+unique features that minimize hardware resource usage while en-           of degree smaller than . In the algorithms and equations, lowercase
+
+hancing performance. ML-KEM and ML-DSA parameter sets are                 letters (e.g., ) are used to represent polynomials, while vectors of
+
+considered to benchmark the area and performance metrics.                 polynomials are represented with bold case and matrices with the
+
+   The contributions of our work are summarized as follows:               upper case. The -th coefficient of a polynomial  is written  . The
+
+                                                                          hat tilde is used to represent elements in the NTT domain (e.g., ^).
+
+     ·  We present a unified NTT hardware architecture that sup-
+
+        ports both ML-KEM and ML-DSA moduli to be used for all            2.2     Number Theoretic Transform
+
+        NIST recommended security levels. The architecture makes          NTT is a generalisation of classical Discrete Fourier Transform
+
+        use of a single datapath for both forward and inverse NTT         (DFT) Z with  a prime satisfying   1            mod 2. We fix  as a
+
+        operations without duplicated control logic.                      -th primitive root of unity (also referred to as twiddle factor) ­ i.e.
+
+     ·  Our design applies a fully pipelined, 8-stages deep, Multi-        is an element of Z s.t.  = 1 and   1 for any integer  in
+
+        path Delay Commutator (MDC) approach, processing 2 co-            [1,  - 1]. We also fix  as a 2-th primitive-root of unity s.t. 2 = .
+
+        efficients per cycle (radix-2). This allows the core to continu-  The (Negative-Wrapped) NTT is defined as the function from
+
+        ously consume data input without causing data dependencies        R to R that maps a polynomial  to ^ where, for   [0,  - 1]:
+
+        in memory accesses and eliminates the need for additional
+
+        control effort.                                                                                 
+
+                                                                                                    =                                                     (1)
+                                                                                                                     
+     ·
+        We propose a novel design that uses a single butterfly con-                                      <
+
+        figuration in each pipeline stage. By using a Cooley-Tukey                                  =    2 +
+
+        (CT) butterfly-only configuration, our design eliminates the                                                                                      (2)
+
+        need to switch configurations when changing the NTT di-                                          <
+
+        rection (forward or inverse), thereby reducing area overhead.     The inverse NTT (written iNTT) transforms an NTT-output back
+
+        This approach also shortens the critical path by eliminating      into its original representation:
+
+        the need for multiplexers, resulting in a higher operating                                       - 1
+
+        frequency.                                                                                 = -1     -   -                                         (3)
+
+     ·  We present practical implementation results on an AMD                                                 =0
+
+        Zynq UltraScale+ FPGA, demonstrating high throughput                                             - 1
+
+        along with best Area-Time Product (ATP) compared to re-                                    = -1     - (2 + )                                      (4)
+
+        lated work as shown in Table 3. Compared to [2], our de-                                              =0
+
+        sign uses nearly the same number of LUTs but increases
+
+        throughput by more than fourfold. Therefore, our design is        The NTT as the following remarkable property: for any element
+
+        an excellent choice for applications where LUT resources          ,       R, we have that       =    ^  ^, where ^  ^ stands for the
+
+        are the limiting factor.                                          polynomial coefficient-wise multiplication. This leads to a direct
+
+   The rest of the paper is organized as follows. Section 2 provides      algorithm for polynomial multiplication whose complexity reduces
+
+preliminary details about our used notation and NTT in general.           to the ones of the NTT/iNTT (the convolution having intrinsically
+
+Section 3 provides the analysis of state-of-the-art of NTT archi-         a linear complexity).
+
+tectures and their limitations. The design of our proposed Radix-2        It is well known that DFT optimization techniques are applicable
+
+MDC (R2MDC) NTT/iNTT engine is explained in Section 4 and                 when implementing the NTT. Among them, the Fast-Fourier Trans-
+
+implementation results are presented and discussed in Section 5.          form (FFT), a divide-and-conquer algorithm proposed indepen-
+
+Finally, in Section 6, conclusions are drawn.                             dently by Cooley-Tukey [6] and Gentleman-Sande [10], achieves a
+
+                                                                          O ( log()) complexity. The radix-2 decimation-in-time (DIT) with
+
+2    Preliminaries                                                        bit-reversal is one of the most common variant of the FFT. It takes
+
+2.1     Notation                                                          a polynomial in normal order (0, 1, . . . , -1) and generates an
+
+                                                                          output polynomial in bit-reverse order (^br(0), ^br(1), . . . , ^br(-1) ).
+
+We denote the ring of integers modulo  as . In this paper, we             It generally relies on the Cooley-Tukey (CT) butterfly for the for-
+
+assume  is a prime number, making  a prime field. We denote as            ward NTT, and on the Gentleman-Sande (GS) butterfly unit for
+
+ = Z []/ + 1 the ring of polynomials reduced by  + 1 with                 the inverse iNTT. The difference in CT and GS butterflies is the
+
+coefficients in Z. We assume that  is a power of two. In such ring,       order of the operations, the CT butterfly relying on a multiplication
+
+any element can by uniquely represented by a polynomial over Z            preceded an addition/subtraction while the GS butterfly relies on
+High-Performance NTT Hardware Accelerator to Support ML-KEM and ML-DSA                            ASHES '24, October 14­18, 2024, Salt Lake City, UT, USA.
+
+                             Ctrl                                       Twiddle ROM                              Pkg      Zeta
+
+                 NTT                                                                                             SV_file  C_code
+
+                 NTT    ST1                   ST2                       R2MDC                     ST8            bypass   NTT
+
+                 input                                                                                                    output
+
+                 0           0                64D  0                    ST3           0           1D       0              0
+
+   ntt_in_data          BF2             SW                     BF2           ST7              SW                 BF2               ntt_out_data
+
+                 1           1     64D    64       1                                  1  1D   1            1              1
+
+   ctrl_mode
+
+                                                               ST3      Post-process     ST7               iNTT  input
+
+   ntt_in_valid              iNTT output                                                                                           ntt_out_valid
+
+ntt_out_ready                                                                                                                     ntt_in_ready
+
+                                        Figure 2: Our Proposed R2MDC NTT/iNTT engine.
+
+an addition/subtraction preceded by a multiplication as shown in             to NTT and iNTT operations. It processes even and odd data sets
+
+Figure 1.                                                                    separately rather than utilizing continuous data processing. On
+
+   Note that the multiplication by powers of  (resp. inverse power           the other hand, the NTT design in [24] has a partially pipelined
+
+of ) in the NTT (Eq. (1)) (resp. in the iNTT (Eq. (3))) can be seen          architecture with two stages folded together as well as processes
+
+as pre-processing and post-processing steps over the polynomials             a single coefficient per cycle instead of two. Hence, both available
+
+before the NTT/iNTT computation is actually done. However, it is             designs come with data-memory dependencies to store and load the
+
+possible to combine these within the NTT/iNTT computations by                intermediate computations during the NTT/iNTT flow and have a
+
+integrating them in the CT/GS butterflies (Eqs. (2) and (4)).                higher latency requirement in terms of clock cycles.
+
+                                                                                  All of the state-of-the-art NTT architectures [2, 15, 22, 24] utilize
+
+3  Analysis of NTT variants                                                  a CT butterfly configuration for the NTT while a GS butterfly con-
+
+                                                                             figuration is used for the iNTT flow. The NTT hardware designs
+
+Since NTT is one of the crucial blocks in LBC, its implementa-               therefore implement a    butterfly unit that supports both
+
+tion requires careful design considerations by keeping in mind the           configurations in a single hardware module but with the overhead
+
+performance, independent and continuous execution, and resource              of duplicated hardware. In particular, the butterfly units utilize
+
+requirements. A common strategy to implement NTT is an                       two sets of modular adders and modular subtractors along with
+
+approach that can be done either using a single butterfly unit [9, 22]       a shared modular multiplier. It also comprises of multiplexer cir-
+
+or multiple butterfly units [2, 5, 12, 14, 21, 23] that perform NTT          cuitry for selection between the NTT and iNTT datapath flow. This
+
+computations stage by stage. The ML-KEM and ML-DSA require 7                 architectures therefore result in an unnecessarily increased area
+
+and 8 stages of NTT computations based on  and the modulus ,                 requirement and critical path.
+
+respectively. The disadvantage of this approach is that separate read
+
+and write memories are always needed to store computations for               4       Architecture of our NTT/iNTT engine
+
+each stage along with complex control logic to manage read/write
+
+memory accesses/conflicts. Furthermore, the latency is higher as             To cater above limitations, this work proposes a high-performance
+
+such a core will wait to finish the NTT computations per stage per           fully pipelined and parallel R2MDC NTT/iNTT accelerator with
+
+vector (if multiple vectors need to be processed) and can not be             the following features: (i) Single-set of NTT/iNTT hardware with
+
+parallelized with other operations in the ML-KEM and ML-DSA                  unique control logic, (ii) single butterfly configuration, i.e., CT for
+
+system.                                                                      NTT/iNTT that reduced area and improved the critical path, (iii)
+
+   In contrast to the previously mentioned approach, a                       fully pipelined and parallel architecture to enable continuous con-
+
+NTT implementation offers significant advantages by delivering               sumption of input by NTT engine whereas consumption of output
+
+high performance while avoiding complex memory accesses. The                 by proceeding construction, without any data memory dependency,
+
+Multi-path Delay Commutator (MDC) [19] is a classical approach               and (iv) support both ML-KEM and ML-DSA NTT/iNTT computa-
+
+for processing NTT computations in a pipelined manner, with                  tions, or even either of it.
+
+the level of parallelism determined by the choice of radix. Radix-
+
+2 (R2) enables processing 2 coefficients per clock cycle whereas             4.1      Top-Level Design and Interface
+
+Radix-4 (R4) enables processing of 4 coefficients per clock cycle.
+
+Prior work on high-performance MDC based NTT designs have                    The block diagram of our proposed R2MDC NTT/iNTT acceler-
+
+one or more limitations [15, 24]. First, they are either targeted            ator is shown in Figure 2. The accelerator takes inputs via the
+
+for ML-KEM or ML-DSA, but not for both standards. Note that                  ntt_in_data bus. The data width was chosen to be 46 bits compris-
+
+the NTT engine being proposed for ML-KEM [15] is unable to                   ing of 2 coefficients (2×23 bits) of ML-DSA. ML-KEM uses only the
+
+support ML-DSA because of its in-complete NTT that supports                  least significant 12 bits of each reserved 23-bit field, the remaining
+
+one less necessary pipeline stage. Second, the R2MDC NTT design              most significant bits are padded with `0'. The output is driven at
+
+described in [15] employs two sets of hardware units dedicated               the ntt_out_data bus. For both busses, we implemented a signal
+ASHES '24, October 14­18, 2024, Salt Lake City, UT, USA.                               Dur E Shahwar Kundi, Jose M. Bermudo Mera, Pierre-Yves Strub, & Michael Hutter
+
+                   BF2                                                                      Unified  Modular Reduction
+
+           bf_in1                                    Modular  Adder       bf_out1                    ML-KEM                         ML-KEM
+
+                                                                                                     Reduction                      Reduction
+
+                                                                                            46 bits  Part-1             0  33 bits  Part-2     0      23 bits
+
+           bf_in2       DSP      Modular  Reduction           Subtractor                                                1                      1
+
+                                                     Modular              bf_out2                    ML-DSA                         ML-DSA
+
+     bf_in_tw                                                                                        Reduction                      Reduction
+
+                                                                                                     Part-1                         Part-2
+
+     ctrl_alg
+
+                                                                                                     Figure 4: Unified Modular      Reduction  Unit.
+
+Figure 3: Radix-2       Cooley-Tukey-only            Butterfly            (BF2) Unit.
+
+                                                                                       configurations are taken up for forward and reverse computations,
+
+synchronization hand-shake via valid/ready inputs and outputs, re-                     respectively that also avoids the bit-reversal requirements. Nor-
+
+spectively. The ctrl_mode input allows switching between Dilithium                     mally,  notation is used for merged pre/post-process steps.
+
+and Kyber and the type of operation, i.e., NTT or iNTT.                                The proposed R2MDC NTT accelerator is implemented in a fully
+
+The engine is composed of two primary components: the R2MDC                            pipelined manner, with all 8 stages unfolded and capable of pro-
+
+engine and the twiddle ROM unit. Based on  = 256, the MDC                              cessing 2 coefficients per cycle in parallel. To synchronize the NTT
+
+architecture results in 8 stages of the NTT, which equals to 2 ().                     accelerator with the rest of the system, a signal handshake protocol
+
+Except for the first stage (ST1) that only consists of a single butterfly              was implemented that consists of _ and _ signals as
+
+unit (BF2), all other stages are comprised of the same BF2 unit and                    shown in Figure 2. For example, the _ signal indicate that
+
+a commutator unit. The commutator unit is made up of a Switch                          valid data is driven at the _ bus. The _ signal indicates
+
+(SW) and one or more Delay (D) buffers that synchronize the arrival                    that the core is ready to consume new data. Data transaction only
+
+of data towards the BF2 of the same stage in a required sequence.                      happens if both _ and _ signals are asserted. In this
+
+Based on the NTT flow, the delay buffer has a variable depth starting                  case, the engine consumes the input, processes it, and increments
+
+from 64D for ST1, 32D for ST2,... , to 1D for ST8. Whereas the iNTT                    the pipeline by one cycle. Note that the engine will stall the pipeline
+
+flow requires the delay buffers in a sequence of 1D for ST1, 2D for                    if an output does not get consumed or if no valid input is driven at
+
+ST2,... , to 64D for ST8. Contrary to [15], we utilize the same NTT                    the input interface. Thus, our NTT engine is able to process the data
+
+flow commutator units for the iNTT by devising a control logic                         continuously which increases the overall throughput of ML-KEM
+
+through multiplexers. The logic `0' via _ signal selects                               and ML-DSA.
+
+an NTT operation where the data starts flowing from ST1 to ST8,                        Based on the parameter sets given in Table 1, ML-KEM results
+
+whereas a logic `1' selects the reverse flow starting from ST8 to ST1                  in an incomplete-NTT configuration. This basically would produce
+
+to perform an iNTT operation, thereby fully utilizing the hardware                     a valid output after stage ST7 but the output would not be in a
+
+by 100 %.                                                                              correct order, requiring 1D shifting and switching. In order to avoid
+
+                                                                                       the incorrect order, we decided to pass the output of ST7 through
+
+4.2  Design of the NTT Stages                                                          stage ST8, utilizing the internal Commutator unit and bypassing the
+
+Each of the eight stages of our R2MDC engine requires a separate                       BF2 unit as shown in Figure 2. This rearranges the output into the
+
+and identical butterfly unit (BF2). Instead of using a    butter-                      correct sequence for continuous data processing. Similarly, during
+
+fly unit [2, 15, 24], a single BF2 configuration, i.e., Cooley-Tukey                   the iNTT, the first stage ST8 BF2 is bypassed accordingly. With this
+
+(CT) as shown in Figure 3 is utilized. This single BF2 unit is then                    change, it is not necessary that the input vectors need to be split
+
+used for both NTT and iNTT operations. The   _1 and   _2                               into even or odd coefficients (e.g., as reported in [15] in case of ML-
+
+inputs expect the two 23-bit coefficients, and   _1 and   _2                           KEM). In addition, it is not required to have multiple read and write
+
+drive the two output coefficients accordingly. The _ signal se-                        operations to load/store the data from/to memory, which further
+
+lects the appropriate modulus  and type of modular reduction used                      increases the performance and throughput of our NTT engine.
+
+after the multiplication operation. Modulo reduction after addition
+
+and subtraction was implemented by either adding or subtracting                        4.3  Unified Modular Reduction Unit
+
+the modulus , but without opening a timing side channel, i.e., the                     The modular reduction unit reduces the coefficients from the range
+
+BF2 unit runs in constant time. The   __ input provides the                            [0, ( - 1)2] to which they belong after a multiplication to the range
+
+twiddle factors from the twiddle ROM. Note that we added input                         [0,  - 1] in congruence with the parameters of the scheme. For
+
+and output registers and also pipelined the modulo reduction unit                      both ML-KEM and ML-DSA modular reduction units, we decided
+
+in order to reduce critical path of our design. The total latency of                   to split up the datapath into two in order to reduce the critical path.
+
+the BF2 unit is 5 clock cycles.                                                        The reduction operations therefore take 2 clock cycles and are fully
+
+Due to the single CT BF2 configuration, the pre-process step dur-                      pipelined. Figure 4 shows the unified architecture.
+
+ing the NTT can be merged with the butterfly computations. How-                        The ML-KEM modular reduction is a modified version of the
+
+ever, the post-process step during the iNTT cannot be merged and                       algorithm presented by Xing and Li [21] which in turn is a modifi-
+
+is implemented separately along with the multiplication by -1. It                      cation of the Barrett reduction. In the first clock cycle, the quotient
+
+costs one extra multiplier and a ROM to store the pre-computed val-                    is approximated by substituting multiplication and shift with shifts
+
+ues for ML-KEM and ML-DSA. Hence, NTT, and iNTT,-1                                     and additions. In the second clock cycle, the result is computed
+High-Performance NTT Hardware Accelerator to Support ML-KEM and ML-DSA                       ASHES '24, October 14­18, 2024, Salt Lake City, UT, USA.
+
+following the principle of Barrett reduction. In contrast to Xing                   Table 2: Area and performance results.
+
+and Li [21], we compute the quotient with one extra bit of preci-              Modules       Area                 Latency   Frequency
+
+sion, which ensures that the intermediate results lie in the range                           LUTs/FFs/DSPs/BRAMs  [Cycles]  [MHz]
+
+[-2, 2 ) and allows us to simplify the output logic down to just               NTT engine    3,821/2,970/16/­
+
+one conditional addition and one conditional subtraction to finally            Twiddle ROM   ­/­/­/4              258       322
+
+correct the result.                                                            Post-process  ­/­/4/1
+
+   The ML-DSA modular reduction is based on the notion that the
+
+prime modulus is of a special form, i.e.,  = 223 - 213 + 1 (pseudo-       5.1       Comparison With Related Work
+
+Mersenne prime) and for any ,     · 223         (213 - 1)  (mod  ).
+
+We therefore decided to apply the idea of Solinas [20] to efficiently     We now compare our NTT design with related work in Table 3. We
+
+reduce the coefficients by simple shift and addition/subtraction          list works that offer Kyber-only [23], Dilithium-only [24], or unified
+
+operations. The first part of the modular reduction reduces the           NTT computations [2, 14]. We differentiate between iterative [2,
+
+original value from 46 bits to 33 bits. The second part reduces the       14, 23] and pipelined [24] NTT architectures. For each proposed
+
+result further from 33 bits to 23 bits. A final conditional subtraction   solution, we indicate the number of internal BF2 butterfly units to
+
+corrects the result and brings the coefficients back to the range         ensure a fair comparison. The table also lists the number of cycles
+
+[0,  - 1].                                                                required to process one polynomial vector as well as up to 8 vectors
+
+                                                                          (the maximum number for ML-DSA) to highlight the advantage
+
+                                                                          of pipelined architectures. The `Performance' column converts the
+
+4.4  Twiddle ROM                                                          latency for processing 8 vectors into microseconds (s) and provides
+
+Each BF2 unit requires computation with a pre-calculated twiddle          the design's throughput in Mbps. Additionally, we compute the
+
+factor, stored in a memory (e.g., ROM or BRAM). That means that           Area-Time-Product (ATP) for each design, considering the LUT
+
+in total 8 memories are needed as each BF2 unit accesses twiddle          count as the most limiting resource on an FPGA and multiplying it
+
+factors during each cycle of an NTT or iNTT operation in ML-KEM           by the latency to process 8 polynomial vectors.
+
+and ML-DSA. We decided to implement a dedicated Twiddle ROM                   The results indicate that our proposed pipelined NTT accelerator
+
+unit which manages the access to these 8 distinct memories as             not only delivers superior performance--processing 8 vectors in
+
+shown in Figure 2. The pre-computed values are generated using a          3.60 s with a throughput of 569 Mpbs--but also has the lowest ATP,
+
+C model and are stored in a SystemVerilog . file. For an                  the same applies to ML-KEM. All the listed designs, both iterative
+
+FPGA target, for example, the BRAMs get initialized directly using        and pipelined, require either FIFOs [15] or additional data memories
+
+that file. This allows for an easy and flexible replacement with new      to manage input/output coefficients in a correct sequence [2, 14, 23,
+
+or updated twiddle factor values if needed.                               24]. It is important to note that these memory requirements have
+
+                                                                          not been included in the reported figures (as marked with footnote
+
+                                                                          ).
+
+5    Implementation Results                                                   Compared to our flexible NTT accelerator, most available NTT
+
+                                                                          architectures are designed for fixed parameter sets [23, 24]. Only
+
+The proposed NTT accelerator was implemented in SystemVer-                a few, such as those in [2, 14], can handle both ML-KEM and ML-
+
+ilog. We used Synopsys Spyglass linting for efficient verification        DSA by integrating two ML-KEM butterfly operations into the
+
+and optimization of our design. To evaluate the performance, we           single butterfly unit required for ML-DSA. Aikata et al. [2] utilized
+
+synthesized the design on a Zynq UltraScale+ MPSoC device, i.e.,          2 BF2 units for ML-DSA, while Mandal and Roy [14] offer two
+
+`xck26-sfvc784-2LV-c'. We decided to not allow the compiler to            versions: one with 2 BF2 units and another with 4 BF2 units. In
+
+flatten the hierarchy in order to get exact area requirements of all      comparison, our design achieves better ATP values while using
+
+implemented submodules. For maximum frequency analysis, we                hardware resources comparable to their iterative NTT architectures.
+
+swept across various target frequencies starting at 50 MHz and in-            There are few pipelined NTT architectures available in the open
+
+creased the frequency until occurrence of the first timing violation      literature [15, 24]. The architecture proposed in [24] designed a
+
+after implementation, i.e., Place and Route (PnR).                        folded R2MDC NTT for ML-DSA, utilizing half the hardware re-
+
+   Table 2 shows the area and performance figures. At a maximum           sources of our design but resulting in higher latency. Their design
+
+frequency of 322 MHz, our R2MDC NTT/iNTT core capable of                  processed 8 vectors in 13.61 s, whereas our NTT accelerator pro-
+
+processing ML-DSA and ML-KEM utilizes 3,821 LUTs, 2,970 FFs,              cesses them in 3.6 s, providing a 74% improvement in performance.
+
+and 16 DSPs. The twiddle ROM consumes 4 36Kb dual-port BRAMs              Additionally, our fully pipelined architecture, which requires more
+
+(or 8 18Kb single-port BRAMs) for storing the pre-computed twiddle        FFs, achieves a higher operating frequency. Despite the different
+
+factors. The post-process unit consumes 4 DSPs and 1 BRAM which           platforms used (Artix-7 vs. Zynq Ultrascale+), our design reaches a
+
+is needed to store the values of  --1,   [0,  - 1]. In total, 20          maximum frequency of 322 MHz compared to the 97 MHz reported
+
+DSPs and 5 BRAMs are needed.                                              in [24].
+
+   Processing a 256-coefficient polynomial vector with our NTT                The closely related R2MDC NTT design, S-NTT [15] specifically
+
+accelerator takes a total of 258 clock cycles: a 130 clock-cycle latency  targets ML-KEM and exhibits the same latency for processing 8
+
+to fill the pipeline and 128 cycles to generate the entire output. Note   vectors. However, the specific hardware resource usage for NTT
+
+that once the pipeline is full, processing subsequent vectors takes       is not separately provided, and thus is not listed in Table 3. Their
+
+only 128 (/2) clock cycles each.                                          design incorporates seven stages based on ML-KEM, with the ST2
+ASHES '24, October 14­18, 2024, Salt Lake City, UT, USA.                                   Dur E Shahwar Kundi, Jose M. Bermudo Mera, Pierre-Yves Strub, & Michael Hutter
+
+                 Table 3: Performance comparison of iterative and pipelined (MDC-based) NTT methods.
+
+Design  FPGA                  Algos                 BF2                Area                      Freq.            Latency (CC)                 Performance     Area-Time
+
+                                                    units             LUTs/FFs/DSPs/BRAMs        MHz           1-vec       8-vec                s    Mbps      Prod. [ATP]
+
+[23]    Artix-7               ML-KEM                      4            2,543/792/4/4.5           182              232      1,856        10.20           201               25,938
+
+[24]    Artix-7               ML-DSA                      4            1,919/1,301/8/2           97               424      1,320        13.61           150               26,136
+
+[2],    Zynq                  ML-DSA                      2            3,487/1,918/4/1           270              512      4,096        15.17           135               52,898
+
+        UltraScale+           ML-KEM                      4                                                       224      1,792               6.64     309               23,154
+
+                              ML-DSA                      2            2,893/2,356/4/4.5         342              512      4,096        11.98           171               34,658
+
+[14]    Zynq                  ML-KEM                      4                                                       224      1,792               5.24     391               15,159
+
+        UltraScale+           ML-DSA                      4            5,909/3,376/8/5.5         294              256       2048               6.97     294               41,185
+
+                              ML-KEM                      8                                                       112           896            3.05     672               18,022
+
+Our     Zynq                  ML-DSA                      8            3,821/2,970/20/5          322              258      1,158               3.60     569               13,755
+
+Work    UltraScale+           ML-KEM                      8                                                       254      1,154               3.58     571               13,679
+
+Iterative NTT.
+
+ Extra data RAM memory        (BRAM) is needed to store      intermediate coefficients, which is not     included in this table.
+
+commutator starting with a 32D delay instead of 64D, processing a                          [9]   Tim Fritzmann and Johanna Sepúlveda. 2019. Efficient and Flexible Low-Power
+
+256-coefficient vector as two 128-coefficient vectors. This makes the                            NTT for Lattice-Based Cryptography. In 2019 IEEE International Symposium on
+
+design inflexible for other parameters. While flexibility often entails                          Hardware Oriented Security and Trust (HOST). IEEE, McLean, VA, USA, 141­150.
+
+                                                                                           [10]  W. Morven Gentleman and G. Sande. 1966.             Fast Fourier Transforms: for fun
+
+increased hardware resources or performance degradation, our                                     and profit. In Proceedings of the November 7-10, 1966, Fall Joint Computer Con-
+
+proposed R2MDC NTT accelerator strikes a balance by optimizing                                   ference (San Francisco, California) (AFIPS '66 (Fall)). Association for Computing
+
+both hardware utilization and performance.                                                       Machinery, New York, NY, USA, 563­578.
+
+                                                                                           [11]  Craig Gentry. 2009. Fully homomorphic encryption using ideal lattices. In Pro-
+
+                                                                                                 ceedings of the 41st ACM Symposium on Theory of Computing (Bethesda, MD,
+
+6    Conclusion                                                                                  USA). Association for Computing Machinery, New York, NY, USA, 169­178.
+
+                                                                                           [12]  Naina Gupta, Arpan Jati, Anupam Chattopadhyay, and Gautam Jha. 2022. Light-
+
+In this work, we present a high-performance NTT architecture                                     weight Hardware Accelerator for Post-Quantum Digital Signature CRYSTALS-
+
+to support ML-DSA and ML-KEM. As a novel contribution, we                                        Dilithium. Cryptology ePrint Archive, Paper 2022/496.
+
+                                                                                           [13]  Florian Hirner, Ahmet Can Mert, and Sujoy Sinha Roy. 2024. Proteus: A Pipelined
+
+propose to use a Cooley-Tukey-only butterfly configuration in the                                NTT Architecture Generator. IEEE Transactions on Very Large Scale Integration
+
+NTT design to reduce area requirements and critical path. We                                     (VLSI) Systems Early Access, 1 (2024), 1­11.
+
+                                                                                           [14]  Suraj Mandal and Debapriya Basu Roy. 2024. KiD: A Hardware Design Framework
+
+integrate the new construction in a parallel NTT architecture based                              Targeting Unified NTT Multiplication for CRYSTALS-Kyber and CRYSTALS-
+
+on a Multi-path Delay Commutator (MDC) pipeline to obtain best                                   Dilithium on FPGA. In 37th International Conference on VLSI Design, VLSID 2024,
+
+results. We evaluated our design on a Zynq Ultrascale+ MPSoC                                     January 6-10, 2024. IEEE, Kolkata, India, 455­460.
+
+                                                                                           [15]  Ziying Ni, Ayesha Khalid, Dur e Shahwar Kundi, Maire ONeill, and Weiqiang
+
+device. Our results show that it outperforms existing work in terms                              Liu. 2023. HPKA: A High-Performance CRYSTALS-Kyber Accelerator Exploring
+
+of data throughput and Area-Time-Product (ATP) while requiring                                   Efficient Pipelining. IEEE Trans. Comput. 72, 12 (dec 2023), 3340­3353.
+
+less resources compared to similar proposals. Our results also show                        [16]  NIST. 2016. Announcing Request for Nominations for Public-Key Post-Quantum
+
+                                                                                                 Cryptographic Algorithms.      https://csrc.nist.gov/news/2016/public- key- post-
+
+that our MDC-based NTT design has similar LUT requirements                                       quantum- cryptographic- algorithms
+
+than work based on iterative NTTs, but is significantly faster, i.e., up                   [17]  NIST. 2022. NIST IR 8413-upd1: Status Report on the Third Round of the NIST
+
+                                                                                                 Post-Quantum Cryptography Standardization Process.            https://csrc.nist.gov/
+
+to a factor of 4 in case of Dilithium NTT calculation performance,                               publications/detail/nistir/8413/final
+
+due to the pipelined processing of data. Our solution is therefore                         [18]  Peter W. Shor. 1997. Polynomial-Time Algorithms for Prime Factorization and
+
+best suitable for high-performance applications of PQC.                                          Discrete Logarithms on a Quantum Computer. SIAM J. Comput. 26, 5 (Oct. 1997),
+
+                                                                                                 1484­1509.    http://dx.doi.org/10.1137/S0097539795293172
+
+                                                                                           [19]  Shousheng He and M. Torkelson. 1998. Designing pipeline FFT processor for
+
+References                                                                                       OFDM (de)modulation. In Proc. URSI International Symposium on Signals, Systems,
+
+                                                                                                 and Electronics. IEEE, Pisa, Italy, 257­262.
+
+[1]  Shweta Agrawal, Dan Boneh, and Xavier Boyen. 2010. Efficient Lattice (H)IBE in        [20]  Jerome A. Solinas. 1999.   Generalized Mersenne Numbers.      Technical report,
+
+     the Standard Model. In Advances in Cryptology ­ EUROCRYPT 2010, Henri Gilbert               University of Waterloo, 1999.  https://cacr.uwaterloo.ca/techreports/1999/corr99-
+
+     (Ed.). Springer Berlin Heidelberg, Berlin, Heidelberg, 553­572.                             39.pdf
+
+[2]  Aikata Aikata, Ahmet Can Mert, Malik Imran, Samuel Pagliarini, and Sujoy Sinha        [21]  Yufei Xing and Shuguo Li. 2021.        A Compact Hardware Implementation of
+
+     Roy. 2022. KaLi: A Crystal for Post-Quantum Security using Kyber and Dilithium.             CCA-Secure Key Exchange Mechanism CRYSTALS-KYBER on FPGA.                IACR
+
+     Cryptology ePrint Archive, Paper 2022/1086.                                                 Transactions on Cryptographic Hardware and Embedded Systems 2021, 2 (Feb.
+
+[3]  Roberto Avanzi, Joppe Bos, Léo Ducas, Eike Kiltz, Tancrède Lepoint, Vadim                   2021), 328­356.
+
+     Lyubashevsky, John M Schanck, Peter Schwabe, Gregor Seiler, and Damien Stehlé.        [22]  Ali Yahya Hummdi, Amer Aljaedi, Zaid Bassfar, Sajjad Shaukat Jamal, Mohammad
+
+     2021. CRYSTALS-Kyber algorithm specifications and supporting documentation.                 Mazyad Hazzazi, and Mujeeb Ur Rehman. 2024. Unif-NTT: A Unified Hardware
+
+[4]  Shi Bai, Lèo Ducas, Eike Kiltz, Tancrède Lepoint, Vadim Lyubashevsky, Peter                 Design of Forward and Inverse NTT for PQC Algorithms. IEEE Access 12 (2024),
+
+     Schwabe, Gregor Seiler, and Damien Stehlè. 2021. CRYSTALS-Dilithium algo-                   94793­94804.     https://doi.org/10.1109/ACCESS.2024.3425813
+
+     rithm specifications and supporting documentation (Version 3.1).                      [23]  Ferhat Yaman, Ahmet Can Mert, Erdinç Öztürk, and Erkay Sava. 2021.                    A
+
+[5]  Mojtaba Bisheh-Niasar, Reza Azarderakhsh, and Mehran Mozaffari-Kermani. 2021.               Hardware Accelerator for Polynomial Multiplication Operation of CRYSTALS-
+
+     High-Speed NTT-based Polynomial Multiplication Accelerator for CRYSTALS-                    KYBER PQC Scheme. In 2021 Design, Automation & Test in Europe Conference &
+
+     Kyber Post-Quantum Cryptography. Cryptology ePrint Archive, Paper 2021/563.                 Exhibition (DATE). IEEE, Grenoble, France, 1020­1025.
+
+[6]  James Cooley and John Tukey. 1965. An Algorithm for the Machine Calculation           [24]  Cankun Zhao, Neng Zhang, Hanning Wang, Bohan Yang, Wenping Zhu, Zheng-
+
+     of Complex Fourier Series. Math. Comp. 19, 90 (1965), 297­301.                              dong Li, Min Zhu, Shouyi Yin, Shaojun Wei, and Leibo Liu. 2021. A Compact
+
+[7]  FIPS-203 (Draft). 2023.  Module-Lattice-based Key-Encapsulation Mechanism                   and High-Performance Hardware Architecture for CRYSTALS-Dilithium. IACR
+
+     Standard. National Institute of Standards and Technology (NIST).                            TCHES 2022, 1 (Nov. 2021), 270­295.
+
+[8]  FIPS-204 (Draft). 2023. Module-Lattice-based Digital Signature Standard. National
+
+     Institute of Standards and Technology (NIST).
+
