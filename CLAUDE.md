@@ -22,10 +22,19 @@ FPGA 竞赛项目：**AMD 赛道 · 3.3 自主选题（初级组）· 后量子�
 - **Vivado ML Standard 2020.2 装在本机** —— `E:\xilinx\Vivado\2020.2`
   （可执行文件 `E:\xilinx\Vivado\2020.2\bin\vivado.bat`；⚠️ 实际目录名是**小写** `xilinx`）
   **综合 / 上板 / 时序 / 资源的事在本机就能做**，不要说"做不了"
-- **板子也接在本机** —— 板载 CH340C，串口号 **COM10**（设备名 `USB-SERIAL CH340`）。
-  ⚠️ COM 口存在 ≠ PL 通路通：要烧 `19_uart_loopback` + 底板 **P5 跳 PL 档**才算确认
-- ⬜ **正点原子例程资料（含 `19_uart_loopback`）还不在这台机器上** ——
-  下载目录 / 安装包目录 / 网盘目录都搜过，没有。动手前先把它弄到手
+- **板子也接在本机**（正点原子**领航者 ZYNQ**，器件 `xc7z020clg400-2`，与板子完全一致）——
+  板载 CH340C，串口号 **COM10**（设备名 `USB-SERIAL CH340`）。⚠️ 板子不常插着，
+  **动手前先确认 COM10 在**（`[System.IO.Ports.SerialPort]::GetPortNames()`）。
+  COM 口存在 ≠ PL 通路通：要烧 `19_uart_loopback` + 底板 **P5 跳 PL 档**才算确认
+- **正点原子资料已在本机** —— `E:\BaiduNetdiskDownload\正点原子资料`（23 GB）。
+  上板要的四个引脚（例程 XDC 与全板 `NAVIGATOR_ZYNQ_IO.xdc` 已交叉核对一致，均 LVCMOS33）：
+  `sys_clk` **U18**（50 MHz）｜`sys_rst_n` **N16**（**低有效**）｜
+  `uart_rxd` **T19**｜`uart_txd` **J15**
+  ⚠️ **复位极性与我们的 RTL 相反** —— 上游 pe1/pe4/pe16 是 `reset` 异步**高**有效。
+  ⚠️ 全板 XDC 里 `uart_rxd`/`uart_txd` 定义了**三次**，是互斥备选
+  （USB UART `T19/J15`、PL_UART(RS232)/RS485 `K14/M15`）；我们只用 **USB UART 那组**。
+  ⚠️ rar 里的源码/readme 是 **GBK**，本机**没有 iconv** —— 用 PowerShell
+  `[System.IO.File]::ReadAllText($p, [System.Text.Encoding]::GetEncoding(936))`
 - **B 全程不需要板子和 Vivado**，进度不被 A 卡住 —— 见 `team/FPGA竞赛_B_引导与计划.md`
 
 ## 目录

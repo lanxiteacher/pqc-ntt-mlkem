@@ -78,7 +78,16 @@ export PATH="/c/iverilog/bin:$PATH"
    - **下一步：跑通官方 `19_uart_loopback` 例程**——纯 PL 逻辑，波特率 115200，
      底板 **P5 跳线切到 PL 档**（3–5、4–6 短接）。
      跑通了才说明「工具链 + 板子 + 串口线」这三样都是好的。
-     ⚠️ **这份例程的资料还没拷到本机**，先把它弄到手。
+     ✅ **资料已到位**（09/22）：`E:\BaiduNetdiskDownload\正点原子资料`（23 GB），
+     例程在 `4_Source_Code/1_FPGA_Design/ZYNQ_7020_FPGA.rar`（**46 个**，别解错成 7010 那个）。
+     `19_uart_loopback` 已解出到 `E:/nav_examples/`，**自带一份已编译好的 `.bit`**
+     （器件正是板子的 `xc7z020clg400-2`）—— **不必重新综合**，直接烧就能做冒烟测试。
+     ⚠️ **烧之前三件事都要满足**：① 外接 **JTAG 下载器**接 14-Pin 排针（板上没有 USB-JTAG，
+     `USB_UART`／`USB_SLAVE` 两个口都**不能**下载程序；下载器已在手）；
+     ② **启动模式拨码开关拨到 JTAG 档**；③ **P5 跳 PL 档**。
+     ⚠️ 引脚口径（09/22 与全板 `NAVIGATOR_ZYNQ_IO.xdc` 交叉核对结案）：
+     `sys_clk` **U18**（50 MHz）／`sys_rst_n` **N16**（**低有效** —— 与我们 RTL 的高有效相反）／
+     `uart_rxd` **T19**／`uart_txd` **J15**，均 LVCMOS33，走 **USB UART** 那组。
 
 2. **跑通验证台** —— 打开终端敲：
 
