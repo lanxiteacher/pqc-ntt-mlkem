@@ -80,7 +80,8 @@ sh run_ntt_layers.sh          # 导出并机器验证 twiddle 层序表
 ```
 FPGA/
 ├── CLAUDE.md                  AI 协作约定与项目环境说明
-├── FPGA竞赛_项目记录.md        当前状态与待办
+├── logs/                      项目记录与进度排期
+│   └── FPGA竞赛_项目记录.md   当前状态与待办
 ├── LICENSE                    Apache License 2.0
 ├── NOTICE                     Apache-2.0 要求的声明文件
 ├── THIRD_PARTY_LICENSES.md    第三方组件清单与许可证

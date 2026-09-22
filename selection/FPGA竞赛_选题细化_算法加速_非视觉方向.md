@@ -1,7 +1,7 @@
 # FPGA 竞赛 · 选题细化：算法硬件加速 · 非视觉候选（无摄像头版）
 
 > 用途：承接《FPGA竞赛_选题细化_硬件加速方向.md》（三选一**因全部依赖摄像头/HDMI 被队长打回**）的重筛底稿。本文件候选**一律不出现图像/视觉方向**、不依赖摄像头/HDMI，数据载体默认 **PC 上位机 ↔ FPGA（串口/USB 喂数据、结果回传对比）**。
-> 创建：2026-09-09 ｜ 上游：被打回稿《FPGA竞赛_选题细化_硬件加速方向.md》、《FPGA竞赛_项目记录.md》
+> 创建：2026-09-09 ｜ 上游：被打回稿《FPGA竞赛_选题细化_硬件加速方向.md》、《../logs/FPGA竞赛_项目记录.md》
 > 状态：讨论稿（非定稿）｜ 距报名截止 2026-09-22 约 2 周
 > ⚠️ 本文属"调查/决策"阶段，不含具体电路设计。
 > 📌 **2026-09-18 更新**：本批候选在选定板卡（正点原子**领航者 ZYNQ-7020**）上的可行性已单独结算，并**推翻了本文三处判断**——① "四候选 7020 适配均极好"（真瓶颈是 DSP/BRAM 不是 LUT）② 候选 C 的"SNN 逻辑简单"③ "上板 UART 是 AI 帮不了的点"（官方已有纯 PL 串口例程）。**选型请以可行性分析为准，本文保留作原始调研记录。** 详见同目录《FPGA竞赛_可行性分析_非视觉候选_领航者7020.md》。
@@ -252,7 +252,7 @@
 - **候选 B（ESN/RC）**：Paderborn 流式 ESN 100–188 Msps / 5.3–9.5ns——Springer ARC 2025（link.springer.com/chapter/10.1007/978-3-031-87995-1_11）与 ACM《Streamlined Dataflow FPGA Architectures for ESN》（dl.acm.org/doi/10.1145/3811539）；金融 ESN on KCU105 0.68W（MAKLE 2025-12）
 - **候选 C（SNN 生物信号）**：ECG 检测 62mW/91.4%——MDPI Electronics 14(24):4923（mdpi.com/2079-9292/14/24/4923）；癫痫检测 3.73μJ/98.1%——IEEE TBioCAS 19(1)（pubmed.ncbi.nlm.nih.gov/39196752）；开源训练库 snnTorch / Brian2
 - **候选 D（HDC）**：AXI-HDC 加速器 IP（github.com/RoMartino/AXI-HDC-Accelerator，Zynq-7000 通用）；HDC 硬件佐证（ImageHD on ZCU104 40× vs CPU——arXiv 2512.08089 / IEEE 11552725，仅作范式参考，非 7020 数字）
-- **上游档案**：被打回稿《FPGA竞赛_选题细化_硬件加速方向.md》、《FPGA竞赛_项目记录.md》（同目录）
+- **上游档案**：被打回稿《FPGA竞赛_选题细化_硬件加速方向.md》、《../logs/FPGA竞赛_项目记录.md》
 
 ---
 

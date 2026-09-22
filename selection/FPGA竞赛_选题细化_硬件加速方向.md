@@ -1,7 +1,7 @@
 # FPGA 竞赛 · 选题细化：硬件加速方向（三选一底稿）
 
 > 用途：在"算法硬件加速器"方向下，把筛出的 **3 个候选选题** 各自展开到"能拿去和队友/老师讨论、能支撑三选一决策"的粒度。
-> 创建：2026-09-09 ｜ 上游：《FPGA竞赛_选题调研.md》《FPGA竞赛_项目记录.md》
+> 创建：2026-09-09 ｜ 上游：《FPGA竞赛_选题调研.md》《../logs/FPGA竞赛_项目记录.md》
 > 状态：选题细化讨论稿（非定稿）｜ 距报名截止 2026-09-22 约 2 周
 > ⚠️ 本文仍属"调查/决策"阶段，**不含具体电路设计**。
 
@@ -162,7 +162,7 @@
 - 去雾加速（PYNQ-Z2 ≈ 7020）：43× / 0.79W — ETASR 2025（mail.etasr.com/index.php/ETASR/article/view/11931）；1080p CLAHE 30FPS、PC 单帧约 2s — 生物通/IEICE 报道 2025-11（www.ebiotrade.com/newsf/2025-11/20251124174134470.htm）；HazeClear ASIC 2026、EdgeLUT 2026（IEEE 11673265）
 - ORB 加速：Adaptive ORB（Pynq-Z2 48FPS vs CPU 15FPS）— MDPI 2624-6120/7/1/13；FPGA/GPU SLAM 前端对比 — Springer JRTIP 10.1007/s11554-025-01650-w
 - 小 ViT 加速比局限（7020 ~1.4×，用作否决依据）：FlexViT / ViTA / Approximate Attention（Zynq-7020）
-- 上游档案：《FPGA竞赛_选题调研.md》《FPGA竞赛_项目记录.md》（同目录）
+- 上游档案：《FPGA竞赛_选题调研.md》《../logs/FPGA竞赛_项目记录.md》
 
 ---
 
