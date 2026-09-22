@@ -1,0 +1,13 @@
+
+****** Vivado v2020.2 (64-bit)
+  **** SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+  **** IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+    ** Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+
+source probe_parts.tcl -notrace
+=== PARTS PROBE ===
+  FOUND   : xc7z020clg400-2
+  FOUND   : xc7a200tffg1156-3
+  xc7a200t* 系列命中敡�: 48
+=== PROBE DONE ===
+INFO: [Common 17-206] Exiting Vivado at Tue Sep 22 16:12:44 2026...

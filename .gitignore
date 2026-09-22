@@ -64,6 +64,9 @@ research/kyber_ref/papers/*.html
 *.ip_user_files/
 *.gen/
 *.srcs/sources_1/bd/*/ipshared/
+# 折叠度扫描的 Vivado 工程与中间产物：可由 rtl/vivado/run_folding_sweep.sh 重新生成。
+# 只挡这一个目录 —— 报告（reports/*.rpt）要提交，不在忽略范围内。
+rtl/vivado/_runs/
 
 # ===== 编辑器 / 系统 =====
 .DS_Store
