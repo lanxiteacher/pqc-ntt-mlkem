@@ -74,7 +74,8 @@ export PATH="/c/iverilog/bin:$PATH"
 
 1. ~~装 Vivado~~ ✅ **2026-09-19 已完成** —— Vivado ML Standard 2020.2，
    装在 `E:\xilinx\Vivado\2020.2`，Cable Drivers 已勾，占用 42.25 GB。
-   版本与原定的 2024.2 不同，理由见 `logs/FPGA竞赛_项目记录.md` §五。
+   版本与原定的 2024.2 不同，理由见 `logs/FPGA竞赛_项目记录_背景.md`
+   §三「Vivado 版本：实装 2020.2」。
    - **下一步：跑通官方 `19_uart_loopback` 例程**——纯 PL 逻辑，波特率 115200，
      底板 **P5 跳线切到 PL 档**（3–5、4–6 短接）。
      跑通了才说明「工具链 + 板子 + 串口线」这三样都是好的。
