@@ -2,20 +2,38 @@
 # run_folding_sweep.sh —— 三档折叠度各跑一次 Vivado 综合实现，出资源 / 频率报告
 #
 #   用法:
-#     sh run_folding_sweep.sh              # 三档全跑（pe1 / pe4 / pe16）
-#     sh run_folding_sweep.sh pe4          # 只跑一档，改一行不用重跑三个
+#     sh run_folding_sweep.sh                    # 参数化版，三档全跑（pe1 / pe4 / pe16）
+#     sh run_folding_sweep.sh pe4                # 只跑一档，改一行不用重跑三个
+#     TREE=upstream sh run_folding_sweep.sh      # 上游基线（rtl/peN/ 三份独立目录）
 #
 #   产物:
 #     rtl/vivado/reports/<档>_util.rpt     ← 资源占用（要提交，H4 要交给 C）
 #     rtl/vivado/reports/<档>_timing.rpt   ← 时序 + 关键路径（同上）
 #     rtl/vivado/_runs/<档>.log            ← 完整日志（不提交，见 .gitignore）
 #
+#   ── TREE：量哪一棵树 ─────────────────────────────────────────────
+#     ncore（默认）  量 rtl/ntt_core/ 的参数化版 —— 顶层都是 KyberHPMNTT_top，
+#                    折叠度由 generic `PE_NUMBER` 选。报告自动带 `_nc` 后缀，
+#                    不会盖掉上游那份。
+#     upstream_top   量 rtl/peN/KyberHPMNPE_top.v（上游**顶层**：核 + 输入寄存级）。
+#                    报告带 `_utop` 后缀。
+#     upstream       量 rtl/peN/KyberHPMNPE.v（上游**核**本体，没有外面那级寄存）。
+#                    `折叠度对比表.md` 里那张基线表就是这么来的。
+#
+#   ⚠️ **核 / 顶层是两个不同的量法，别混着比。**
+#      上游的 IOB 数两边一样（`_top` 不改变端口位宽，`din`/`dout` 仍是 12×PE），
+#      但 LUT/FF 差一级寄存器的量。ncore 量的是**顶层**（含 12 位串行化的外壳），
+#      所以要和 `upstream_top` 并排看，不是和 `upstream`。
+#      三者同一器件、同一周期约束，只有**边界**不同 —— 表里必须标清是哪一行。
+#
 #   环境变量:
+#     TREE=<ncore|upstream_top|upstream>  量哪棵树，见上。默认 ncore
 #     VIVADO_RUNS=<目录>   工程中间产物放哪。默认 rtl/vivado/_runs/
 #                          （C 盘紧张时可以指到别的盘）
 #     PART=<器件>          默认 xc7z020clg400-2，也就是板上那颗 Zynq-7020
 #     PERIOD=<ns>          默认 5（200MHz）
-#     TAG=<后缀>           报告文件名加后缀，交叉核对跑用，见下
+#     TAG=<后缀>           报告文件名加后缀，交叉核对跑用，见下。
+#                          不给的话 ncore 档自动用 `_nc`
 #
 #   ── 关于「周期给 5ns」────────────────────────────────────────────
 #   5ns 比这块设计能达到的更快（论文同量级设计在 Artix-7 上是 127–192MHz），
@@ -38,10 +56,26 @@ RTLDIR="$(cd "$HERE/.." && pwd)"
 VIVADO="${VIVADO:-E:/xilinx/Vivado/2020.2/bin/vivado.bat}"
 PART="${PART:-xc7z020clg400-2}"
 PERIOD="${PERIOD:-5}"
-TAG="${TAG:-}"
+TREE="${TREE:-ncore}"
 TRIES="${TRIES:-3}"
 REPDIR="$HERE/reports"
 RUNDIR="${VIVADO_RUNS:-$HERE/_runs}"
+
+case "$TREE" in
+    ncore|upstream_top|upstream) ;;
+    *) echo "  ❌ 不认识的 TREE「$TREE」，只支持 ncore / upstream_top / upstream"; exit 1 ;;
+esac
+
+# 三棵树各自一个默认后缀 —— 不加的话会互相覆盖，而 `upstream`（核）那三份
+# 报告早已提交、是交给 C 的产物清单（§八），盖掉就复现不出来了。
+TAG="${TAG:-}"
+if [ -z "$TAG" ]; then
+    case "$TREE" in
+        ncore)        TAG="_nc"   ;;
+        upstream_top) TAG="_utop" ;;
+        upstream)     TAG=""      ;;
+    esac
+fi
 
 # ── 为什么必须有一个「仓库之外」的启动目录 ──────────────────────────
 # Vivado 把 .Xil/<...>/realtime/tmp/ 交给综合引擎 ABC 当工作目录，路径是经 shell
@@ -95,25 +129,56 @@ else
     TARGETS="pe1 pe4 pe16"
 fi
 
+case "$TREE" in
+    ncore)        TREEDESC="rtl/ntt_core 顶层 KyberHPMNTT_top（参数化版）" ;;
+    upstream_top) TREEDESC="rtl/peN 顶层 KyberHPMNPE_top（上游基线）" ;;
+    upstream)     TREEDESC="rtl/peN 核 KyberHPMNPE（上游基线）" ;;
+esac
+
 echo "═══════════════════════════════════════════════════════════"
 echo "  折叠度扫描：器件 $PART   目标周期 ${PERIOD}ns   运行目录 $RUNDIR"
+echo "  源码树：$TREEDESC"
 echo "═══════════════════════════════════════════════════════════"
 
 for d in $TARGETS; do
-    top="$(top_of "$d")"
-    if [ -z "$top" ]; then
+    bflies="$(bflies_of "$d")"
+    if [ "$bflies" = "?" ]; then
         echo "  ❌ 不认识的档位「$d」，只支持 pe1 / pe4 / pe16"
         exit 1
     fi
     label="$d$TAG"
-    srcdir="$RTLDIR/$d"
+
+    case "$TREE" in
+        ncore)
+            # 第 7 个 tclarg = 蝶形数，synth_one.tcl 自己拼成 generic PE_NUMBER=N。
+            # ⚠️ 不要把 `PE_NUMBER=N` 整串从命令行传进去 —— 见 synth_one.tcl 的注释。
+            srcdir="$RTLDIR/ntt_core"
+            top="KyberHPMNTT_top"
+            pearg="$bflies"
+            ;;
+        upstream_top)
+            # 上游顶层。它自己带 `parameter PE_NUMBER`，**但顶层没有实例化者**，
+            # 所以 generic 传不进去（`-generic` 只作用于顶层模块的参数）。
+            # 好在每个 peN 目录里的 `_top` 默认值本来就是对的（1 / 4 / 16），
+            # 而目录名已经决定了是哪一档 —— 不会串。
+            srcdir="$RTLDIR/$d"
+            top="$(top_of "$d")_top"
+            pearg=""
+            ;;
+        upstream)
+            srcdir="$RTLDIR/$d"
+            top="$(top_of "$d")"
+            pearg=""
+            ;;
+    esac
+
     if [ ! -d "$srcdir" ]; then
         echo "  ❌ 源码目录不存在：$srcdir"
         exit 1
     fi
 
     echo ""
-    echo "─── $label  |  $top  |  $(bflies_of "$d") 个蝶形单元 ───"
+    echo "─── $label  |  $top  |  $bflies 个蝶形单元 ───"
 
     # 重试：本机 Vivado 2020.2 的综合 helper 子进程会间歇性报
     # "couldn't read file ...: No error"（读的是它自己安装目录里确实存在的文件），
@@ -131,7 +196,7 @@ for d in $TARGETS; do
         if ( cd "$SCRATCH" && exec "$VIVADO" -mode batch -notrace -nolog -nojournal \
                 -source "$(vpath "$HERE/synth_one.tcl")" \
                 -tclargs "$label" "$top" "$PART" "$PERIOD" \
-                         "$(vpath "$srcdir")" "$(vpath "$REPDIR")" ) \
+                         "$(vpath "$srcdir")" "$(vpath "$REPDIR")" "$pearg" ) \
                 > "$RUNDIR/$label.log" 2>&1 \
            && [ -s "$REPDIR/${label}_util.rpt" ]
         then
@@ -194,24 +259,51 @@ fmax_of() {
     fi
 }
 
+# ⚠️ 最后一行不能写 `rpt_cell ... | head -1` 这类：报告里 `Block RAM Tile` 与
+#    `Block RAM Tile | DSP48E1 only` 之类会撞名，所以 rpt_cell 取的是**第一次**匹配
+#    就 exit，别在外面再叠一层过滤。
 echo ""
 echo "═══════════════════════════════════════════════════════════"
-echo "  汇总（器件 $PART，目标周期 ${PERIOD}ns）"
+echo "  汇总（源码树：$TREEDESC）"
+echo "  器件 $PART，目标周期 ${PERIOD}ns，引脚预算 125"
 echo "═══════════════════════════════════════════════════════════"
-printf '  %-8s %10s %8s %6s %6s %8s %10s\n' 档 LUT FF DSP BRAM WNS_ns Fmax_MHz
+printf '  %-8s %10s %8s %6s %6s %8s %8s %10s\n' 档 LUT FF DSP BRAM WNS_ns IOB Fmax_MHz
+iob_fail=0
 for d in $TARGETS; do
     label="$d$TAG"
     f="$REPDIR/${label}_util.rpt"
     wns="$(grep -m1 "^RESULT $label WNS_NS" "$RUNDIR/$label.log" | awk '{print $4}')"
-    printf '  %-8s %10s %8s %6s %6s %8s %10s\n' \
+    iob="$(rpt_cell "$f" 'Bonded IOB')"
+    # 判据 1：三档 IOB 都必须落在 7020 的 125 个引脚预算里。
+    # 上游 pe16 是 397 → place 直接失败，所以这一格是本轮改造的验收点。
+    if [ -n "$iob" ] && [ "$iob" -gt 125 ] 2>/dev/null; then
+        iob="$iob ⚠️超"
+        iob_fail=1
+    fi
+    printf '  %-8s %10s %8s %6s %6s %8s %8s %10s\n' \
         "$label" \
         "$(rpt_cell "$f" 'Slice LUTs')" \
         "$(rpt_cell "$f" 'Slice Registers')" \
         "$(rpt_cell "$f" 'DSPs')" \
         "$(rpt_cell "$f" 'Block RAM Tile')" \
         "${wns:--}" \
+        "${iob:-?}" \
         "$(fmax_of "$wns")"
 done
 echo ""
 echo "  Fmax 是反推值：T_min ≈ ${PERIOD}ns - WNS，Fmax = 1000/T_min（MHz）"
 echo "  完整报告在 $REPDIR/"
+# ⚠️ 判据 1 只对**参数化版**（TREE=ncore）下结论。上游两棵树本来就超预算
+#    （pe4 109 / pe16 397），跑对照那一轮不该打印「判据 1 通过/不通过」——
+#    打印 ✅ 会把「上游本来就不达标」说成达标，打印 ❌ 会被读成「参数化版退步了」。
+#    所以先判 TREE，再判数字。
+if [ "$TREE" = "ncore" ]; then
+    if [ "$iob_fail" -eq 0 ]; then
+        echo "  ✅ 判据 1（引脚预算）：三档 Bonded IOB 全部 ≤ 125"
+    else
+        echo "  ❌ 判据 1（引脚预算）：有档位的 Bonded IOB 超过 125 —— 见上表标 ⚠️ 的行"
+    fi
+else
+    echo "  ℹ️  上游基线（$TREE）：pe4 / pe16 的 Bonded IOB 本就超 125（109 / 397）——"
+    echo "      这是 §五 那条结论的复现，不是回归。判据 1 只对 TREE=ncore 下结论。"
+fi

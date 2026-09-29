@@ -2,7 +2,7 @@
 #
 # 用法（由 run_folding_sweep.sh 调用，一般不直接跑）:
 #   vivado -mode batch -source synth_one.tcl \
-#       -tclargs <标签> <顶层> <器件> <周期ns> <源码目录> <报告目录>
+#       -tclargs <标签> <顶层> <器件> <周期ns> <源码目录> <报告目录> [<蝶形数>]
 #
 # 非工程模式（non-project）：不建 .xpr、不写 bitstream，只到 route 为止。
 #   —— 本步的目的只是「量数字」，上板和引脚约束是后面 H6 另起的事。
@@ -17,8 +17,17 @@ set part    [lindex $argv 2]
 set period  [lindex $argv 3]
 set srcdir  [lindex $argv 4]
 set repdir  [lindex $argv 5]
+# 第 7 个参数可省：蝶形数，用来给参数化版 `rtl/ntt_core/` 的顶层设 generic。
+# 上游那三份独立目录没有参数，留空即可；省掉时 lindex 返回空串，走下面 else 分支。
+#
+# ⚠️ 这里只传**裸数字**（`4`），generic 的 `PE_NUMBER=` 部分在下面拼。
+#    一开始直接把整串 `PE_NUMBER=4` 从命令行传进来，Vivado 的命令行解析把它
+#    在 `=` 处切成了两个参数 —— Tcl 侧收到的是 "PE_NUMBER"，`4` 掉进了下一个 argv。
+#    结果 `-generic PE_NUMBER` 让参数取到 0，报的是
+#    「part-select [-1:0] does not match declaration」这种看着像 RTL 写错了的错。
+set penum [lindex $argv 6]
 
-puts "=== $tag | top=$top | part=$part | period=${period}ns ==="
+puts "=== $tag | top=$top | part=$part | period=${period}ns PE_NUMBER=${penum} ==="
 
 # 只读设计文件；testbench 排除（它们含 $readmemh / $display / #delay，不参与综合）
 set srcs {}
@@ -31,7 +40,12 @@ if {[llength $srcs] == 0} { error "no .v found in $srcdir" }
 
 read_verilog $srcs
 
-synth_design -top $top -part $part
+# generic 只在参数化版传；上游三份目录的顶层没有参数，所以分支。
+if {$penum ne ""} {
+    synth_design -top $top -part $part -generic PE_NUMBER=$penum
+} else {
+    synth_design -top $top -part $part
+}
 
 # 唯一一条约束：时钟。clk 不分频直接进逻辑，所以这一条就够。
 create_clock -period $period -name clk [get_ports clk]

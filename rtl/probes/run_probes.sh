@@ -24,6 +24,16 @@ mkdir -p "$W"
 head -256 "$BATCH/ntt_batch_in.txt"  > "$W/in.txt"
 head -256 "$BATCH/ntt_batch_exp.txt" > "$W/exp.txt"
 
+# 段 ⑩ 要整套 16 组（4096 系数），三个运算各一套、**文件名不重叠**
+# （靠「跑之前重铺一遍」会串味 —— 分析脚本读的是最后一次铺的那份）。
+cp "$BATCH/ntt_batch_in.txt"   "$W/f_fntt_in.txt"
+cp "$BATCH/ntt_batch_exp.txt"  "$W/f_fntt_exp.txt"
+cp "$BATCH/intt_batch_in.txt"  "$W/f_intt_in.txt"
+cp "$BATCH/intt_batch_exp.txt" "$W/f_intt_exp.txt"
+cp "$BATCH/pwm2_batch_a.txt"   "$W/f_pwm2_in.txt"
+cp "$BATCH/pwm2_batch_b.txt"   "$W/f_pwm2_b.txt"
+cp "$BATCH/pwm2_batch_exp.txt" "$W/f_pwm2_exp.txt"
+
 PE1=$(ls ../pe1/*.v | tr '\n' ' ')
 PE4=$(ls ../pe4/*.v | tr '\n' ' ')
 PE16=$(ls ../pe16/*.v | tr '\n' ' ')
@@ -436,6 +446,122 @@ if p[1] == p[4] == p[16]:
     print(f"        （这条路只说明三档**一致**，没有外部锚，不能说明对）")
 else:
     print("  ❌ 三档在这条路上也不同，与 ⑧ 的结论矛盾，要查")
+PY
+
+echo
+echo "═══ ⑩ 三档功能对拍（判据 3）：16 组 × 256 系数 / 运算 ═══"
+# 判据是**多重集相等** —— 它把「装载 + 变换」和「读出顺序」分开判，互不污染。
+# 读出顺序不在这条判据里，而是单独量出来印在右边一列。
+#
+# 装载协议按 (运算, 折叠度) 分档，全在 ntt_func_tb.v 的 DEF_MODE 里，
+# 表在那儿、理由也在那儿。这里不给任何 -D 覆盖，用的就是默认的那一套。
+for op in "fntt:" "intt:-DOP_INTT" "pwm2:-DOP_PWM2"; do
+    opn="${op%%:*}"; opf="${op#*:}"
+    for pe in 1 4 16; do
+        iverilog -g2005 -DCFG_PE_NUM=$pe $opf -o "$W/func_${opn}_$pe.vvp" \
+            ntt_func_tb.v $COREV "$TOPV" 2>"$W/func_${opn}_$pe.err" || true
+        ( cd "$W" && vvp "func_${opn}_$pe.vvp" ) > "$W/func_${opn}_$pe.log" 2>&1 || true
+    done
+done
+python - <<'PY'
+# -*- coding: utf-8 -*-
+import pathlib, collections, sys
+
+d = pathlib.Path("_work")
+
+def load(op, pe):
+    g = collections.defaultdict(dict)
+    for ln in (d/f"func_{op}_{pe}.log").read_text(encoding="utf-8", errors="replace").splitlines():
+        t = ln.split()
+        if t and t[0] == "DOUT":
+            g[int(t[1])][int(t[2])] = int(t[3], 16) if t[3] != "xxx" else -1
+    return g
+
+def vals(n):
+    return [int(x, 16) for x in (d/n).read_text(encoding="utf-8", errors="replace").split()]
+
+# 读出约定认得出的几种候选。σ 是上游 pe1 的组内交织，τ 是 INTT 那两个半区交织。
+SIG = lambda m: 4*(m//4) + [0,2,1,3][m % 4]
+TAU = lambda e: e//2 + 128*(e % 2)
+KNOWN = {"自然序": lambda m: m, "交织 σ=0,2,1,3": SIG, "τ=0,128,1,129": TAU}
+
+EXPECT = {   # 上游/B 的 bench 里写死的那一列，用来校 pe1
+    ("fntt", 1): "交织 σ=0,2,1,3", ("intt", 1): "τ=0,128,1,129",
+    ("pwm2", 1): "交织 σ=0,2,1,3",
+}
+
+bad = []
+for op in ("fntt", "intt", "pwm2"):
+    exp = vals(f"f_{op}_exp.txt")
+    print(f"  --- {op.upper()} ---  非退化：期望向量 {len(set(exp))} 个不同值 / 4096")
+    for pe in (1, 4, 16):
+        got = load(op, pe)
+        tot = 0; nx = 0; mp = None; zero = 0
+        for g in range(16):
+            if len(got.get(g, {})) < 256:
+                nx += 1; continue
+            row = [got[g][m] for m in range(256)]
+            e = exp[g*256:(g+1)*256]
+            if -1 in row:
+                nx += 1; continue
+            tot += sum(1 for x, y in zip(sorted(row), sorted(e)) if x == y)
+            b = collections.defaultdict(list)
+            for i, v in enumerate(e): b[v].append(i)
+            cur = [str(b[v][0]) if len(b[v]) == 1 else "?" for v in row]
+            if mp is None: mp = cur
+            else:
+                for m in range(256):
+                    if mp[m] != "?" and cur[m] != "?" and mp[m] != cur[m]:
+                        mp[m] = "CONFLICT"
+        if mp is None:
+            print(f"      pe{pe:<3d} ❌ 16 组没一组收齐（{nx} 组空 / 读出是 X）")
+            bad.append((op, pe, "没数据")); continue
+        nc = sum(1 for x in mp if x == "CONFLICT")
+        nm = next((n for n, f in KNOWN.items()
+                   if all(x == "?" or int(x) == f(m) for m, x in enumerate(mp))), "未知约定")
+        ok = (tot == 4096) and (nx == 0) and (nc == 0)
+        # pe1 再和 B 的 bench 逐字对齐 —— 对不上说明是探针的脚手架错了
+        cal = ""
+        if (op, pe) in EXPECT:
+            if nm == EXPECT[(op, pe)]: cal = "  校准 ✅ 与 B 的 bench 一致"
+            else:
+                cal = f"  校准 ❌ 应为 {EXPECT[(op,pe)]}"
+                ok = False
+        if nc: cal += f"  ⚠️ {nc} 处组间冲突（读出顺序随数据变 → 不是固定置换）"
+        print(f"      pe{pe:<3d} 多重集 {tot:4d}/4096   读出={nm}{cal}")
+        if not ok: bad.append((op, pe, f"{tot}/4096"))
+if bad:
+    print(f"  ❌ 判据 3 **未通过**：{len(bad)} 格有问题 -> {bad}")
+else:
+    print("  ✅ 判据 3 通过：3 个运算 × 3 档，各 4096/4096 多重集相等，"
+          "读出顺序在 16 组之间稳定，pe1 三处与 B 的 bench 逐字一致")
+    print("     ⚠️ 适用范围：多重集相等只证明「装载 + 变换」对；读出顺序是**另一件事**，")
+    print("        上面那一列就是它 —— 三档**不统一**（见 top_golden_tb.v 一节与段 ⑨）。")
+PY
+
+echo "  --- 阴性对照：把 pe4 的 PWM2 装载顺序拨成 pe1 那套（σ），多重集必须塌 ---"
+# 这条对照就是当初那个「假失败」的复现：抄 pe1 的协议去驱动 pe4，得到的是 22/4096。
+# 没有它，「4096/4096」只说明自己跟自己对上了 —— 有它才说明**装载顺序是可判的**。
+iverilog -g2005 -DCFG_PE_NUM=4 -DOP_PWM2 -DA_SIG -DB_SIG -o "$W/func_neg_pwm2.vvp" \
+    ntt_func_tb.v $COREV "$TOPV" 2>"$W/func_neg_pwm2.err" || true
+( cd "$W" && vvp func_neg_pwm2.vvp ) > "$W/func_neg_pwm2.log" 2>&1 || true
+python - <<'PY'
+# -*- coding: utf-8 -*-
+import pathlib, collections
+d = pathlib.Path("_work")
+exp = [int(x,16) for x in (d/"f_pwm2_exp.txt").read_text(encoding="utf-8", errors="replace").split()]
+g = collections.defaultdict(dict)
+for ln in (d/"func_neg_pwm2.log").read_text(encoding="utf-8", errors="replace").splitlines():
+    t = ln.split()
+    if t and t[0] == "DOUT": g[int(t[1])][int(t[2])] = int(t[3],16) if t[3] != "xxx" else -1
+tot = 0
+for k in range(16):
+    row = [g[k][m] for m in range(256)]; e = exp[k*256:(k+1)*256]
+    tot += sum(1 for x,y in zip(sorted(row), sorted(e)) if x == y)
+if tot < 200:
+    print(f"      ✅ 多重集塌到 {tot}/4096（≈随机），判据有分辨力")
+else:
+    print(f"      ❌ 拨错了顺序却仍拿到 {tot}/4096 —— 多重集判据分辨不出装载顺序，要查")
 PY
 
 echo
