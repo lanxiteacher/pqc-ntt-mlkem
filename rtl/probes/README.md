@@ -21,7 +21,7 @@ sh run_probes.sh
 | `ag_equiv_tb.v` | `../ntt_core/ntt_addressgenerator` 与 `../pe{1,4,16}/addressgenerator` 的**逐拍等价**：同一份激励喂两个模块，每个时钟沿比 18 路输出 | `-DCFG_L=`（7/5/3），pe1 另需 `-DHAS_PE1_PORTS` |
 | `core_equiv_tb.v` | `../ntt_core/KyberHPMNTT` 与 `../pe{1,4,16}/KyberHPM{1,4,16}PE` 的**逐拍等价**：每个时钟沿比全部端口 + 全部内部状态（三档 39 / 111 / 399 路） | `-DCFG_PE_NUM=` **和** `-DCFG_PE_MOD=`（两个都要给，见下） |
 | `top_behavior_tb.v` | `../ntt_core/KyberHPMNTT_top` 的**对外行为**：三档喂**同一串** 12 位激励，走「load A → FNTT A → load B → FNTT B → PWM2 A → read A」，比读出的 256 个值 | `-DCFG_PE_NUM=`；pe1 另可加 `-DREF_PE1`（见下） |
-| `top_golden_tb.v` | 同一条顶层，但拿 `../refsim/batch/ntt_batch_exp.txt` 第 0 组当**外部锚**（有锚才谈得上「对不对」，不只是「一不一样」）。`-DWITH_PWM2` 再走一遍上一条那条 PWM2 路 | `-DCFG_PE_NUM=`；`-DWITH_PWM2`（见下） |
+| `top_golden_tb.v` | 同一条顶层，但拿 `../refsim/batch/ntt_batch_exp.txt` 第 0 组当**外部锚**（有锚才谈得上「对不对」，不只是「一不一样」）。`-DWITH_PWM2` 再走一遍上一条那条 PWM2 路；`-DWITH_INTT` 换走 INTT（只量周期数） | `-DCFG_PE_NUM=`；`-DWITH_PWM2` / `-DWITH_INTT`（见下） |
 
 **`leaf_elab_tb.v` 的阴性对照**（在 `run_probes.sh` 段 ⓪ 里，每次跑都重验）：
 
@@ -159,6 +159,8 @@ CORE="$(ls ../ntt_core/*.v | grep -v _top)"
 iverilog -g2005 -DCFG_PE_NUM=1 -o w.vvp \
     top_golden_tb.v $CORE ../ntt_core/KyberHPMNTT_top.v && vvp w.vvp
 # 再加 -DWITH_PWM2 走 ⑧ 那条路（顺带把 FNTT B / PWM2 A 的 CC+3 也在顶层量一遍）
+# 再加 -DWITH_INTT 换走「装载 A → INTT A → 读 A」，**只量周期数不判值**
+#   （INTT 的装载/读出约定还没有黄金锚，值判据在 Task 6）
 ```
 
 跑完打印 256 个读出值，段 ⑨ 的 python 把它们**逐位锚到黄金向量的下标**上，
@@ -181,6 +183,25 @@ iverilog -g2005 -DCFG_PE_NUM=1 -o w.vvp \
   所以约定被原样继承。
 - ⚠️ 因此**不能**引用 ⑧ 的 ✅ 说「三档 dout 序列逐位相同」。要让它成立，
   得在 `KyberHPMNTT_top` 里按「操作 + 折叠度」做反交织 —— 留给 Task 6。
+
+**判据 2：三档周期数（实测，段 ⑨ 每次跑都重验）**
+
+顶层量到的 `done` 拍 − `start_*` 起点 − 3 = 核周期数。三档 × 三个运算全中：
+
+| | FNTT | PWM2 | INTT |
+|---|---|---|---|
+| pe1 | 904 | 647 | 904 |
+| pe4 | 232 | 167 | 233 |
+| pe16 | 69 | 47 | 71 |
+
+与 `../H1_port_spec.md` §五 的上游实测值逐个相同。FNTT 是**两个 build 各量一次**
+（纯 FNTT 路 + PWM2 路里的 FNTT A/B），两处结论一致 —— 这是同一张表的内部交叉验证。
+
+- ⚠️ 周期数**不含延迟**：`done` 与折叠度无关地落在 `start_*+CC+3`，但第一条有效
+  `dout` 是 `read_*+2*PE_NUMBER+3`（见 `top_behavior_tb.v`）。两件事别混。
+- ⚠️ INTT 这一格**只量周期数**。`-DWITH_INTT` 那趟的 256 个读出值**没有黄金锚**
+  （H1 §五 只锚了 FNTT），所以段 ⑨ 的 python 只读 `gold_fntt_*` / `gold_pwm2_*`，
+  不去碰 `gold_intt_*`。INTT 的值判据在 Task 6。
 - ⚠️ 探针自己的坑：**抓取必须和 `cyc` 自增在同一个 `always` 块里**。
   分成两块各带 `#1` 就是竞争，`cap[]` 会出现没写过的 X 槽，
   表现为「多重集不等 / `xxx` 值」这种看着像 RTL 挂了的现象。

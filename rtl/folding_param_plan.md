@@ -15,9 +15,11 @@ Vivado ML Standard 2020.2（`E:\xilinx\Vivado\2020.2`）｜ python 3
 
 **设计文档（spec）：** `rtl/folding_param_design.md` —— **本计划从它展开，两个一起读**。
 
-**进度（2026-09-29）：** Task 1~4 已完成。`sh rtl/probes/run_probes.sh` 段 ⓪⑥⑦⑧ 全 PASS
+**进度（2026-09-29）：** Task 1~5 已完成。`sh rtl/probes/run_probes.sh` 段 ⓪⑥⑦⑧⑨ 全 PASS
 （含各自的阴性对照，逐拍等价 pe1 7005 拍 / pe4 1919 拍 / pe16 669 拍）。
-**剩 Task 5~8**（三档周期数 → 三档功能对拍 → Vivado 综合与引脚预算 → 文档）。
+**判据 2（三档周期数）已通过**：三档 × {FNTT, PWM2, INTT} 共 12 格全部等于上游实测值，
+见下方 Task 5。
+**剩 Task 6~8**（三档功能对拍 → Vivado 综合与引脚预算 → 文档）。
 
 ⚠️ **Task 4 有一条判据没达标，已改由 Task 6 承接：** 新增的段 ⑨ 拿
 `refsim/batch/ntt_batch_exp.txt` 第 0 组当外部锚，量出 **FNTT 读数路上三档的读出顺序并不一致**
@@ -26,7 +28,7 @@ Vivado ML Standard 2020.2（`E:\xilinx\Vivado\2020.2`）｜ python 3
 第 113-117 行靠反交织才对得上 FIPS 203 黄金向量），核与上游逐拍等价所以被原样继承，
 不是本次参数化引入的。详细结论见 `rtl/probes/README.md` 的 `top_golden_tb.v` 一节。
 
-⚠️ 上面「判据 1/2/3」仍**未**核对 —— 那要等 Task 5/6/7。
+⚠️ 判据 **1（Vivado 综合 + IOB 预算）** 与 **3（三档功能对拍）** 仍**未**核对 —— 那是 Task 7 / Task 6。
 
 ---
 
@@ -920,11 +922,14 @@ git push
 - Consumes: Task 4 的 `KyberHPMNTT_top`
 - Produces: 一张三档 `CC` 实测表（写进 `rtl/folding_param_design.md` §一 的判据 2 表）
 
-- [ ] **Step 1: 在 `run_probes.sh` 里加三档周期数输出**
+- [x] **Step 1: 在 `run_probes.sh` 里加三档周期数输出**
 
-复用现有探针的格式，对每个档打印 FNTT / PWM2 / INTT 三条路的 `done_start_delta`。
+复用 `top_golden_tb.v` 的格式（新增 `-DWITH_INTT` 一条腿），段 ⑨ 末尾统一打印
+FNTT / PWM2 / INTT 三条路的三档 `done − start − 3`，并直接和下表比对。
+本步实际只新增了 **INTT 一格** —— FNTT / PWM2 在 Task 4 的 `-DWITH_PWM2` 那趟里
+已经从顶层量到过。
 
-- [ ] **Step 2: 与上游实测值逐个对齐**
+- [x] **Step 2: 与上游实测值逐个对齐**
 
 | | FNTT_CC | PWM2_CC | INTT_CC |
 |---|---:|---:|---:|
@@ -932,9 +937,10 @@ git push
 | pe4 | 232 | 167 | 233 |
 | pe16 | 69 | 47 | 71 |
 
-**任何一个对不上就停下来查** —— 这是本轮的主安全网。对不上说明 stall 或地址公式抄错了。
+**实测 12 格全中**（段 ⑨ 每次跑自动重验，任一格不符即打 `❌ 判据 2 未通过`）。
+FNTT 在两趟 build 里各量一次，两处一致 —— 表内部的交叉验证。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add rtl/probes/

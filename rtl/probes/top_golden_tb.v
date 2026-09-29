@@ -19,6 +19,11 @@
 //
 // 默认只跑 FNTT：装载 A → start_fntt(A) → 读 A。
 //
+// `-DWITH_INTT` 换成：装载 A → start_intt(A) → 读 A。**只量周期数，不判值** ——
+//   INTT 的装载/读出约定还没有黄金锚（只有 FNTT 有），值判据留给 Task 6。
+//   加这条是因为 Task 5 要的三档周期数表里，INTT 是唯一还没从顶层量过的一格
+//   （FNTT / PWM2 已由 `-DWITH_PWM2` 那条路量到 CC+3）。
+//
 // `-DWITH_PWM2` 换成另一条路：装载 A → FNTT A → 装载 B(**同一份 vin**) → FNTT B
 //   → PWM2 A → 读 A。B 跟 A 同数据时，PWM2 的结果在每个下标上就是
 //   `exp[i]^2 mod 3329`，**仍然有黄金锚**，只是要平方一下。
@@ -47,8 +52,10 @@ module top_golden_tb;
 
 localparam integer PE_NUMBER = `CFG_PE_NUM;
 
+// 上游实测的核周期数（H1_port_spec.md §五 / 探针 ①③④）。顶层 = CC+3。
 localparam integer CC_FNTT    = (PE_NUMBER==1) ? 904 : (PE_NUMBER==4) ? 232 : 69;
 localparam integer CC_PWM2    = (PE_NUMBER==1) ? 647 : (PE_NUMBER==4) ? 167 : 47;
+localparam integer CC_INTT    = (PE_NUMBER==1) ? 904 : (PE_NUMBER==4) ? 233 : 71;
 localparam integer FIRST_DOUT = 2*PE_NUMBER + 3;
 localparam integer LOAD_WAIT  = 257 + PE_NUMBER + 8;
 
@@ -56,7 +63,7 @@ reg  clk, reset;
 initial clk = 1'b0;
 always #5 clk = ~clk;
 
-reg  load_a_f, load_b_f, read_a, start_fntt, start_pwm2, start_ab;
+reg  load_a_f, load_b_f, read_a, start_fntt, start_pwm2, start_intt, start_ab;
 reg  [11:0] din;
 wire [11:0] dout;
 wire        done;
@@ -67,7 +74,7 @@ KyberHPMNTT_top #(.PE_NUMBER(PE_NUMBER)) dut (
     .load_b_f(load_b_f), .load_b_i(1'b0),
     .read_a(read_a), .read_b(1'b0),
     .start_ab(start_ab),
-    .start_fntt(start_fntt), .start_pwm2(start_pwm2), .start_intt(1'b0),
+    .start_fntt(start_fntt), .start_pwm2(start_pwm2), .start_intt(start_intt),
     .din(din), .dout(dout), .done(done)
 );
 
@@ -119,10 +126,11 @@ task pulse; input [2:0] which; begin
     case (which)
         1: start_fntt = 1'b1;
         2: start_pwm2 = 1'b1;
+        3: start_intt = 1'b1;
     endcase
     mark = cyc;
     @(negedge clk);
-    start_fntt = 1'b0; start_pwm2 = 1'b0;
+    start_fntt = 1'b0; start_pwm2 = 1'b0; start_intt = 1'b0;
 end endtask
 
 integer op_exp, nerr, m, nzero, ndistinct, dup;
@@ -138,7 +146,7 @@ initial begin
     cap_en = 0; cap_base = 0;
     reset = 1'b1;
     load_a_f = 0; load_b_f = 0; read_a = 0;
-    start_fntt = 0; start_pwm2 = 0; start_ab = 0; din = 0;
+    start_fntt = 0; start_pwm2 = 0; start_intt = 0; start_ab = 0; din = 0;
 
 `ifdef CFG_PE_MISSING
     $display("FATAL 没给 CFG_PE_NUM —— 用法：-DCFG_PE_NUM=1|4|16");
@@ -153,6 +161,19 @@ initial begin
     $display("LOAD_A %0d", mark);
     step(LOAD_WAIT);
 
+`ifdef WITH_INTT
+    // 只量周期数：INTT 的方向和读出约定都没锚（H1_port_spec.md §五 只锚了 FNTT），
+    // 所以这条**不判值**，只看 `done` 落在 CC_INTT+3。值判据留给 Task 6。
+    done_cyc = -1;
+    pulse(3);                                    // start_intt, bank A
+    op_exp = mark + CC_INTT + 3;
+    step(CC_INTT + 3 + 8);
+    $display("OP_INTT_A start %0d expect_done %0d actual_done %0d", mark, op_exp, done_cyc);
+    if (done_cyc != op_exp) begin
+        nerr = nerr + 1;
+        $display("FAIL ④ done 拍数(INTT A)：实测 %0d，预期 %0d", done_cyc, op_exp);
+    end
+`else
     done_cyc = -1;
     pulse(1);                                    // start_fntt, bank A
     op_exp = mark + CC_FNTT + 3;
@@ -162,6 +183,7 @@ initial begin
         nerr = nerr + 1;
         $display("FAIL ④ done 拍数(FNTT A)：实测 %0d，预期 %0d", done_cyc, op_exp);
     end
+`endif
 
 `ifdef WITH_PWM2
     // 装载 B —— 装同一串 vin，于是 PWM2 的结果是 exp 的逐点平方，锚还在

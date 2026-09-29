@@ -321,8 +321,10 @@ echo "═══ ⑨ KyberHPMNTT_top 对着黄金向量（有外部锚）══�
 #      B 装的是**同一串 vin**，顺带把 FNTT B / PWM2 A 的 CC+3 也在顶层量一遍
 #      —— 这一趟的读出值不是 exp 的简单函数（bank 的存取关系没弄清），
 #      所以只拿它比三档**互相**是否一致，不当作对黄金向量的判据。
-for mode in "" "-DWITH_PWM2"; do
-    tag="fntt"; [ -n "$mode" ] && tag="pwm2"
+for mode in "" "-DWITH_PWM2" "-DWITH_INTT"; do
+    tag="fntt"
+    [ "$mode" = "-DWITH_PWM2" ] && tag="pwm2"
+    [ "$mode" = "-DWITH_INTT" ] && tag="intt"
     for pe in 1 4 16; do
         iverilog -g2005 -DCFG_PE_NUM=$pe $mode -o "$W/gold_${tag}_$pe.vvp" \
             top_golden_tb.v $COREV "$TOPV" 2>"$W/gold_${tag}_$pe.err" || true
@@ -333,7 +335,58 @@ done
 for pe in 1 4 16; do
     grep -E '^(FAIL|PASS)' "$W/gold_fntt_$pe.log" | sed "s/^/  FNTT pe$pe /"
     grep -E '^(OP_|FAIL|PASS)' "$W/gold_pwm2_$pe.log" | sed "s/^/  PWM2 pe$pe /"
+    grep -E '^(OP_|FAIL|PASS)' "$W/gold_intt_$pe.log" | sed "s/^/  INTT pe$pe /"
 done
+
+# --- 判据 2：三档周期数表（Task 5 的主安全网）---
+# 逐条把顶层量到的 `done` 拍数换算回核周期数（顶层 = CC+3）再和上游实测值对齐。
+# ⚠️ 任何一个对不上就停下来查 —— 对不上说明 stall 或地址公式抄错了，
+#    而不是「某个值偏一点」。这张表就是把那句话变成可执行的检查。
+python - <<'PY'
+# -*- coding: utf-8 -*-
+import pathlib, re, sys
+d = pathlib.Path("_work")
+EXP = {1: {"FNTT": 904, "PWM2": 647, "INTT": 904},
+       4: {"FNTT": 232, "PWM2": 167, "INTT": 233},
+      16: {"FNTT":  69, "PWM2":  47, "INTT":  71}}
+LINE = re.compile(r"OP_(\w+)_([AB]) start (\d+) expect_done (\d+) actual_done (-?\d+)")
+
+meas = {}       # (pe, op, bank) -> (cc, expect_ok)
+for tag in ("fntt", "pwm2", "intt"):
+    for pe in (1, 4, 16):
+        f = d / f"gold_{tag}_{pe}.log"
+        if not f.exists():
+            continue
+        for ln in f.read_text(errors="replace").splitlines():
+            mo = LINE.match(ln.strip())
+            if not mo:
+                continue
+            op, bank, st, ex, ac = mo.group(1), mo.group(2), *map(int, mo.groups()[2:])
+            meas[(pe, op, bank)] = (ac - st - 3, ac == ex)
+
+print("  --- 判据 2：三档周期数（顶层量到的 done 拍 − 起点 − 3 = 核 CC）---")
+print("      %-6s %-6s %8s %8s   %s" % ("档", "运算", "实测 CC", "上游 CC", "结论"))
+bad = []
+for op in ("FNTT", "PWM2", "INTT"):
+    for pe in (1, 4, 16):
+        hit = [(b, v) for (p, o, b), v in sorted(meas.items()) if p == pe and o == op]
+        if not hit:
+            print("      %-6s %-6s %8s %8s   ⚠️ 这一档没量到（探针没跑起来？看 .err）"
+                  % (f"pe{pe}", op, "—", EXP[pe][op]))
+            bad.append((pe, op, None))
+            continue
+        for bank, (cc, ex_ok) in hit:
+            ok = (cc == EXP[pe][op]) and ex_ok
+            if not ok:
+                bad.append((pe, op, bank))
+            print("      %-6s %-6s %8d %8d   %s"
+                  % (f"pe{pe}", f"{op}_{bank}", cc, EXP[pe][op],
+                     "✅" if ok else "❌ 与上游不符 —— 停下查 stall / 地址公式"))
+if bad:
+    print(f"  ❌ 判据 2 **未通过**：{len(bad)} 格对不上 -> {bad}")
+else:
+    print("  ✅ 判据 2 通过：三档 × {FNTT, PWM2, INTT} 全部等于上游实测值")
+PY
 python - <<'PY'
 # -*- coding: utf-8 -*-
 import pathlib
