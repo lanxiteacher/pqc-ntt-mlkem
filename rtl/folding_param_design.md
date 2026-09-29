@@ -176,6 +176,7 @@ T(L) = Σ_{S=0}^{min(6,L-1)} (2^S − 1)  +  Σ_{S=L}^{6} (2^L − 1)  +  7
 |---|---|---|
 | **PWM2 地址** | 双读口 `raddr` + `raddr_b`，写地址受 `c_pwm` 调制；另吐 `raddr_b`、`c_loop_pwm` 两个顶层要用的信号 | **退化为恒等扫描** `raddr <= c_loop`，`waddre = waddro <= c_loop` |
 | **FSM 结构** | 4 态、2 位编码，**无 stall 状态** | 有 stall 状态：pe4 加 `STL0/STL1`（6 态），pe16 加 `STL0/STL1/STL2`（7 态、3 位编码）并配 `c_stl` 计数器 |
+| **BROM 表内容** | 382 条 × 12 位 | 222 条 × 48 位（pe4）／86 条 × 192 位（pe16）。**三张表互不相同，且不是彼此的打包或连续切片** |
 
 - **PWM2 分歧**是数据布局决定的：PE=1 时「点乘 + 折叠最后一阶」的数据重排
   必须由地址生成器显式完成；PE≥4 时被并行度免费吸收。
@@ -190,11 +191,27 @@ T(L) = Σ_{S=0}^{min(6,L-1)} (2^S − 1)  +  Σ_{S=L}^{6} (2^L − 1)  +  7
 
   （pe1 那两处 `S == L-1` 的位置上**没有** stall —— 这正是它不能由 L 唯一决定的原因。）
 
-→ 这两处**只能分支保留**，不能强求统一式。
+- **BROM 分歧**（2026-09-29 实测补记，复现脚本 `rtl/ntt_core/tools/check_brom.py`）：
+  三张 twiddle 表的**内容**也不同，且**不是彼此的打包或连续切片**。
 
-### 3.3 ⚠️ twiddle 表的位宽**不是** L 的函数
+  | | 条目数 × 每组字数 | 「一组内全同」的条目 | 能在 pe1 扁平表里找到连续匹配的 |
+  |---|---|---|---|
+  | pe1 | 382 × 1 | — | — |
+  | pe4 | 222 × 4 | 126 条（首个非全同在第 63 条） | **只有 32 条：下标 190–221** |
+  | pe16 | 86 × 16 | 30 条（首个非全同在第 15 条） | **只有 8 条：下标 78–85** |
 
-`c_tw` / `raddr_tw` 的位宽三档是 **9 / 8 / 7**，而 `BROM.v` 的地址位宽正好也是 9 / 8 / 7
+  两档能匹配的都只是**尾段**，且**都从 pe1 扁平表的同一下标 254 起**
+  （pe4 斜率 4、pe16 斜率 16）—— 254 正好就是 §3.3a 里那个「实际用到的最大 `c_tw`」。
+
+  也就是说：**下标 ≥254 的尾段是斜率 = `PE_NUMBER` 的直通打包；
+  254 之前的那一段是折叠造成的 twiddle 共享**（一组内若干个蝶形共用同一个 twiddle），
+  共享的规律随折叠度变化，**推不出统一式**。
+
+→ 这三处**只能分支保留**，不能强求统一式。
+
+### 3.3 ⚠️ twiddle 表的位宽与内容**都不是** L 的函数
+
+**（a）地址位宽。** `c_tw` / `raddr_tw` 的位宽三档是 **9 / 8 / 7**，而 `BROM.v` 的地址位宽正好也是 9 / 8 / 7
 （`rtl/pe1/BROM.v:16`、`rtl/pe4/BROM.v:17`、`rtl/pe16/BROM.v:17`）。
 
 实际用到的最大 `c_tw` 是 **254 / 190 / 78**，需要 8 / 8 / 7 位 ——
@@ -208,6 +225,18 @@ T(L) = Σ_{S=0}^{min(6,L-1)} (2^S − 1)  +  Σ_{S=L}^{6} (2^L − 1)  +  7
 ⚠️ 三者必须始终一致：`c_tw` 位宽 == `raddr_tw` 位宽 == `BROM` 地址位宽。
 漏改一处 → 读数越界 → **读飞**（这就是风险表 R4）。
 
+**（b）数据位宽。** `BROM` 的 `dout` 位宽 = **`12 * PE_NUMBER`**
+（12 / 48 / 192）—— 一拍读出的是一整组蝶形要用的全部 twiddle。这个是能推出来的。
+
+**（c）表内容。** 见 §3.2 最后一条：三张表**互不相同**，推不出统一式。
+表是静态数据，**逐字保留上游原表**是唯一 bit-exact 的做法：
+`BROM.v` 里用 `generate` 按 `PE_NUMBER` 分三支，各放一份原表（脚本从上游文件
+逐字提取生成，不手抄）。
+
+> 判定依据：`rtl/ntt_core/tools/check_brom.py` 把三张表抠出来做匹配 ——
+> pe4 按 4 值一组、pe16 按 16 值一组，去 pe1 的扁平表里找连续切片。
+> 若它们是 pe1 表的打包，**每一条都该命中**；实际 pe4 只命中 32/222、pe16 只命中 8/86。
+
 ---
 
 ## 四、架构
@@ -220,16 +249,20 @@ T(L) = Σ_{S=0}^{min(6,L-1)} (2^S − 1)  +  Σ_{S=L}^{6} (2^L − 1)  +  7
 rtl/ntt_core/
 ├── KyberHPMNTT.v        核    #(parameter PE_NUMBER=1)
 ├── KyberHPMNTT_top.v    顶层  输入/输出寄存 + 固定 12 位接口 + 序列化器
-├── addressgenerator.v   参数化  #(parameter L)
-├── BRAM.v               #(parameter ADDR_W)
-├── BROM.v               twiddle 表
+├── addressgenerator.v   参数化  #(parameter L, TW_ADDR_W)
+├── BRAM.v               #(parameter ADDR_W)            数据位宽恒 12，深度 2**ADDR_W
+├── BROM.v               #(parameter PE_NUMBER, TW_ADDR_W)  三张原表走 generate（§3.3c）
 ├── butterfly.v  modadd.v  modsub.v  modred.v  modmul.v  intmul.v
 └── dt0.v dt1.v dt2.v dt3.v  FA.v HA.v div2.v shiftreg.v
 ```
 
-- 叶子模块（`butterfly` `modadd` `modmul` `intmul` `FA` `HA` `div2` `shiftreg` `dt1–3`）
-  三档**逐字节相同**，直接取一份。
-- `dt0.v` 三档只差一个空行；`modred.v` pe1↔pe4 只差 CC0 注释头 → 合成一份。
+**新树里与上游重名的模块一律加 `ntt_` 前缀**（`ntt_BRAM` / `ntt_BROM` / `ntt_addressgenerator` …）——
+Verilog 没有命名空间，新旧同名的话「新旧并排逐拍对拍」根本编译不过。
+
+- 叶子模块三档**全部只差空白或注释**（2026-09-29 逐文件 `cmp` 实核）：
+  `butterfly` `modadd` `modmul` `intmul` `FA` `HA` `div2` `shiftreg` 逐字节相同；
+  `dt0`–`dt3` 只差一个空行（pe1 与 pe16 相同）；`modred.v` pe1 缺 CC0 注释头（取 pe4 那份）；
+  `modsub.v` pe16 缺 CC0 注释头（取 pe1 那份）。**没有一处是逻辑差异。**
 - `rtl/pe1|pe4|pe16/` **暂时保留** —— 它们是折叠度对比表的基线。
   等新树三档验过再决定去留（`research/ref_rtl/` 有上游原件，删了不丢基线）。
 
@@ -240,9 +273,10 @@ rtl/ntt_core/
 ```
 KyberHPMNTT_top #(.PE_NUMBER(16))
   └── KyberHPMNTT #(.PE_NUMBER(16))
-        ├── addressgenerator #(.L(L))    L = $clog2(128/PE_NUMBER)
+        ├── addressgenerator #(.L(L), .TW_ADDR_W(TW))   L = $clog2(128/PE_NUMBER)
         ├── BRAM            #(.ADDR_W(L+1))
-        └── BROM            #(.TW_ADDR_W(TW_ADDR_W))  ← 9/8/7，手工选，**不是** L 的函数（见 §3.3）
+        └── BROM            #(.PE_NUMBER(PE), .TW_ADDR_W(TW))
+                            ↑ TW = 9/8/7，手工选，**不是** L 的函数（§3.3a）
 ```
 
 **这是参数化能否成立的关键一环** —— 现在断在这里。

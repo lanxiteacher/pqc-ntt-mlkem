@@ -23,11 +23,23 @@ head -256 "$BATCH/ntt_batch_exp.txt" > "$W/exp.txt"
 PE1=$(ls ../pe1/*.v | tr '\n' ' ')
 PE4=$(ls ../pe4/*.v | tr '\n' ' ')
 PE16=$(ls ../pe16/*.v | tr '\n' ' ')
+CORE="../ntt_core"          # 参数化后的新树（本段只用到叶子 BRAM/BROM）
 
 # vvp 的工作目录决定 $readmemh 的相对路径，所以统一在 _work 里跑
 run_tb () {   # run_tb <可执行名> <plusargs...>
     vvp "../_work/$1" ${2:+$2} > "../_work/$1.log" 2>&1 || true
 }
+
+echo "═══ ⓪ ntt_core 叶子：BRAM/BROM 三档实例化 + 内容抽查 ═══"
+# TW_ADDR_W 是手工选的 9/8/7，推不出公式（设计文档 §3.3）—— 所以三档的搭配写死在下面
+for cfg in 1:9 4:8 16:7; do
+    pe="${cfg%%:*}"; tw="${cfg##*:}"
+    iverilog -g2005 -DCFG_PE_NUM=$pe -DCFG_TW=$tw \
+        -o "$W/leaf$pe.vvp" leaf_elab_tb.v "$CORE/BRAM.v" "$CORE/BROM.v"
+    ( cd "$W" && vvp "leaf$pe.vvp" ) > "$W/leaf$pe.log" 2>&1 || true
+    grep -E '^(PE=|抽查)' "$W/leaf$pe.log" | sed 's/^/  /'
+    grep -E '^(PASS|FAIL|FATAL)' "$W/leaf$pe.log" | sed 's/^/  /'
+done
 
 echo "═══ ① pe1 接口时序（核） ═══"
 iverilog -g2012 -o "$W/pe1_core.vvp" $PE1 pe1_timing_tb.v

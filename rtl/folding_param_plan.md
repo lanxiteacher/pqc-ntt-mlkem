@@ -126,9 +126,14 @@ refsim/batch/                    ← 黄金向量，只读
 
 **Interfaces:**
 - Produces（后续 Task 依赖的确切名字）：
-  - `ntt_BRAM #(parameter ADDR_W = 8) (clk, wen, brsel, brselen, waddr, raddr0, raddr1, din, dout0, dout1)`
-    —— **端口名与位序照抄 `rtl/pe1/BRAM.v`**，只把写死的位宽换成 `ADDR_W`，深度换成 `2**ADDR_W`
-  - `ntt_BROM #(parameter TW_ADDR_W = 9) (raddr, dout)` —— 同理，照抄 `rtl/pe1/BROM.v`
+  - `ntt_BRAM #(parameter ADDR_W = 8) (clk, wen, waddr, din, raddr, dout)`
+    —— **单读口**（`rtl/pe1/BRAM.v` 原文就是 6 个端口，**没有** `brsel/brselen/raddr0/raddr1`；
+    银行选择与多读口是**核**在例化处铺的，不是 BRAM 自己的端口）。
+    只把写死的 `[7:0]` 换成 `[ADDR_W-1:0]`、深度 `[255:0]` 换成 `[0:2**ADDR_W-1]`。
+    数据位宽恒 **12**（三档都是 `reg [11:0] blockram`）。
+  - `ntt_BROM #(parameter PE_NUMBER = 1, TW_ADDR_W = 9) (clk, raddr, dout)`
+    —— `dout` 位宽 = **`12*PE_NUMBER`**（12/48/192，一拍读出一整组蝶形的 twiddle）；
+    **三张表内容互不相同**，走 `generate` 逐档放原表（见 Step 5）。
   - **端口名一律不改；模块名一律加 `ntt_` 前缀**（约束 13）
 
 - [ ] **Step 1: 先确认三档叶子模块真的逐字节相同**
@@ -143,9 +148,13 @@ for f in butterfly modadd modsub modred modmul intmul dt0 dt1 dt2 dt3 FA HA div2
 done
 ```
 
-预期（设计文档 §4.1 已记录，此处复核）：
-大部分 `same/same`；`dt0.v` 是 `DIFF/DIFF`（只差一个空行）；
-`modred.v` 是 `DIFF/same`（只差 CC0 版权注释头）。
+预期（设计文档 §4.1 已记录，此处复核 —— 2026-09-29 实跑结果已回填）：
+大部分 `same/same`；`modred.v` 是 `DIFF/same`、`modsub.v` 是 `same/DIFF`
+（都只差 CC0 版权注释头）；`dt0`–`dt3` 四个是 `DIFF/DIFF`（只差**一个空行**，pe1 与 pe16 相同）。
+
+> 实跑确认：**没有任何一处是逻辑差异**。取 pe1 那份即可；
+> 注释头不齐的两个（`modred.v` 取 pe4、`modsub.v` 取 pe1）见 Step 3。
+
 **若出现预期外的 DIFF，停下来，先 `diff` 看清差异再决定取哪一份** —— 不要默认取 pe1。
 
 - [ ] **Step 2: 建目录，从 pe1 复制一份叶子**
@@ -193,7 +202,8 @@ diff rtl/pe4/BRAM.v rtl/pe16/BRAM.v
 ```
 
 已知差异（设计文档 §3.1a）：地址位宽 `[7:0]` / `[5:0]` / `[3:0]`（= `L+1`），
-存储深度 `[255:0]` / `[63:0]`（= `2^(L+1)-1`）。
+存储深度 `[255:0]` / `[63:0]` / `[15:0]`。**数据位宽三档都是 12，端口三档都是 6 个**
+（实核：`rtl/pe1/BRAM.v` 只有 `clk/wen/waddr/din/raddr/dout`）。
 
 改法：以 pe1 那份为底，把模块头改成
 
@@ -201,19 +211,24 @@ diff rtl/pe4/BRAM.v rtl/pe16/BRAM.v
 module ntt_BRAM #(                // ⚠️ 模块名加 ntt_ 前缀（约束 13）
     parameter ADDR_W = 8          // = L+1：pe1→8, pe4→6, pe16→4
 )(
-    ...原有端口...
+    input  wire              clk,
+    input  wire              wen,
+    input  wire [ADDR_W-1:0] waddr,
+    input  wire [11:0]       din,
+    input  wire [ADDR_W-1:0] raddr,
+    output reg  [11:0]       dout
 );
+(* ram_style="block" *) reg [11:0] blockram [0:2**ADDR_W-1];
 ```
 
-并把**每一处**写死的 `[7:0]` 换成 `[ADDR_W-1:0]`、`[255:0]` 换成 `[2**ADDR_W-1:0]`。
-**改完用 grep 确认没有漏网的写死常数**：
+**改完确认没有漏网的写死常数**（⚠️ 用 python 查，别用 `grep -c $'\r'` 那类判据）：
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"
-grep -n "7:0\]\|255:0\]\|128\|256" rtl/ntt_core/BRAM.v
+grep -n "\[7:0\]\|\[255:0\]\|\[5:0\]\|\[3:0\]" rtl/ntt_core/BRAM.v
 ```
 
-预期：只剩 `ADDR_W` 表达式与注释。**有裸常数就继续改。**
+预期：无输出。**有裸常数就继续改。**
 
 - [ ] **Step 5: 参数化 `BROM.v`**
 
@@ -223,102 +238,136 @@ diff rtl/pe1/BROM.v rtl/pe4/BROM.v
 diff rtl/pe4/BROM.v rtl/pe16/BROM.v
 ```
 
-以 pe1 那份为底，模块头改成
+⚠️ **`TW_ADDR_W` 三档取 9 / 8 / 7**，这个参数**不接受** `L` 推导 ——
+上游是手工挑的 2 的幂（源码注释 "222 is enough" / "86 is enough"）。
+
+⚠️⚠️ **但更重要的是：三张表的「内容」也不同**，而且**不是彼此的打包或连续切片**
+（设计文档 §3.3c）。所以不能用「以 pe1 为底」的做法 —— pe1 那张 12 位表**喂不了 pe4/pe16**。
+
+**做法：`generate` 按 `PE_NUMBER` 分三支，各放一份上游原表，逐字提取、不做任何改写。**
+表是静态数据，逐字保留即 bit-exact。
+
+**不要手抄**（pe1 388 行 + pe4 228 行 + pe16 92 行 case，手抄必错）。用脚本从上游文件抠：
+
+```bash
+cd "C:/Users/l'x/Desktop/FPGA"
+PY=$(command -v python3 || command -v python)
+"$PY" "C:/Users/l'x/AppData/Local/Temp/gen_brom.py"        # 生成 rtl/ntt_core/BROM.v
+"$PY" "C:/Users/l'x/AppData/Local/Temp/verify_brom.py"     # 逐行比对三个分支 vs 上游
+```
+
+生成的模块头：
 
 ```verilog
 module ntt_BROM #(                // ⚠️ 模块名加 ntt_ 前缀（约束 13）
-    parameter TW_ADDR_W = 9      // ⚠️ 手工选，**不是** L 的函数（见设计文档 §3.3）
+    parameter PE_NUMBER = 1,          // 1 / 4 / 16：决定数据位宽 12*PE_NUMBER 与表内容
+    parameter TW_ADDR_W = 9           // ⚠️ 手工选 9/8/7，**不是** L 的函数（设计文档 §3.3）
 )(
-    input  wire [TW_ADDR_W-1:0] raddr,
-    ...
+    input  wire                    clk,
+    input  wire [TW_ADDR_W-1:0]    raddr,
+    output reg  [12*PE_NUMBER-1:0] dout
 );
-```
-
-⚠️ **`TW_ADDR_W` 三档取 9 / 8 / 7，对应 BROM 深度 512 / 256 / 128。**
-这个参数**不接受** `L` 推导 —— 上游是手工挑的 2 的幂（源码注释 "222 is enough" / "86 is enough"）。
-
-顺手删掉 pe1 `BROM.v` 里那条挂在死数组上的 `(* rom_style="block" *) reg [11:0] blockrom [511:0]`
-（`rtl/pe1/BROM.v:19`，无任何引用）—— 这是 `logs/` §二 B 里挂着的遗留清理项。
-
-- [ ] **Step 6: 写一个只做 elaboration 的最小顶，三档各编一次**
-
-创建 `rtl/ntt_core/_elab_check.v`（**临时文件，本 Task 末尾删除**）：
-
-```verilog
-`timescale 1ns/1ps
-module _elab_check;
-    localparam PE = `CFG_PE_NUM;              // 1 / 4 / 16
-    localparam L  = $clog2(128/PE);
-    localparam TW = `CFG_TW;                  // 9 / 8 / 7，手工选
-    // F1 的期望值表 —— ⚠️ 故意写成查表，**不是**公式：
-    // TW_ADDR_W 推不出统一式（设计文档 §3.3），写成公式反而是错的
-    localparam integer TW_EXPECT = (PE == 1) ? 9 : (PE == 4) ? 8 : (PE == 16) ? 7 : -1;
-
-    wire [L:0]    raddr0, raddr1, waddr0, waddr1;
-    wire [L:0]    dout0, dout1;
-    wire [TW-1:0] raddr_tw;
-    reg clk = 0;
-    always #5 clk = ~clk;
-
-    ntt_BRAM #(.ADDR_W(L+1)) u_bram (
-        .clk(clk), .wen(1'b0), .brsel(1'b0), .brselen(1'b0),
-        .waddr(waddr0), .raddr0(raddr0), .raddr1(raddr1),
-        .din(12'd0), .dout0(dout0), .dout1(dout1));
-    ntt_BROM #(.TW_ADDR_W(TW)) u_brom (.raddr(raddr_tw), .dout());
-
-    initial begin
-        if (TW != TW_EXPECT) begin
-            $display("FAIL: PE=%0d 时 TW_ADDR_W 应为 %0d，实为 %0d", PE, TW_EXPECT, TW);
-            $finish;
-        end
-        #100;
-        $display("ELAB OK PE=%0d L=%0d TW=%0d", PE, L, TW);
-        $finish;
+generate
+if (PE_NUMBER == 1) begin : G_TW1
+    always @(posedge clk) begin
+        case(raddr)   // ← 上游 rtl/pe1/BROM.v 的表，逐字
+        ...
+        endcase
     end
-endmodule
+end else if (PE_NUMBER == 4) begin : G_TW4
+    ...上游 rtl/pe4/BROM.v 的表...
+end else begin : G_TW16
+    ...上游 rtl/pe16/BROM.v 的表...
+end
+endgenerate
 ```
+
+⚠️ **`generate` 里没有 `default` 分支** —— 传别的 `PE_NUMBER` 时 `dout` 会悬空且**不报错**。
+所以 Step 6 的探针里必须有一条非法 `PE_NUMBER` 的守卫（已写进 `leaf_elab_tb.v`）。
+
+顺手删掉三份里那条挂在死数组上、无任何引用的
+`(* rom_style="block" *) reg ... blockrom [...];`（三档都只出现在声明行，已核）——
+这是 `logs/` §二 B 里挂着的遗留清理项。生成的 BROM.v 里不再保留它。
+
+- [ ] **Step 6: 写叶子探针，三档各跑一次**
+
+> ⚠️ **偏离原计划（已与用户确认按此办）**：原计划写的是一个跑完就删的临时顶
+> `rtl/ntt_core/_elab_check.v`。改成**常驻探针** `rtl/probes/leaf_elab_tb.v` ——
+> 因为 BROM 的表内容是 Task 1 才发现的第三处真结构分歧，
+> 三张表一旦被谁改错、或 generate 分支接错，**编译和综合都不会报错**，
+> 只有真的读一次表才知道。这个风险值得一个常驻回归。
+
+探针验四件事（`rtl/probes/leaf_elab_tb.v`，期望值全部手工抄自上游三份 `BROM.v`）：
+
+1. `TW_ADDR_W` 与 `PE_NUMBER` 的搭配（F1，查表断言，**不是**公式）
+2. **BROM 三张表的内容** —— 每档抽查 5 个地址（首条 / 3 个中间 / 末条），
+   覆盖「全同条 / 部分同 / 全不同」三种形态
+3. BRAM 读写往返 + 地址间不串扰
+4. **非退化**（约定 4）：统计抽查到的不同 12 位系数值个数，少于 8 个就判失败
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"
 export PATH="/c/iverilog/bin:$PATH"
+L=rtl/probes/leaf_elab_tb.v
 for cfg in "1 9" "4 8" "16 7"; do
   set -- $cfg
-  iverilog -g2005 -o /tmp/elab.vvp -DCFG_PE_NUM=$1 -DCFG_TW=$2 \
-    rtl/ntt_core/_elab_check.v rtl/ntt_core/BRAM.v rtl/ntt_core/BROM.v \
-    && vvp /tmp/elab.vvp
+  iverilog -g2005 -DCFG_PE_NUM=$1 -DCFG_TW=$2 -o /tmp/leaf$1.vvp \
+    $L rtl/ntt_core/BRAM.v rtl/ntt_core/BROM.v && vvp /tmp/leaf$1.vvp
 done
 ```
 
-预期：三档都打出 `ELAB OK`。
+预期（2026-09-29 实跑）：
 
-- [ ] **Step 7: 确认 F1 的断言真的有分辨力（Review Focus）**
+```
+PE=1  L=7  TW_ADDR_W=9  BRAM 深度=256  BROM 表宽=12 位   → 抽查到 8 个不同值   PASS
+PE=4  L=5  TW_ADDR_W=8  BRAM 深度=64   BROM 表宽=48 位   → 抽查到 15 个不同值  PASS
+PE=16 L=3  TW_ADDR_W=7  BRAM 深度=16   BROM 表宽=192 位  → 抽查到 46 个不同值  PASS
+```
 
-故意传错一组，确认它会炸：
+- [ ] **Step 7: 阴性对照 —— 确认断言与守卫真的有分辨力（Review Focus）**
+
+**两条都要跑，缺一条这一步不算完成：**
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"; export PATH="/c/iverilog/bin:$PATH"
-iverilog -g2005 -o /tmp/elabbad.vvp -DCFG_PE_NUM=4 -DCFG_TW=9 \
-  rtl/ntt_core/_elab_check.v rtl/ntt_core/BRAM.v rtl/ntt_core/BROM.v && vvp /tmp/elabbad.vvp
+
+# 对照 1（F1）：PE=4 但 TW_ADDR_W 故意传 9 —— 必须 FAIL
+iverilog -g2005 -DCFG_PE_NUM=4 -DCFG_TW=9 -o /tmp/leafbad.vvp \
+  rtl/probes/leaf_elab_tb.v rtl/ntt_core/BRAM.v rtl/ntt_core/BROM.v && vvp /tmp/leafbad.vvp
+
+# 对照 2：PE_NUMBER=3（128/3 非整数，且 BROM 的 generate 没有 default）—— 必须 FATAL
+iverilog -g2005 -DCFG_PE_NUM=3 -DCFG_TW=9 -o /tmp/leafbad3.vvp \
+  rtl/probes/leaf_elab_tb.v rtl/ntt_core/BRAM.v rtl/ntt_core/BROM.v && vvp /tmp/leafbad3.vvp
 ```
 
-预期：打出 `FAIL: PE=4 时 TW_ADDR_W 应为 8，实为 9`。
+预期（2026-09-29 实跑）：
 
-> 这条断言是 F1 的兜底：`TW_ADDR_W` 手工选，写错会**静默读飞**，
+```
+对照 1 → FAIL: PE_NUMBER=4 时 TW_ADDR_W 应为 8，实为 9 —— c_tw/raddr_tw/BROM 会读飞
+对照 2 → FATAL: CFG_PE_NUM=3 不是 1/4/16 —— BROM 的 generate 没有 default，dout 会悬空
+```
+
+> 对照 1 是 F1 的兜底：`TW_ADDR_W` 手工选，写错会**静默读飞**，
 > 所以让它在 **elaboration 期**就炸，而不是等跑波形才发现。
-> 注意 `BROM #(.TW_ADDR_W(9))` 配 PE=4 本身**能编译能跑** —— 这正是需要断言的原因。
+> 注意 `ntt_BROM #(.TW_ADDR_W(9))` 配 PE=4 本身**能编译能跑** —— 这正是需要断言的原因。
+>
+> 对照 2 是那条 `generate` 没有 `default` 的兜底：不守的话，
+> 非法 `PE_NUMBER` 会得到一个 `dout` 恒为 X 的「能跑的」设计。
 
-- [ ] **Step 8: 删掉临时文件，提交**
+- [ ] **Step 8: 提交**
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"
-rm rtl/ntt_core/_elab_check.v
-git add rtl/ntt_core/
+git add rtl/ntt_core/ rtl/probes/leaf_elab_tb.v
 git commit -m "ntt_core：叶子模块归并 + BRAM/BROM 参数化
 
-叶子模块三档本就逐字节相同，取一份；modred.v 补回 pe1 缺失的
-CC0 版权头（用 pe4 那份，diff 确认只差注释）。
-BRAM 地址位宽 L+1、BROM 地址位宽 TW_ADDR_W（9/8/7，手工选）。
-顺带删掉 BROM.v 里挂在死数组上的 rom_style 属性。"
+叶子模块三档只差空白/注释（14 个文件逐对 cmp 实核，无一处逻辑差异）；
+modred.v 取 pe4 那份（pe1 缺 CC0 头）。
+BRAM 单读口、数据位宽恒 12、深度 2**ADDR_W。
+BROM 数据位宽 = 12*PE_NUMBER；三张表内容互不相同（第三处真结构分歧），
+用 generate 逐档放原表，由脚本从上游文件逐字提取 + 逐行比对。
+新树模块一律加 ntt_ 前缀（约束 13）—— 否则新旧同名，等价探针编不过。
+顺带删掉 BROM.v 里挂在死数组上的 rom_style 属性（三档均无引用）。"
 git push
 ```
 
@@ -335,7 +384,7 @@ git push
 - Modify: `rtl/probes/run_probes.sh`, `rtl/probes/README.md`
 
 **Interfaces:**
-- Consumes: Task 1 的 `BRAM` / `BROM` 参数名（本任务不用它们，但要保持端口名一致）
+- Consumes: Task 1 的 `ntt_BRAM` / `ntt_BROM` 参数名（本任务不用它们，但要保持端口名一致）
 - Produces: `ntt_addressgenerator #(parameter L = 7, TW_ADDR_W = 9)`，
   端口名**与 `rtl/pe1/addressgenerator.v` 完全一致**（**模块名不同**，见约束 13），
   **含** pe1 独有的两个输出 `c_loop_pwm[L-1:0]` 与 `raddr_b[L-1:0]`。
