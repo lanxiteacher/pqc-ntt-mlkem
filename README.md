@@ -46,11 +46,22 @@ ML-KEM（FIPS 203，即 CRYSTALS-Kyber）是 NIST 后量子密码标准中的密
 
 ### 尚未验证
 
+> 状态截至 **2026-09-29**。上表四项验的是**上游基线**（`research/ref_rtl/kyber-polmul-hw/pe1/`）；
+> 本项目自己的参数化版本 `rtl/ntt_core/` 见下第三条。
+
 - **ML-KEM 更外层的运算**：向量级点乘累加（`polyvec_basemul_acc_montgomery` 那一层）、
   base case 乘法、以及 `poly_tomont` / `poly_reduce` 归位。
-- **多 PE 配置**：只验了 `PE_NUMBER=1`，`pe4` / `pe16` 未验。
-- **上板实测**：Vivado 综合、时序收敛、资源占用、功耗均未做。
-- **上位机**：`host/` 尚未开工，目前只有目录说明（`host/README.md`），串口协议未冻结。
+  **已判定不做** —— 仓库里没有对应的 RTL，没有可验的对象。这条即本项目的验证边界。
+- **多 PE 配置的功能正确性**：上表四通路只覆盖 **`PE_NUMBER=1`**。
+  `rtl/ntt_core/`（把上游三档手工副本合并成的参数化版本）目前有
+  **「与上游逐拍等价 + 三档周期数逐个对齐」**的证据（`rtl/probes/`，
+  `sh rtl/probes/run_probes.sh` 可复跑），**但三档功能对拍（4096/4096）尚未做**。
+- **综合与资源**：上游基线三档已综合/实现（2026-09-22），资源与频率见
+  `rtl/vivado/折叠度对比表.md` 与 `rtl/vivado/reports/`。**参数化版本尚未综合。**
+- **功耗**：未测。
+- **上板**：PL 通路已实测跑通（2026-09-29，官方 `19_uart_loopback` 串口回环，16 字节原样返回）。
+  **NTT 核本身尚未上板** —— 还差一层板级 wrapper（时钟 / 复位 / UART）。
+- **上位机与协议**：`host/proto.md` 是协议草案，**未冻结**；PC 端上位机未开工。
 
 覆盖边界的完整说明在 `refsim/README.md` 第八节。
 
