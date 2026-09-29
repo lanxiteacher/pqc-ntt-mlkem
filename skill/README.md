@@ -1,6 +1,7 @@
 # skill —— 技能包
 
-**主责：C** ｜ 状态：🔄 **`checklists/` 与 `prompts/` 已成（2026-09-29）；`scripts/` `templates/` 未开工**
+**主责：C** ｜ 状态：✅ **四项齐了（2026-09-29）**：`checklists/` 34 条、`prompts/` 4 条、
+`scripts/` 3 个零依赖校验脚本、`templates/` 3 个骨架
 ｜ 对应评分项：**大模型协作与技能包（15 分）**
 
 > 位置与内容要求见 `../FPGA竞赛_选题指导_PQC-NTT_ML-KEM.md` §8.2。
@@ -71,22 +72,34 @@ skill/
 `../FPGA竞赛_选题指导_PQC-NTT_ML-KEM.md` §7、
 `../logs/FPGA竞赛_项目记录_变更.md`。
 
-### 3. `scripts/` —— 校验脚本
+### 3. `scripts/` —— 校验脚本 ✅（2026-09-29）
 
 选题指导点名的三类：
 
-- 自动比对黄金模型（现成：`../refsim/run_*.sh` 四条，**把它们整理成"别人拿去就能跑"的形态**）
-- 检查资源与时序
-- **验证工程可复现性** —— 判据见 `../README.md`：全新 clone + 零 `.exe` 能跑通
+| 类别 | 在哪 | 说明 |
+|---|---|---|
+| ① 自动比对黄金模型 | **`../refsim/` 四条入口**（不复制） | 本仓库最成熟的资产，各自自包含；复制会分叉 |
+| ② 检查资源与时序 | `../metrics/gen_metrics.mjs` | 从报告**解析**出数字生成表，不手抄 |
+| ③ 验证工程可复现性 | [`scripts/check_reproducible.sh`](scripts/check_reproducible.sh) | 干净目录 + 全新 clone + 从零跑 |
 
-⚠️ 从 `refsim/` 拿脚本时**不要改原件** —— 复制一份到 `skill/scripts/`，
-再按「给外人看」的角度改写（去掉只有我们懂的简称、补上依赖说明）。
+另外新写了两个通用校验（本项目的格式坑全是「数值全对、比对全错」，
+肉眼看不出来）：
+[`scripts/check_data_format.sh`](scripts/check_data_format.sh)（每行 3 位小写十六进制 + LF）、
+[`scripts/check_nondegenerate.sh`](scripts/check_nondegenerate.sh)（不同值占比 + 最常见值占比）。
 
-### 4. `templates/` —— 工程骨架模板
+**三个脚本只用 `sh` + `awk`，零依赖** —— 别人拿去不用先装东西。
+各脚本的关键坑、资源报告的四个必查项，都写在 [`scripts/README.md`](scripts/README.md)。
 
-下一个题目可以直接套用的东西。目前能沉淀的：Vivado 非工程模式脚本
-（`../rtl/vivado/`）、testbench 骨架（`../refsim/pe1/*_batch_tb.v`）、
-一键验证脚本的写法（`$(dirname "$0")` 相对定位）。
+### 4. `templates/` —— 工程骨架模板 ✅（2026-09-29）
+
+| 模板 | 用途 |
+|---|---|
+| [`templates/vivado_nonproject.tcl`](templates/vivado_nonproject.tcl) | 非工程模式「量数字」脚本（含两个环境雷区） |
+| [`templates/batch_testbench.v`](templates/batch_testbench.v) | 批量对拍 testbench 骨架（有界等待 / 好定位的报错 / 顺序注释） |
+| [`templates/run_checks.sh`](templates/run_checks.sh) | 一键验证脚本骨架（相对路径 / 工具预检 / 逐项报） |
+
+⚠️ 后两个是**骨架**，`TODO` 处要填；`batch_testbench.v` 本机没有 iverilog，
+**没有编译验证过**，套用时先跑最小例。
 
 ---
 
