@@ -135,4 +135,17 @@ for tag, f in (("pe4 ", "pe4.log"), ("pe16", "pe16.log")):
 PY
 
 echo
+echo "═══ ⑥ ntt_core/ntt_addressgenerator 与上游逐拍等价 ═══"
+# L=7→pe1（多两个输出，要 -DHAS_PE1_PORTS）｜L=5→pe4｜L=3→pe16（都不能带那个宏）
+for cfg in 7:pe1:-DHAS_PE1_PORTS 5:pe4: 3:pe16:; do
+    L="${cfg%%:*}"; rest="${cfg#*:}"; dir="${rest%%:*}"; extra="${rest#*:}"
+    iverilog -g2005 -DCFG_L=$L $extra \
+        -o "$W/ag$L.vvp" ag_equiv_tb.v "../$dir/addressgenerator.v" "../$dir/shiftreg.v" \
+        "$CORE/addressgenerator.v" "$CORE/shiftreg.v"
+    ( cd "$W" && vvp "ag$L.vvp" ) > "$W/ag$L.log" 2>&1 || true
+    grep -E '^(CFG|PHASE)' "$W/ag$L.log" | sed 's/^/  /'
+    grep -E '^(PASS|FAIL|FATAL)' "$W/ag$L.log" | sed 's/^/  /'
+done
+
+echo
 echo "═══ 完成 —— 中间文件在 rtl/probes/_work/ ═══"
