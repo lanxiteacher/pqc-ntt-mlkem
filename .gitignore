@@ -89,3 +89,16 @@ Thumbs.db
 *token*.md
 *.credentials
 .env
+
+# ===== 本机私有的 Claude Code 配置 ⚠️ =====
+# `.claude/settings.local.json` 是**给 AI 助手用的权限允许清单**：哪些命令
+# 不用每次弹确认。它只对配它的那台机器有意义。
+#
+# 为什么必须挡：
+#   1. 队友 clone 下来会**被动继承别人的权限设置** —— 他们没同意过；
+#   2. 它记的是"这台机器上谁能干什么"，属于本机私有配置，不是项目资产；
+#   3. 万一将来有人写进去路径、用户名之类，就成了无意泄露。
+#
+# 只挡 .local 那一份。若以后要全队共用一套配置，可以提交
+# `.claude/settings.json`（不带 .local），那条**故意不挡**。
+.claude/settings.local.json
