@@ -132,7 +132,7 @@ def main():
     print("")
     print("顺带看一眼两条已知的特殊值（只报数，不做判定）：")
     if "#PMUL TIME 2" in by_name:
-        print("  #PMUL TIME 2  ->  *%s   （proto.md:452：0 也是正常校验值）"
+        print("  #PMUL TIME 2  ->  *%s   （proto.md:454：0 也是正常校验值）"
               % by_name["#PMUL TIME 2"])
     else:
         print("  #PMUL TIME 2 不在表里，跳过。")
@@ -142,7 +142,7 @@ def main():
         print("  #PMUL NTT 1 / #OK NTT 1 有缺，跳过。")
     else:
         print("  #PMUL NTT 1 = *%s， #OK NTT 1 = *%s  ->  %s"
-              % (a, b, "相同（即 proto.md:453 的说法）" if a == b else "不同"))
+              % (a, b, "相同（即 proto.md:455 的说法）" if a == b else "不同"))
 
     return 0
 
