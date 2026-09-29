@@ -15,12 +15,14 @@ Vivado ML Standard 2020.2（`E:\xilinx\Vivado\2020.2`）｜ python 3
 
 **设计文档（spec）：** `rtl/folding_param_design.md` —— **本计划从它展开，两个一起读**。
 
-**进度（2026-09-29）：** Task 1~6 已完成。`sh rtl/probes/run_probes.sh` 段 ⓪⑥⑦⑧⑨⑩ 全 PASS
+**进度（2026-09-29）：** Task 1~7 已完成，**三条判据全过**。
+`sh rtl/probes/run_probes.sh` 段 ⓪⑥⑦⑧⑨⑩ 全 PASS
 （含各自的阴性对照，逐拍等价 pe1 7005 拍 / pe4 1919 拍 / pe16 669 拍）。
+**判据 1（Vivado 综合 + 引脚预算）已通过**：三档 Bonded IOB 都是 37，三档都布完线。
 **判据 2（三档周期数）已通过**：三档 × {FNTT, PWM2, INTT} 共 12 格全部等于上游实测值。
 **判据 3（三档功能对拍）已通过**：3 个运算 × 3 档 × 4096 系数全部多重集相等，
-pe1 三处读出顺序与 B 的 bench 逐字一致。见下方 Task 5 / Task 6。
-**剩 Task 7~8**（Vivado 综合与引脚预算 → 文档）。
+pe1 三处读出顺序与 B 的 bench 逐字一致。见下方 Task 5 / Task 6 / Task 7。
+**剩 Task 8**（文档与跨队同步）。
 
 ⚠️ **Task 4 有一条判据没达标，已改由 Task 6 承接：** 新增的段 ⑨ 拿
 `refsim/batch/ntt_batch_exp.txt` 第 0 组当外部锚，量出 **FNTT 读数路上三档的读出顺序并不一致**
@@ -29,7 +31,11 @@ pe1 三处读出顺序与 B 的 bench 逐字一致。见下方 Task 5 / Task 6�
 第 113-117 行靠反交织才对得上 FIPS 203 黄金向量），核与上游逐拍等价所以被原样继承，
 不是本次参数化引入的。详细结论见 `rtl/probes/README.md` 的 `top_golden_tb.v` 一节。
 
-⚠️ 判据 **1（Vivado 综合 + IOB 预算）** 仍**未**核对 —— 那是 Task 7。
+⚠️ **判据 1 已核对，但「核 / 顶层」是两个边界，对比时要标清。**
+上游那三份已提交的报告量的是**核**（`KyberHPMNPE`）；本轮 `rtl/ntt_core/` 量的是**顶层**
+（含 12 位串行化的外壳）。两者的 IOB 数一样（上游 `_top` 不改端口位宽），但 LUT/FF
+差一级寄存器的量。所以扫描脚本加了 `TREE=upstream_top` 专门量上游顶层，
+对比表里必须写清哪一行是哪个边界。见下方 Task 7 的「实施记录」。
 
 ---
 
