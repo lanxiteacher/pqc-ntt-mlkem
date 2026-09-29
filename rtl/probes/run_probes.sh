@@ -1,0 +1,126 @@
+#!/bin/sh
+# ===========================================================================
+# run_probes.sh —— 跑出 H1_port_spec.md 里的全部周期数与顺序表
+#
+# 用法：sh run_probes.sh      （在 rtl/probes/ 下跑，或从别处跑都行）
+# 依赖：iverilog（/c/iverilog/bin）、python
+# 中间文件全部落在 _work/，不进仓库。
+# ===========================================================================
+set -e
+export PATH="/c/iverilog/bin:$PATH"
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+cd "$HERE"
+BATCH="../../refsim/batch"
+W="_work"
+mkdir -p "$W"
+
+# ------------------------------------------------------------------ 向量
+# 取 FNTT 黄金向量的第 0 组（前 256 行）。refsim/batch 是 B 的目录，只读。
+head -256 "$BATCH/ntt_batch_in.txt"  > "$W/in.txt"
+head -256 "$BATCH/ntt_batch_exp.txt" > "$W/exp.txt"
+
+PE1=$(ls ../pe1/*.v | tr '\n' ' ')
+PE4=$(ls ../pe4/*.v | tr '\n' ' ')
+PE16=$(ls ../pe16/*.v | tr '\n' ' ')
+
+# vvp 的工作目录决定 $readmemh 的相对路径，所以统一在 _work 里跑
+run_tb () {   # run_tb <可执行名> <plusargs...>
+    vvp "../_work/$1" ${2:+$2} > "../_work/$1.log" 2>&1 || true
+}
+
+echo "═══ ① pe1 接口时序（核） ═══"
+iverilog -g2012 -o "$W/pe1_core.vvp" $PE1 pe1_timing_tb.v
+( cd "$W" && vvp pe1_core.vvp ) > "$W/pe1_core.log" 2>&1
+grep '^TIMELINE' "$W/pe1_core.log" | sed 's/^/  /'
+
+echo "═══ ② pe1 接口时序（KyberHPM1PE_top，带输入/输出寄存） ═══"
+iverilog -g2012 -DUSE_TOP -o "$W/pe1_top.vvp" $PE1 pe1_timing_tb.v
+( cd "$W" && vvp pe1_top.vvp ) > "$W/pe1_top.log" 2>&1
+grep '^TIMELINE' "$W/pe1_top.log" | sed 's/^/  /'
+
+echo "═══ ③ pe4 装载顺序 / 读出顺序 ═══"
+iverilog -g2012 -o "$W/pe4.vvp" $PE4 order_tb.v
+( cd "$W" && vvp pe4.vvp ) > "$W/pe4.log" 2>&1
+grep '^ORDER' "$W/pe4.log" | sed 's/^/  /'
+
+echo "═══ ④ pe16 装载顺序 / 读出顺序 ═══"
+iverilog -g2012 -DPE16 -o "$W/pe16.vvp" $PE16 order_tb.v
+( cd "$W" && vvp pe16.vvp ) > "$W/pe16.log" 2>&1
+grep '^ORDER' "$W/pe16.log" | sed 's/^/  /'
+
+echo
+echo "═══ ⑤ 反推顺序表 ═══"
+python - "$W" <<'PY'
+# -*- coding: utf-8 -*-
+import sys, os
+from collections import defaultdict
+sys.stdout.reconfigure(encoding="utf-8")
+
+W = sys.argv[1]
+exp = [int(l.strip(), 16) for l in open(os.path.join(W, "exp.txt")) if l.strip()]
+idx = defaultdict(list)
+for j, v in enumerate(exp):
+    idx[v].append(j)
+
+def load(name):
+    return [int(l.split()[2], 16)
+            for l in open(os.path.join(W, name)) if l.startswith("RAW")]
+
+def beat_lines(name):
+    return [l.split()[2].strip()
+            for l in open(os.path.join(W, name)) if l.startswith("BEAT")]
+
+def report(tag, raw, pe):
+    pi, amb = [], 0
+    for v in raw:
+        c = idx[v]
+        if len(c) == 1:
+            pi.append(c[0])
+        else:
+            pi.append(-1); amb += 1
+    print(f"  {tag}: 256 个值里可唯一定位的 {256-amb} 个")
+    bad = []
+    for b in range(256 // pe):
+        want = [pe*b + (pe-1-j) for j in range(pe)]
+        got  = pi[pe*b:pe*b+pe]
+        for j in range(pe):
+            if got[j] != -1 and got[j] != want[j]:
+                bad.append((b, j, got[j], want[j]))
+    if not bad:
+        print(f"  {tag}: ✅ 全部可唯一定位的值都符合「dout 最高切片 = 本拍最低下标，拍间自然顺序」")
+    else:
+        print(f"  {tag}: ❌ {len(bad)} 处不符，前 8 条：")
+        for b, j, g, w in bad[:8]:
+            print(f"      beat {b} 切片 {j}: 实测下标 {g}，规则预测 {w}")
+
+report("pe4 ", load("pe4.log") , 4)
+report("pe16", load("pe16.log"), 16)
+
+# ---- pe1 的读出顺序（FNTT，结果在 bank1）---------------------------------
+# 时间线显示 first_dout_cc 在 read_pulse 之后第 3 拍，而 OUT 数组从 read 之后
+# 第 1 拍就开始记，所以要跳过前 2 条。
+out = [int(l.split()[2], 16)
+       for l in open(os.path.join(W, "pe1_core.log")) if l.startswith("OUT ")]
+pi = []
+for v in out:
+    c = idx[v]
+    pi.append(c[0] if len(c) == 1 else -1)
+beats = pi[2:258]                      # 第 3 拍起的 256 拍
+assert len(beats) == 256, f"OUT 条数不够：{len(pi)}"
+want = [4*(m//4) + [0,2,1,3][m % 4] for m in range(256)]
+mis = [(m, beats[m], want[m]) for m in range(256)
+       if beats[m] != -1 and beats[m] != want[m]]
+if not mis:
+    print("  pe1 : ✅ 读出顺序符合组内 0,2,1,3 循环（0,2,1,3,4,6,5,7,...）")
+else:
+    print(f"  pe1 : ❌ {len(mis)} 处不符，前 8 条：{mis[:8]}")
+print(f"  pe1  非零读数拍数: 见 ① 的 nonzero_beats（含末尾 1 拍越界回卷）")
+
+for tag, f in (("pe4 ", "pe4.log"), ("pe16", "pe16.log")):
+    bl = beat_lines(f)
+    print(f"  {tag} 读出拍数（含多打的 4 拍）: {len(bl)}，其中第 {len(bl)-4} 拍之后是越界拍")
+PY
+
+echo
+echo "═══ 完成 —— 中间文件在 rtl/probes/_work/ ═══"
