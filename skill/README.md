@@ -1,6 +1,7 @@
 # skill —— 技能包
 
-**主责：C** ｜ 状态：⬜ 未开工 ｜ 对应评分项：**大模型协作与技能包（15 分）**
+**主责：C** ｜ 状态：🔄 **`checklists/` 已成（2026-09-29）；`prompts/` `scripts/` `templates/` 未开工**
+｜ 对应评分项：**大模型协作与技能包（15 分）**
 
 > 位置与内容要求见 `../FPGA竞赛_选题指导_PQC-NTT_ML-KEM.md` §8.2。
 > AI 协作**记录**（逐日日志）不在这里，在 `../report/`。
@@ -51,18 +52,24 @@ skill/
 `../team/FPGA竞赛_三人分工.md` §七 第 4 条把「答辩要能复述原理」写成了纪律，
 而提示词是达成它的手段。）
 
-### 2. `checklists/` —— 踩坑清单
+### 2. `checklists/` —— 踩坑清单 ✅（2026-09-29）
 
-原料是现成的，**从这三处汇总**（不要自己回忆，会漏）：
+按主题分成五份，共 **34 条**，每条写清 **现象 → 原因 → 怎么修 → 怎么预防**，
+外加 **怎么发现的**（决定下次能不能更快发现）与 **谁扛**：
 
-| 来源 | 里面有什么 |
-|---|---|
-| `../CLAUDE.md` 的「约定」 | 6 条，每条都标了踩过的坑 |
-| `../refsim/README.md` | 验证链的踩坑与覆盖边界 |
-| `../team/FPGA竞赛_B_Claude环境对齐指南.md` §四 | 7 条技术约定 |
-| `../logs/FPGA竞赛_项目记录_变更.md` | 按日期记的决策与坑，**只增** |
+| 文件 | 主题 | 条数 |
+|---|---|---|
+| [`checklists/data-format.md`](checklists/data-format.md) | 数据文件的编码与行尾 | 6 |
+| [`checklists/verification.md`](checklists/verification.md) | 验证方法学：怎么才算「验过了」 | 9 |
+| [`checklists/rtl-and-timing.md`](checklists/rtl-and-timing.md) | RTL、时序、资源报告 | 6 |
+| [`checklists/toolchain-and-board.md`](checklists/toolchain-and-board.md) | 工具链与上板 | 8 |
+| [`checklists/ai-collaboration.md`](checklists/ai-collaboration.md) | 与 AI 协作时特有的坑 | 5 |
 
-每条写清：**现象 → 原因 → 怎么修 → 怎么预防**。
+原料汇总自五处（都是本项目一手记录，不是通用建议）：
+`../CLAUDE.md` 的「约定」6 条、`../refsim/README.md` §七/§八、
+`../team/FPGA竞赛_B_Claude环境对齐指南.md` §四、
+`../FPGA竞赛_选题指导_PQC-NTT_ML-KEM.md` §7、
+`../logs/FPGA竞赛_项目记录_变更.md`。
 
 ### 3. `scripts/` —— 校验脚本
 
