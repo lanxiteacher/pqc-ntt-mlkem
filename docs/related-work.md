@@ -20,6 +20,8 @@ PQShield 的 2/4/8 蝶形），所以「能调折叠度」**本身不构成差�
 
 1. **接口宽度不随折叠度增长** —— 上游基线 `din`/`dout` 位宽 = `12 × PE`，pe16 要 **397 个引脚**，
    而 7020 只有 **125 个**，`place_design` 直接失败。这是 `../rtl/vivado/折叠度对比表.md` §五 实测出来的。
+   参数化版的对策已定稿（`../rtl/folding_param_design.md` §4.3）：**核内保持宽接口，
+   序列化放到核外，顶层对外固定 12 位、三档完全相同**；验收判据第 1 条 = 三档 Bonded IOB ≤ 125。
 2. **端到端完整多项式乘法已验证**（含 INTT 与点乘，FIPS 203 KAT 4096/4096），
    而表里多数工作只报到 NTT 核级。
 
@@ -141,6 +143,7 @@ Zynq-7000 上的 Kyber NTT，**2908 LUT / 170 FF / 9 DSP / 1935 周期 / 45 MHz 
 | ③ | ASHES '24 · Kundi / Bermudo Mera / Strub / Hutter（PQShield），*High-Performance NTT Hardware Accelerator to Support ML-KEM and ML-DSA* —— DOI 10.1145/3689939.3695785 | `../research/kyber_ref/papers/pq_table.txt`、`pqshield.txt` | ⚠️ **Table 3 抽取后有一行丢了设计标签**（`2,893/2,356/4/4.5` 那行），且多行共用面积格。**本表暂未引用它的数字**，等核对过 PDF 再说 |
 | ④ | 我们自己的三档实测 | `../rtl/vivado/折叠度对比表.md`（产物 `reports/*.rpt`） | A 实测（H4）。数字以 `reports/` 下的 `.rpt` 为准 |
 | ⑤ | 侧信道相关结论 | `../research/…汇编.md` §2.6 | 只用于答辩防守，不涉及本表 |
+| ⑥ | 参数化折叠度设计定稿（**我们改进的载体**） | `../rtl/folding_param_design.md` | A 定稿（2026-09-29）。§一 给三档验收判据、§2.1 重述接口瓶颈、§4.3 定「核外序列化 + 固定 12 位接口」 |
 
 **PQShield 那篇（③）为什么值得单独盯**：它是**产业界**（PQShield）的工作，
 明确同时支持 **ML-KEM 和 ML-DSA**，Zynq UltraScale+ 8 蝶形配置报 322 MHz / 258 周期 / ATP 13,755。
