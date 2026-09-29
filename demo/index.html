@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>ML-KEM NTT 七层蝶形演示</title>
+<style>
+  :root {
+    --bg: #12151a; --panel: #1a1f27; --line: #2c333e;
+    --fg: #d8dee9; --dim: #7c8998; --accent: #4c9aff;
+    --hot: #b8791f; --hot-bg: #3a2c12; --sel: #2d4a75;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 14px/1.6 "Consolas", "Cascadia Mono", "Courier New", monospace;
+  }
+  header { padding: 14px 20px; border-bottom: 1px solid var(--line); }
+  h1 { margin: 0 0 4px; font-size: 17px; font-weight: 600; }
+  .sub { color: var(--dim); font-size: 12px; }
+  main { display: flex; gap: 18px; padding: 18px 20px; align-items: flex-start; flex-wrap: wrap; }
+
+  .grid { display: grid; grid-template-columns: repeat(16, 46px); gap: 2px; }
+  .cell {
+    height: 26px; display: flex; align-items: center; justify-content: center;
+    background: var(--panel); border: 1px solid transparent; border-radius: 3px;
+    font-size: 12px; color: var(--dim); cursor: pointer; user-select: none;
+  }
+  .cell.on  { color: var(--fg); }                       /* 本层参与 */
+  .cell.chg { background: var(--hot-bg); color: #f0c674; border-color: var(--hot); }
+  .cell.sel { background: var(--sel); color: #fff; border-color: var(--accent); }
+  .cell.pair { outline: 1px dashed var(--accent); outline-offset: -1px; color: #9dc4f5; }
+
+  .panel { flex: 1 1 340px; min-width: 320px; max-width: 460px; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; margin-bottom: 12px; }
+  .box h2 { margin: 0 0 8px; font-size: 13px; color: var(--accent); font-weight: 600; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 13px; }
+  .kv dt { color: var(--dim); }
+  .kv dd { margin: 0; }
+  code { color: #f0c674; }
+
+  .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  button, select {
+    background: #232a34; color: var(--fg); border: 1px solid var(--line);
+    border-radius: 4px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button:disabled { opacity: .35; cursor: default; border-color: var(--line); }
+  .stage { font-size: 13px; color: var(--dim); }
+  .stage b { color: var(--fg); font-size: 15px; }
+
+  .legend { font-size: 12px; color: var(--dim); }
+  .legend b { color: var(--fg); font-weight: 600; }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; }
+  table.bf { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.bf th, table.bf td { text-align: left; padding: 2px 6px 2px 0; color: var(--dim); }
+  table.bf td.v { color: var(--fg); }
+  footer { color: var(--dim); font-size: 12px; padding: 4px 20px 24px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ML-KEM 的 NTT —— 七层蝶形，按一下走一层</h1>
+  <div class="sub">
+    q = 3329 ｜ N = 256 ｜ CT/DIT 蝶形，len 从 128 递减到 2，twiddle 取自 <code>zetas[]</code> 递增
+  </div>
+</header>
+
+<main>
+  <div>
+    <div class="bar">
+      <button id="prev">← 上一层</button>
+      <button id="next">下一层 →</button>
+      <button id="reset">重置</button>
+      <select id="vec"></select>
+    </div>
+    <div class="stage" id="stage"></div>
+    <div style="height:10px"></div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="panel">
+    <div class="box">
+      <h2>这一层在干什么</h2>
+      <dl class="kv" id="layerinfo"></dl>
+    </div>
+
+    <div class="box">
+      <h2>选一个数看它的蝶形</h2>
+      <table class="bf" id="bf">
+        <tr><td colspan="2" class="legend">点左边的格子。</td></tr>
+      </table>
+    </div>
+
+    <div class="box">
+      <h2>图例</h2>
+      <div class="legend">
+        <span class="swatch" style="background:var(--hot-bg);border:1px solid var(--hot)"></span>
+        本层值变了
+        <span class="swatch" style="background:var(--sel);border:1px solid var(--accent)"></span>
+        你选中的数
+        <span class="swatch" style="border:1px dashed var(--accent)"></span> 它的配对<br><br>
+        每组蝶形：<code>t = zeta × b</code>（Montgomery 乘）<br>
+        <code>a′ = a + t</code>　<code>b′ = a − t</code><br>
+        数字口径：<b>canonical mod q</b>，落回 <b>0..3328</b>。
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>数据从哪来</h2>
+      <div class="legend" id="meta"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  本页只做<b>正变换的 7 层</b>。逆变换与对拍页是后面的事。
+  数字与 <code>research/mlkem_kat/ntt_out.hex</code> 已逐值对齐（第 7 层）。
+</footer>
+
+<script src="data/vectors.js"></script>
+<script>
+(function () {
+  const D = window.NTT_DATA;
+  if (!D) { document.body.innerHTML = "<p style='padding:20px'>读不到 data/vectors.js —— 先在仓库根目录跑 <code>node demo/gen_layers.mjs</code>。</p>"; return; }
+
+  const N = D.meta.n, Q = D.meta.q;
+  const LEN = D.layerLen;                       // [128,64,32,16,8,4,2]，共 7 层
+  const NL = LEN.length;
+
+  /* 每层之前已经消耗掉的 zetas 个数 —— 正变换从下标 1 起步、逐层递增。
+     组数 = 128 / len，所以偏移量 = 1 + Σ(前面各层的组数)。 */
+  const zetaOffset = [];
+  { let acc = 1;
+    for (let i = 0; i < NL; i++) { zetaOffset.push(acc); acc += 128 / LEN[i]; } }
+
+  let vIdx = 0;      // 当前向量
+  let layer = 0;     // 0 = 输入，1..7 = 走完第 layer 层
+  let sel = null;    // 选中的下标
+
+  const els = {
+    grid: document.getElementById('grid'),
+    stage: document.getElementById('stage'),
+    info: document.getElementById('layerinfo'),
+    bf: document.getElementById('bf'),
+    vec: document.getElementById('vec'),
+    meta: document.getElementById('meta'),
+  };
+
+  const hex3 = (v) => v.toString(16).padStart(3, '0');
+  const groupOf = (i) => Math.floor(i / (2 * LEN[layer - 1]));   // 仅 layer>=1 有效
+
+  /* ---- 向量下拉 ------------------------------------------------------- */
+  D.vectors.forEach((v) => {
+    const o = document.createElement('option');
+    o.value = v.id;
+    o.textContent = '向量 ' + String(v.id).padStart(2, '0') +
+                    (v.match ? '' : ' ⚠️未对齐');
+    els.vec.appendChild(o);
+  });
+
+  function cells() { return els.grid.children; }
+
+  function buildGrid() {
+    els.grid.innerHTML = '';
+    for (let i = 0; i < N; i++) {
+      const d = document.createElement('div');
+      d.className = 'cell';
+      d.dataset.i = i;
+      d.addEventListener('click', () => { sel = (sel === i ? null : i); render(); });
+      els.grid.appendChild(d);
+    }
+  }
+
+  function render() {
+    const V = D.vectors[vIdx];
+    const cur = V.layers[layer];
+    const prev = layer > 0 ? V.layers[layer - 1] : null;
+    const cs = cells();
+
+    for (let i = 0; i < N; i++) {
+      const c = cs[i];
+      const changed = prev && cur[i] !== prev[i];
+      const involved = layer > 0;              // 每层全部 256 个下标都参与
+      let cls = 'cell';
+      if (involved) cls += ' on';
+      if (changed) cls += ' chg';
+      if (sel === i) cls += ' sel';
+      else if (sel !== null && layer > 0 && groupOf(i) === groupOf(sel) && i !== sel) cls += ' pair';
+      c.className = cls;
+      c.textContent = cur[i];
+      c.title = '下标 ' + i + ' ｜ 十进制 ' + cur[i] + ' ｜ 十六进制 ' + hex3(cur[i]);
+    }
+
+    /* 标题与层信息 */
+    if (layer === 0) {
+      els.stage.innerHTML = '状态：<b>输入</b>（还没开始变换）';
+      els.info.innerHTML = '<dt>层</dt><dd>0 / ' + NL + '</dd>' +
+        '<dt>说明</dt><dd>这 256 个数就是待变换的多项式系数。</dd>';
+    } else {
+      const L = LEN[layer - 1];
+      const groups = 128 / L;
+      const zf = zetaOffset[layer - 1], zt = zf + groups - 1;
+      const changed = prev.reduce((n, x, i) => n + (x !== cur[i] ? 1 : 0), 0);
+      els.stage.innerHTML = '状态：第 <b>' + layer + '</b> / ' + NL + ' 层已经走完';
+      els.info.innerHTML =
+        '<dt>层</dt><dd>' + layer + ' / ' + NL + '</dd>' +
+        '<dt>len</dt><dd>' + L + '（每组 ' + L + ' 个蝶形）</dd>' +
+        '<dt>组数</dt><dd>' + groups + '</dd>' +
+        '<dt>twiddle</dt><dd><code>zetas[' + zf + '] → [' + zt + ']</code></dd>' +
+        '<dt>本层数值变了</dt><dd>' + changed + ' / ' + N + ' 个</dd>';
+    }
+
+    renderButterfly(cur, prev);
+  }
+
+  function renderButterfly(cur, prev) {
+    if (layer === 0) {
+      els.bf.innerHTML = '<tr><td colspan="2" class="legend">先按「下一层」，再点格子看蝶形。</td></tr>';
+      return;
+    }
+    const L = LEN[layer - 1];
+    if (sel === null) {
+      els.bf.innerHTML = '<tr><td colspan="2" class="legend">点左边的格子。</td></tr>';
+      return;
+    }
+    const g = groupOf(sel);
+    const zeta = D.zetas[zetaOffset[layer - 1] + g];
+    const base = g * 2 * L;
+    const a = base + (sel - base) % L;        // 每组的「左半」起点
+    const b = a + L;
+    const row = (k, txt) =>
+      '<tr><td>' + k + '</td><td class="v">' + txt + '</td></tr>';
+    els.bf.innerHTML =
+      row('你点的下标', sel + '（第 ' + (sel - base + 1) + ' / ' + (2 * L) + ' 个）') +
+      row('所属组', '第 ' + g + ' 组，覆盖下标 ' + base + ' .. ' + (base + 2 * L - 1)) +
+      row('本组的 zeta', '<code>zetas[' + (zetaOffset[layer - 1] + g) + '] = ' + zeta + '</code>') +
+      row('a（下标 ' + a + '）', cur[a] + (prev ? '（本层前 ' + prev[a] + '）' : '')) +
+      row('b（下标 ' + b + '）', cur[b] + (prev ? '（本层前 ' + prev[b] + '）' : '')) +
+      row('蝶形', 't = zeta × ' + (prev ? prev[b] : '?') + '；' +
+                  'a′ = a + t = ' + cur[a] + '；b′ = a − t = ' + cur[b]);
+  }
+
+  /* ---- 交互 ----------------------------------------------------------- */
+  function step(d) {
+    layer = Math.max(0, Math.min(NL, layer + d));
+    render();
+  }
+  document.getElementById('next').addEventListener('click', () => step(1));
+  document.getElementById('prev').addEventListener('click', () => step(-1));
+  document.getElementById('reset').addEventListener('click', () => { layer = 0; sel = null; render(); });
+  els.vec.addEventListener('change', (e) => { vIdx = +e.target.value; layer = 0; sel = null; render(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { step(1); e.preventDefault(); }
+    if (e.key === 'ArrowLeft')  { step(-1); e.preventDefault(); }
+    if (e.key === 'r') { layer = 0; sel = null; render(); }
+  });
+
+  els.meta.innerHTML =
+    '层序规则：<code>' + D.meta.layerOrderSource + '</code><br>' +
+    'zeta 表：<code>' + D.meta.zetaSource + '</code><br>' +
+    '真值来源：<code>' + D.meta.groundTruth + '</code><br>' +
+    '对齐情况：<b>' + D.meta.verified + '</b><br>' +
+    '生成器：<code>' + D.meta.generator + '</code>';
+
+  buildGrid();
+  render();
+})();
+</script>
+</body>
+</html>

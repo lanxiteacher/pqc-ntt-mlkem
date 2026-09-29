@@ -13,6 +13,9 @@ __pycache__/
 # ===== refsim 的临时文件 =====
 refsim/tmp_*.txt
 
+# ===== rtl/probes 的中间文件（每条命令重生成，不进仓库）=====
+rtl/probes/_work/
+
 # ===== 已废弃的 Round3 材料 =====
 # 见 research/已核实结论_修正选题指导文档.md：
 # Round3 的 KAT 不能用来验收 FIPS 203 ML-KEM，留着只会误导。
