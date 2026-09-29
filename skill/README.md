@@ -1,6 +1,6 @@
 # skill —— 技能包
 
-**主责：C** ｜ 状态：🔄 **`checklists/` 已成（2026-09-29）；`prompts/` `scripts/` `templates/` 未开工**
+**主责：C** ｜ 状态：🔄 **`checklists/` 与 `prompts/` 已成（2026-09-29）；`scripts/` `templates/` 未开工**
 ｜ 对应评分项：**大模型协作与技能包（15 分）**
 
 > 位置与内容要求见 `../FPGA竞赛_选题指导_PQC-NTT_ML-KEM.md` §8.2。
@@ -34,23 +34,23 @@ skill/
 
 ## 四项必交内容
 
-### 1. `prompts/` —— 提示词工作流
+### 1. `prompts/` —— 提示词工作流 ✅（2026-09-29）
 
-**至少两条**（选题指导 §8.2 点名要求）：
+四条，其中前两条是选题指导 §8.2 点名要求的：
 
 | 提示词模板 | 用途 | 状态 |
 |---|---|---|
-| 从算法描述推导软硬划分 | 拿到一个算法，怎么让 AI 帮你划出「哪部分放硬件、哪部分放软件」 | ⬜ |
-| 根据综合报告定位瓶颈 | 把 Vivado 报告丢给 AI，让它指出瓶颈在哪 | ⬜ |
+| [`prompts/01_hardware_software_partition.md`](prompts/01_hardware_software_partition.md) | 从算法描述推导软硬划分 | ✅ |
+| [`prompts/02_bottleneck_from_reports.md`](prompts/02_bottleneck_from_reports.md) | 根据综合报告定位瓶颈 | ✅ |
+| [`prompts/03_explain_your_own_code.md`](prompts/03_explain_your_own_code.md) | 让 AI 讲懂它自己写的代码（答辩要能复述原理） | ✅ |
+| [`prompts/04_every_number_has_a_source.md`](prompts/04_every_number_has_a_source.md) | 每个数都要有出处（防「顺手补全」） | ✅ |
 
-**每条必须写清三件事**：
-- **适用范围** —— 什么情况下能用，什么情况下不能用
-- **使用方法** —— 怎么填、贴给谁、期望得到什么
-- **失效条件** —— 什么时候它会不管用
+每条写清五件事：**适用范围 / 不能用 / 使用方法（可直接复制的原文）/ 期望得到什么 /
+失效条件**，外加一段 `本项目的实例`（问出了什么、从哪个失败里总结的）。
 
-（另外建议补一条：**「让 AI 讲懂它自己写的代码」** ——
-`../team/FPGA竞赛_三人分工.md` §七 第 4 条把「答辩要能复述原理」写成了纪律，
-而提示词是达成它的手段。）
+> `04` 是原计划里没有的，是**本项目踩了两次之后补的**：
+> 一次是往对比表里补了源表里根本没有的 FF 一列，
+> 一次是把 `fqmul(zeta, b)` 写成 `zeta × b`（格式都对、事实都错）。
 
 ### 2. `checklists/` —— 踩坑清单 ✅（2026-09-29）
 
