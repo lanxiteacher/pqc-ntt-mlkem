@@ -225,6 +225,6 @@ RTL 的错先在 `refsim/` 里验干净 —— 这套验证台存在的意义就
 | 官方考题环境（1000 条） | `research/mlkem_kat/` | ✅ 1000/1000 通过 |
 | NTT 数学层序表 | `refsim/run_ntt_layers.sh` | ✅ 已机器验证 |
 | 技术资料汇编（22 篇论文） | `research/PQC-NTT_ML-KEM_技术资料汇编.md` | ✅ 相关工作表的原料 |
-| 板子 + 下载器 + 串口 | 领航者 ZYNQ-7020，CH340 COM10 | ✅ **在 A 手里** |
+| 板子 + 下载器 + 串口 | 领航者 ZYNQ-7020，CH340（设备名 `USB-SERIAL CH340`；**COM 口号会变，用前现查**） | ✅ **在 A 手里**，09/29 已实测跑通 PL 通路 |
 | Verilog 仿真器 | iverilog 12.0 | ✅ 已装 |
 | Vivado | Vivado ML Standard 2020.2，`E:\xilinx\Vivado\2020.2` | ✅ **已装在本机（A 的工位）**，Vitis 随装 |

@@ -34,9 +34,15 @@ FPGA 竞赛项目：**AMD 赛道 · 3.3 自主选题（初级组）· 后量子�
   （可执行文件 `E:\xilinx\Vivado\2020.2\bin\vivado.bat`；⚠️ 实际目录名是**小写** `xilinx`）
   **综合 / 上板 / 时序 / 资源的事在本机就能做**，不要说"做不了"
 - **板子也接在本机**（正点原子**领航者 ZYNQ**，器件 `xc7z020clg400-2`，与板子完全一致）——
-  板载 CH340C，串口号 **COM10**（设备名 `USB-SERIAL CH340`）。⚠️ 板子不常插着，
-  **动手前先确认 COM10 在**（`[System.IO.Ports.SerialPort]::GetPortNames()`）。
-  COM 口存在 ≠ PL 通路通：要烧 `19_uart_loopback` + 底板 **P5 跳 PL 档**才算确认
+  板载 CH340C，设备名 `USB-SERIAL CH340`。⚠️ **串口号会变**：Windows 按「插在哪个 USB 口」
+  现分配（见过 COM10、COM9），**不要写死** —— 动手前用
+  `[System.IO.Ports.SerialPort]::GetPortNames()` 查当前是哪个
+- ✅ **PL 通路 2026-09-29 已验通** —— JTAG 烧官方 `19_uart_loopback` + 底板 **P5 跳 PL 档**
+  （3–5、4–6 短接）+ 启动拨码 **JTAG 档**（两位都 ON）→ 串口 115200-8N1 回环，16 字节原样返回。
+  ⚠️ 位流**掉电即失**，断电后要重烧
+- **JTAG 下载器**（正点原子 Xilinx 下载器，FTDI **FT232H**）插底板**右侧的 14-Pin JTAG 座**。
+  ⚠️ `USB_UART` 与 `USB_SLAVE` 两个口都**不能**下载程序。
+  烧录可**纯命令行**（`vivado -mode batch -source <脚本>.tcl`），不必开 GUI
 - **正点原子资料已在本机** —— `E:\BaiduNetdiskDownload\正点原子资料`（23 GB）。
   上板要的四个引脚（例程 XDC 与全板 `NAVIGATOR_ZYNQ_IO.xdc` 已交叉核对一致，均 LVCMOS33）：
   `sys_clk` **U18**（50 MHz）｜`sys_rst_n` **N16**（**低有效**）｜

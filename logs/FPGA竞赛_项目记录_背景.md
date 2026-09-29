@@ -13,11 +13,11 @@
 |---|---|
 | 芯片 | **XC7Z020CLG400-2**（Vivado 必须选 `xc7z020clg400-2`，别套 Zybo/PYNQ-Z1 的 -1） |
 | 片上资源 | BRAM ≈ **4.9 Mb ≈ 0.6 MB**（最卡）、220 DSP、53,200 LUT |
-| 串口 | 板载 CH340C → **`CH340 (COM10)` 已确认**；底板 **P5 跳线**切 PS/PL（**PL 档 = 3–5、4–6 短接**） |
+| 串口 | 板载 CH340C → 设备名 `USB-SERIAL CH340`；⚠️ **COM 口号会变**（Windows 按 USB 口分配，见过 COM10/COM9），用前现查；底板 **P5 跳线**切 PS/PL（**PL 档 = 3–5、4–6 短接**） |
 | 时钟 | PL 侧 **50 MHz 单端**（U18） |
-| 下载 | **无板载 USB-JTAG，需外接下载器** —— ✅ **已在手**（09/22 复核）。`USB_UART` 与 `USB_SLAVE` 两个口都**不能**下载程序；烧录时**启动模式拨码拨到 JTAG 档** |
+| 下载 | **无板载 USB-JTAG，需外接下载器** —— ✅ 已在手且**已实测可用**（正点原子 Xilinx 下载器，FTDI **FT232H**，插底板**右侧 14-Pin JTAG 座**）。`USB_UART` 与 `USB_SLAVE` 两个口都**不能**下载程序；烧录时**启动模式拨码拨到 JTAG 档（两位都 ON）** |
 | 资料 | 官方 46 个**纯 PL** 例程（含 `19_uart_loopback`）、500+ 页开发指南 |
-| ⚠️ 未验证 | COM 口出现 ≠ PL 通路通 —— 需烧 `19_uart_loopback` + P5 跳 PL 档才能确认 |
+| ✅ 已验通 | **PL 通路 2026-09-29 验证通过**：JTAG 烧 `19_uart_loopback` + P5 跳 PL 档 → 串口回环，16 字节原样返回。⚠️ 位流**掉电即失**，断电后要重烧 |
 | ✅ 已核对 | XDC 引脚号（**09/22 结案**）：`sys_clk` **U18** ／ `sys_rst_n` **N16** ／ `uart_rxd` **T19** ／ `uart_txd` **J15**，均 LVCMOS33 —— 走 **USB UART** 那组 |
 
 ### 队伍与时间
@@ -33,18 +33,25 @@
 - **Vivado ML Standard 2020.2 已装在本机**（`E:\xilinx\Vivado\2020.2`，可执行 `bin\vivado.bat`）
   —— **本机就是 A 的工位**，综合 / 上板 / 时序 / 资源都能做（无 Vivado 的旧记述已作废）
 - 板子（领航者 7020，器件 `xc7z020clg400-2`）**属于本机，但不常插着** ——
-  板载 CH340C，串口号 **COM10**（`USB-SERIAL CH340`）；用前先确认 COM10 在
-  （`[System.IO.Ports.SerialPort]::GetPortNames()`）
+  板载 CH340C，设备名 `USB-SERIAL CH340`；⚠️ **COM 口号会变**（Windows 按「插在哪个
+  USB 口」现分配，见过 COM10、COM9），**用前现查**（`[System.IO.Ports.SerialPort]::GetPortNames()`）
 - ✅ **正点原子资料已在本机**（09/22）—— `E:\BaiduNetdiskDownload\正点原子资料`（23 GB）。
   例程在 `4_Source_Code/1_FPGA_Design/ZYNQ_7020_FPGA.rar`（1.4 GB，46 个；
-  **别解错成 7010 那个**）。`19_uart_loopback` 已单独解出到 `E:/nav_examples/`，
-  **自带已综合好的 `.bit`**（器件正是 `xc7z020clg400-2`）→ 冒烟测试不必重新综合
+  **别解错成 7010 那个**）。`19_uart_loopback` 已单独解出到 `E:/nav_examples/` 与
+  `C:/fpga_work/ZYNQ_7020_FPGA/19_uart_loopback/`，**自带已综合好的 `.bit`**
+  （器件正是 `xc7z020clg400-2`）→ 冒烟测试不必重新综合。
+  `C:/fpga_work/` 另存三个 `*.tcl`：探下载器 / 扫 JTAG 链 / **烧位流**（见下「上板流程」）
 - **上板四个引脚**（例程 XDC 与全板 `NAVIGATOR_ZYNQ_IO.xdc` 交叉核对一致，均 LVCMOS33）：
   `sys_clk` **U18**（50 MHz）｜`sys_rst_n` **N16**（**低有效**）｜`uart_rxd` **T19**｜`uart_txd` **J15**
-- ⚠️ **烧之前要确认的三件事**（缺一样就烧不进去或看不出效果）：
-  ① **外接 JTAG 下载器**接在 14-Pin 排针上（板上无 USB-JTAG；**下载器已在手**，不是采购项）；
-  ② **启动模式拨码开关拨到 JTAG 档**；③ **底板 P5 跳 PL 档**（3–5、4–6）。
-  ⚠️ COM 口存在 ≠ PL 通路通
+- ✅ **上板流程（2026-09-29 实测走通）** —— 烧之前要确认的三件事（缺一样就烧不进去
+  或看不出效果）：① **外接 JTAG 下载器**接在底板**右侧 14-Pin 排针**上（板上无 USB-JTAG）；
+  ② **启动模式拨码开关拨到 JTAG 档**（两位都 ON）；③ **底板 P5 跳 PL 档**（3–5、4–6）。
+  然后**纯命令行**烧位流，不必开 GUI：
+  ```
+  Set-Location "C:\fpga_work"     # 必须先离开仓库 —— 仓库路径含撇号，会咬死 Vivado 的 shell 调用
+  & "E:\xilinx\Vivado\2020.2\bin\vivado.bat" -mode batch -nojournal -nolog -source "C:\fpga_work\program_bit.tcl"
+  ```
+  看到 `End of startup status: HIGH` = 配置成功（DONE 拉高）。⚠️ 位流**掉电即失**
 - ⚠️ **两条会咬人的差异**：① 例程复位 `sys_rst_n` **低**有效，与我们上游 `reset` 异步**高**有效**相反**；
   ② 全板 XDC 里 `uart_rxd`/`uart_txd` 定义了**三次**，是互斥备选
   （USB UART `T19/J15`、PL_UART(RS232)/RS485 `K14/M15`），我们只用 **USB UART 那组**

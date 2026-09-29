@@ -888,7 +888,7 @@ int16_t barrett_reduce(int16_t a) {
             <tr><td>芯片</td><td class="mono">XC7Z020CLG400-2（Vivado 必须选这个，别套 Zybo / PYNQ-Z1 的 -1）</td></tr>
             <tr><td>PL 时钟</td><td class="mono">50 MHz 单端（U18）。倍频算加分项，不作为计划前提</td></tr>
             <tr><td>串口</td><td class="mono">底板 P5 跳线切 PS/PL。用 PS 侧则保持默认档</td></tr>
-            <tr><td>串口芯片</td><td class="mono">CH340C（已确认 COM10）</td></tr>
+            <tr><td>串口芯片</td><td class="mono">CH340C，设备名 USB-SERIAL CH340。⚠️ COM 口号由 Windows 按「插在哪个 USB 口」现分配，会变 —— 用前现查，不要写死</td></tr>
             <tr><td>下载</td><td class="mono">无板载 USB-JTAG，需外接下载器（已确认在手）</td></tr>
             <tr><td>资源</td><td class="mono">53,200 LUT / 106,400 FF / 220 DSP48E1 / 140 × 36Kb BRAM</td></tr>
           </tbody>
