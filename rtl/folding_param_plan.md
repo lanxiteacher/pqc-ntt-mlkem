@@ -15,11 +15,12 @@ Vivado ML Standard 2020.2（`E:\xilinx\Vivado\2020.2`）｜ python 3
 
 **设计文档（spec）：** `rtl/folding_param_design.md` —— **本计划从它展开，两个一起读**。
 
-**进度（2026-09-29）：** Task 1~5 已完成。`sh rtl/probes/run_probes.sh` 段 ⓪⑥⑦⑧⑨ 全 PASS
+**进度（2026-09-29）：** Task 1~6 已完成。`sh rtl/probes/run_probes.sh` 段 ⓪⑥⑦⑧⑨⑩ 全 PASS
 （含各自的阴性对照，逐拍等价 pe1 7005 拍 / pe4 1919 拍 / pe16 669 拍）。
-**判据 2（三档周期数）已通过**：三档 × {FNTT, PWM2, INTT} 共 12 格全部等于上游实测值，
-见下方 Task 5。
-**剩 Task 6~8**（三档功能对拍 → Vivado 综合与引脚预算 → 文档）。
+**判据 2（三档周期数）已通过**：三档 × {FNTT, PWM2, INTT} 共 12 格全部等于上游实测值。
+**判据 3（三档功能对拍）已通过**：3 个运算 × 3 档 × 4096 系数全部多重集相等，
+pe1 三处读出顺序与 B 的 bench 逐字一致。见下方 Task 5 / Task 6。
+**剩 Task 7~8**（Vivado 综合与引脚预算 → 文档）。
 
 ⚠️ **Task 4 有一条判据没达标，已改由 Task 6 承接：** 新增的段 ⑨ 拿
 `refsim/batch/ntt_batch_exp.txt` 第 0 组当外部锚，量出 **FNTT 读数路上三档的读出顺序并不一致**
@@ -28,7 +29,7 @@ Vivado ML Standard 2020.2（`E:\xilinx\Vivado\2020.2`）｜ python 3
 第 113-117 行靠反交织才对得上 FIPS 203 黄金向量），核与上游逐拍等价所以被原样继承，
 不是本次参数化引入的。详细结论见 `rtl/probes/README.md` 的 `top_golden_tb.v` 一节。
 
-⚠️ 判据 **1（Vivado 综合 + IOB 预算）** 与 **3（三档功能对拍）** 仍**未**核对 —— 那是 Task 7 / Task 6。
+⚠️ 判据 **1（Vivado 综合 + IOB 预算）** 仍**未**核对 —— 那是 Task 7。
 
 ---
 
@@ -960,7 +961,43 @@ git push
 - Consumes: Task 4 的 `KyberHPMNTT_top`；**只读**引用 `refsim/batch/ntt_batch_in.txt` / `ntt_batch_exp.txt`
 - Produces: 三档各 4096/4096 的对拍结果
 
-- [ ] **Step 1: 先统计向量的非退化程度（约束 4）**
+- [x] **Step 1: 先统计向量的非退化程度（约束 4）**
+
+实测（段 ⑩ 每次跑都重印）：FNTT / INTT / PWM2 三个期望向量分别有
+**2374 / 2355 / 2371** 个不同值 / 4096，零系数各 1~3 个 —— 远在退化线以上。
+
+- [x] **Step 2: 写功能对拍 testbench** —— 见下方「实施记录」
+- [x] **Step 3: 三档各跑一次，均须 4096/4096** —— **3 个运算 × 3 档 = 9 格全中**
+- [x] **Step 4: 提交**
+
+### 实施记录（2026-09-29）
+
+**做法**：新建 `rtl/probes/ntt_func_tb.v`，16 组向量全跑（4096 系数），判「**多重集相等**」；
+读出顺序不写进判据，而是单独量出来印在右边一列。装载协议写在 TB 的 `DEF_MODE` 里。
+
+**判据 3 实测**：
+
+| 运算 | pe1 | pe4 | pe16 | 读出顺序 |
+|---|---|---|---|---|
+| FNTT | ✅ 4096 | ✅ 4096 | ✅ 4096 | pe1 = σ｜pe4/pe16 = 自然序 |
+| INTT | ✅ 4096 | ✅ 4096 | ✅ 4096 | 三档都是 τ |
+| PWM2 | ✅ 4096 | ✅ 4096 | ✅ 4096 | 三档都是 σ |
+
+**这一步踩到的坑（已写进 `probes/README.md` 与 `H1_port_spec.md` §五）**：
+
+1. **协议按 (运算, 折叠度) 分档**。第一版照抄 pe1 的 `pwm2_batch_tb.v` 去驱动 pe4/pe16，
+   拿到 **22/4096**（= 随机命中），看着像 RTL 挂了 —— 其实只是装载顺序不同：
+   pe1 的 PWM2 用 `_i` + σ，pe4/pe16 用 `_i` + **自然序**。扫一遍两个候选就分出来了。
+   阴性对照留在段 ⑩ 末尾（把顺序拨错，多重集必须塌到 ~22/4096）。
+2. **上游只在 pe1 上按运算拆过 bench**（`_FNTT`/`_INTT`/`_PWM2`），pe4/pe16 只有
+   `_ALL_FULL`/`_ALL_HALF`。所以 pe4/pe16 的协议**没有上游文档可抄**，只能扫。
+3. **pe1 是唯一的自检锚**：pe1 三处的读出顺序必须和 B 的 bench 逐字一致，
+   段 ⑩ 单独打 `校准 ✅`。没有它，「4096/4096」可能只是自己跟自己对上了。
+4. 向量文件按运算**分开命名**。原先三个运算共用一个文件名靠「跑之前重铺一遍」，
+   分析脚本一读就串味（拿 pwm2 的期望去判 FNTT）。
+
+**仍未覆盖**：完整乘法（FNTT→PWM2→INTT）端到端；PWM2 两 bank 装**不同**数据的
+情形（现有黄金向量 a == b，这一格实际是平方）。
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"
@@ -977,25 +1014,12 @@ print('总系数', len(v), '不同值', len(set(v)))
 判据用「**多重集合相等**」（`rtl/H1_port_spec.md` §八 的手法）：
 装载顺序与读出顺序分开判，不互相污染。
 
-- [ ] **Step 3: 三档各跑一次，均须 4096/4096**
+**Files（实际）:**
+- Create: `rtl/probes/ntt_func_tb.v`
+- Modify: `rtl/probes/run_probes.sh`（段 ⑩）、`rtl/probes/README.md`
 
-```bash
-for n in 1 4 16; do
-  iverilog -g2005 -o /tmp/f$n.vvp -DCFG_PE_NUM=$n rtl/probes/ntt_func_tb.v rtl/ntt_core/*.v && vvp /tmp/f$n.vvp
-done
-```
-⚠️ **pe4 / pe16 从未做过功能对拍**（`logs/` 里的已知缺口）——
-这一步如果是**第一次**跑通，把结论回填进 `logs/FPGA竞赛_项目记录.md`。
-
-- [ ] **Step 4: 提交**
-
-```bash
-git add rtl/probes/
-git commit -m "三档功能对拍：各 4096/4096（判据 3）
-
-pe4/pe16 此前从未做过功能对拍，本次首次跑通。"
-git push
-```
+⚠️ **pe4 / pe16 此前从未做过功能对拍**（`logs/` 里的已知缺口）——
+本次首次跑通，结论已回填进 `logs/` 与 `H1_port_spec.md` §五。
 
 ---
 

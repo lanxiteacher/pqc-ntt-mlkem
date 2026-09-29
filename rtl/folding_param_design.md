@@ -17,6 +17,7 @@
 | 1 | 三档综合通过，**Bonded IOB ≤ 125** | `rtl/vivado/run_folding_sweep.sh`，看 reports 里的 IOB 数 |
 | 2 | 三档的**周期数与上游逐拍一致** | 探针实测 FNTT / PWM2 / INTT 的 `CC`，与下表逐个对齐 |
 | 3 | 三档**功能对拍通过** | pe1 现有的 FIPS 203 KAT 验证链扩到 pe4 / pe16 |
+| | | ✅ **2026-09-29 通过**：3 个运算 × 3 档 × 16 组共 4096 系数，多重集全中（`rtl/probes/ntt_func_tb.v`，段 ⑩） |
 
 判据 2 的基准值（上游实测，`rtl/vivado/折叠度对比表.md`；**右三是 2026-09-29 从顶层实测回来的**）：
 
