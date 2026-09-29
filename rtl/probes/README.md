@@ -11,7 +11,7 @@ sh run_probes.sh
 
 需要 `iverilog`（`/c/iverilog/bin`，不在 PATH 里，脚本自己加）和 `python`。
 
-## 五个探针
+## 七个探针
 
 | 文件 | 测什么 | 编出来的可执行 |
 |---|---|---|
@@ -20,6 +20,15 @@ sh run_probes.sh
 | `leaf_elab_tb.v` | `../ntt_core/` 的叶子（`ntt_BRAM` / `ntt_BROM`）三档**能否例化**、深度/位宽对不对、BROM 内容抽查 | `-DCFG_PE_NUM=` / `-DCFG_TW=` |
 | `ag_equiv_tb.v` | `../ntt_core/ntt_addressgenerator` 与 `../pe{1,4,16}/addressgenerator` 的**逐拍等价**：同一份激励喂两个模块，每个时钟沿比 18 路输出 | `-DCFG_L=`（7/5/3），pe1 另需 `-DHAS_PE1_PORTS` |
 | `core_equiv_tb.v` | `../ntt_core/KyberHPMNTT` 与 `../pe{1,4,16}/KyberHPM{1,4,16}PE` 的**逐拍等价**：每个时钟沿比全部端口 + 全部内部状态（三档 39 / 111 / 399 路） | `-DCFG_PE_NUM=` **和** `-DCFG_PE_MOD=`（两个都要给，见下） |
+| `top_behavior_tb.v` | `../ntt_core/KyberHPMNTT_top` 的**对外行为**：三档喂**同一串** 12 位激励，走「load A → FNTT A → load B → FNTT B → PWM2 A → read A」，比读出的 256 个值 | `-DCFG_PE_NUM=`；pe1 另可加 `-DREF_PE1`（见下） |
+| `top_golden_tb.v` | 同一条顶层，但拿 `../refsim/batch/ntt_batch_exp.txt` 第 0 组当**外部锚**（有锚才谈得上「对不对」，不只是「一不一样」）。`-DWITH_PWM2` 再走一遍上一条那条 PWM2 路 | `-DCFG_PE_NUM=`；`-DWITH_PWM2`（见下） |
+
+**`leaf_elab_tb.v` 的阴性对照**（在 `run_probes.sh` 段 ⓪ 里，每次跑都重验）：
+
+| 改哪里 | 预期 |
+|---|---|
+| `-DCFG_PE_NUM=4 -DCFG_TW=9`（`TW_ADDR_W` 配错档） | FAIL —— 这套搭配**能编能跑**，只是 `c_tw`/`raddr_tw`/`BROM` 会静默读飞，所以必须在 elaboration 期拦住 |
+| `-DCFG_PE_NUM=3` | FATAL —— `BROM` 的 `generate` 没有 `default`，不守会得到一个 `dout` 恒为 X 的「能跑的」设计 |
 
 ### `ag_equiv_tb.v` 的用法与坑
 
@@ -96,6 +105,87 @@ iverilog -g2005 -DCFG_PE_NUM=4 -DCFG_PE_MOD=KyberHPM4PE -o w.vvp \
 
 - ⚠️ 写阴性对照时**别用「对调两行连续赋值」当改动** —— `assign` 是顺序无关的，
   对调前后语义完全一样，只是 `.vvp` 的字节不同，跑出来照样 PASS。
+
+### `top_behavior_tb.v` 的用法与坑
+
+```sh
+CORE="$(ls ../ntt_core/*.v | grep -v _top)"      # 核里例化了 BRAM/BROM/butterfly/AG/shiftreg
+iverilog -g2005 -DCFG_PE_NUM=4 -o w.vvp \
+    top_behavior_tb.v $CORE ../ntt_core/KyberHPMNTT_top.v && vvp w.vvp
+```
+
+查四件事：① 装载相位过去后脉冲 `start_*` 能收到 `done`（有界等待护栏）；
+② 读出起点；③ **连着 256 拍**有效 `dout`，一拍不多一拍不少；④ `done` 在 `start_*` 后第 `CC+3` 拍。
+
+- ⚠️ **读出起点不是三档统一的**，是 `read` 之后第 `2*PE_NUMBER+3` 拍
+  （pe1 **5** / pe4 **11** / pe16 **35**）。核自己的读出延迟固定，但 `ce` 每 `PE_NUMBER`
+  拍才来一次，第一拍宽结果最早也要等第 3 个 `ce`（前两个 `ce` 上核在清 `do_cntr`），
+  此前没有数据可拆。硬要三档都在 `read+5` 吐第一个值，只能吐假的。
+  所以「接口一致」= **端口一致 + 值序列一致，不含延迟一致**。
+  ⚠️ `../folding_param_plan.md` 的 Task 4 写「第一条有效 `dout` 在 `read+5`（三档都是）」——
+  这句**只对 pe1 成立**，别照抄。
+- ⚠️ `-DREF_PE1` **只有能带**：那一档另外例化一份上游 `KyberHPM1PE_top` 逐拍对比
+  （接口同名同位宽，可直连）。pe4/pe16 的 `_top` 是**宽**接口，不是同一个东西，没有可比对象。
+- ⚠️ `-DDBG_WIDE` 另开一段调试打印：逐拍打出核那侧的**宽** `din`/`dout` 以及
+  `sub`/`rsub`/`dsel`/`ce`。核对「哪个 12 位切片被搬到了哪一拍」时用这个，比对着 `dout` 猜快得多。
+
+**这条探针自己踩过的三个坑**（每一个都让探针**看起来在通过**）：
+
+| 坑 | 症状 | 正解 |
+|---|---|---|
+| LFSR 被 X 毒死 | `always @(negedge clk)` 在 t=0 因 `clk` 的 X→0 触发一次，那一刻 `initial` 还没播种 → 全 X 的 LFSR 永远停在 X；两棵树"一起 X"，逐拍对拍报 **0 处不符** | 加 `if (!reset)` |
+| 空数组槽被当成非零 | `cap[]` 没抓到的槽是 X，而 `X !== 0` 恒真 → 「有效窗口之前必须为空」这条结构判据**假 FAIL** | 抓取使能要在脉冲**之前**开 |
+| bank B 的数据三档不同 | 装载 A 三档都在第 3 拍（数据天然一样），但装载 B 分别在第 **1188 / 519 / 368** 拍，LFSR 一路自由跑 → 三档装进 bank B 的系数**不是同一串**，PWM2 结果自然不同 | 每次装载前**重新播种**（A / B 用不同种子）。这条最像 RTL 的 bug 而其实不是 —— 先怀疑激励 |
+
+**阴性对照**（在 `run_probes.sh` 段 ⑧ 里）：把反序列化的切片号写成正着数
+（`dsel = PE_NUMBER-1-rsub` → `(rsub==0) ? 0 : PE_NUMBER-rsub`），组内顺序变成 0,3,2,1。
+预期 **pe16 与 pe1 不同（16 处）而 pe1 不受影响**（`PE=1` 时 `rsub` 恒 0，两式同值）——
+后半条同时也是「三档在这条路上逐位相同」这条判据**有分辨力**的证明：没有它，那个 ✅
+只说明三档跑得一样，不说明跑对了。
+⚠️ 但「跑对了」最终还是要有**外部锚**才算数 —— 这正是 `top_golden_tb.v` 存在的理由，
+而它一上锚就照出：FNTT 读数路上三档并不一致。所以这条阴性对照证明的是
+**这条探针能分辨顺序**，不是**三档已经统一**。
+
+**没覆盖到的**：bank B 的读出（`read_b`）、INTT 方向。这条只走
+「load A → FNTT A → load B → FNTT B → PWM2 A → read A」，够证明序列化器；其余留给 Task 6。
+
+⚠️ **那个 ✅ 的适用范围比看上去窄。** 它只说三档在**这条读数路**（PWM2 之后）上一样。
+别读成「固定 12 位接口成立」—— FNTT 之后直接读的那条路三档**不一样**，见下面 `top_golden_tb.v`。
+
+### `top_golden_tb.v` 的用法与坑
+
+```sh
+CORE="$(ls ../ntt_core/*.v | grep -v _top)"
+iverilog -g2005 -DCFG_PE_NUM=1 -o w.vvp \
+    top_golden_tb.v $CORE ../ntt_core/KyberHPMNTT_top.v && vvp w.vvp
+# 再加 -DWITH_PWM2 走 ⑧ 那条路（顺带把 FNTT B / PWM2 A 的 CC+3 也在顶层量一遍）
+```
+
+跑完打印 256 个读出值，段 ⑨ 的 python 把它们**逐位锚到黄金向量的下标**上，
+认出来的约定写成人话（`自然序` / `交织 0,2,1,3`）。
+
+**实测结论（这是 Task 4 目前唯一没达标的一条）**：
+
+| 读数路 | pe1 | pe4 | pe16 |
+|---|---|---|---|
+| 装载 A → FNTT A → 读 A | **交织 `0,2,1,3`** | 自然序 | 自然序 |
+| 装载 B → FNTT B → PWM2 A → 读 A | 三档逐位相同 | ← | ← |
+
+- 三档的**装载**都是自然序，**变换结果**都能对上海量黄金向量（多重集 256/256）——
+  所以对不上的只有 pe1 在 FNTT 读数路上的那个交织。
+- **交织是上游 pe1 自己的约定，不是这次参数化引入的。** 证据在 B 的目录里：
+  `refsim/pe1/fntt_batch_tb.v` 按自然序灌数（第 75 行），读回时靠
+  `fout[4m+0], fout[4m+2], fout[4m+1], fout[4m+3]`（第 113-117 行）反交织才对上
+  FIPS 203 黄金向量；`pwm2_batch_tb.v` / `intt_batch_tb.v` 的文件头也写明
+  FNTT/PWM2 进出都是交织、**INTT 输出是自然序**。核与上游逐拍等价（段 ⑦），
+  所以约定被原样继承。
+- ⚠️ 因此**不能**引用 ⑧ 的 ✅ 说「三档 dout 序列逐位相同」。要让它成立，
+  得在 `KyberHPMNTT_top` 里按「操作 + 折叠度」做反交织 —— 留给 Task 6。
+- ⚠️ 探针自己的坑：**抓取必须和 `cyc` 自增在同一个 `always` 块里**。
+  分成两块各带 `#1` 就是竞争，`cap[]` 会出现没写过的 X 槽，
+  表现为「多重集不等 / `xxx` 值」这种看着像 RTL 挂了的现象。
+- ⚠️ 还有一条**不是**探针的坑、而是常被误判的：`start_fntt(A)` 之后 `done` 还没来
+  就把 `done_cyc` 打出来，会看到 `actual_done -1`。打印要放在 `step(CC+3+8)` **之后**。
 
 向量来源是 `refsim/batch/ntt_batch_in.txt` 和 `ntt_batch_exp.txt`
 （FNTT 的 16 组黄金向量，已由 FIPS 203 KAT 校验过的 C 参考实现算出）。

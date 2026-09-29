@@ -8,6 +8,10 @@
 # ===========================================================================
 set -e
 export PATH="/c/iverilog/bin:$PATH"
+# ⚠️ Windows 的 python 默认按系统码页（cp936）编码 stdout，脚本里的 ✅/❌ 一打就
+# UnicodeEncodeError 崩掉 —— 崩在最后一段读起来像"跑完了"，其实后面的判据一条没出。
+# 段 ⑤ 里那句 sys.stdout.reconfigure 只救它自己，这里统一兜住。
+export PYTHONIOENCODING=utf-8
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 cd "$HERE"
@@ -40,6 +44,24 @@ for cfg in 1:9 4:8 16:7; do
     grep -E '^(PE=|抽查)' "$W/leaf$pe.log" | sed 's/^/  /'
     grep -E '^(PASS|FAIL|FATAL)' "$W/leaf$pe.log" | sed 's/^/  /'
 done
+
+echo "  --- 阴性对照（Task 1 Step 7）：两条都必须炸，否则断言没有分辨力 ---"
+# 对照 1（F1）：PE=4 配 TW_ADDR_W=9 —— 这套搭配**能编能跑**，只是 c_tw/raddr_tw/BROM
+#   会静默读飞。正是「能跑但错」才需要 elaboration 期的断言。预期 FAIL。
+if iverilog -g2005 -DCFG_PE_NUM=4 -DCFG_TW=9 -o "$W/leafbad.vvp" \
+        leaf_elab_tb.v "$CORE/BRAM.v" "$CORE/BROM.v" 2>"$W/leafbad.err"; then
+    ( cd "$W" && vvp leafbad.vvp ) 2>&1 | grep -E '^(FAIL|PASS)' | sed 's/^/  /'
+else
+    echo "  ℹ️ 对照 1 在编译期就被拦住（也可接受）"
+fi
+# 对照 2：PE_NUMBER=3 —— BROM 的 generate 没有 default，不守就会得到一个
+#   dout 恒为 X 的「能跑的」设计。预期 FATAL。
+if iverilog -g2005 -DCFG_PE_NUM=3 -DCFG_TW=9 -o "$W/leafbad3.vvp" \
+        leaf_elab_tb.v "$CORE/BRAM.v" "$CORE/BROM.v" 2>"$W/leafbad3.err"; then
+    ( cd "$W" && vvp leafbad3.vvp ) 2>&1 | grep -E '^(FAIL|PASS|FATAL)' | sed 's/^/  /'
+else
+    echo "  ℹ️ 对照 2 在编译期就被拦住（也可接受）"
+fi
 
 echo "═══ ① pe1 接口时序（核） ═══"
 iverilog -g2012 -o "$W/pe1_core.vvp" $PE1 pe1_timing_tb.v
@@ -212,6 +234,156 @@ for cfg in 1:pe1:KyberHPM1PE 4:pe4:KyberHPM4PE 16:pe16:KyberHPM16PE; do
              "$(ls "$W/negB"/*.v | grep -v _top | tr '\n' ' ')" "B$pe"
 done
 echo "  → 预期：三档全 FAIL（证明共享骨架也在被逐拍比对，不是只比了分支）"
+
+TOPV="$CORE/KyberHPMNTT_top.v"
+
+echo
+echo "═══ ⑧ KyberHPMNTT_top：固定 12 位接口的三档对外行为 ═══"
+# 这条是「接口一致」的判据：三档喂**同一串** 12 位激励，
+#   ① 装载相位收尾后再脉冲 start_* 能收到 done
+#   ② 有效 dout 从 read 之后第 2*PE_NUMBER+3 拍起（**三档不同**，见探针文件头）
+#   ③ 连续 256 拍有效值（非零、且不同值个数不退化）
+#   ④ done 在 start_* 之后第 CC+3 拍
+# 然后打印这 256 个值，下面横向 diff。
+#
+# ⚠️ 这条走的是 **PWM2 之后** 读 bank A 那条路。那个 ✅ **不能**读成
+#    「固定 12 位接口成立」—— 它只说明三档在**这条路上**一致。
+#    FNTT 之后直接读的那条路，段 ⑨ 实测三档**不一致**（有黄金锚），
+#    原因与归属见 ⑨ 的说明，别把这里的 ✅ 外推。
+
+for pe in 1 4 16; do
+    iverilog -g2005 -DCFG_PE_NUM=$pe -o "$W/top$pe.vvp" \
+        top_behavior_tb.v $COREV "$TOPV" 2>"$W/top$pe.err" || true
+    ( cd "$W" && vvp "top$pe.vvp" ) > "$W/top$pe.log" 2>&1 || true
+    grep -E '^(LOAD_|OP_|READ_A|FAIL|WARN)' "$W/top$pe.log" | sed 's/^/  /'
+done
+for pe in 1 4 16; do
+    grep '^DOUT' "$W/top$pe.log" | awk '{print $3}' > "$W/top_seq$pe.txt"
+    printf "  pe%-3s 读出 %s 个值\n" "$pe" "$(wc -l < "$W/top_seq$pe.txt" | tr -d ' ')"
+done
+if diff -q "$W/top_seq1.txt" "$W/top_seq4.txt" >/dev/null 2>&1 &&
+   diff -q "$W/top_seq1.txt" "$W/top_seq16.txt" >/dev/null 2>&1; then
+    echo "  ✅ 三档 dout 序列**逐位相同**（256/256）"
+else
+    echo "  ❌ 三档 dout 序列不同："
+    diff "$W/top_seq1.txt" "$W/top_seq4.txt"  | head -6 | sed 's/^/    1vs4  /'
+    diff "$W/top_seq1.txt" "$W/top_seq16.txt" | head -6 | sed 's/^/    1vs16 /'
+fi
+
+# pe1 另外和上游 KyberHPM1PE_top 逐拍对拍（接口同名同位宽，直连）
+# ⚠️ pe4/pe16 没有可比的 _top —— 上游那两档的 _top 是**宽**接口，不是同一个东西。
+iverilog -g2005 -DCFG_PE_NUM=1 -DREF_PE1 -o "$W/top1ref.vvp" \
+    top_behavior_tb.v $PE1 $COREV "$TOPV" 2>"$W/top1ref.err" || true
+( cd "$W" && vvp top1ref.vvp ) > "$W/top1ref.log" 2>&1 || true
+grep -E '^(PASS|FAIL)' "$W/top1ref.log" | sed 's/^/  /'
+
+echo "  --- 阴性对照：反序列化的切片号写成正着数，必须只见于 pe>1 ---"
+# 改成「rsub=0 取切片 0，否则取切片 PE_NUMBER-rsub」——
+#   组内顺序变成 0,3,2,1（pe4），而 H1_port_spec.md §五 要求最高切片 = 最低下标。
+#   预期：pe1 仍 PASS（PE=1 时 rsub 恒 0，两式同值），pe4/pe16 FAIL。
+#   ⚠️ 这条同时也是「三档逐位相同」这条判据**有分辨力**的证明：
+#      没有它，上面那个 ✅ 只说明三档跑得一样，不说明跑对了。
+rm -rf "$W/negT"; mkdir -p "$W/negT"; cp "$TOPV" "$W/negT/"
+python - "$W/negT/KyberHPMNTT_top.v" <<'PY'
+# -*- coding: utf-8 -*-
+import sys, pathlib
+p = pathlib.Path(sys.argv[1]); s = p.read_text(encoding="utf-8")
+old = "wire [3:0]  dsel     = PE_NUMBER - 1 - rsub;"
+new = "wire [3:0]  dsel     = (rsub == 4'd0) ? 4'd0 : (PE_NUMBER - rsub);"
+assert s.count(old) == 1, "对照 T 的锚点不再是唯一一处，脚本要跟着改"
+p.write_bytes(s.replace(old, new).encode("utf-8"))
+PY
+for pe in 1 4 16; do
+    iverilog -g2005 -DCFG_PE_NUM=$pe -o "$W/negT$pe.vvp" \
+        top_behavior_tb.v $COREV "$W/negT/KyberHPMNTT_top.v" 2>/dev/null || true
+    ( cd "$W" && vvp "negT$pe.vvp" ) > "$W/negT$pe.log" 2>&1 || true
+    grep '^DOUT' "$W/negT$pe.log" | awk '{print $3}' > "$W/negT_seq$pe.txt"
+done
+if diff -q "$W/negT_seq1.txt" "$W/negT_seq16.txt" >/dev/null 2>&1; then
+    echo "  ❌ pe1 与 pe16 竟然还相同 —— 对照没生效，检查锚点"
+else
+    echo "  ✅ pe1 与 pe16 已不同（$(diff "$W/negT_seq1.txt" "$W/negT_seq16.txt" | grep -c '^<' || true) 处）—— 判据有分辨力"
+fi
+if diff -q "$W/negT_seq1.txt" "$W/top_seq1.txt" >/dev/null 2>&1; then
+    echo "  ✅ pe1 不受影响（PE=1 时 rsub 恒 0，两式同值）—— 与预期一致"
+else
+    echo "  ❌ pe1 也被改动了 —— 与「只影响 pe>1」的预期不符，要查"
+fi
+
+echo
+echo "═══ ⑨ KyberHPMNTT_top 对着黄金向量（有外部锚）═══"
+# ⑧ 只证明三档**互相一致**（自洽）；这条把 `$BATCH/ntt_batch_exp.txt` 第 0 组
+# （FIPS 203 KAT 校验过的参考实现算出来的 FNTT 结果）当锚，问的是「都对不对」。
+#
+# 两趟：
+#   A) 装载 A → FNTT A → 读 A（不做 PWM2，直接对纯 FNTT 黄金向量）
+#   B) 再走一遍 ⑧ 那条路（装载 B → FNTT B → PWM2 A → 读 A），
+#      B 装的是**同一串 vin**，顺带把 FNTT B / PWM2 A 的 CC+3 也在顶层量一遍
+#      —— 这一趟的读出值不是 exp 的简单函数（bank 的存取关系没弄清），
+#      所以只拿它比三档**互相**是否一致，不当作对黄金向量的判据。
+for mode in "" "-DWITH_PWM2"; do
+    tag="fntt"; [ -n "$mode" ] && tag="pwm2"
+    for pe in 1 4 16; do
+        iverilog -g2005 -DCFG_PE_NUM=$pe $mode -o "$W/gold_${tag}_$pe.vvp" \
+            top_golden_tb.v $COREV "$TOPV" 2>"$W/gold_${tag}_$pe.err" || true
+        ( cd "$W" && vvp "gold_${tag}_$pe.vvp" ) > "$W/gold_${tag}_$pe.log" 2>&1 || true
+        grep '^DOUT' "$W/gold_${tag}_$pe.log" | awk '{print $3}' > "$W/gold_${tag}_$pe.txt"
+    done
+done
+for pe in 1 4 16; do
+    grep -E '^(FAIL|PASS)' "$W/gold_fntt_$pe.log" | sed "s/^/  FNTT pe$pe /"
+    grep -E '^(OP_|FAIL|PASS)' "$W/gold_pwm2_$pe.log" | sed "s/^/  PWM2 pe$pe /"
+done
+python - <<'PY'
+# -*- coding: utf-8 -*-
+import pathlib
+from collections import defaultdict
+d = pathlib.Path("_work")
+def vals(p): return [int(x, 16) for x in p.read_text().split()]
+exp = vals(d/"exp.txt")
+# 上游的「交织」约定 σ(m) = 4*(m//4) + [0,2,1,3][m%4]
+sig = lambda m: 4*(m//4) + [0,2,1,3][m % 4]
+
+def name_of(mp):
+    """把 m→黄金下标 的映射表认出来是哪一种约定"""
+    known = {"自然序": lambda m: m, "交织 0,2,1,3": sig}
+    for nm, f in known.items():
+        if all(x == "?" or int(x) == f(m) for m, x in enumerate(mp)):
+            return nm
+    return "既不是自然序也不是 0,2,1,3 交织"
+
+print("  --- A) 装载 A → FNTT A → 读 A（锚 = 纯 FNTT 黄金向量）---")
+maps = {}
+for pe in (1, 4, 16):
+    got = vals(d/f"gold_fntt_{pe}.txt")
+    if sorted(got) != sorted(exp):
+        print(f"  pe{pe}: ❌ 多重集 != 黄金向量 —— 装载或变换就是错的，先别管顺序")
+        continue
+    b = defaultdict(list)
+    for i, v in enumerate(exp): b[v].append(i)
+    mp = [str(b[v][0]) if len(b[v]) == 1 else "?" for v in got]
+    nat = sum(1 for m in range(256) if got[m] == exp[m])
+    print(f"  pe{pe}: 多重集 == 黄金向量 ✅；逐位==自然序 {nat}/256；"
+          f"值有重复记 ? 的 {mp.count('?')} 处")
+    print(f"        outset 约定 = {name_of(mp)}     m→idx 前 12: {','.join(mp[:12])}")
+    maps[pe] = mp
+if len(maps) == 3:
+    if maps[1] == maps[4] == maps[16]:
+        print("  ✅ 三档的读出约定相同 —— 固定 12 位接口在 FNTT 读数路上成立")
+    else:
+        print("  ❌ 三档的读出约定**不同** —— 「三档 dout 逐位相同」在 FNTT 读数路上**不成立**")
+        print(f"        pe1 / pe4 / pe16 分别 = {[name_of(maps[p]) for p in (1,4,16)]}")
+print("  --- B) 装载 B → FNTT B → PWM2 A → 读 A（⑧ 那条路，只比三档互相）---")
+p = {pe: vals(d/f"gold_pwm2_{pe}.txt") for pe in (1, 4, 16)}
+if p[1] == p[4] == p[16]:
+    print("  ✅ 三档在这条路上逐位相同（与 ⑧ 一致）")
+    # 顺带说一说这条路是什么约定（用 pe1 的流去套 σ 的逆）
+    inv = [0]*256
+    for m in range(256): inv[sig(m)] = m
+    print(f"        （这条路只说明三档**一致**，没有外部锚，不能说明对）")
+else:
+    print("  ❌ 三档在这条路上也不同，与 ⑧ 的结论矛盾，要查")
+PY
 
 echo
 echo "═══ 完成 —— 中间文件在 rtl/probes/_work/ ═══"

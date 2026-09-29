@@ -15,6 +15,19 @@ Vivado ML Standard 2020.2（`E:\xilinx\Vivado\2020.2`）｜ python 3
 
 **设计文档（spec）：** `rtl/folding_param_design.md` —— **本计划从它展开，两个一起读**。
 
+**进度（2026-09-29）：** Task 1~4 已完成。`sh rtl/probes/run_probes.sh` 段 ⓪⑥⑦⑧ 全 PASS
+（含各自的阴性对照，逐拍等价 pe1 7005 拍 / pe4 1919 拍 / pe16 669 拍）。
+**剩 Task 5~8**（三档周期数 → 三档功能对拍 → Vivado 综合与引脚预算 → 文档）。
+
+⚠️ **Task 4 有一条判据没达标，已改由 Task 6 承接：** 新增的段 ⑨ 拿
+`refsim/batch/ntt_batch_exp.txt` 第 0 组当外部锚，量出 **FNTT 读数路上三档的读出顺序并不一致**
+（pe1 = 交织 `0,2,1,3`；pe4/pe16 = 自然序）。段 ⑧ 那个「三档逐位相同」只覆盖
+**PWM2 之后的读数路**，不能外推。交织是**上游 pe1 自带的约定**（`refsim/pe1/fntt_batch_tb.v`
+第 113-117 行靠反交织才对得上 FIPS 203 黄金向量），核与上游逐拍等价所以被原样继承，
+不是本次参数化引入的。详细结论见 `rtl/probes/README.md` 的 `top_golden_tb.v` 一节。
+
+⚠️ 上面「判据 1/2/3」仍**未**核对 —— 那要等 Task 5/6/7。
+
 ---
 
 ## Global Constraints
@@ -136,7 +149,7 @@ refsim/batch/                    ← 黄金向量，只读
     **三张表内容互不相同**，走 `generate` 逐档放原表（见 Step 5）。
   - **端口名一律不改；模块名一律加 `ntt_` 前缀**（约束 13）
 
-- [ ] **Step 1: 先确认三档叶子模块真的逐字节相同**
+- [x] **Step 1: 先确认三档叶子模块真的逐字节相同**
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"
@@ -157,7 +170,7 @@ done
 
 **若出现预期外的 DIFF，停下来，先 `diff` 看清差异再决定取哪一份** —— 不要默认取 pe1。
 
-- [ ] **Step 2: 建目录，从 pe1 复制一份叶子**
+- [x] **Step 2: 建目录，从 pe1 复制一份叶子**
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"
@@ -178,7 +191,7 @@ cd "C:/Users/l'x/Desktop/FPGA"
 grep -n "^module" rtl/ntt_core/*.v      # 逐条核对，必须全部带 ntt_ 前缀
 ```
 
-- [ ] **Step 3: 把 `modred.v` 的 CC0 版权头补上**
+- [x] **Step 3: 把 `modred.v` 的 CC0 版权头补上**
 
 pe1 的 `modred.v` 缺上游 CC0 注释头，pe4/pe16 有。取 pe4 那份（注释头在），
 但**先用 `diff` 确认除了注释头没有别的差异**：
@@ -191,7 +204,7 @@ cp rtl/pe4/modred.v rtl/ntt_core/modred.v
 
 预期 `diff` 只输出注释行差异。**若 diff 里出现任何非注释行，停下来报告。**
 
-- [ ] **Step 4: 参数化 `BRAM.v`**
+- [x] **Step 4: 参数化 `BRAM.v`**
 
 先看清三档的差异：
 
@@ -230,7 +243,7 @@ grep -n "\[7:0\]\|\[255:0\]\|\[5:0\]\|\[3:0\]" rtl/ntt_core/BRAM.v
 
 预期：无输出。**有裸常数就继续改。**
 
-- [ ] **Step 5: 参数化 `BROM.v`**
+- [x] **Step 5: 参数化 `BROM.v`**
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"
@@ -289,7 +302,7 @@ endgenerate
 `(* rom_style="block" *) reg ... blockrom [...];`（三档都只出现在声明行，已核）——
 这是 `logs/` §二 B 里挂着的遗留清理项。生成的 BROM.v 里不再保留它。
 
-- [ ] **Step 6: 写叶子探针，三档各跑一次**
+- [x] **Step 6: 写叶子探针，三档各跑一次**
 
 > ⚠️ **偏离原计划（已与用户确认按此办）**：原计划写的是一个跑完就删的临时顶
 > `rtl/ntt_core/_elab_check.v`。改成**常驻探针** `rtl/probes/leaf_elab_tb.v` ——
@@ -324,7 +337,7 @@ PE=4  L=5  TW_ADDR_W=8  BRAM 深度=64   BROM 表宽=48 位   → 抽查到 15 �
 PE=16 L=3  TW_ADDR_W=7  BRAM 深度=16   BROM 表宽=192 位  → 抽查到 46 个不同值  PASS
 ```
 
-- [ ] **Step 7: 阴性对照 —— 确认断言与守卫真的有分辨力（Review Focus）**
+- [x] **Step 7: 阴性对照 —— 确认断言与守卫真的有分辨力（Review Focus）**
 
 **两条都要跑，缺一条这一步不算完成：**
 
@@ -354,7 +367,7 @@ iverilog -g2005 -DCFG_PE_NUM=3 -DCFG_TW=9 -o /tmp/leafbad3.vvp \
 > 对照 2 是那条 `generate` 没有 `default` 的兜底：不守的话，
 > 非法 `PE_NUMBER` 会得到一个 `dout` 恒为 X 的「能跑的」设计。
 
-- [ ] **Step 8: 提交**
+- [x] **Step 8: 提交**
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"
@@ -391,7 +404,7 @@ git push
   pe4/pe16 档这两个输出接不出线也无所谓 —— **端口一律保留，不要按档裁掉**，
   这样顶层的例化不用写分支。
 
-- [ ] **Step 1: 先写失败的等价探针**
+- [x] **Step 1: 先写失败的等价探针**
 
 新建 `rtl/probes/ag_equiv_tb.v`。**核心手法：把旧的与新的例化在同一个 testbench 里，
 接同一组激励，逐拍比对全部输出。**
@@ -510,7 +523,7 @@ module ag_equiv_tb;
 endmodule
 ```
 
-- [ ] **Step 2: 跑探针，确认它现在**必然失败**（新模块还不存在）
+- [x] **Step 2: 跑探针，确认它现在**必然失败**（新模块还不存在）
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"
@@ -522,7 +535,7 @@ iverilog -g2005 -DCFG_L=7 -DHAS_PE1_PORTS -o /tmp/ag.vvp rtl/probes/ag_equiv_tb.
 预期：**报 `addressgenerator` 找不到 / 文件不存在**。
 这一步是确认探针本身能编、能跑 —— 不是确认业务逻辑。
 
-- [ ] **Step 3: 写参数化的 `addressgenerator.v`**
+- [x] **Step 3: 写参数化的 `addressgenerator.v`**
 
 以 **`rtl/pe1/addressgenerator.v` 为底**（它是唯一功能验证过的配置），
 把写死的常数逐条换成设计文档 §3.1 的统一式。
@@ -620,7 +633,7 @@ endgenerate
 //     ⚠️ pe16 的 INTT 里 c_stage 与 c_loop 的 stall 条件**不同**，照抄别统一
 ```
 
-- [ ] **Step 4: 三档各跑一次等价探针**
+- [x] **Step 4: 三档各跑一次等价探针**
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"
@@ -635,7 +648,7 @@ iverilog -g2005 -DCFG_L=3                 -o /tmp/ag3.vvp rtl/probes/ag_equiv_tb
 ⚠️ **`-DCFG_L=7` 那一条必须带 `-DHAS_PE1_PORTS`** —— pe1 的 AG 多两个输出
 （`c_loop_pwm` / `raddr_b`），不带这个宏旧那侧的例化会缺端口。pe4/pe16 **不能**带。
 
-- [ ] **Step 5: 阴性对照 —— 确认探针有分辨力**
+- [x] **Step 5: 阴性对照 —— 确认探针有分辨力**
 
 故意把新模块里 FNTT 读地址的 `L-1-S` 改成 `L-2-S`，重跑一次 pe1：
 
@@ -648,7 +661,7 @@ iverilog -g2005 -DCFG_L=7 -DHAS_PE1_PORTS -o /tmp/ag7.vvp rtl/probes/ag_equiv_tb
 
 （本项目惯例：阴性对照是「验证通过」的成立条件之一。）
 
-- [ ] **Step 6: F2 / F3 的专测（Review Focus）**
+- [x] **Step 6: F2 / F3 的专测（Review Focus）**
 
 `ag_equiv_tb.v` 的逐拍比对**已经覆盖** F2 与 F3（它们在同一个 FSM 里，任何差异都会改到
 `waddr0/1` 或 `stage_count`）。但**要在探针里加一条显式的段标记**，
@@ -665,7 +678,7 @@ reg [127:0] seg = "reset";
 
 ⚠️ 必须用 `-DCFG_L=3`（pe16 档）跑，改动才在编译路径上 —— pe1 档走的是另一个 generate 分支。
 
-- [ ] **Step 7: 把探针接进 `run_probes.sh`，提交**
+- [x] **Step 7: 把探针接进 `run_probes.sh`，提交**
 
 在 `rtl/probes/run_probes.sh` 末尾追加三档调用，输出格式与现有 ①②③④⑤ 保持一致
 （`✅` / `❌` 前缀，见现有脚本）。同步更新 `rtl/probes/README.md`。
@@ -697,7 +710,7 @@ git push
 - Produces: `KyberHPMNTT #(parameter PE_NUMBER = 1)`，
   端口与 `rtl/pe1/KyberHPM1PE.v` **同名同序**，只有 `din`/`dout` 位宽写成 `[12*PE_NUMBER-1:0]`
 
-- [ ] **Step 1: 写失败的等价探针 `core_equiv_tb.v`**
+- [x] **Step 1: 写失败的等价探针 `core_equiv_tb.v`**
 
 手法同 Task 2：旧的 `KyberHPM{1,4,16}PE` 与新的 `KyberHPMNTT` 同激励、逐拍比对。
 
@@ -720,7 +733,7 @@ module core_equiv_tb;
 endmodule
 ```
 
-- [ ] **Step 2: 跑一次确认它现在失败**（新模块不存在）
+- [x] **Step 2: 跑一次确认它现在失败**（新模块不存在）
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"; export PATH="/c/iverilog/bin:$PATH"
@@ -729,7 +742,7 @@ iverilog -g2005 -o /tmp/core.vvp -DCFG_PE_NUM=1 rtl/probes/core_equiv_tb.v \
 ```
 预期：报文件不存在。
 
-- [ ] **Step 3: 写 `KyberHPMNTT.v`**
+- [x] **Step 3: 写 `KyberHPMNTT.v`**
 
 以 `rtl/pe1/KyberHPM1PE.v` 为底，把各处写死的常数换成 `PE_NUMBER` / `L` 派生式。
 **重点在例化处**（上游三档的例化是位置连接、端口数还不一样）：
@@ -764,7 +777,7 @@ initial begin
 end
 ```
 
-- [ ] **Step 4: 三档各跑等价探针**
+- [x] **Step 4: 三档各跑等价探针**
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"; export PATH="/c/iverilog/bin:$PATH"
@@ -780,7 +793,7 @@ iverilog -g2005 -o /tmp/c16.vvp -DCFG_PE_NUM=16 rtl/probes/core_equiv_tb.v rtl/p
 > 不要裸写 `rtl/ntt_core/*.v`。顶层的探针（Task 4 / Task 6）反过来**要包含** `_top`。
 > 两种写法在各自的文件里都成立，别互相"统一"掉。
 
-- [ ] **Step 5: F5 的非法参数用例（Review Focus）**
+- [x] **Step 5: F5 的非法参数用例（Review Focus）**
 
 ```bash
 # PE_NUMBER=3：128/3 不是整数 → 必须在 elaboration 期炸，而不是静默算错
@@ -791,7 +804,7 @@ iverilog -g2005 -o /tmp/cbad.vvp -DCFG_PE_NUM=3 \
 预期：报错或 `$finish` 打出 `FATAL`。
 **⚠️ 若它编译通过且跑出了「结果」，说明守卫没生效 —— 必须修到它会炸。**
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add rtl/ntt_core/KyberHPMNTT.v rtl/probes/
@@ -815,7 +828,7 @@ git push
   **与 `rtl/pe1/KyberHPM1PE_top.v` 同名**，但 `din`/`dout` 固定 `[11:0]`
   （**三档永远一样**）—— 这就是把 pe16 的 397 个引脚压到 37 个的那一层
 
-- [ ] **Step 1: 写失败的对外行为探针**
+- [x] **Step 1: 写失败的对外行为探针**
 
 ```verilog
 `timescale 1ns/1ps
@@ -836,7 +849,7 @@ module top_behavior_tb;
 endmodule
 ```
 
-- [ ] **Step 2: 跑一次确认失败**
+- [x] **Step 2: 跑一次确认失败**
 
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"; export PATH="/c/iverilog/bin:$PATH"
@@ -844,7 +857,7 @@ iverilog -g2005 -o /tmp/t1.vvp -DCFG_PE_NUM=1 rtl/probes/top_behavior_tb.v rtl/n
 ```
 预期：报文件不存在。
 
-- [ ] **Step 3: 写序列化器**
+- [x] **Step 3: 写序列化器**
 
 核心是**攒够 `PE_NUMBER` 个系数再喂核一拍**：
 
@@ -856,7 +869,7 @@ iverilog -g2005 -o /tmp/t1.vvp -DCFG_PE_NUM=1 rtl/probes/top_behavior_tb.v rtl/n
 // 读出：反向拆开，每拍吐一个 12 位
 ```
 
-- [ ] **Step 4: F4 的直通与非直通两组用例（Review Focus）**
+- [x] **Step 4: F4 的直通与非直通两组用例（Review Focus）**
 
 **这是 F4 的专测。** 三档喂**同一串** 12 位激励，外部行为必须**完全一致**
 （只有 `done` 的拍数不同）：
@@ -885,7 +898,7 @@ done
 > 再加一条 pe1 专属对照：把上游 `KyberHPM1PE_top` 与新的 `KyberHPMNTT_top #(.PE_NUMBER(1))`
 > 并排例化、同激励、逐拍比对 —— pe1 是唯一功能验证过的配置，**它必须一点不变**（R1）。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add rtl/ntt_core/KyberHPMNTT_top.v rtl/probes/top_behavior_tb.v
@@ -1058,6 +1071,6 @@ git push
 
 外加**阴性对照**（本项目惯例，缺了判据不算成立）：
 
-- [ ] Task 2 Step 5 的地址公式破坏 → 探针必须 FAIL
-- [ ] Task 2 Step 6 的 stall 条件破坏 → 探针必须 FAIL
-- [ ] Task 3 Step 5 的非法 `PE_NUMBER` → 必须炸
+- [x] Task 2 Step 5 的地址公式破坏 → 探针必须 FAIL
+- [x] Task 2 Step 6 的 stall 条件破坏 → 探针必须 FAIL
+- [x] Task 3 Step 5 的非法 `PE_NUMBER` → 必须炸
