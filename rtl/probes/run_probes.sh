@@ -148,4 +148,70 @@ for cfg in 7:pe1:-DHAS_PE1_PORTS 5:pe4: 3:pe16:; do
 done
 
 echo
+echo "═══ ⑦ ntt_core/KyberHPMNTT 与上游逐拍等价（三档） ═══"
+# 新核的参数化写法：共享骨架 + 只在「结构真的不同」的地方开 generate 分支。
+# 所以这条探针要证明的是「参数化没改行为」，比的是每拍的全部端口与内部状态。
+COREV="$(ls $CORE/*.v | grep -v _top | tr '\n' ' ')"    # 新核（不含 _top）
+
+core_run () {   # $1=PE_NUMBER $2=上游源码 $3=上游模块名 $4=新核源码 $5=标签
+    iverilog -g2005 -DCFG_PE_NUM="$1" -DCFG_PE_MOD="$3" \
+        -o "$W/core$5.vvp" core_equiv_tb.v $2 $4 2>"$W/core$5.err" || true
+    ( cd "$W" && vvp "core$5.vvp" ) > "$W/core$5.log" 2>&1 || true
+    grep -E '^(CFG|CYCLES|PASS|FAIL|FATAL|WARN)' "$W/core$5.log" | sed 's/^/  /'
+    if ! grep -qE '^(PASS|FAIL|FATAL)' "$W/core$5.log"; then
+        echo "  ❌ $5 没有产出 PASS/FAIL/FATAL —— 编译或仿真挂了，看 $W/core$5.log 与 $W/core$5.err"
+    fi
+}
+
+for cfg in 1:pe1:KyberHPM1PE 4:pe4:KyberHPM4PE 16:pe16:KyberHPM16PE; do
+    pe="${cfg%%:*}"; rest="${cfg#*:}"; dir="${rest%%:*}"; mod="${rest##*:}"
+    core_run "$pe" "$(ls ../$dir/*.v | tr '\n' ' ')" "$mod" "$COREV" "$pe"
+done
+
+echo "  --- 非法 PE_NUMBER=3：应当响亮地失败（不是静默给出错电路）---"
+core_run 3 "$PE16" KyberHPM16PE "$COREV" 3
+echo "  （上面那行 FATAL 来自两个地方：核自己的 initial 守卫 + 探针的守卫）"
+echo "  （编译期另有 $(grep -c 'out of bounds' "$W/core3.err" || true) 条 out-of-bounds 警告 —— 正是「落进 pe16 支」的证据）"
+
+echo "  --- 阴性对照：改一处必须 FAIL，否则探针没有分辨力 ---"
+neg_prep () {   # $1=目标目录：拷一份新核进去
+    rm -rf "$1"; mkdir -p "$1"; cp $CORE/*.v "$1/"
+}
+
+# 对照 A —— 只动 pe16 分支：装载时 pe16 的写地址高位取反
+neg_prep "$W/negA"
+python - "$W/negA/KyberHPMNTT.v" <<'PY'
+# -*- coding: utf-8 -*-
+import sys, pathlib
+p = pathlib.Path(sys.argv[1]); s = p.read_text(encoding="utf-8")
+old, new = "{32{1'b0,di_cntr[L-1:0]}}", "{32{1'b1,di_cntr[L-1:0]}}"
+assert s.count(old) == 1, "对照 A 的锚点不再是唯一一处，脚本要跟着改"
+p.write_bytes(s.replace(old, new).encode("utf-8"))
+PY
+for cfg in 1:pe1:KyberHPM1PE 4:pe4:KyberHPM4PE 16:pe16:KyberHPM16PE; do
+    pe="${cfg%%:*}"; rest="${cfg#*:}"; dir="${rest%%:*}"; mod="${rest##*:}"
+    core_run "$pe" "$(ls ../$dir/*.v | tr '\n' ' ')" "$mod" \
+             "$(ls "$W/negA"/*.v | grep -v _top | tr '\n' ' ')" "A$pe"
+done
+echo "  → 预期：只有 PE=16 FAIL，PE=1/PE=4 仍 PASS（证明探针能定位到配置）"
+
+# 对照 B —— 动共享骨架：dout 的低半改成读低半（原本读高半）
+neg_prep "$W/negB"
+python - "$W/negB/KyberHPMNTT.v" <<'PY'
+# -*- coding: utf-8 -*-
+import sys, pathlib
+p = pathlib.Path(sys.argv[1]); s = p.read_text(encoding="utf-8")
+old = "assign do0_lo[12*(PE_NUMBER-1-dg) +: 12] = do0[PE_NUMBER+dg];"
+new = "assign do0_lo[12*(PE_NUMBER-1-dg) +: 12] = do0[dg];"
+assert s.count(old) == 1, "对照 B 的锚点不再是唯一一处，脚本要跟着改"
+p.write_bytes(s.replace(old, new).encode("utf-8"))
+PY
+for cfg in 1:pe1:KyberHPM1PE 4:pe4:KyberHPM4PE 16:pe16:KyberHPM16PE; do
+    pe="${cfg%%:*}"; rest="${cfg#*:}"; dir="${rest%%:*}"; mod="${rest##*:}"
+    core_run "$pe" "$(ls ../$dir/*.v | tr '\n' ' ')" "$mod" \
+             "$(ls "$W/negB"/*.v | grep -v _top | tr '\n' ' ')" "B$pe"
+done
+echo "  → 预期：三档全 FAIL（证明共享骨架也在被逐拍比对，不是只比了分支）"
+
+echo
 echo "═══ 完成 —— 中间文件在 rtl/probes/_work/ ═══"
