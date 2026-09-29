@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>RTL 输出 vs 黄金向量 —— 对拍结果</title>
+</head>
+<body>
+<script src="data/compare.js"></script>
+<script src="ntt-view.js"></script>
+<script>
+(function () {
+  'use strict';
+  const D = window.COMPARE_DATA;
+  if (!D) {
+    document.body.innerHTML = "<p style='padding:20px'>读不到 <code>data/compare.js</code> —— " +
+      "先在仓库根目录跑 <code>node demo/gen_compare.mjs</code>。</p>";
+    return;
+  }
+  NttView.css();
+
+  const extra = document.createElement('style');
+  extra.textContent = `
+    .cell.ok  { color:#9ed49e; }
+    .cell.bad { background:#5a1f1f; color:#ffd0d0; border-color:#c44; font-weight:700; }
+    .cell.pick { outline:2px solid var(--accent); outline-offset:-2px; }
+    table.t { width:100%; border-collapse:collapse; font-size:12px; }
+    table.t th { text-align:left; color:var(--dim); font-weight:600; padding:3px 6px 3px 0;
+                 border-bottom:1px solid var(--line); }
+    table.t td { padding:3px 6px 3px 0; color:var(--fg); vertical-align:top; }
+    table.t td.d { color:var(--dim); }
+    table.t td.op { white-space:nowrap; color:var(--fg); }
+    table.t tr.sep td { border-top:1px solid var(--line); }
+    .panel { max-width:560px; }
+    .mode { display:flex; gap:6px; align-items:center; }
+    .mode button.on { border-color:var(--accent); color:var(--accent); }
+    ul.lim { margin:0; padding-left:18px; font-size:12px; color:var(--dim); }
+    ul.lim li { margin-bottom:3px; }
+  `;
+  document.head.appendChild(extra);
+
+  const N = D.meta.n;
+  const F = D.fntt;
+  const hx = (h) => parseInt(h, 16);
+  const hex3 = (v) => v.toString(16).padStart(3, '0');
+
+  document.title = 'RTL 输出 vs 黄金向量 —— 对拍结果';
+  document.body.innerHTML = `
+    <header>
+      <h1>RTL 输出 vs 黄金向量 —— 逐比特对拍</h1>
+      <div class="sub">
+        ${F.totalMatch} / ${F.total} 个系数一致（${D.meta.nVectors} 组向量 × ${N}）｜
+        每格是 RTL 仿真落盘的那个值，不是参考实现算出来的
+      </div>
+    </header>
+    <nav>${NttView.nav('compare')}</nav>
+    <main>
+      <div>
+        <div class="bar">
+          <div class="mode">
+            <button id="mReal" class="on">实测</button>
+            <button id="mNeg">演示：改坏一条期望值</button>
+          </div>
+          <select id="vec"></select>
+        </div>
+        <div class="stage" id="stage"></div>
+        <div style="height:10px"></div>
+        <div class="grid" id="grid"></div>
+        <div style="height:10px"></div>
+        <div class="legend" id="gridnote"></div>
+      </div>
+      <div class="panel">
+        <div class="box"><h2>点一个系数</h2><table class="t" id="cellinfo"></table></div>
+        <div class="box"><h2>各项运算的判定</h2><table class="t" id="ops"></table>
+          <div class="legend" id="opsnote" style="margin-top:6px"></div></div>
+        <div class="box"><h2>非退化统计（「全中」必须配这个才作数）</h2>
+          <table class="t" id="degen"></table>
+          <div class="legend" style="margin-top:6px">出处：<code>${D.nondegenSource}</code></div></div>
+        <div class="box"><h2>阴性对照：这个测试有没有牙齿</h2><div class="legend" id="neg"></div></div>
+        <div class="box"><h2>这条链没覆盖什么</h2><ul class="lim" id="lim"></ul>
+          <div class="legend" style="margin-top:6px">出处：<code>${D.limitsSource}</code>。
+          把边界写清楚，比含糊地说「全部通过」有用。</div></div>
+      </div>
+    </main>
+    <footer id="foot"></footer>
+  `;
+
+  const els = {
+    grid: document.getElementById('grid'),
+    stage: document.getElementById('stage'),
+    vec: document.getElementById('vec'),
+    cell: document.getElementById('cellinfo'),
+    gridnote: document.getElementById('gridnote'),
+    foot: document.getElementById('foot')
+  };
+
+  /* ---- 两种模式：实测 / 演示改坏一条 ---------------------------------- */
+  const real = F.golden;
+  const tampered = F.golden.slice();
+  tampered[D.negCtrl.linear] = D.negCtrl.written;
+
+  let mode = 'real';
+  const expect = () => (mode === 'real' ? real : tampered);
+  let vIdx = 0;
+  let pick = null;
+
+  for (let v = 0; v < D.meta.nVectors; v++) {
+    const o = document.createElement('option');
+    o.value = v;
+    o.textContent = '向量 ' + String(v).padStart(2, '0');
+    els.vec.appendChild(o);
+  }
+
+  for (let i = 0; i < N; i++) {
+    const d = document.createElement('div');
+    d.className = 'cell';
+    d.addEventListener('click', () => { pick = (pick === i ? null : i); render(); });
+    els.grid.appendChild(d);
+  }
+
+  function render() {
+    const E = expect();
+    const cs = els.grid.children;
+    let bad = 0;
+    for (let i = 0; i < N; i++) {
+      const got = F.rtl[vIdx * N + i];
+      const want = E[vIdx * N + i];
+      const same = got === want;
+      if (!same) bad++;
+      cs[i].className = 'cell ' + (same ? 'ok' : 'bad') + (pick === i ? ' pick' : '');
+      cs[i].textContent = got;
+      cs[i].title = '下标 ' + i + ' ｜ RTL ' + got + ' ｜ 期望 ' + want +
+                    ' ｜ ' + (same ? '一致' : '不一致');
+    }
+
+    els.stage.innerHTML = '向量 <b>' + String(vIdx).padStart(2, '0') + '</b> ：' +
+      (bad === 0
+        ? '<b style="color:#9ed49e">' + N + ' / ' + N + ' 全中</b>'
+        : '<b style="color:#ff9d9d">' + (N - bad) + ' / ' + N + '，' + bad + ' 处不符</b>');
+
+    els.gridnote.innerHTML = mode === 'real'
+      ? '绿 = RTL 输出与黄金向量一致。这一格里显示的数字来自 ' +
+        '<code>' + D.meta.rtlSource + '</code>。'
+      : '⚠️ <b>这是演示</b>：人为把第 ' + D.negCtrl.vector + ' 组第 ' + D.negCtrl.index +
+        ' 号期望值改成 <code>' + D.negCtrl.written + '</code>，' +
+        '红格就是测试抓出来的那一条。真正的 tb 阴性对照记录见右下「阴性对照」框。';
+
+    renderCell(E);
+  }
+
+  function renderCell(E) {
+    if (pick === null) {
+      els.cell.innerHTML = '<tr><td class="d">点左边任意一格。</td></tr>';
+      return;
+    }
+    const got = F.rtl[vIdx * N + pick];
+    const want = E[vIdx * N + pick];
+    const same = got === want;
+    const row = (k, v) => '<tr><td class="d">' + k + '</td><td>' + v + '</td></tr>';
+    els.cell.innerHTML =
+      row('第几组 / 第几号', D.meta.nVectors + ' 组里的第 ' + String(vIdx).padStart(2, '0') +
+                             ' 组，组内下标 <b>' + pick + '</b>') +
+      row('RTL 输出', '<code>' + got + '</code>（十进制 ' + hx(got) + '）') +
+      row('黄金向量', '<code>' + want + '</code>（十进制 ' + hx(want) + '）') +
+      row('判定', same ? '<span style="color:#9ed49e">✅ 一致</span>'
+                       : '<span style="color:#ff9d9d">❌ 不一致</span>') +
+      row('比的是谁', 'RTL 落盘值就是本格显示的这个 <code>' + got + '</code>；' +
+                      '期望值来自 <code>' + D.meta.goldenSource + '</code>');
+  }
+
+  /* ---- 右侧固定表格 ---------------------------------------------------- */
+  document.getElementById('ops').innerHTML =
+    '<tr><th>运算</th><th>判定</th><th>怎么判的</th></tr>' +
+    D.quoted.map((q, i) =>
+      '<tr' + (i ? ' class="sep"' : '') + '>' +
+      '<td class="op">' + q.op + '</td>' +
+      '<td><b>' + q.result + '</b><br>' +
+        (q.recomputed ? '<span style="color:#9ed49e">本页复算</span>'
+                      : '<span class="d">引用</span>') + '</td>' +
+      '<td class="d">' + q.how + '<br><code>' + q.evidence + '</code></td></tr>').join('');
+
+  document.getElementById('opsnote').innerHTML =
+    '「本页复算」= 这一页从仓库里的文件重新算过，算法在 <code>' + D.meta.generator + '</code>。' +
+    '「引用」= 只有 testbench 打印的统计，仓库里没有逐数值落盘 —— ' +
+    '<b>本页不替它们编造逐值数据</b>，出处写在表里。';
+
+  document.getElementById('degen').innerHTML =
+    '<tr><th>文件</th><th>行数</th><th>不同值</th><th>最常见值占比</th></tr>' +
+    D.nondegen.map((r) =>
+      '<tr><td><code>' + r.file + '</code></td><td>' + r.rows + '</td><td>' + r.distinct +
+      '</td><td>' + r.topPct + '%</td></tr>').join('') +
+    '<tr><td class="d" colspan="4">4096 个系数里 2300 多个不同值、最常见的一个占 0.2% —— ' +
+    '这种熵下「全中」不可能是巧合。</td></tr>';
+
+  const g = D.negCtrl;
+  document.getElementById('neg').innerHTML =
+    '把 <code>' + g.source + '</code> 里的期望值改坏一条，看跑批能不能抓到（' + g.op + '）：<br><br>' +
+    '<code>向量 ' + g.vector + ' [' + g.index + ']: 期望 ' + g.written +
+      ' 得到 ' + g.rtlGot + '</code><br>' +
+    '<code>向量 ' + g.vector + ': ❌ ' + g.match + '/' + g.of + '</code><br>' +
+    '<code>✗ 共 ' + g.mismatches + ' 个系数不符</code><br><br>' +
+    '恰好 1 个不符、位置正确 —— 说明这个测试确实能把错抓出来。' +
+    '『得到 ' + g.rtlGot + '』这个值是 RTL 报的，不是期望值文件里的（期望值那一位已被改成 ' +
+    g.written + '）；' + g.crossCheck + '。';
+
+  document.getElementById('lim').innerHTML =
+    D.limits.map((t) => '<li>' + t + '</li>').join('');
+
+  els.foot.innerHTML =
+    '数据生成：<code>' + D.meta.generator + '</code>｜' +
+    '口径：每行恰好 3 位小写十六进制，逐行比字符串。';
+
+  /* ---- 交互 ------------------------------------------------------------ */
+  const bReal = document.getElementById('mReal');
+  const bNeg = document.getElementById('mNeg');
+  function setMode(m) {
+    mode = m;
+    bReal.className = m === 'real' ? 'on' : '';
+    bNeg.className = m === 'neg' ? 'on' : '';
+    if (m === 'neg') {                       // 改坏的那一条在第 7 组，直接跳过去
+      vIdx = D.negCtrl.vector;
+      els.vec.value = String(vIdx);
+    }
+    pick = null;
+    render();
+  }
+  bReal.addEventListener('click', () => setMode('real'));
+  bNeg.addEventListener('click', () => setMode('neg'));
+  els.vec.addEventListener('change', (e) => {
+    vIdx = +e.target.value; pick = null; render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
