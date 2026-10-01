@@ -1,6 +1,6 @@
 # report/figures —— 报告配图
 
-**主责：C** ｜ 状态：🔄 **1 张已成（2026-09-30）**
+**主责：C** ｜ 状态：🔄 **2 张已成（2026-10-01）**
 
 > 放**报告正文里要用的图**。素材原图（截图、录屏）在 `../../assets/`，
 > 不要在这里重复存一份 —— 这里只放**排版好的、要进报告的**那一版。
@@ -12,6 +12,7 @@
 | 文件 | 用在哪 | 画的是什么 |
 |---|---|---|
 | `folding_sweep.svg` | `design/03_性能与资源.md` §3.3；`design/02_设计与创新点.md` §2.2 | 折叠度三档（1 / 4 / 16 蝶形）的 **NTT 周期数 / LUT 占用 / 推算 Fmax** 三个面板 |
+| `verify_chain.svg` | `design/04_功能正确性.md` §4.3 | 验证链：FIPS 203 KAT → C 参考实现 → 作者期望输出 → RTL 对拍，四个入口脚本与结果标在链上 |
 
 **这张图的数字不是手抄的**，来源是 `../../metrics/data/metrics.csv`
 （该 CSV 由 `../../metrics/gen_metrics.mjs` 从 `../../rtl/vivado/reports/*.rpt` 解析生成）。
@@ -25,6 +26,10 @@ node report/figures/gen_figures.mjs      # → report/figures/folding_sweep.svg
 
 ⚠️ **参数化版本重测后（W5）要重跑这一步** —— 先跑 `node metrics/gen_metrics.mjs` 更新 CSV，
 再跑本脚本更新图。两处都不需要手工改数字。
+
+⚠️ `verify_chain.svg` 与上面那张性质不同：它是**结构示意图，不是数据图**，
+手写 SVG、没有生成脚本（没有数字要推导）。内容与 `../../refsim/README.md` §一 对齐，
+改动链上任何一环（入口脚本、组数、结果）时**要手工同步这张图**。
 
 ⚠️ **本机没有 Vivado**（Vivado 与板子都在 A 的工位），所以这张图用的是**工具推算值**，
 不是上板实测。图上已标注这一点。

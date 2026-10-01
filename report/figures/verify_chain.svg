@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="648" viewBox="0 0 900 648" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<rect width="900" height="648" fill="#ffffff"/>
+
+<text x="450" y="34" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2933">验证链：外部锚 → 独立复算 → 逐比特对拍</text>
+<text x="450" y="58" text-anchor="middle" font-size="12.5" fill="#6b7785">每一环都可能出错，所以链的起点必须是 RTL 之外的标准答案</text>
+
+<!-- 主链：四只方框 -->
+<g>
+  <rect x="70" y="84" width="470" height="64" rx="6" fill="#eef4fa" stroke="#4a90c4" stroke-width="1.4"/>
+  <text x="305" y="110" text-anchor="middle" font-size="14.5" font-weight="600" fill="#1f2933">FIPS 203 兼容 KAT 向量集（1000 条）</text>
+  <text x="305" y="131" text-anchor="middle" font-size="11.5" fill="#6b7785">社区维护的向量集 —— 出处与措辞见 §4.4 脚注</text>
+</g>
+<line x1="305" y1="148" x2="305" y2="178" stroke="#4a90c4" stroke-width="1.6"/>
+<polygon points="305,182 299,172 311,172" fill="#4a90c4"/>
+<text x="568" y="161" font-size="12" font-weight="600" fill="#1f2933">① 四项独立复算</text>
+<text x="568" y="178" font-size="12" fill="#6b7785">1000 / 1000 通过（约 1.3 秒）</text>
+
+<g>
+  <rect x="70" y="182" width="470" height="64" rx="6" fill="#eef4fa" stroke="#4a90c4" stroke-width="1.4"/>
+  <text x="305" y="208" text-anchor="middle" font-size="14.5" font-weight="600" fill="#1f2933">C 参考实现（research/kyber_ref/）</text>
+  <text x="305" y="229" text-anchor="middle" font-size="11.5" fill="#6b7785">从这一环起它是「地面真值」—— 锚落在它上面，不在作者自己的期望值上</text>
+</g>
+<line x1="305" y1="246" x2="305" y2="276" stroke="#4a90c4" stroke-width="1.6"/>
+<polygon points="305,280 299,270 311,270" fill="#4a90c4"/>
+<text x="568" y="259" font-size="12" font-weight="600" fill="#1f2933">② 复算作者的输入</text>
+<text x="568" y="276" font-size="12" fill="#6b7785">与作者期望输出逐比特一致（256/256 ×2）</text>
+
+<g>
+  <rect x="70" y="280" width="470" height="64" rx="6" fill="#eef4fa" stroke="#4a90c4" stroke-width="1.4"/>
+  <text x="305" y="306" text-anchor="middle" font-size="14.5" font-weight="600" fill="#1f2933">作者期望输出 KYBER_DIN*_MFNTT.txt</text>
+  <text x="305" y="327" text-anchor="middle" font-size="11.5" fill="#6b7785">两边一致 → 域约定与输出顺序理解相同，后面的对拍才谈得上「对不对」</text>
+</g>
+<line x1="305" y1="344" x2="305" y2="374" stroke="#4a90c4" stroke-width="1.6"/>
+<polygon points="305,378 299,368 311,368" fill="#4a90c4"/>
+<text x="568" y="357" font-size="12" font-weight="600" fill="#1f2933">③ 灌 RTL</text>
+<text x="568" y="374" font-size="12" fill="#6b7785">黄金向量进 RTL，输出落盘</text>
+
+<g>
+  <rect x="70" y="378" width="470" height="108" rx="6" fill="#eef4fa" stroke="#4a90c4" stroke-width="1.4"/>
+  <text x="305" y="404" text-anchor="middle" font-size="14.5" font-weight="600" fill="#1f2933">作者 RTL 副本（refsim/pe1/，PE_NUMBER = 1）</text>
+  <text x="305" y="428" text-anchor="middle" font-size="12" fill="#1f2933">FNTT 16 组 4096/4096　｜　INTT 16 组 4096/4096　｜　PWM2 16 组 4096/4096</text>
+  <text x="305" y="450" text-anchor="middle" font-size="12" fill="#1f2933">往返自检（把 RTL 的实际输出回灌 RTL）4096/4096</text>
+  <text x="305" y="472" text-anchor="middle" font-size="12" fill="#1f2933">完整乘法 FULL 4096/4096　｜　半程乘法 HALF 4096/4096</text>
+</g>
+<line x1="305" y1="486" x2="305" y2="516" stroke="#4a9c68" stroke-width="1.6"/>
+<polygon points="305,520 299,510 311,510" fill="#4a9c68"/>
+<text x="568" y="499" font-size="12" font-weight="600" fill="#1f2933">④ 逐比特对拍</text>
+<text x="568" y="516" font-size="12" fill="#6b7785">四条通路，各 4096 个系数</text>
+
+<g>
+  <rect x="70" y="520" width="470" height="60" rx="6" fill="#eef8f0" stroke="#4a9c68" stroke-width="1.6"/>
+  <text x="305" y="545" text-anchor="middle" font-size="14" font-weight="700" fill="#1f2933">∴ NTT / INTT / 点乘 / 完整多项式乘法 均符合 FIPS 203</text>
+  <text x="305" y="566" text-anchor="middle" font-size="11.5" fill="#6b7785">验证边界止于一次多项式乘法，见 §4.8</text>
+</g>
+
+<!-- 底部：参数化三档怎么复用这条锚 -->
+<line x1="70" y1="600" x2="830" y2="600" stroke="#c3cbd4" stroke-width="1"/>
+<text x="70" y="622" font-size="12" fill="#1f2933">参数化三档版本复用同一条锚：黄金向量取自 refsim/batch/，由 rtl/probes/ 判据 3 验证 —— 3 运算 × 3 档 × 4096 多重集相等。</text>
+<text x="70" y="640" font-size="11.5" fill="#6b7785">注意：多重集相等判「装载 + 变换」，读出顺序另列一列单量 —— 与本图 pe1 的逐位对拍强度不同，边界见 §4.8。</text>
+</svg>
