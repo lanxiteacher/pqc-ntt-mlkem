@@ -1,6 +1,6 @@
 # report/figures —— 报告配图
 
-**主责：C** ｜ 状态：🔄 **2 张已成（2026-10-01）**
+**主责：C** ｜ 状态：🔄 **3 张已成（2026-10-01）**
 
 > 放**报告正文里要用的图**。素材原图（截图、录屏）在 `../../assets/`，
 > 不要在这里重复存一份 —— 这里只放**排版好的、要进报告的**那一版。
@@ -13,6 +13,7 @@
 |---|---|---|
 | `folding_sweep.svg` | `design/03_性能与资源.md` §3.3；`design/02_设计与创新点.md` §2.2 | 折叠度三档（1 / 4 / 16 蝶形）的 **NTT 周期数 / LUT 占用 / 推算 Fmax** 三个面板 |
 | `verify_chain.svg` | `design/04_功能正确性.md` §4.3 | 验证链：FIPS 203 KAT → C 参考实现 → 作者期望输出 → RTL 对拍，四个入口脚本与结果标在链上 |
+| `architecture.svg` | `design/02_设计与创新点.md` §2.2 | 架构三层：`KyberHPMNTT_top` 的对外端口 / 核外的序列化-反序列化 / 核内的宽接口。实线 = 数据，虚线 = 控制 |
 
 **这张图的数字不是手抄的**，来源是 `../../metrics/data/metrics.csv`
 （该 CSV 由 `../../metrics/gen_metrics.mjs` 从 `../../rtl/vivado/reports/*.rpt` 解析生成）。
@@ -27,9 +28,13 @@ node report/figures/gen_figures.mjs      # → report/figures/folding_sweep.svg
 ⚠️ **参数化版本重测后（W5）要重跑这一步** —— 先跑 `node metrics/gen_metrics.mjs` 更新 CSV，
 再跑本脚本更新图。两处都不需要手工改数字。
 
-⚠️ `verify_chain.svg` 与上面那张性质不同：它是**结构示意图，不是数据图**，
-手写 SVG、没有生成脚本（没有数字要推导）。内容与 `../../refsim/README.md` §一 对齐，
-改动链上任何一环（入口脚本、组数、结果）时**要手工同步这张图**。
+⚠️ `verify_chain.svg` 和 `architecture.svg` 与上面那张性质不同：它们是**结构示意图，
+不是数据图**，手写 SVG、没有生成脚本。内容分别与 `../../refsim/README.md` §一、
+`design/02_设计与创新点.md` §2.2–§2.5 对齐 —— **改结构时要手工同步这两张图**。
+
+⚠️ `architecture.svg` 里**引用了三个数字**（引脚 397 / 芯片可用 125 / 三档 IOB = 37）——
+引用不等于推导，所以没配生成脚本，但**它们会随参数化版本 W5 重测而变，重测后要回来核一遍**
+（出处：`../../rtl/vivado/折叠度对比表.md` §五／§六／§九）。
 
 ⚠️ **本机没有 Vivado**（Vivado 与板子都在 A 的工位），所以这张图用的是**工具推算值**，
 不是上板实测。图上已标注这一点。
@@ -41,8 +46,8 @@ node report/figures/gen_figures.mjs      # → report/figures/folding_sweep.svg
 | 图 | 要什么 | 谁 / 什么时候 |
 |---|---|---|
 | **关键路径截图** | `rtl/vivado/reports/pe{1,4,16}_nc_timing.rpt` 的 `-max_paths 10` 段落的截图 | 需要 Vivado —— **C 本机做不了**，要 A 截或 C 去 A 的工位 |
-| **架构框图**（矢量版） | 现在只在 `design/02` 里是 ASCII 图；报告排版时要一张正式的 | C 画（可复用本目录的 SVG 生成方式） |
-| **演示页截图** | `../../demo/` 三页（正向 / 逆变换 / 对拍）的界面截图 | C 截，存 `../../assets/`，选用后放这里 |
+| ~~**架构框图**（矢量版）~~ | ✅ **已成** `architecture.svg`（10-01） | C（已完成；`design/02` §2.2 已引用） |
+| ~~**演示页截图**~~ | ✅ **已截 4 张，在 `../../assets/`**（由 `../../demo/gen_shots.mjs` 无头 Edge 生成）<br>⚠️ 原图是**深色底**，不适合黑白打印 —— 报告里要用得挑局部裁切或做浅底版 | C（10-01 已完成截图；**选版式进正文仍待做**） |
 | **波形截图** | `refsim/` 对拍时的波形 | 要 B 给（H5，W3 起） |
 
 ---
