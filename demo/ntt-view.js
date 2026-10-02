@@ -52,13 +52,29 @@
     { key: 'compare', href: 'compare.html', label: '对拍结果' }
   ];
 
+  /* 颜色全部走变量 —— 深色是默认，浅色（?theme=light）只覆盖变量，
+     所以「两份主题」是同一套布局，不会各写各的。见 css() 里的 themeAttr()。 */
   const CSS = `
     :root {
       --bg:#12151a; --panel:#1a1f27; --line:#2c333e;
       --fg:#d8dee9; --dim:#7c8998; --accent:#4c9aff;
       --hot:#b8791f; --hot-bg:#3a2c12; --sel:#2d4a75; --ok:#5f9e5f;
+      --code:#f0c674; --chg-fg:#f0c674; --sel-fg:#ffffff; --pair-fg:#9dc4f5;
+      --btn-bg:#232a34;
+      --ok-fg:#9ed49e; --err-fg:#ff9d9d;
+      --bad-bg:#5a1f1f; --bad-fg:#ffd0d0; --bad-line:#cc4444;
+    }
+    :root[data-theme="light"] {
+      --bg:#ffffff; --panel:#f6f8fa; --line:#d0d7de;
+      --fg:#1c1f24; --dim:#57616e; --accent:#1d63c9;
+      --hot:#9a5a12; --hot-bg:#fbe8c6; --sel:#cfe1ff; --ok:#2f7a2f;
+      --code:#9a5200; --chg-fg:#6f4200; --sel-fg:#08234a; --pair-fg:#1d63c9;
+      --btn-bg:#e9edf2;
+      --ok-fg:#1f7a1f; --err-fg:#b0231f;
+      --bad-bg:#ffd9d9; --bad-fg:#8a1f1f; --bad-line:#cc3333;
     }
     * { box-sizing:border-box; }
+    html { background:var(--bg); }
     body { margin:0; background:var(--bg); color:var(--fg);
            font:14px/1.6 "Consolas","Cascadia Mono","Courier New",monospace; }
     header { padding:14px 20px; border-bottom:1px solid var(--line); }
@@ -75,9 +91,9 @@
             background:var(--panel); border:1px solid transparent; border-radius:3px;
             font-size:12px; color:var(--dim); cursor:pointer; user-select:none; }
     .cell.on  { color:var(--fg); }
-    .cell.chg { background:var(--hot-bg); color:#f0c674; border-color:var(--hot); }
-    .cell.sel { background:var(--sel); color:#fff; border-color:var(--accent); }
-    .cell.pair { outline:1px dashed var(--accent); outline-offset:-1px; color:#9dc4f5; }
+    .cell.chg { background:var(--hot-bg); color:var(--chg-fg); border-color:var(--hot); }
+    .cell.sel { background:var(--sel); color:var(--sel-fg); border-color:var(--accent); }
+    .cell.pair { outline:1px dashed var(--accent); outline-offset:-1px; color:var(--pair-fg); }
     .panel { flex:1 1 340px; min-width:320px; max-width:460px; }
     .box { background:var(--panel); border:1px solid var(--line); border-radius:6px;
            padding:12px 14px; margin-bottom:12px; }
@@ -85,9 +101,9 @@
     .kv { display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-size:13px; }
     .kv dt { color:var(--dim); }
     .kv dd { margin:0; }
-    code { color:#f0c674; }
+    code { color:var(--code); }
     .bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
-    button, select { background:#232a34; color:var(--fg); border:1px solid var(--line);
+    button, select { background:var(--btn-bg); color:var(--fg); border:1px solid var(--line);
                      border-radius:4px; padding:6px 12px; font:inherit; font-size:13px; cursor:pointer; }
     button:hover { border-color:var(--accent); }
     button:disabled { opacity:.35; cursor:default; border-color:var(--line); }
@@ -104,11 +120,19 @@
     footer { color:var(--dim); font-size:12px; padding:4px 20px 24px; }
   `;
 
+  /* 主题：?theme=light 切浅底（报告要黑白可读），默认深底。
+     三个页面都调 css()，所以主题由这里统一决定，各页不必各写一遍。 */
+  function theme() {
+    const m = /[?&]theme=(light|dark)\b/.exec(location.search);
+    return m ? m[1] : 'dark';
+  }
+
   /* 页头样式与导航条：三个页面共用，所以单独拿出来 */
   function css() {
     const s = document.createElement('style');
     s.textContent = CSS;
     document.head.appendChild(s);
+    document.documentElement.dataset.theme = theme();
   }
   function nav(activeKey) {
     return NAV.map((n) =>

@@ -1,6 +1,6 @@
 # report —— 设计报告 + AI 协作记录
 
-**主责：C** ｜ 状态：🔄 **AI 日志已开（2026-09-29 起）；章节一「选题背景与相关工作」、二「设计与创新点」、三「性能与资源」初稿已成（09-30），四「功能正确性」、五「可复现性」初稿已成（10-01）；配图 3 张（10-01，含架构框图）**
+**主责：C** ｜ 状态：🔄 **AI 日志已开（2026-09-29 起）；章节一「选题背景与相关工作」、二「设计与创新点」、三「性能与资源」初稿已成（09-30），四「功能正确性」、五「可复现性」初稿已成（10-01）；配图 3 张矢量图（10-01）+ 演示页浅色报告版 3 张（10-02）**
 
 > 位置见 `../FPGA竞赛_选题指导_PQC-NTT_ML-KEM.md` §8.1（指南 3.3.5.4 推荐结构）。
 > 可复用的提示词/脚本/踩坑清单不在这里，在 `../skill/`。
@@ -96,8 +96,8 @@ report/
 | 一、选题背景与相关工作 | 🔄 **初稿已成（09-30）** | `design/01_选题背景与相关工作.md`；原料 `../docs/related-work.md`。<br>⚠️ 缺口：主表 4a–4c 器件型号、PQShield Table 3 **未回原始 PDF 核对** |
 | 二、设计与创新点 | 🔄 **初稿已成（09-30）** | `design/02_设计与创新点.md`；原料 `../rtl/folding_param_design.md`（A 定稿）<br>⚠️ 板级 wrapper 未完成，上板数据与端到端延迟不在本章 |
 | 三、性能与资源 | 🔄 **初稿已成** | `design/03_性能与资源.md`；W5 补上板实测频率与端到端延迟 |
-| 四、功能正确性 | 🔄 **初稿已成（10-01）** | `design/04_功能正确性.md`；上游基线证据 `../refsim/README.md` §一／§三／§七／§八，三档部分 `../rtl/probes/README.md`。<br>⚠️ 缺口：波形截图等 B 的 **H5**（W3 起）；pe4/pe16 的完整乘法端到端、PWM2 两 bank 异数据均未覆盖（已写进 §4.8） |
-| 五、可复现性 | 🔄 **初稿已成（10-01）** | `design/05_可复现性.md`；复现步骤取自 `../README.md` §三／§六，判据取自 `../skill/scripts/check_reproducible.sh`。<br>⚠️ 缺口：`check_reproducible.sh --from-remote` **全绿尚无有工具链的机器跑出**（成文机器缺 gcc/iverilog/python3），已如实写进 §5.6 |
+| 四、功能正确性 | 🔄 **初稿已成（10-01）** | `design/04_功能正确性.md`；上游基线证据 `../refsim/README.md` §一／§三／§七／§八，三档部分 `../rtl/probes/README.md`。<br>配图：`figures/verify_chain.svg` + `figures/demo_compare_negctrl.png`（§4.7，浅底）。<br>⚠️ 缺口：波形截图等 B 的 **H5**（W3 起）；pe4/pe16 的完整乘法端到端、PWM2 两 bank 异数据均未覆盖（已写进 §4.8） |
+| 五、可复现性 | 🔄 **初稿已成（10-01）** | `design/05_可复现性.md`；复现步骤取自 `../README.md` §三／§六，判据取自 `../skill/scripts/check_reproducible.sh`。<br>配图：`figures/demo_ntt_layer3.png` / `demo_compare_pass.png`（§5.4，A 档零工具链所见，浅底）。<br>⚠️ 缺口：`check_reproducible.sh --from-remote` **全绿尚无有工具链的机器跑出**（成文机器缺 gcc/iverilog/python3），已如实写进 §5.6 |
 | 附录 | ⬜ | 等日志积累 |
 
 ---

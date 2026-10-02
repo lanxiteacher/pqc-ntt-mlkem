@@ -20,9 +20,16 @@
 
   const extra = document.createElement('style');
   extra.textContent = `
-    .cell.ok  { color:#9ed49e; }
-    .cell.bad { background:#5a1f1f; color:#ffd0d0; border-color:#c44; font-weight:700; }
+    .cell.ok  { color:var(--ok-fg); }
+    .cell.bad { background:var(--bad-bg); color:var(--bad-fg); border-color:var(--bad-line); font-weight:700; }
     .cell.pick { outline:2px solid var(--accent); outline-offset:-2px; }
+    /* ⚠️ 必须写成 .stage b.okfg —— ntt-view.js 里有 .stage b { color:var(--fg) }，
+       它（0,1,1）比单类 .okfg（0,1,0）更具体，会把颜色盖掉。
+       原来这两处用的是内联 style（比任何选择器都硬），换成类名后就输了。 */
+    .okfg  { color:var(--ok-fg); }
+    .errfg { color:var(--err-fg); }
+    .stage b.okfg  { color:var(--ok-fg); }
+    .stage b.errfg { color:var(--err-fg); }
     table.t { width:100%; border-collapse:collapse; font-size:12px; }
     table.t th { text-align:left; color:var(--dim); font-weight:600; padding:3px 6px 3px 0;
                  border-bottom:1px solid var(--line); }
@@ -134,8 +141,8 @@
 
     els.stage.innerHTML = '向量 <b>' + String(vIdx).padStart(2, '0') + '</b> ：' +
       (bad === 0
-        ? '<b style="color:#9ed49e">' + N + ' / ' + N + ' 全中</b>'
-        : '<b style="color:#ff9d9d">' + (N - bad) + ' / ' + N + '，' + bad + ' 处不符</b>');
+        ? '<b class="okfg">' + N + ' / ' + N + ' 全中</b>'
+        : '<b class="errfg">' + (N - bad) + ' / ' + N + '，' + bad + ' 处不符</b>');
 
     els.gridnote.innerHTML = mode === 'real'
       ? '绿 = RTL 输出与黄金向量一致。这一格里显示的数字来自 ' +
@@ -161,8 +168,8 @@
                              ' 组，组内下标 <b>' + pick + '</b>') +
       row('RTL 输出', '<code>' + got + '</code>（十进制 ' + hx(got) + '）') +
       row('黄金向量', '<code>' + want + '</code>（十进制 ' + hx(want) + '）') +
-      row('判定', same ? '<span style="color:#9ed49e">✅ 一致</span>'
-                       : '<span style="color:#ff9d9d">❌ 不一致</span>') +
+      row('判定', same ? '<span class="okfg">✅ 一致</span>'
+                       : '<span class="errfg">❌ 不一致</span>') +
       row('比的是谁', 'RTL 落盘值就是本格显示的这个 <code>' + got + '</code>；' +
                       '期望值来自 <code>' + D.meta.goldenSource + '</code>');
   }
@@ -174,7 +181,7 @@
       '<tr' + (i ? ' class="sep"' : '') + '>' +
       '<td class="op">' + q.op + '</td>' +
       '<td><b>' + q.result + '</b><br>' +
-        (q.recomputed ? '<span style="color:#9ed49e">本页复算</span>'
+        (q.recomputed ? '<span class="okfg">本页复算</span>'
                       : '<span class="d">引用</span>') + '</td>' +
       '<td class="d">' + q.how + '<br><code>' + q.evidence + '</code></td></tr>').join('');
 

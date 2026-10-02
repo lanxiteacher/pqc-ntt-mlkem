@@ -24,7 +24,12 @@ import { tmpdir } from 'node:os';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
-const OUT = join(ROOT, 'assets');
+/* 两个去处：原图（深色）进 assets/，报告版（浅色）进 report/figures/。
+   同一张截图两个去处，是因为两边的命名与用途不同（见各自 README）。 */
+const OUTDIRS = {
+  assets:  join(ROOT, 'assets'),
+  figures: join(ROOT, 'report', 'figures')
+};
 
 /* ---- 找 Edge --------------------------------------------------------- */
 const EDGE_CANDIDATES = [
@@ -40,18 +45,36 @@ if (!EDGE) {
 }
 
 /* ---- 要截哪几张 ------------------------------------------------------
+ * out   : 'assets' 或 'figures'（见 OUTDIRS）
+ * theme : 'dark'（原图）或 'light'（报告版，黑白可读）
  * page  : 打开哪一页
  * next  : 点几次「下一步」
  * cell  : 再点第几个格子（-1 = 不点）
  * btn   : 再点哪个按钮的 id（null = 不点）
- * 文件名按 assets/README.md 的口径：YYYY-MM-DD_<谁>_<一句话>.png
+ * clip  : 可选，CSS 选择器 —— 截到「从左上角到该元素右下角」的一块
+ *         （报告版用它裁掉右面板与底部空白，否则整页又瘦又长）
+ * expectBad : 可选，截图前断言 #grid 里红格（.cell.bad）的个数。
+ *         对拍页用它 —— 红格数**数出来**，不从图上目视（缩小后会看错）
+ *
+ * 命名两边不同（各自的 README 定的，别统一）：
+ *   assets  = YYYY-MM-DD_<谁>_<一句话>.png     （素材时间线）
+ *   figures = 英文小写 + 下划线                 （进报告的那一版）
  * -------------------------------------------------------------------- */
 const DATE = '2026-10-01';
 const SHOTS = [
-  { file: `${DATE}_C_演示页正变换第3层蝶形高亮.png`,        page: 'index.html',   next: 3, cell: 0,    btn: null },
-  { file: `${DATE}_C_演示页逆变换第4层蝶形高亮.png`,        page: 'intt.html',    next: 4, cell: 0,    btn: null },
-  { file: `${DATE}_C_演示页对拍4096系数全中.png`,            page: 'compare.html', next: 0, cell: -1,   btn: null },
-  { file: `${DATE}_C_演示页对拍阴性对照抓出1个系数不符.png`, page: 'compare.html', next: 0, cell: -1,   btn: 'mNeg' }
+  /* —— 原图（深色）→ assets/ —— */
+  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_演示页正变换第3层蝶形高亮.png`,        page: 'index.html',   next: 3, cell: 0,  btn: null },
+  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_演示页逆变换第4层蝶形高亮.png`,        page: 'intt.html',    next: 4, cell: 0,  btn: null },
+  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_演示页对拍4096系数全中.png`,            page: 'compare.html', next: 0, cell: -1, btn: null },
+  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_演示页对拍阴性对照抓出1个系数不符.png`, page: 'compare.html', next: 0, cell: -1, btn: 'mNeg' },
+
+  /* —— 报告版（浅色）→ report/figures/ —— */
+  /* NTT 那张不裁：每层**所有**格子都会变（每个蝶形改两个输出），
+     所以「变化高亮」没有局部性 —— 有信息的是右侧「选一个数看它的蝶形」面板，
+     裁掉它这图就没内容了。 */
+  { out: 'figures', theme: 'light', file: 'demo_ntt_layer3.png',      page: 'index.html',   next: 3, cell: 0,  btn: null },
+  { out: 'figures', theme: 'light', file: 'demo_compare_pass.png',    page: 'compare.html', next: 0, cell: -1, btn: null,  clip: 'main > div:first-child', expectBad: 0 },
+  { out: 'figures', theme: 'light', file: 'demo_compare_negctrl.png', page: 'compare.html', next: 0, cell: -1, btn: 'mNeg', clip: 'main > div:first-child', expectBad: 1 }
 ];
 
 const PORT = 9333 + (process.pid % 200);   // 避开固定端口被占
@@ -97,7 +120,7 @@ async function attach() {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
-  if (!existsSync(OUT)) mkdirSync(OUT, { recursive: true });
+  for (const dir of Object.values(OUTDIRS)) if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 
   const proc = spawn(EDGE, [
     '--headless=new',
@@ -126,7 +149,8 @@ async function main() {
     });
 
     for (const shot of SHOTS) {
-      const url = pathToFileURL(join(HERE, shot.page)).href;
+      const url = pathToFileURL(join(HERE, shot.page)).href +
+                  (shot.theme === 'light' ? '?theme=light' : '');
       await cdp.send('Page.navigate', { url });
       await sleep(900);            // 页面脚本立刻建 DOM，稍等即可
 
@@ -139,12 +163,33 @@ async function main() {
         await sleep(200);
       }
 
-      const { data } = await cdp.send('Page.captureScreenshot', {
-        format: 'png', captureBeyondViewport: true
-      });
-      writeFileSync(join(OUT, shot.file), Buffer.from(data, 'base64'));
+      const params = { format: 'png', captureBeyondViewport: true };
+      if (shot.expectBad !== undefined) {
+        const r = await cdp.send('Runtime.evaluate', {
+          expression: `document.querySelectorAll('#grid .cell.bad').length`,
+          returnByValue: true
+        });
+        const got = r.result.value;
+        if (got !== shot.expectBad) {
+          throw new Error(`${shot.file}: 红格数应为 ${shot.expectBad}，实测 ${got} —— 图名在断言的事对不上`);
+        }
+        console.log(`  · ${shot.file} 红格数 ${got}（断言 ${shot.expectBad}）✅`);
+      }
+      if (shot.clip) {
+        const r = await cdp.send('Runtime.evaluate', {
+          expression: `(()=>{const e=document.querySelector(${JSON.stringify(shot.clip)});` +
+                      `if(!e)return "null";const b=e.getBoundingClientRect();` +
+                      `return JSON.stringify({r:b.right,b:b.bottom});})()`,
+          returnByValue: true
+        });
+        if (r.result.value === 'null') throw new Error('clip 选择器没命中：' + shot.clip);
+        const box = JSON.parse(r.result.value);
+        params.clip = { x: 0, y: 0, width: Math.ceil(box.r), height: Math.ceil(box.b), scale: 1 };
+      }
+      const { data } = await cdp.send('Page.captureScreenshot', params);
+      writeFileSync(join(OUTDIRS[shot.out], shot.file), Buffer.from(data, 'base64'));
       const size = Buffer.from(data, 'base64').length;
-      console.log(`✓ assets/${shot.file}  (${(size / 1024).toFixed(0)} KB)`);
+      console.log(`✓ ${shot.out}/${shot.file}  (${(size / 1024).toFixed(0)} KB)`);
     }
   } finally {
     if (cdp) cdp.close();

@@ -74,9 +74,10 @@ node demo/gen_shots.mjs
 node demo/gen_layers.mjs && node demo/gen_compare.mjs && node demo/gen_shots.mjs
 ```
 
-> 这 4 张是**原图**（深色主题，1440 宽 ×2 像素密度）。报告里要用的话，
-> ⚠️ **深底不适合黑白打印** —— 排版时要么加浅底版本、要么只挑局部裁切。
-> 挑好的那一版放 `../report/figures/`（见 `../report/figures/README.md` §二）。
+> 这 4 张是**原图**（深色主题）。⚠️ 深底不适合黑白打印 —— **报告用的浅底版已另做**：
+> `../report/figures/demo_ntt_layer3.png` / `demo_compare_pass.png` / `demo_compare_negctrl.png`
+> （同一个脚本加 `?theme=light` + 裁切生成，见 `../report/figures/README.md` §一）。
+> 惯例：**原始件留在这里，报告那一版放 `report/figures/`，两边都留**（见下「规矩」第 4 条）。
 
 ⬜ **A、B 的素材仍空** —— Vivado 资源/时序报告截图、上板串口录屏、`refsim/` 对拍波形。
 这些只能由 A、B 提供（本机没有 Vivado、没有板子），**C 主动去要**（H9）。

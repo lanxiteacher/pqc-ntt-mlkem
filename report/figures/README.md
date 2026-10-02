@@ -1,6 +1,6 @@
 # report/figures —— 报告配图
 
-**主责：C** ｜ 状态：🔄 **3 张已成（2026-10-01）**
+**主责：C** ｜ 状态：🔄 **3 张矢量图 + 3 张演示页截图（浅色报告版，2026-10-02）**
 
 > 放**报告正文里要用的图**。素材原图（截图、录屏）在 `../../assets/`，
 > 不要在这里重复存一份 —— 这里只放**排版好的、要进报告的**那一版。
@@ -14,6 +14,15 @@
 | `folding_sweep.svg` | `design/03_性能与资源.md` §3.3；`design/02_设计与创新点.md` §2.2 | 折叠度三档（1 / 4 / 16 蝶形）的 **NTT 周期数 / LUT 占用 / 推算 Fmax** 三个面板 |
 | `verify_chain.svg` | `design/04_功能正确性.md` §4.3 | 验证链：FIPS 203 KAT → C 参考实现 → 作者期望输出 → RTL 对拍，四个入口脚本与结果标在链上 |
 | `architecture.svg` | `design/02_设计与创新点.md` §2.2 | 架构三层：`KyberHPMNTT_top` 的对外端口 / 核外的序列化-反序列化 / 核内的宽接口。实线 = 数据，虚线 = 控制 |
+| `demo_ntt_layer3.png` | `design/05_可复现性.md` §5.4 | 演示页（**浅色报告版**）：正变换走到第 3 层，右侧显示选中系数的蝶形算式与配对 |
+| `demo_compare_pass.png` | `design/05_可复现性.md` §5.4 | 演示页对拍页：RTL 落盘输出 vs 黄金向量，**4096/4096 全中**，全场无红格 |
+| `demo_compare_negctrl.png` | `design/04_功能正确性.md` §4.7 | 演示页阴性对照：改坏一条期望值 → 网格里**恰好 1 个红格** |
+
+**这 3 张是截图，不是矢量图**（页面是交互式的，只能截）。生成方式：
+`node demo/gen_shots.mjs` —— 无头 Edge 驱动，源页在 `../../demo/`。
+它们用 **`?theme=light` 浅色主题**（专为黑白打印，深色原图在 `../../assets/`），
+且只截「标题 + 网格」一小块（`clip`），不是整页。
+⚠️ **对拍两张在出图前断言红格数**（pass = 0、negctrl = 1）—— 图名在断言的事由脚本核实，不靠目视。
 
 **这张图的数字不是手抄的**，来源是 `../../metrics/data/metrics.csv`
 （该 CSV 由 `../../metrics/gen_metrics.mjs` 从 `../../rtl/vivado/reports/*.rpt` 解析生成）。
@@ -47,7 +56,7 @@ node report/figures/gen_figures.mjs      # → report/figures/folding_sweep.svg
 |---|---|---|
 | **关键路径截图** | `rtl/vivado/reports/pe{1,4,16}_nc_timing.rpt` 的 `-max_paths 10` 段落的截图 | 需要 Vivado —— **C 本机做不了**，要 A 截或 C 去 A 的工位 |
 | ~~**架构框图**（矢量版）~~ | ✅ **已成** `architecture.svg`（10-01） | C（已完成；`design/02` §2.2 已引用） |
-| ~~**演示页截图**~~ | ✅ **已截 4 张，在 `../../assets/`**（由 `../../demo/gen_shots.mjs` 无头 Edge 生成）<br>⚠️ 原图是**深色底**，不适合黑白打印 —— 报告里要用得挑局部裁切或做浅底版 | C（10-01 已完成截图；**选版式进正文仍待做**） |
+| ~~**演示页截图**~~ | ✅ **原图 4 张在 `../../assets/`（深色）**；**报告版 3 张浅色截图已进本目录**（`demo_*.png`，10-02）。浅底版由 `?theme=light` + `clip` 裁到「标题 + 网格」生成 | C（**已完成**） |
 | **波形截图** | `refsim/` 对拍时的波形 | 要 B 给（H5，W3 起） |
 
 ---
