@@ -1,6 +1,6 @@
 # 🅲 C —— 演示、文档与协作留痕（通俗版）
 
-> 本文只讲你这一块。**总排期见 `logs/FPGA竞赛_进度与排期_通俗版.md`**——
+> 本文只讲你这一块。**总排期见 `logs/schedule_plain.md`**——
 > 两边不一致时以那份为准。看不懂的词先查那份的第二节「术语词典」。
 > 交接点编号 H1–H10，三份文档共用同一套。
 >
@@ -76,7 +76,7 @@
 
 ### 1. NTT 是什么
 
-读 `research/PQC-NTT_ML-KEM_技术资料汇编.md` 的第一部分。
+读 `research/pqc-ntt_ml-kem_compendium.md` 的第一部分。
 
 **你不需要会写电路代码，但必须能对着演示页讲清楚**：
 输入 256 个数字，经过 7 层计算，每层把数字两两配对做一次「蝶形」运算，
@@ -96,7 +96,7 @@ sh run_fntt_check.sh
 
 ### 3. 我们「新」在哪里
 
-翻 `research/PQC-NTT_ML-KEM_技术资料汇编.md` 里那 22 篇论文的摘要部分，
+翻 `research/pqc-ntt_ml-kem_compendium.md` 里那 22 篇论文的摘要部分，
 重点关注：**别人用什么平台、做到什么折叠度、占多少资源**。
 这是第 3 件事（相关工作表）的原料。
 
@@ -107,7 +107,7 @@ sh run_fntt_check.sh
 
 ## 四、逐周计划
 
-> 这是总表里 **C 那一列**的展开。总表见 `logs/FPGA竞赛_进度与排期_通俗版.md` 第三节。
+> 这是总表里 **C 那一列**的展开。总表见 `logs/schedule_plain.md` 第三节。
 
 | 周次 | 日期 | 你要做完什么（括号里是「看到什么算完成」） |
 |---|---|---|
@@ -151,7 +151,7 @@ export PATH="/c/iverilog/bin:$PATH"; iverilog -V
 
 | 要什么 | 在哪 |
 |---|---|
-| 三档资源/频率（LUT／DSP／BRAM／Fmax） | `rtl/vivado/折叠度对比表.md` |
+| 三档资源/频率（LUT／DSP／BRAM／Fmax） | `rtl/vivado/folding_comparison.md` |
 | 12 份 Vivado 原始报告（可截关键路径图） | `rtl/vivado/reports/`（pe1/pe4/pe16 各 util+timing，加 a7 交叉核对那组） |
 | 功能正确性（对拍多少系数、KAT 多少条） | `refsim/README.md`（pe1 **4096/4096**；KAT **1000/1000**） |
 
@@ -271,5 +271,5 @@ A、B 每完成一小步，应该把**截图／录屏 + 一句话说明**丢进�
 ---
 
 > 相关文档：`team/FPGA竞赛_C_Claude环境对齐指南.md`（**项目架构 + 这台机器上怎么开工**，
-> 先读它第一节）｜`logs/FPGA竞赛_进度与排期_通俗版.md`（总排期 + 术语词典）｜
-> `logs/FPGA竞赛_项目记录.md`（当前状态与决策）
+> 先读它第一节）｜`logs/schedule_plain.md`（总排期 + 术语词典）｜
+> `logs/project_state.md`（当前状态与决策）

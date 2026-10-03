@@ -5,7 +5,7 @@
 > 许可证：[Apache License 2.0](LICENSE)
 
 以 ML-KEM 的核心运算 **NTT（数论变换）** 为切入点，在 FPGA 上实现低延迟的
-多项式乘法加速核，并配套一条以 FIPS 203 官方考题为终点的**软硬协同验证链**。
+多项式乘法加速核，并配套一条以 FIPS 203 兼容考题为终点的**软硬协同验证链**。
 
 ---
 
@@ -19,7 +19,7 @@ ML-KEM（FIPS 203，即 CRYSTALS-Kyber）是 NIST 后量子密码标准中的密
 | 部分 | 内容 |
 |---|---|
 | **硬件加速核** | `refsim/pe1/` —— 在开源硬件基线 `kyber-polmul-hw/pe1` 上改造的工作副本；`rtl/` —— 交付给 Vivado 工程的产物（当前为 twiddle 表） |
-| **验证台** | `refsim/` —— 用官方考题锚定参考实现，再拿参考实现逐比特对拍 RTL |
+| **验证台** | `refsim/` —— 用兼容考题锚定参考实现，再拿参考实现逐比特对拍 RTL |
 
 验证台是本仓库的核心资产。它回答的问题不是"作者的 testbench 跑没跑通"，
 而是"**这份 RTL 算得对不对**"——这两件事不一样，理由见 `refsim/README.md` 开头。
@@ -60,7 +60,7 @@ ML-KEM（FIPS 203，即 CRYSTALS-Kyber）是 NIST 后量子密码标准中的密
   FNTT→PWM2→INTT 端到端、PWM2 两 bank 装不同数据。⚠️ 这些验证在 `rtl/probes/`，
   **不在 `refsim/` 那套链子里** —— `refsim/` 跑的仍是上游基线。
 - **综合与资源**：上游基线三档已综合/实现（2026-09-22），资源与频率见
-  `rtl/vivado/折叠度对比表.md` 与 `rtl/vivado/reports/`。**参数化版本尚未综合。**
+  `rtl/vivado/folding_comparison.md` 与 `rtl/vivado/reports/`。**参数化版本尚未综合。**
 - **功耗**：未测。
 - **上板**：PL 通路已实测跑通（2026-09-29，官方 `19_uart_loopback` 串口回环，16 字节原样返回）。
   **NTT 核本身尚未上板** —— 还差一层板级 wrapper（时钟 / 复位 / UART）。
@@ -98,11 +98,11 @@ sh run_ntt_layers.sh          # 导出并机器验证 twiddle 层序表
 FPGA/
 ├── CLAUDE.md                  AI 协作约定与项目环境说明
 ├── logs/                      项目记录与进度排期
-│   ├── FPGA竞赛_项目记录.md   当前状态与待办 —— 开工只读这一份
-│   ├── FPGA竞赛_项目记录_背景.md  硬约束/评分规则/风险 —— 做决策时读
-│   ├── FPGA竞赛_项目记录_变更.md  变更记录（只增）—— 追溯时读
-│   ├── FPGA竞赛_项目记录_归档.md  更早的过程
-│   └── FPGA竞赛_进度与排期_通俗版.md  人话版，可直接转发队友
+│   ├── project_state.md   当前状态与待办 —— 开工只读这一份
+│   ├── project_state_background.md  硬约束/评分规则/风险 —— 做决策时读
+│   ├── project_state_changelog.md  变更记录（只增）—— 追溯时读
+│   ├── project_state_archive.md  更早的过程
+│   └── schedule_plain.md  人话版，可直接转发队友
 ├── LICENSE                    Apache License 2.0
 ├── NOTICE                     Apache-2.0 要求的声明文件
 ├── THIRD_PARTY_LICENSES.md    第三方组件清单与许可证
@@ -118,7 +118,7 @@ FPGA/
 │   ├── kyber_ref/             ML-KEM C 参考实现（地面真值）
 │   ├── mlkem_kat/             FIPS 203 兼容考题 1000 条
 │   ├── standards/             NIST FIPS 203 / 204 / 205
-│   └── PQC-NTT_ML-KEM_技术资料汇编.md
+│   └── pqc-ntt_ml-kem_compendium.md
 │
 ├── selection/                 历史：选题过程
 └── _refbuild/                 历史：参考实现早期 bench

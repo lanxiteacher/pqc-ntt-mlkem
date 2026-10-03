@@ -43,7 +43,7 @@ node report/figures/gen_figures.mjs      # → report/figures/folding_sweep.svg
 
 ⚠️ `architecture.svg` 里**引用了三个数字**（引脚 397 / 芯片可用 125 / 三档 IOB = 37）——
 引用不等于推导，所以没配生成脚本，但**它们会随参数化版本 W5 重测而变，重测后要回来核一遍**
-（出处：`../../rtl/vivado/折叠度对比表.md` §五／§六／§九）。
+（出处：`../../rtl/vivado/folding_comparison.md` §五／§六／§九）。
 
 ⚠️ **本机没有 Vivado**（Vivado 与板子都在 A 的工位），所以这张图用的是**工具推算值**，
 不是上板实测。图上已标注这一点。

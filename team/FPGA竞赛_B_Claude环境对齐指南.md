@@ -70,10 +70,10 @@ git pull          # 每次开工前先拉
 FPGA/
 ├── CLAUDE.md                  ← 开工先读。三个人共用，改之前先说一声
 ├── logs/                      ← 项目记录与进度排期。三个人共用
-│   ├── FPGA竞赛_项目记录.md   ← 当前状态与待办（**开工只读这一份**）
-│   ├── FPGA竞赛_项目记录_背景.md  ← 硬约束/评分/风险，做决策时读
-│   ├── FPGA竞赛_项目记录_变更.md  ← 变更记录（只增），追溯时读
-│   └── FPGA竞赛_项目记录_归档.md  ← 更早的过程
+│   ├── project_state.md   ← 当前状态与待办（**开工只读这一份**）
+│   ├── project_state_background.md  ← 硬约束/评分/风险，做决策时读
+│   ├── project_state_changelog.md  ← 变更记录（只增），追溯时读
+│   └── project_state_archive.md  ← 更早的过程
 ├── .gitignore                 ← 编译产物不进仓库
 │
 ├── refsim/                    ← 【B】RTL 验证台（核心资产）
@@ -90,7 +90,7 @@ FPGA/
 │   ├── mlkem_kat/             ← FIPS 203 官方考题 1000 条 + 黄金向量
 │   ├── papers/                ← 论文 PDF【只在 B 本地，不进仓库，见第一节】
 │   ├── standards/             ← NIST FIPS 203/204/205（公有领域，进仓库）
-│   └── PQC-NTT_ML-KEM_技术资料汇编.md
+│   └── pqc-ntt_ml-kem_compendium.md
 │
 ├── selection/                 ← 历史：选题过程（不删，不再动）
 └── _refbuild/                 ← 历史：参考实现的早期 bench
@@ -101,7 +101,7 @@ FPGA/
 **1. 目录名一律英文。**
 竞赛要求提交的开源仓库目录名纯英文。现在就叫英文，是为了避免最后
 "把中文目录改名 → 所有脚本路径全断 → 重跑一遍验证"这个返工。
-**文件名可以中文**（`logs/FPGA竞赛_项目记录.md` 这种），但**新建目录必须是英文**。
+**文件名可以中文**（`logs/project_state.md` 这种），但**新建目录必须是英文**。
 
 **2. `research/` 是只读的。**
 任何对基线 RTL 的修改都在 `refsim/pe1/` 的**副本**上做，原始目录保持原样。
@@ -255,7 +255,7 @@ sh run_ntt_layers.sh          # 打印并机器验证 twiddle 层序表
 
 1. **开工前先 `git pull`**，收工前 `git commit && git push`。别攒。
 2. **只改自己主责的目录**（见第二节的表）。
-3. **`CLAUDE.md`、`../logs/FPGA竞赛_项目记录.md`、`team/` 是共享的** ——
+3. **`CLAUDE.md`、`../logs/project_state.md`、`team/` 是共享的** ——
    要改先跟对方说一声，别两个 Claude 同时改同一份。
 4. **一个能跑通的小步 = 一个提交。** 不做完不合并 ——
    保持仓库随时是可运行的，别让队友拿到跑不起来的东西。

@@ -255,7 +255,7 @@ pe16 同理，`din[191:180]` = `16k+0`，`din[11:0]` = `16k+15`。
   基准向量在 `refsim/batch/fullmul_*.txt` / `halfmul_*.txt`，是下一步。
 - `pwm2` 的**两个 bank 装不同数据**的情形 —— 见上，现有黄金向量 a == b。
 - 板级：串口 / 状态机 / 上位机握手 —— 那是 H3 与 `host/` 的范围。
-- `rtl/vivado/折叠度对比表.md` 里的数字是 **Vivado 综合**结果（资源 / 频率），
+- `rtl/vivado/folding_comparison.md` 里的数字是 **Vivado 综合**结果（资源 / 频率），
   **不是功能正确性证据**。
 
 > 这一条对协议的影响：**H3 先按 `PE_NUMBER = 1` 冻结是安全的**。
@@ -293,7 +293,7 @@ uart_tx (clk, rst_n, uart_tx_en, uart_tx_data[7:0]) -> (uart_txd, uart_tx_busy)
 - `uart_rx_done` / `uart_tx_en` 都是 **1 拍脉冲**（与核的 `start_*` / `read_*` 同风格，好接）。
 - ⚠️ 两个子模块的复位是 **`rst_n`，低有效**；核的 `reset` 是 **异步高有效**。
   **接一起必须取反**（`reset = ~rst_n`，或者把核的 `reset` 接 `~sys_rst_n`）。
-  这与 `logs/FPGA竞赛_项目记录.md` §二 B 里记的「N16 低有效」是同一件事。
+  这与 `logs/project_state.md` §二 B 里记的「N16 低有效」是同一件事。
 
 ---
 

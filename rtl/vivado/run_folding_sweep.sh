@@ -18,7 +18,7 @@
 #     upstream_top   量 rtl/peN/KyberHPMNPE_top.v（上游**顶层**：核 + 输入寄存级）。
 #                    报告带 `_utop` 后缀。
 #     upstream       量 rtl/peN/KyberHPMNPE.v（上游**核**本体，没有外面那级寄存）。
-#                    `折叠度对比表.md` 里那张基线表就是这么来的。
+#                    `folding_comparison.md` 里那张基线表就是这么来的。
 #
 #   ⚠️ **核 / 顶层是两个不同的量法，别混着比。**
 #      上游的 IOB 数两边一样（`_top` 不改变端口位宽，`din`/`dout` 仍是 12×PE），

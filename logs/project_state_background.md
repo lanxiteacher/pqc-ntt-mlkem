@@ -1,7 +1,7 @@
 # FPGA 创新设计竞赛 · 背景（硬约束 / 赛事 / 风险）
 
 > **不常变，但做决策和排查时要看。** 平时开工不用读这份。
-> 当前状态与待办见《FPGA竞赛_项目记录.md》；变更历史见《FPGA竞赛_项目记录_变更.md》。
+> 当前状态与待办见《project_state.md》；变更历史见《project_state_changelog.md》。
 
 ---
 
@@ -193,9 +193,9 @@
 | `research/ref_rtl/kyber-polmul-hw/pe1/` | 开源 NTT 硬件基线（已验证）—— **A 的改造起点** |
 | `research/kyber_ref/` | C 参考实现（地面真值） |
 | `research/mlkem_kat/` | FIPS 203 官方考题，**1000 条全过**（⚠️ 出处是社区仓库 `post-quantum-cryptography/KAT`，**非 NIST 官方**，措辞注意） |
-| `research/PQC-NTT_ML-KEM_技术资料汇编.md` | 22 篇论文 + 标准 |
-| `PQ-NTT 选题指导` | `FPGA竞赛_选题指导_PQC-NTT_ML-KEM.md` + 单文件网页 `pqc-ntt-guide.html`（可直接发队友）+ 附件 `rtl/zetas_tables.v` |
-| 归档（历史过程） | `FPGA竞赛_项目记录_归档.md`、`FPGA竞赛_可行性分析_非视觉候选_领航者7020.md`、`FPGA竞赛_选题细化_*.md` |
+| `research/pqc-ntt_ml-kem_compendium.md` | 22 篇论文 + 标准 |
+| `PQ-NTT 选题指导` | `competition_guide_notes.md` + 单文件网页 `pqc-ntt-guide.html`（可直接发队友）+ 附件 `rtl/zetas_tables.v` |
+| 归档（历史过程） | `project_state_archive.md`、`feasibility_nonvision_navigator7020.md`、`selection/topic_*.md` |
 
 ### 外部链接
 

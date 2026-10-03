@@ -1033,7 +1033,7 @@ print('总系数', len(v), '不同值', len(set(v)))
 
 **Files:**
 - Modify: `rtl/vivado/run_folding_sweep.sh`（指向新树）
-- Modify: `rtl/vivado/折叠度对比表.md`（补新树一列）
+- Modify: `rtl/vivado/folding_comparison.md`（补新树一列）
 
 - [x] **Step 1: 改扫描脚本指向 `rtl/ntt_core/`，三档各综合一次**
 
@@ -1047,7 +1047,7 @@ print('总系数', len(v), '不同值', len(set(v)))
 
 - [x] **Step 3: 记录资源与 Fmax**
 
-把三档的 LUT / FF / DSP / RAMB18 / WNS / Fmax 抄进 `折叠度对比表.md`，
+把三档的 LUT / FF / DSP / RAMB18 / WNS / Fmax 抄进 `folding_comparison.md`，
 与上游三档并排对比（**上游那三列留着**，是「优化前后对比表」——报告 §3.3.5.3 要）。
 
 - [x] **Step 4: 提交**
@@ -1063,7 +1063,7 @@ git push
 **判据 1 通过。** 三档 Bonded IOB 实测**都是 37**，且**三档都布完线** ——
 上游 pe16 是 397，在 `Phase 1.2 IO Placement` 就失败，所以这是 pe16 第一次在
 7020 上布完线。37 = 12 控制 + 1 时钟 + 12 `din` + 12 `dout`（**端口数与折叠度无关**，
-这正是收窄接口换来的）。逐档数字见 `折叠度对比表.md` §9.1。
+这正是收窄接口换来的）。逐档数字见 `folding_comparison.md` §9.1。
 
 **非退化证据**：DSP 精确 = 1 / 4 / 16（蝶形数）；LUT 727 → 2000 → 8922；
 FF 388 → 880 → 2933，逐档单调。
@@ -1090,7 +1090,7 @@ FF 388 → 880 → 2933，逐档单调。
 - 判据 1 的结论**只对 `TREE=ncore` 打印**。上游那两棵树本来就超预算（pe4 109 / pe16 397），
   对它们打印「✅ 判据 1 通过」等于把不达标说成达标。
 
-**复现**：`rtl/vivado/折叠度对比表.md` §七（基线）/ §9.5（参数化版）。
+**复现**：`rtl/vivado/folding_comparison.md` §七（基线）/ §9.5（参数化版）。
 ⚠️ 量上游要显式 `TREE=upstream_top` 或 `TREE=upstream`，否则默认量参数化版。
 
 ---
@@ -1100,7 +1100,7 @@ FF 388 → 880 → 2933，逐档单调。
 **Files:**
 - Modify: `rtl/H1_port_spec.md`（§五）
 - Modify: `rtl/folding_param_design.md`（状态行）
-- Modify: `logs/FPGA竞赛_项目记录.md`（§一、§二）
+- Modify: `logs/project_state.md`（§一、§二）
 
 - [x] **Step 1: 改 `H1_port_spec.md` §五**
 
@@ -1114,8 +1114,8 @@ FF 388 → 880 → 2933，逐档单调。
 
 - [x] **Step 3: 更新项目记录**
 
-`logs/FPGA竞赛_项目记录.md` §一「还差」行划掉参数化版本那一项；
-§二 B 里的「参数化折叠度版本」标完成。**只改状态，不写过程**（过程进 `_变更.md`）。
+`logs/project_state.md` §一「还差」行划掉参数化版本那一项；
+§二 B 里的「参数化折叠度版本」标完成。**只改状态，不写过程**（过程进 `project_state_changelog.md`）。
 
 - [x] **Step 4: 给 B / C 的转发话术**
 
@@ -1125,7 +1125,7 @@ FF 388 → 880 → 2933，逐档单调。
 - [x] **Step 5: 提交并推送**
 
 ```bash
-git add rtl/H1_port_spec.md rtl/folding_param_design.md logs/FPGA竞赛_项目记录.md
+git add rtl/H1_port_spec.md rtl/folding_param_design.md logs/project_state.md
 git commit -m "参数化版本收尾：H1 §五 标注被取代 + 项目记录状态同步"
 git push
 ```
@@ -1136,7 +1136,7 @@ git push
   「2026-09-29 新增：参数化顶层 `KyberHPMNTT_top` 的读出顺序（实测）」，
   所以本次只在 §五 **顶部**补一段导语，说明「下表的**位宽**那一列只描述上游宽接口；
   周期数 / 有效拍数是按 `PE_NUMBER` 算的，两版都成立」。原文一行没删。
-- **Step 4 的产物**：`A给B_回复_2026-09-29.txt`、`A给C_2026-09-29.txt`（仓库根，**已提交**）
+- **Step 4 的产物**：`letter_2026-09-29_A_to_B.txt`、`letter_2026-09-29_A_to_C.txt`（仓库根，**已提交**）
   —— 由 A 转发。`B给A_回复_2026-09-29.txt` 是 B 的来信，**未提交**：别人的文档，
   不替对方决定要不要进仓库。
 - **Step 3 改的是共享文件**：`logs/` 是三个人的共享目录，改动前已确认

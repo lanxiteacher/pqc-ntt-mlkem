@@ -4,7 +4,7 @@ A → C ｜ 报告「优化前后对比」要用的素材（可直接引）
 ============================================================
 
 
-【一句话】数据源是 `rtl/vivado/折叠度对比表.md` §九 + `rtl/vivado/reports/` 下的
+【一句话】数据源是 `rtl/vivado/folding_comparison.md` §九 + `rtl/vivado/reports/` 下的
 `.rpt` 文件。下面说清：取哪几行、这次优化的核心结论怎么说、以及**三个会被问倒的坑**。
 
 
@@ -12,7 +12,7 @@ A → C ｜ 报告「优化前后对比」要用的素材（可直接引）
 一、取哪张表
 ============================================================
 
-`rtl/vivado/折叠度对比表.md` **§9.1 主表**，6 行：
+`rtl/vivado/folding_comparison.md` **§9.1 主表**，6 行：
 
   | 版本 | 档 | 顶层模块 | LUT | FF | DSP | BRAM tile | RAMB18 | IOB | WNS | Fmax | 实现状态 |
 
@@ -100,7 +100,7 @@ A → C ｜ 报告「优化前后对比」要用的素材（可直接引）
   rtl/vivado/reports/{pe1,pe4,pe16}_utop_{util,timing}.rpt   上游**顶层**（对照组）
   rtl/vivado/reports/{pe1,pe4,pe16}_util.rpt                 上游**核**（更早提交的基线）
 
-  复现命令：`rtl/vivado/折叠度对比表.md` §七（基线）/ §9.5（参数化版）
+  复现命令：`rtl/vivado/folding_comparison.md` §七（基线）/ §9.5（参数化版）
   器件一律 `xc7z020clg400-2`，目标周期 5 ns（故意收紧，用 WNS 反推 Fmax）。
 
   ⚠️ 跑之前 Vivado 必须从**仓库外**的目录启动 —— 仓库路径里有撇号，

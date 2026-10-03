@@ -3,7 +3,7 @@
 > 状态：**已实现，三条判据全过**（2026-09-29）
 > 主责：A ｜ 目标器件：`xc7z020clg400-2`（正点原子领航者 ZYNQ，125 个 IOB）
 >
-> 代码在 `rtl/ntt_core/`，探针在 `rtl/probes/`，综合数字在 `rtl/vivado/折叠度对比表.md`。
+> 代码在 `rtl/ntt_core/`，探针在 `rtl/probes/`，综合数字在 `rtl/vivado/folding_comparison.md`。
 
 ---
 
@@ -17,12 +17,12 @@
 | # | 判据 | 怎么验 |
 |---|---|---|
 | 1 | 三档综合通过，**Bonded IOB ≤ 125** | `rtl/vivado/run_folding_sweep.sh`，看 reports 里的 IOB 数 |
-| | | ✅ **2026-09-29 通过**：三档 Bonded IOB 都是 **37**，且**三档都布完线**（pe16 上游是 397、IO 阶段就失败）。逐档数字见 `rtl/vivado/折叠度对比表.md` §九 |
+| | | ✅ **2026-09-29 通过**：三档 Bonded IOB 都是 **37**，且**三档都布完线**（pe16 上游是 397、IO 阶段就失败）。逐档数字见 `rtl/vivado/folding_comparison.md` §九 |
 | 2 | 三档的**周期数与上游逐拍一致** | 探针实测 FNTT / PWM2 / INTT 的 `CC`，与下表逐个对齐 |
 | 3 | 三档**功能对拍通过** | pe1 现有的 FIPS 203 KAT 验证链扩到 pe4 / pe16 |
 | | | ✅ **2026-09-29 通过**：3 个运算 × 3 档 × 16 组共 4096 系数，多重集全中（`rtl/probes/ntt_func_tb.v`，段 ⑩） |
 
-判据 2 的基准值（上游实测，`rtl/vivado/折叠度对比表.md`；**右三是 2026-09-29 从顶层实测回来的**）：
+判据 2 的基准值（上游实测，`rtl/vivado/folding_comparison.md`；**右三是 2026-09-29 从顶层实测回来的**）：
 
 | | FNTT_CC | PWM2_CC | INTT_CC | 实测 FNTT | 实测 PWM2 | 实测 INTT |
 |---|---:|---:|---:|---:|---:|---:|
@@ -421,7 +421,7 @@ FNTT 在同样位置则三者一起冻结。**这是真的，重构时不要「�
 
 ## 十、复现与依据
 
-- 折叠度实测数据：`rtl/vivado/折叠度对比表.md`
+- 折叠度实测数据：`rtl/vivado/folding_comparison.md`
 - 接口时序：`rtl/H1_port_spec.md`（探针 `rtl/probes/`）
 - 上游原件（只读）：`research/ref_rtl/kyber-polmul-hw/pe{1,4,16}/`
 - 本设计的分析依据：三份 `addressgenerator.v` 的**逐行逐信号**比对

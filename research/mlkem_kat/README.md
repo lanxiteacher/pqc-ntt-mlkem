@@ -279,7 +279,7 @@ grep -o "^[a-z_]* =" kat_MLKEM_768.rsp | sort | uniq -c
 ## 七、和项目其它部分的关系
 
 - 算法本体的讲解（三层结构、NTT 索引规则、域/缩放陷阱）见
-  `../PQC-NTT_ML-KEM_技术资料汇编.md`
+  `../pqc-ntt_ml-kem_compendium.md`
 - 参考实现源码在 `../kyber_ref/`
 - 标准原文在 `../standards/`（FIPS 203/204/205）
-- 被推翻的旧结论见 `../已核实结论_修正选题指导文档.md`
+- 被推翻的旧结论见 `../verified_corrections_to_guide.md`

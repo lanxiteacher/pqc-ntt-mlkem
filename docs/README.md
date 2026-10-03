@@ -18,7 +18,7 @@ docs/
 
 ## related-work.md 怎么写
 
-基于 `../research/PQC-NTT_ML-KEM_技术资料汇编.md` 里那 22 篇论文，整理一张表：
+基于 `../research/pqc-ntt_ml-kem_compendium.md` 里那 22 篇论文，整理一张表：
 
 | 列 | 说明 |
 |---|---|
@@ -34,7 +34,7 @@ docs/
 那些 `.txt` 在仓库里，PDF 不在（版权，见 `../.gitignore`）。
 
 ⚠️ **从 PDF 抽出的表格要核对列有没有错位。** 已有先例：
-`../rtl/vivado/折叠度对比表.md` 记录过一次「论文的 LUT 数没对上，原因是 PDF 抽文本时列错位」，
+`../rtl/vivado/folding_comparison.md` 记录过一次「论文的 LUT 数没对上，原因是 PDF 抽文本时列错位」，
 那张表因此**不引用论文的 LUT 数，只引用我们自己重跑出来的频率**。
 
 ## 技术初稿从哪来

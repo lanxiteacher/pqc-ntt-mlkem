@@ -110,5 +110,5 @@
 <line x1="24" y1="592" x2="976" y2="592" stroke="#c3cbd4" stroke-width="1"/>
 <text x="24" y="616" font-size="12" fill="#1f2933">对外固定 12 位 ⇒ 三档 Bonded IOB 恒为 37（12 控制 ＋ 1 时钟 ＋ din[11:0] ＋ dout[11:0]）。上游「接口宽度 = 12 × 蝶形数」到 16 蝶形要 397 个引脚，而芯片只有 125 个。</text>
 <text x="24" y="638" font-size="11.5" fill="#6b7785">把序列化放到核外，是唯一「改接口宽度而不动核的 FSM」的做法：PE_NUMBER = 1 时序列化器直通，pe1 已验证的时序与 KAT 结论原样保留。</text>
-<text x="24" y="662" font-size="11.5" fill="#6b7785">数字出处：rtl/vivado/折叠度对比表.md §五／§六（397 / 125）与 §九（三档 IOB = 37）；端口与时序见 rtl/H1_port_spec.md §一／§六。</text>
+<text x="24" y="662" font-size="11.5" fill="#6b7785">数字出处：rtl/vivado/folding_comparison.md §五／§六（397 / 125）与 §九（三档 IOB = 37）；端口与时序见 rtl/H1_port_spec.md §一／§六。</text>
 </svg>

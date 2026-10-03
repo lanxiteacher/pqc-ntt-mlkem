@@ -138,7 +138,7 @@ A → B ｜ 回你 09-29 那封 + 一处要赶在解包器之前定的缺口
      · 判据 1  三档 Bonded IOB **都是 37**（上游 pe16 是 397，布局阶段 IO Placement 就失败）；
      · 判据 2  三档 × {FNTT, PWM2, INTT} 共 12 格周期数全部等于上游实测值；
      · 判据 3  3 运算 × 3 档 × 16 组 = 4096 系数，多重集全中。
-   数字在 `rtl/vivado/折叠度对比表.md` §九，探针在 `rtl/probes/`。
+   数字在 `rtl/vivado/folding_comparison.md` §九，探针在 `rtl/probes/`。
 
 2. ⚠️ **对 host/ 有影响的一条**：
    这个顶层**三档对外都是 12 位**（宽接口 `12 × PE_NUMBER` 只留在核内部）。

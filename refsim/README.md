@@ -301,6 +301,6 @@ R = 2¹⁶ mod q = **2285**，R⁻¹ = **169**。
 
 - KAT 校验环境、向量生成器：`../research/mlkem_kat/README.md`
 - 算法本体讲解（三层结构、索引规则、域/缩放陷阱）：
-  `../research/PQC-NTT_ML-KEM_技术资料汇编.md`
+  `../research/pqc-ntt_ml-kem_compendium.md`
 - 参考实现源码：`../research/kyber_ref/`
 - 原始 RTL（未改动）：`../research/ref_rtl/kyber-polmul-hw/pe1/`

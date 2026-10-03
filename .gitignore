@@ -17,7 +17,7 @@ refsim/tmp_*.txt
 rtl/probes/_work/
 
 # ===== 已废弃的 Round3 材料 =====
-# 见 research/已核实结论_修正选题指导文档.md：
+# 见 research/verified_corrections_to_guide.md：
 # Round3 的 KAT 不能用来验收 FIPS 203 ML-KEM，留着只会误导。
 # 本地保留，不进仓库。
 research/Kyber-Round3.zip

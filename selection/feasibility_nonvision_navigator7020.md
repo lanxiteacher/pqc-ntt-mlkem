@@ -1,7 +1,7 @@
 # FPGA 竞赛 · 可行性分析：非视觉算法加速候选 @ 正点原子领航者 ZYNQ-7020
 
-> 用途：承接《FPGA竞赛_选题细化_算法加速_非视觉方向.md》的 A/B/C/D 四候选，回答"这些题在我这块板子上到底做不做得成"。
-> 创建：2026-09-18 ｜ 上游：《选题细化_算法加速_非视觉方向》《项目记录》
+> 用途：承接《topic_algo_accel_nonvision.md》的 A/B/C/D 四候选，回答"这些题在我这块板子上到底做不做得成"。
+> 创建：2026-09-18 ｜ 上游：`topic_algo_accel_nonvision.md`《项目记录》
 > 状态：**已结算（结论可用）**，供与队友/老师过选型
 > ⚠️ 本文属"调查/决策"阶段，不含具体电路设计。
 > ⚠️ **数据来源限制（重要）**：本次调研环境的全文抓取被网络策略拦截，所有文献数据来自搜索引擎返回的摘要片段，**未能逐篇打开 PDF 核对原表**。凡有列对应关系不确定、版本冲突或仅单一来源的，本文均已逐条标注置信度。**锁定最终 1–2 个方向后，建议用学校 VPN 下载原文核对关键表格。**
@@ -333,7 +333,7 @@ USB座 → CH340C(3.3V TTL) → 74LVC1G125GW ×2 → P5 ─┬─ 1-3 / 2-4 短�
 - Smith-Waterman：[PLOS ONE 0254736（Virtex-7 512PE）](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0254736)、[NITK Basys 3 报告](https://ieee.l1.nitk.ac.in/virtual_expo/report/153)
 - Monte Carlo：[HyPER（STFC）](https://epubs.stfc.ac.uk/manifestation/53374835/DL-CONF-2020-001.pdf)、[MMU 硕士论文 Zynq-7020 MC](https://helward.mmu.ac.uk/STAFF/M.Bane/MSc/2018-2019/MatthewCarter_MSc2019_FPGA_FinanceOptionPricing.pdf)
 
-**上游档案**：《FPGA竞赛_选题细化_算法加速_非视觉方向.md》《../logs/FPGA竞赛_项目记录.md》
+**上游档案**：《topic_algo_accel_nonvision.md》《../logs/project_state.md》
 
 ---
 

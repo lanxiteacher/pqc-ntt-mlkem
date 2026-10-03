@@ -66,7 +66,7 @@ node metrics/gen_metrics.mjs      # → 更新本文件里的生成块 + 写 dat
 | LUT 占用 | 资源 | 727 ｜ 2000 ｜ 8922 | 个 | post-route；顶层边界；占用率 1.37% ｜ 3.76% ｜ 16.77% | `rtl/vivado/reports/pe1_nc_util.rpt`、`rtl/vivado/reports/pe4_nc_util.rpt`、`rtl/vivado/reports/pe16_nc_util.rpt` |
 | DSP 占用 | 资源 | 1 ｜ 4 ｜ 16 | 个 | post-route；**严格等于蝶形数**（非退化佐证） | 同上 |
 | 最高频率 / WNS | 资源 | 168 MHz ｜ 160 MHz ｜ 154 MHz | MHz | post-route；约束 `create_clock -period 5`（200 MHz，故意给紧），Fmax = 1000 / (5 − WNS)；WNS -0.936 ns ｜ -1.260 ns ｜ -1.507 ns | `rtl/vivado/reports/pe1_nc_timing.rpt`、`rtl/vivado/reports/pe4_nc_timing.rpt`、`rtl/vivado/reports/pe16_nc_timing.rpt` |
-| IOB 占用 | 资源 | 37 ｜ 37 ｜ 37 | 个 | post-route；**三档都是常数 37**（12 控制 + 1 时钟 + 12 `din` + 12 `dout`），与折叠度无关 —— 这是判据 1；占用率 29.60% ｜ 29.60% ｜ 29.60%，上游同边界是 37 / 109 / **397** | `rtl/vivado/折叠度对比表.md` §9.2 |
+| IOB 占用 | 资源 | 37 ｜ 37 ｜ 37 | 个 | post-route；**三档都是常数 37**（12 控制 + 1 时钟 + 12 `din` + 12 `dout`），与折叠度无关 —— 这是判据 1；占用率 29.60% ｜ 29.60% ｜ 29.60%，上游同边界是 37 / 109 / **397** | `rtl/vivado/folding_comparison.md` §9.2 |
 
 ### 功能正确性（B 侧验证台 + A 侧探针）
 
@@ -124,7 +124,7 @@ Fmax 是**反推**出来的：`T_min ≈ 目标周期 − WNS`，`Fmax = 1000 / 
 
 ## 相关
 
-- 三档折叠度的详细对比与复现命令：`../rtl/vivado/折叠度对比表.md`
+- 三档折叠度的详细对比与复现命令：`../rtl/vivado/folding_comparison.md`
 - 三档周期数的探针与判据：`../rtl/probes/README.md` §判据 2
 - 功能正确性验证链：`../refsim/README.md`
 - 原始报告（24 份）：`../rtl/vivado/reports/`

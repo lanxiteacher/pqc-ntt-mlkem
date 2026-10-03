@@ -1,6 +1,6 @@
 # 🅰️ A —— 算法核 RTL + 综合实现 + 上板（通俗版）
 
-> 本文只讲你这一块。**总排期见 `logs/FPGA竞赛_进度与排期_通俗版.md`**——
+> 本文只讲你这一块。**总排期见 `logs/schedule_plain.md`**——
 > 两边不一致时以那份为准。看不懂的词先查那份的第二节「术语词典」。
 > 交接点编号 H1–H10，三份文档共用同一套。
 >
@@ -13,7 +13,7 @@
 > ③ **参数化版本已到 6/8**（`rtl/folding_param_plan.md`）—— Task 6 三档功能对拍 09/29 晚通过，剩 Task 7/8。
 > ④ **H3 协议 09/29 已冻结 v1.0**（比计划的 10/02 提前）—— **板级 wrapper 现在没有任何等待项**。
 > ⚠️ 但 A 的 Task 6 实测带出一处 H3 缺口（**FNTT 回传序随折叠度变**），见下面 H3 那一节。
-> **总排期仍以 `logs/FPGA竞赛_进度与排期_通俗版.md` 为准。**
+> **总排期仍以 `logs/schedule_plain.md` 为准。**
 
 ---
 
@@ -63,7 +63,7 @@
 | `refsim/README.md` | 验证链的完整说明 | 想知道「为什么这么验」时读 |
 | `research/kyber_ref/` | C 语言写的标准版本 | 对拍的「标准答案」 |
 | `research/mlkem_kat/` | 官方考题环境（1000 条） | 标准答案的来源 |
-| `research/PQC-NTT_ML-KEM_技术资料汇编.md` | 22 篇论文 + 标准 | **第一部分先读** |
+| `research/pqc-ntt_ml-kem_compendium.md` | 22 篇论文 + 标准 | **第一部分先读** |
 
 ### 环境两件事，每次开工先做
 
@@ -83,7 +83,7 @@ export PATH="/c/iverilog/bin:$PATH"
 
 1. ~~装 Vivado~~ ✅ **2026-09-19 已完成** —— Vivado ML Standard 2020.2，
    装在 `E:\xilinx\Vivado\2020.2`，Cable Drivers 已勾，占用 42.25 GB。
-   版本与原定的 2024.2 不同，理由见 `logs/FPGA竞赛_项目记录_背景.md`
+   版本与原定的 2024.2 不同，理由见 `logs/project_state_background.md`
    §三「Vivado 版本：实装 2020.2」。
    - ✅ **2026-09-29 已跑通官方 `19_uart_loopback` 例程** —— 纯 PL，波特率 115200，
      底板 **P5 跳线切到 PL 档**（3–5、4–6 短接）+ 启动拨码 **JTAG 档**（两位都 ON），
@@ -123,7 +123,7 @@ export PATH="/c/iverilog/bin:$PATH"
 
 ## 四、逐周计划
 
-> 这是总表里 **A 那一列**的展开。总表见 `logs/FPGA竞赛_进度与排期_通俗版.md` 第三节。
+> 这是总表里 **A 那一列**的展开。总表见 `logs/schedule_plain.md` 第三节。
 
 | 周次 | 日期 | 你要做完什么（括号里是「看到什么算完成」） |
 |---|---|---|
@@ -280,6 +280,6 @@ RTL 的错先在 `refsim/` 里验干净。板子只用来确认「综合出来�
 
 ---
 
-> 相关文档：`logs/FPGA竞赛_进度与排期_通俗版.md`（总排期 + 术语词典）｜
-> `logs/FPGA竞赛_项目记录.md`（当前状态与决策）｜
+> 相关文档：`logs/schedule_plain.md`（总排期 + 术语词典）｜
+> `logs/project_state.md`（当前状态与决策）｜
 > `team/FPGA竞赛_B_Claude环境对齐指南.md`（换台机器怎么搭环境）

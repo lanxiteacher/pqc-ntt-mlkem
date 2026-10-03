@@ -1,6 +1,6 @@
 # 🅱️ B —— 验证 + 上位机（通俗版）
 
-> 本文只讲你这一块。**总排期见 `logs/FPGA竞赛_进度与排期_通俗版.md`**——
+> 本文只讲你这一块。**总排期见 `logs/schedule_plain.md`**——
 > 两边不一致时以那份为准。看不懂的词先查那份的第二节「术语词典」。
 > 交接点编号 H1–H10，三份文档共用同一套。
 >
@@ -14,7 +14,7 @@
 > ④ ⚠️ **A 的 Task 6 实测带出一处 H3 缺口，要你定，且要赶在你写解包器之前** ——
 > **FNTT 的回传顺序随折叠度变**（pe1 = 交织，pe4/pe16 = 自然序），而折叠度是编译进板子的、
 > 命令里没有 → 第 4 条「按自己发出的命令判断」在 `#NTT` 上不成立。见第四节 H3。
-> **总排期仍以 `logs/FPGA竞赛_进度与排期_通俗版.md` 为准。**
+> **总排期仍以 `logs/schedule_plain.md` 为准。**
 
 ---
 
@@ -73,7 +73,7 @@
 | `refsim/ntt_layers.c` | NTT 层序表 + 对拍程序 | 数学上搞不清时看它 |
 | `research/mlkem_kat/` | 官方考题环境（1000 条） | 标准答案的来源 |
 | `research/kyber_ref/` | C 语言写的标准版本 | 对拍的「标准答案」 |
-| `research/PQC-NTT_ML-KEM_技术资料汇编.md` | 22 篇论文 + 标准 | 第一部分先读 |
+| `research/pqc-ntt_ml-kem_compendium.md` | 22 篇论文 + 标准 | 第一部分先读 |
 
 ### 环境三件事，每次开工先做
 
@@ -120,7 +120,7 @@ export PATH="/c/iverilog/bin:$PATH"
 
 ## 四、逐周计划
 
-> 这是总表里 **B 那一列**的展开。总表见 `logs/FPGA竞赛_进度与排期_通俗版.md` 第三节。
+> 这是总表里 **B 那一列**的展开。总表见 `logs/schedule_plain.md` 第三节。
 
 | 周次 | 日期 | 你要做完什么（括号里是「看到什么算完成」） |
 |---|---|---|
@@ -283,6 +283,6 @@ export PATH="/c/iverilog/bin:$PATH"
 
 ---
 
-> 相关文档：`logs/FPGA竞赛_进度与排期_通俗版.md`（总排期 + 术语词典）｜
-> `logs/FPGA竞赛_项目记录.md`（当前状态与决策）｜
+> 相关文档：`logs/schedule_plain.md`（总排期 + 术语词典）｜
+> `logs/project_state.md`（当前状态与决策）｜
 > `team/FPGA竞赛_B_Claude环境对齐指南.md`（换台机器怎么搭环境）

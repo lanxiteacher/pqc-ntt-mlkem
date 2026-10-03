@@ -4,7 +4,7 @@
 `scripts/` 3 个零依赖校验脚本、`templates/` 3 个骨架
 ｜ 对应评分项：**大模型协作与技能包（15 分）**
 
-> 位置与内容要求见 `../FPGA竞赛_选题指导_PQC-NTT_ML-KEM.md` §8.2。
+> 位置与内容要求见 `../competition_guide_notes.md` §8.2。
 > AI 协作**记录**（逐日日志）不在这里，在 `../report/`。
 
 ---
@@ -69,8 +69,8 @@ skill/
 原料汇总自五处（都是本项目一手记录，不是通用建议）：
 `../CLAUDE.md` 的「约定」6 条、`../refsim/README.md` §七/§八、
 `../team/FPGA竞赛_B_Claude环境对齐指南.md` §四、
-`../FPGA竞赛_选题指导_PQC-NTT_ML-KEM.md` §7、
-`../logs/FPGA竞赛_项目记录_变更.md`。
+`../competition_guide_notes.md` §7、
+`../logs/project_state_changelog.md`。
 
 ### 3. `scripts/` —— 校验脚本 ✅（2026-09-29）
 
@@ -117,4 +117,4 @@ skill/
 
 - AI 协作**日志**：`../report/`
 - 分工与逐周计划：`../team/FPGA竞赛_C_引导与计划.md`
-- 项目记录：`../logs/FPGA竞赛_项目记录.md`
+- 项目记录：`../logs/project_state.md`
