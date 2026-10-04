@@ -195,7 +195,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   <div>
     <h1>FPGA 创新设计竞赛 · 项目进度</h1>
     <p class="sub">后量子密码 ML-KEM 的 NTT / INTT / 点乘 FPGA 加速核 ｜ 3.3 自主选题（初级组）｜ 纯 PL 实现</p>
-    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-04 16:54 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 5 处未提交</p>
+    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-04 17:06 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 6 处未提交</p>
   </div>
   <button class="btn" id="theme" type="button">切换明暗</button>
 </header>
@@ -204,10 +204,10 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   <div class="hero-num"><span class="n">34</span><span class="u">天</span></div>
   <div class="hero-side">
     <div class="hero-l">距 <strong>2026-11-07</strong> 作品提交</div>
-    <div class="meter" title="关键路径里程碑已完成 4 / 共 11 个（计划口径，来自 status.json）">
-      <div class="meter-fill" style="width:36.4%"></div>
+    <div class="meter" title="关键路径里程碑已完成 8 / 共 14 个（计划口径，来自 status.json）">
+      <div class="meter-fill" style="width:57.1%"></div>
     </div>
-    <div class="meter-cap">关键路径里程碑 4/11 已完成 · 决赛（11 月底）（2026-11-30）</div>
+    <div class="meter-cap">关键路径里程碑 8/14 已完成 · 决赛（11 月底）（2026-11-30）</div>
   </div>
   <div class="fresh"><span class="dot" style="background:var(--good)"></span>✓ 入口记录停在 10-04 · 已 0 天没更新</div>
 </section>
@@ -230,7 +230,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="grow ghand"><div class="glab">交接点</div><div class="gtrack"><div class="ghchip done" style="left:9.804%;width:13.725%" title="H1 A→B 端口说明 · H3 串口协议冻结 v1.0 · H7 C→A、B 演示页数据格式">H1 H3 H7</div><div class="ghchip" style="left:37.255%;width:13.725%" title="H4 A→C 综合资源数字 · H5 B→C 第一批验证数据 · H10 C 独立复现">H4 H5 H10</div><div class="ghchip key" style="left:50.980%;width:13.725%" title="H6 上板联调 —— B 到 A 的工位，两个人必须在同一台机器前 · H5 B→C 第二批验证数据">H6 · H5</div><div class="ghchip" style="left:64.706%;width:13.725%" title="H8 A、B → C 报告技术初稿">H8</div><div class="ghchip" style="left:78.431%;width:13.725%" title="H10 B 换一台电脑、从零 clone、按 README 走一遍">H10</div></div></div>
     <div class="gsec">
       <div class="glab"><span class="swatch" style="--c:var(--s1)"></span>A · 硬件与上板</div>
-      <div class="gact">最后提交 10-04 · 近 7 天 43 次 · 累计 62 次</div>
+      <div class="gact">最后提交 10-04 · 近 7 天 45 次 · 累计 64 次</div>
     </div><div class="grow">
         <div class="glab"><span class="glab-t" title="装 Vivado、跑通验证台（满屏全绿）、读懂 butterfly.v 与 addressgenerator.v">装 Vivado · 验证台跑通</span></div>
         <div class="gtrack"><div class="gbar st-done"
@@ -365,22 +365,22 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 <div class="nows"><article class="now" style="--c: var(--s1)">
       <div class="now-h"><span class="swatch" aria-hidden="true"></span>A · 硬件与上板</div>
       <div class="now-b">
-        <span class="k">现在</span><span class="v">板级通路三档全通：pe1 / pe4 / pe16 各 5 条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）。途中修掉 proto_fsm 一个写死的 bank 切换常数 —— 它只在 pe1 上恰好对，pe4 上是 2/5、pe16 上连 #NTT 都挂；改成随折叠度派生后三档全过。⚠️ 三档只覆盖 1/4/16：核的数据通路是「每档一份」不是公式，pe2/pe8 有 FATAL 守卫拦</span>
-        <span class="k">下一步</span><span class="v">提交本轮（RTL 修复 + 三档报告 + 三档事务日志）；等 B 回 §5.3.4 勘误与 &lt;RDY&gt; 字段两条</span>
+        <span class="k">现在</span><span class="v">板级通路三档全通：pe1 / pe4 / pe16 各 5 条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）。途中修掉 proto_fsm 一个写死的 bank 切换常数 —— 它只在 pe1 上恰好对，pe4 上是 2/5、pe16 上连 #NTT 都挂；改成随折叠度派生后三档全过，修复版仿真 S1+S2+S3 三档各 520 比对点 / 0 失败。⚠️ 三档只覆盖 1/4/16：核的数据通路是「每档一份」不是公式，pe2/pe8 有 FATAL 守卫拦</span>
+        <span class="k">下一步</span><span class="v">与 B 联调（H6）—— 信已发、人还没来。另欠自己一份 `report/ai-log/`（§3.3.3.1 是「须」，压 15 分那档）</span>
       </div>
       <div class="now-p" title="logs/project_state.md §一「上板」「下一步」；rtl/vivado/folding_comparison.md §9.1">范围 rtl/ ｜ 综合 ｜ 板子（本机） · 来源 logs/project_state.md §一「上板」「下一步」；rtl/vivado/folding_comparison.md §9.1 · 核对 2026-10-04</div>
     </article><article class="now" style="--c: var(--s2)">
       <div class="now-h"><span class="swatch" aria-hidden="true"></span>B · 验证台与上位机</div>
       <div class="now-b">
-        <span class="k">现在</span><span class="v">上位机已成形：host/src/ 13 个 .py 入库，7 个自测 559 项全绿 —— 但全部跑在陪练（假串口）上，真板子一次没接过</span>
-        <span class="k">下一步</span><span class="v">两件欠着的：① `#RDY &lt;ver&gt; &lt;build&gt; &lt;errs&gt;` 的 `&lt;build&gt;` 放什么（仍未闭）② `proto.md` §5.3.4 的输入顺序列表本身有错、且缺 `#PMUL TIME` / `#PMUL FULL` 两行 —— 口径与实测见 logs/letter_2026-10-04_A_to_BC_board.txt</span>
+        <span class="k">现在</span><span class="v">上位机已成形：host/src/ 13 个 .py 入库，7 个自测 559 项全绿 —— 但全部跑在陪练（假串口）上，真板子一次没接过。⚠️ 仓库活动停在 09-29；A 在 10-03 / 10-04 发的四封信（含 H6 上板联调）尚无回音</span>
+        <span class="k">下一步</span><span class="v">四件欠着的：① `#RDY &lt;ver&gt; &lt;build&gt; &lt;errs&gt;` 的 `&lt;build&gt;` 放什么（仍未闭）② `proto.md` §5.3.4 的输入顺序列表本身有错、且缺 `#PMUL TIME` / `#PMUL FULL` 两行 —— 口径与实测见 logs/letter_2026-10-04_A_to_BC_board.txt ③ 仓库根 `README.md` 加「目录对照说明」（§3.3.5.4 的「须」）④ 写自己的 `report/ai-log/`</span>
       </div>
       <div class="now-p" title="logs/project_state.md §一「还差」；team/FPGA竞赛_AB_待办清单.md §二">范围 refsim/ ｜ host/ · 来源 logs/project_state.md §一「还差」；team/FPGA竞赛_AB_待办清单.md §二 · 核对 2026-10-04</div>
     </article><article class="now" style="--c: var(--s3)">
       <div class="now-h"><span class="swatch" aria-hidden="true"></span>C · 报告与演示</div>
       <div class="now-b">
         <span class="k">现在</span><span class="v">不依赖 A、B 的活已做完：报告五章初稿、skill/ 四个子目录、metrics/ 指标表、demo/ 三页、report/figures/ 三张图、assets/ 四张截图</span>
-        <span class="k">下一步</span><span class="v">A 那三句话 10-04 已全部答复（文件名口径 / 根 README 改「兼容考题」/ logs 过期条目）—— 剩下是 C 自己的两件：① `report/design/` 5 个 + `assets/` 4 个中文文件名改英文；② 装 gcc + iverilog + python3（H10 独立复现的前提）</span>
+        <span class="k">下一步</span><span class="v">A 那三句话 10-04 已全部答复（文件名口径 / 根 README 改「兼容考题」/ logs 过期条目）—— 剩下都是 C 自己的：① `report/design/` 5 个 + `assets/` 4 个中文文件名改英文；② 装 gcc + iverilog + python3（H10 独立复现的前提）；③ 报告正文写明 Vivado 是 2020.2（§3.3.3.1 允许用其他版本，但「须在报告中说明」）；④ `skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」（§3.3.5.2）</span>
       </div>
       <div class="now-p" title="team/FPGA竞赛_C_待办清单.md §〇 §一 §二">范围 report/ ｜ demo/ ｜ docs/ ｜ skill/ ｜ metrics/ ｜ assets/ · 来源 team/FPGA竞赛_C_待办清单.md §〇 §一 §二 · 核对 2026-10-04</div>
     </article></div>
@@ -388,7 +388,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 <h2>数字一览<span class="h2n">每块底部都写着来源</span></h2>
 <div class="tiles"><div class="tile" title="自动 · status.json · 核对日期 2026-10-04">
     <div class="tile-l">关键路径里程碑</div>
-    <div class="tile-v">4/11</div>
+    <div class="tile-v">8/14</div>
     <div class="tile-n">已完成 / 全部</div>
     <div class="tile-p">自动 · status.json · 2026-10-04</div>
   </div><div class="tile" title="人写 · refsim/README.md；logs/project_state.md §一 · 核对日期 2026-09-29">
@@ -408,8 +408,8 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="tile-p">人写 · rtl/vivado/folding_comparison.md §九 · 2026-09-29</div>
   </div><div class="tile" title="自动 · git log">
     <div class="tile-l">三人提交</div>
-    <div class="tile-v">102</div>
-    <div class="tile-n">A 62 · B 15 · C 25</div>
+    <div class="tile-v">104</div>
+    <div class="tile-n">A 64 · B 15 · C 25</div>
     <div class="tile-p">自动 · git log</div>
   </div></div>
 <p class="hint">仓库规模（自动 · git ls-files，跳过草稿与数据目录）：NTT 核（参数化版） 4,381 行 · 验证探针 2,734 行 · 综合脚本与报告 1,347 行 · 上位机（B） 3,287 行 · 验证台（B） 4,903 行 · 报告正文（C） 1,104 行 · 演示页（C） 1,600 行 · 技能包（C） 2,768 行 · 指标表（C） 450 行</p>
@@ -456,10 +456,10 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td>回 B 一句：#RDY 的 &lt;build&gt; 放什么（唯一未闭协议条目）</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
       <td class="c-src" title="team/FPGA竞赛_AB_待办清单.md §二·1">team/FPGA竞赛_AB_待办清单.md §二·1</td>
-    </tr><tr data-owner="A" class="st-todo">
+    </tr><tr data-owner="A" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
-      <td>更新 logs/ 入口记录 —— 六处过期（Task 8 已完成；C 侧三处；工具链已核）</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td>更新 logs/ 入口记录 —— 六处过期已全部核完（10-04：`project_state.md` 的 Task 8 段、WHS 串列、指南待办两项；`team/FPGA竞赛_A_引导与计划.md` W2/W5 两行「余 2 个 Task」；`host/proto.md` 与 C 侧三处归 B、C 自己那两份）</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="team/FPGA竞赛_AB_待办清单.md §四；C_待办清单.md §一·3">team/FPGA竞赛_AB_待办清单.md §四；C_待办清单.md §一·3</td>
     </tr><tr data-owner="A" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
@@ -476,11 +476,21 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td>回 C 三句话（文件名口径／根 README「官方」措辞／logs 同步）</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
       <td class="c-src" title="team/FPGA竞赛_C_待办清单.md §一">team/FPGA竞赛_C_待办清单.md §一</td>
+    </tr><tr data-owner="A" class="st-done">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
+      <td>仓库与赛事事务：C 加管理员 ✅、Gitee→钉钉 webhook ✅、《选题指南》子赛道与 Vivado 版本要求 ✅（三件 10-04 全部办结）</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
+      <td class="c-src" title="team/FPGA竞赛_AB_待办清单.md §一·4；logs/letter_2026-10-04_A_to_BC_guideline.txt">team/FPGA竞赛_AB_待办清单.md §一·4；logs/letter_2026-10-04_A_to_BC_guideline.txt</td>
     </tr><tr data-owner="A" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
-      <td>仓库与赛事事务：C 加管理员 ✅、Gitee→钉钉 webhook ✅（两者 10-04 办结）；剩核《选题指南》子赛道与 Vivado 版本要求</td>
+      <td>★ 补写自己的 `report/ai-log/` —— §3.3.3.1 是「须」提交大模型协作记录，压 15 分那档；现有 4 篇全是 C 的，A、B 两篇只能本人写。时间敏感：每过一天能记的当天细节就少一天</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
-      <td class="c-src" title="team/FPGA竞赛_AB_待办清单.md §一·4">team/FPGA竞赛_AB_待办清单.md §一·4</td>
+      <td class="c-src" title="logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条">logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条</td>
+    </tr><tr data-owner="A" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
+      <td>核官方赛程页 http://www.fpgachina.cn/ —— 手头的 11/7 截止从没跟官方页核过（§3.3.6 写「均以大赛官方公布为准」）</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="选题指南.pdf p23 §3.3.6">选题指南.pdf p23 §3.3.6</td>
     </tr><tr data-owner="A" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
       <td>NOTICE 作者姓名占位符 —— 提交作品前必须填（本人已决定暂缓）</td>
@@ -496,6 +506,16 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td>回 A 一句：&lt;build&gt; 放什么 —— 两人之间唯一未闭条目</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
       <td class="c-src" title="team/FPGA竞赛_AB_待办清单.md §二·1">team/FPGA竞赛_AB_待办清单.md §二·1</td>
+    </tr><tr data-owner="B" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
+      <td>★ 仓库根 `README.md` 加一节「目录对照说明」—— §3.3.5.4 推荐结构「非强制」，但「采用其他组织方式的队伍**须**在 README.md 中给出目录对照说明」。现有 README:110–124 那棵树是「目录说明」不是「对照说明」</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条 (d)">logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条 (d)</td>
+    </tr><tr data-owner="B" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
+      <td>★ 补写自己的 `report/ai-log/` —— 与 A 那条同因，压 15 分那档</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条">logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条</td>
     </tr><tr data-owner="B" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
       <td>W2 内跑完 §5.5 三种错误注入并回报</td>
@@ -516,10 +536,20 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td>装 gcc + iverilog + python3 —— H10 独立复现（W3/W4）的唯一前提</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
       <td class="c-src" title="team/FPGA竞赛_C_待办清单.md §二·1">team/FPGA竞赛_C_待办清单.md §二·1</td>
-    </tr><tr data-owner="C" class="st-blocked">
+    </tr><tr data-owner="C" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
+      <td>报告正文写明 Vivado 是 2020.2 —— §3.3.3.1 允许用其他版本，条件是「须在报告中说明并保证脚本可复现」</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 1 条">logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 1 条</td>
+    </tr><tr data-owner="C" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
+      <td>★ 补写自己的 `report/ai-log/`；`skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 2、4 条">logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 2、4 条</td>
+    </tr><tr data-owner="C" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
       <td>等 A 三句话（文件名口径／根 README 措辞／logs 同步）</td>
-      <td class="c-state"><span class="ico">⚠</span>卡住</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="team/FPGA竞赛_C_待办清单.md §一">team/FPGA竞赛_C_待办清单.md §一</td>
     </tr><tr data-owner="C" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
