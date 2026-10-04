@@ -1,0 +1,236 @@
+============================================================
+A → B、C ｜ 板级跑到 bitstream；文件名口径回原文核过
+2026-10-04
+============================================================
+
+【摘要 · 先看这个】
+
+1. 板级 综合→实现→bitstream **跑通**。烧录脚本也进仓库了（原来只在
+   C:/fpga_work/ 里，不在 git，换台机器复现不了）。
+
+2. **烧录还没做。** 2026-10-04 查本机 USB：6 个 COM 口全是蓝牙虚拟口
+   （BTHENUM），没有 FTDI 下载器、没有 CH340。板子没接/没上电。这步卡在硬件。
+
+3. **文件名口径回原文核过了**，结论和现在的理解有出入，见第二节。
+   要改的只有中文名，共 **17 个**，大写名一个都不用动。
+
+4. 因为第 3 条，`CLAUDE.md` 第 84 行那段我加了说明 —— 共享文件，按规矩在此报备。
+
+
+============================================================
+一、板级：现在的状态
+============================================================
+
+综合 → 实现 → bitstream：
+
+    器件      xc7z020clg400-2（板上那颗 Zynq-7020）
+    顶层      ntt_board_top（PE_NUMBER=1）
+    WNS       +6.538 ns   @ 20 ns 约束
+    WHS       +8.338 ns
+    时序      全收敛，0 条告警
+    资源      LUT 5025 / 53200 = 9.45%
+              FF  3484 / 106400 = 3.27%
+              BRAM 2.5 tile = 1.79%
+              DSP  1 / 220 = 0.45%
+    关键路径  13.462 ns → 约 74 MHz
+    引脚      U18 sys_clk / N16 sys_rst_n / T19 uart_rxd / J15 uart_txd
+              四条全部 FIXED 在 XDC 指定位，LVCMOS33
+
+报告落在 `rtl/vivado/reports/`（已进 git，可直接看）。
+bitstream 在 `rtl/vivado/_runs/ntt_board.bit`（4,045,673 B）——
+⚠️ `_runs/` 被 .gitignore 忽略，**换台机器要自己综合一遍**。
+
+跑法：
+
+    sh rtl/vivado/run_board_synth.sh          # 综合 → bitstream
+    sh rtl/vivado/run_board_prog.sh scan      # 只扫 JTAG 链，不烧东西
+    sh rtl/vivado/run_board_prog.sh           # 烧进 PL
+
+⚠️ 上板前提三条（缺一条都表现为「看不到设备」，已写进 board_prog.tcl 文件头）：
+    · 下载器插**底板右侧 14-Pin JTAG 座** —— USB_UART / USB_SLAVE 都不能下载
+    · 底板 P5 跳 **PL 档**（3–5、4–6 短接）
+    · 启动拨码 **JTAG 档**（两位都 ON）
+⚠️ 位流**掉电即失**，断电后要重烧。
+
+顺带，这一版综合一开始跑不过的原因值得记一下（和路径无关，是工具抖动）：
+Vivado 2020.2 的综合 helper 子进程**间歇性**报「读不到某个文件」，
+读的是它自己安装目录里**确实存在**的文件。这是**第四种**不同的文件了，
+前三种见 C:/fpga_work/sweep_utop.log。对策就是重试 —— 脚本里默认 5 次，
+每轮清一次 `.Xil/`（它会无限累积，本机当时堆了 ~15 个历次运行的目录）。
+
+
+============================================================
+二、文件名口径：回《选题指南》原文核过（PDF 第 17 / 24 页）
+============================================================
+
+现在 `CLAUDE.md` 引的原话是准的，一字不差：
+
+    「仓库内所有目录名与文件名须使用纯英文（小写字母、数字、下划线或连字符），
+      不得出现中文、空格或特殊字符，以保证跨平台复现与脚本自动化。
+      中文只出现在文件的正文内容中。」
+
+**但括号里那句「小写字母」不能照字面推。** 理由是《指南》自己给的例子：
+§3.3.5.4 紧接着列推荐目录结构，**第一行就是 `README.md`** —— 大写。
+同页更早的 §3.2.5 提交内容也是同一句话。
+
+所以这一条真正管的是**后半句**：「不得出现中文、空格或特殊字符」。
+**要改的是中文名，不是大写名。**
+
+按这个判据扫全仓库（`git ls-files`，逐段查非 ASCII、空格、以及
+`[A-Za-z0-9_.-]` 之外的字符）：
+
+    违例            17 个   全部是中文名
+    含大写          282 个  **不用动**
+    含空格          0 个
+    含特殊字符      0 个
+
+那 282 个大写名里有 233 个是上游 Verilog 模块名（`BRAM.v` `BROM.v` `FA.v`
+`KyberHPMNTT_top.v` …）。改这些会连带 Verilog 的 include 指令、模块例化、
+`$readmemh` 的路径一起断，而且原件在 `research/`（只读，谁都不改）——
+改了也对不上。`README.md` / `CLAUDE.md` / `LICENSE` / `NOTICE` 同理，不用动。
+
+
+------------------------------------------------------------
+那 17 个中文名在哪、谁主责
+------------------------------------------------------------
+
+`team/` 8 个（**共享目录**，见 CLAUDE.md 多人协作第 3 条）：
+
+    team/FPGA竞赛_三人分工.md
+    team/FPGA竞赛_A_引导与计划.md
+    team/FPGA竞赛_B_引导与计划.md
+    team/FPGA竞赛_C_引导与计划.md
+    team/FPGA竞赛_B_Claude环境对齐指南.md
+    team/FPGA竞赛_C_Claude环境对齐指南.md
+    team/FPGA竞赛_AB_待办清单.md
+    team/FPGA竞赛_C_待办清单.md
+
+`report/design/` 5 个（C）：
+
+    report/design/01_选题背景与相关工作.md
+    report/design/02_设计与创新点.md
+    report/design/03_性能与资源.md
+    report/design/04_功能正确性.md
+    report/design/05_可复现性.md
+
+`assets/` 4 个（C）：
+
+    assets/2026-10-01_C_演示页对拍4096系数全中.png
+    assets/2026-10-01_C_演示页对拍阴性对照抓出1个系数不符.png
+    assets/2026-10-01_C_演示页正变换第3层蝶形高亮.png
+    assets/2026-10-01_C_演示页逆变换第4层蝶形高亮.png
+
+`rtl/` `refsim/` `host/` `logs/` `docs/` `demo/` `skill/` `status/` —— **零违例**。
+
+
+------------------------------------------------------------
+⚠️ 这 17 个名字被引用得很广，**改名不是「改文件名」那么简单**
+------------------------------------------------------------
+
+扫了一遍引用（在其它已入库文件里搜这 17 个名字），**约 70 处**，
+而且**横跨三个人的目录**：
+
+    CLAUDE.md                       ← 引 team/ 里 4 个
+    status/gen_status.mjs           ← 引 team/ 里 4 个（A 的目录）
+    status/status.json
+    status/index.html
+    logs/project_state.md           ← 引 team/ 里 3 个（共享）
+    logs/schedule_plain.md          ← 引 team/ 里 3 个
+    letter_2026-10-03_A_to_BC.txt
+    host/proto.md                   ← 引 team/ 里 2 个（B）
+    host/README.md
+    report/ 内互相引用（README、figures/README、design 之间）
+    assets/README.md
+    docs/related-work.md
+    skill/ 与 demo/ 各一处
+
+举一个具体的：`team/FPGA竞赛_B_引导与计划.md` 被 **9 个文件**引用，
+其中 `CLAUDE.md`、`status/gen_status.mjs`、`status/status.json`、`status/index.html`
+是 A 这边的；`host/proto.md`、`host/README.md`、`logs/letter_2026-09-29_B_to_A.txt`
+是 B 那边的；`logs/` 两份是共享的。
+
+**所以建议：这 17 个改名由一个人在一次提交里做完，不要三个人各改各的。**
+三个人同时改，中间态的仓库是「文件名已改、引用还指旧名」——
+`status/gen_status.mjs` 会读不到文件，README 里的链接会 404，
+而且下一轮 `git pull` 很容易撞冲突（CLAUDE.md 多人协作第 5 条：不要硬合）。
+
+A 这边做过一遍同样的事（那次是 A 侧的 18 个），工具链现成，
+**可以在一次提交里连 `CLAUDE.md` / `status/` / `logs/` / 根目录信件的引用一起改完**。
+需要 C 点头的是 `report/design/` 那 5 个和 `assets/` 那 4 个（C 的主责目录），
+以及 `team/` 那 8 个怎么办（共享目录）。
+
+名字怎么取，附一个建议（可直接用，也可否）：
+
+    team/FPGA竞赛_三人分工.md              → team/roles_and_duties.md
+    team/FPGA竞赛_A_引导与计划.md          → team/guide_A.md
+    team/FPGA竞赛_B_引导与计划.md          → team/guide_B.md
+    team/FPGA竞赛_C_引导与计划.md          → team/guide_C.md
+    team/FPGA竞赛_B_Claude环境对齐指南.md  → team/env_align_B.md
+    team/FPGA竞赛_C_Claude环境对齐指南.md  → team/env_align_C.md
+    team/FPGA竞赛_AB_待办清单.md           → team/todo_AB.md
+    team/FPGA竞赛_C_待办清单.md            → team/todo_C.md
+    report/design/01_选题背景与相关工作.md → report/design/01_background_and_related_work.md
+    report/design/02_设计与创新点.md       → report/design/02_design_and_innovation.md
+    report/design/03_性能与资源.md         → report/design/03_performance_and_resources.md
+    report/design/04_功能正确性.md         → report/design/04_functional_correctness.md
+    report/design/05_可复现性.md           → report/design/05_reproducibility.md
+    assets/2026-10-01_C_演示页对拍4096系数全中.png
+        → assets/2026-10-01_C_demo_match_4096_all_pass.png
+    assets/2026-10-01_C_演示页对拍阴性对照抓出1个系数不符.png
+        → assets/2026-10-01_C_demo_negative_control_1_mismatch.png
+    assets/2026-10-01_C_演示页正变换第3层蝶形高亮.png
+        → assets/2026-10-01_C_demo_fntt_layer3_highlight.png
+    assets/2026-10-01_C_演示页逆变换第4层蝶形高亮.png
+        → assets/2026-10-01_C_demo_intt_layer4_highlight.png
+
+（assets 那 4 个沿用仓库既有的 `YYYY-MM-DD_<谁>_<一句话>` 约定，只把中文换成英文。）
+
+
+============================================================
+三、B：有个协议口径要你确认
+============================================================
+
+`host/src/host.py` 的模块 docstring 里，你自己标了三处 proto.md 没写清 / 有歧义
+的地方（`T_DONE` 起算点、「重发 3 次」是重发还是总数、`#ABORT` 没应答怎么办），
+写着「已报给 B，等 B 与 A 确认」。
+
+A 侧的实现在 `rtl/board/proto_fsm.v`。这三条**都属于电脑端的判定**：
+重发是上位机的事；板子只管「超时后回到等命令行」（关键规则一）＋ 谁发 `#ABORT`
+就应答。`T_DONE` 的起算点也在上位机，板子侧不读这个时间。
+
+所以这三条**不影响板子侧**，A 这边没有要改的。你按自己的解读定即可，
+定完在 proto.md 里落一句「已定」，免得下次又当歧义重开。
+
+
+============================================================
+四、C：两件与你有关的
+============================================================
+
+1. 上面第二节那 17 个改名里，`report/design/` 5 个 + `assets/` 4 个是你的主责目录。
+   等你和 B 回一句「这么改行 / 换个名字」，A 就一次提交做完（含所有引用）。
+   `report/ai-log/` 4 份、`report/README.md`、`report/figures/README.md`、
+   `docs/related-work.md`、`assets/README.md` 里都引了这些名字，会一并改掉。
+
+2. `report/design/03_性能与资源.md` 现在可以填真数字了 —— 第一节那张表
+   （WNS / WHS / LUT / FF / BRAM / DSP / 关键路径 / 频率）是本次综合实测值，
+   出处 `rtl/vivado/reports/board_util.rpt` 与 `board_timing.rpt`，已进 git。
+
+
+============================================================
+附：核验用命令
+============================================================
+
+    # 文件名违例（中文 / 空格 / 特殊字符）—— 期望 17 个，全部是中文名
+    git -c core.quotepath=false ls-files
+
+    # 含大写的文件数 —— 期望 282，其中 233 是上游 Verilog 模块名
+    git ls-files | grep -c '[A-Z]'
+
+    # 《选题指南》原文
+    #   PDF 第 17 页（§3.2.5 提交内容）
+    #   PDF 第 24 页（§3.3.5.4 推荐目录结构 —— 紧接那段的目录树第一行是 README.md）
+
+    # 板级综合报告
+    ls rtl/vivado/reports/
+
+—— A，2026-10-04
