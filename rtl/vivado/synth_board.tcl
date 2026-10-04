@@ -147,8 +147,12 @@ if {$impl_ok} {
         # ntt_board.bit），而**拿错档位上板**的症状是「256 个值全错」——
         # 看着像 RTL 挂了。有了这个戳，`run_board_prog.sh` 烧录前能直接报出来。
         # 写完 bitstream 才写它，所以「戳存在」蕴含「bitstream 是完整的」。
+        # ⚠️ `-translation lf`：Tcl 在 Windows 上默认把 `\n` 翻成 `\r\n`，
+        #    戳里就会多一个 CR，`cat` 出来看着像「pe4\r」。仓库口径统一 LF
+        #    （CLAUDE.md 约定 1），别在这里开一个例外。
         if {[catch {
             set fh [open [file join $outdir ntt_board.pe] w]
+            fconfigure $fh -translation lf
             puts $fh $pe
             close $fh
         } err]} {
