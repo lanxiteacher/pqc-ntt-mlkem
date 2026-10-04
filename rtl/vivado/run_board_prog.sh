@@ -88,17 +88,20 @@ set -e
 
 echo ""
 echo "─── 结果 ───"
-grep -E "^RESULT prog|^    (target|device):|^  !!|^      [①②③④]" "$RUNDIR/board_prog.log" || true
+# ⚠️ 三个 grep 都要 `-a`：Vivado 的日志里有控制字节，grep 会判定成
+#    「二进制文件」，于是**不打印匹配行**、只回一句 `Binary file ... matches`。
+#    那样下面两条判据看着像没命中，实际是没打印。（2026-10-04 scan 时踩到。）
+grep -a -E "^RESULT prog|^    (target|device):|^  !!|^      [①②③④]" "$RUNDIR/board_prog.log" || true
 
 # 27-3164 / "End of startup status: HIGH" 是 Zynq PL 配置完成的标志
-if grep -q "End of startup status: HIGH" "$RUNDIR/board_prog.log"; then
+if grep -a -q "End of startup status: HIGH" "$RUNDIR/board_prog.log"; then
     echo "   ✅ PL 配置完成（End of startup status: HIGH）"
 fi
 echo ""
 echo "  日志  $RUNDIR/board_prog.log"
 
 if [ "$MODE" = "program" ]; then
-    if grep -q "^RESULT prog PROGRAMMED" "$RUNDIR/board_prog.log"; then
+    if grep -a -q "^RESULT prog PROGRAMMED" "$RUNDIR/board_prog.log"; then
         echo ""
         echo "  下一步：真串口跑一条事务 —— 串口号先查，别写死："
         echo "    powershell -NoProfile -Command \"[System.IO.Ports.SerialPort]::GetPortNames()\""
