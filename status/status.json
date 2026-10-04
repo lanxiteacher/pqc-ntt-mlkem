@@ -3,10 +3,10 @@
   "updated": "2026-10-04",
 
   "countdown": {
-    "submission": "2026-11-07",
-    "submission_label": "作品提交",
-    "finals": "2026-11-30",
-    "finals_label": "决赛（11 月底）"
+    "submission": "2026-11-04",
+    "submission_label": "作品提交（官方 18:00 截止）",
+    "finals": "2026-11-20",
+    "finals_label": "决赛（11/20–11/22，南京江北新区）"
   },
 
   "tracks": [
@@ -89,11 +89,12 @@
     { "id": "H5", "when": "2026-10-20", "label": "W3/W4：B 交 C 两批验证数据；H10 加 C 一道独立复现", "owner": "B+C", "state": "todo", "source": "team/FPGA竞赛_C_待办清单.md §三" },
     { "id": "H8", "when": "2026-10-27", "label": "W5：A、B 把报告技术初稿交给 C（要点 + 数字即可，不必成文）", "owner": "A+B", "state": "todo", "source": "team/FPGA竞赛_C_待办清单.md §三" },
     { "id": "H10", "when": "2026-11-03", "label": "W6：换一台电脑、从零 clone、按 README 走一遍（B 那一遍不省）", "owner": "B", "state": "todo", "source": "team/FPGA竞赛_AB_待办清单.md §二·3" },
-    { "id": "—",  "when": "2026-11-07", "label": "作品提交", "owner": "全员", "state": "todo", "source": "logs/project_state.md §一「关键日期」" }
+    { "id": "—",  "when": "2026-11-04", "label": "作品提交（官方 18:00 截止）", "owner": "全员", "state": "todo", "source": "大赛通知原文（2026-10-04 核）：作品提交 2026-11-04 18:00；决赛 2026-11-20～11-22 南京江北新区" }
   ],
 
   "gantt": {
     "_how": "整页的主图。横轴＝团队计划里的真实周次，日期抄自 team/FPGA竞赛_{A,B,C}_引导与计划.md 第四节「逐周计划」那三张表 —— 没有编日期。每根条＝一条线一周要做的事（label 是压缩到 14 字以内的名字，note 是原话）。critical＝关键路径：A 这根不交，B 那根就动不了。上面 blockers 里的 bar 字段指向被卡住的那根条，图上会挂 ⚠。",
+    "note": "官方赛程 2026-10-04 已核（fpgachina.cn 是 JS 应用、REST 接口返 401；改从两所高校转发的通知原文逐字核对）：作品提交 2026-11-04 18:00，决赛 2026-11-20～11-22（南京江北新区）。我们此前的 11/7 是上一届（2025 第八届）的日期，被误当成本届搬了过来。后果：原 W7（11/04–11/07）整周落在截止之后，排在 W7 的「冻结 RTL / 报告定稿 / 视频定稿 / 提交」必须整体前移进 W6（10/28–11/03）。周次重切需三人一起定，这张图暂按原计划渲染，未擅自改动周次。",
     "weeks": [
       { "id": "W0", "start": "2026-09-18", "end": "2026-09-22" },
       { "id": "W1", "start": "2026-09-23", "end": "2026-09-29" },
@@ -151,7 +152,8 @@
     { "owner": "A", "text": "回 C 三句话（文件名口径／根 README「官方」措辞／logs 同步）", "state": "todo", "as_of": "2026-10-03", "source": "team/FPGA竞赛_C_待办清单.md §一" },
     { "owner": "A", "text": "仓库与赛事事务：C 加管理员 ✅、Gitee→钉钉 webhook ✅、《选题指南》子赛道与 Vivado 版本要求 ✅（三件 10-04 全部办结）", "state": "done", "as_of": "2026-10-04", "source": "team/FPGA竞赛_AB_待办清单.md §一·4；logs/letter_2026-10-04_A_to_BC_guideline.txt" },
     { "owner": "A", "text": "★ 补写自己的 `report/ai-log/` —— §3.3.3.1 是「须」提交大模型协作记录，压 15 分那档；现有 4 篇全是 C 的，A、B 两篇只能本人写。时间敏感：每过一天能记的当天细节就少一天", "state": "todo", "as_of": "2026-10-04", "source": "logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条" },
-    { "owner": "A", "text": "核官方赛程页 http://www.fpgachina.cn/ —— 手头的 11/7 截止从没跟官方页核过（§3.3.6 写「均以大赛官方公布为准」）", "state": "todo", "as_of": "2026-10-04", "source": "选题指南.pdf p23 §3.3.6" },
+    { "owner": "A", "text": "核官方赛程页 —— **已核完**：fpgachina.cn 是 JS 应用、其 REST 接口返 401（时间戳签名），改从两所高校转发的通知原文逐字核对 ⇒ **作品提交 2026-11-04 18:00、决赛 11-20～11-22**。手头的 11/7 是**上一届**的日期，全仓库已订正", "state": "done", "as_of": "2026-10-04", "source": "南航教务处 / 集美大学创业学院转发的官方通知（2026-10-04 核）" },
+    { "owner": "A+B+C", "text": "★ **重切 W6/W7** —— 官方截止 11/04 18:00 比原计划早 3 天，原 W7（11/04–11/07）整周落在截止之后。排在 W7 的「冻结 RTL / 报告定稿 / 视频定稿 / 提交」要整体前移进 W6，W7 只剩截止日当天。三人一起定，改完同步 team/ 三份周计划 + logs/schedule_plain.md + status.json 的 gantt.weeks", "state": "todo", "as_of": "2026-10-04", "source": "大赛通知原文；status/status.json gantt.note" },
     { "owner": "A", "text": "NOTICE 作者姓名占位符 —— 提交作品前必须填（本人已决定暂缓）", "state": "todo", "as_of": "2026-10-04", "source": "team/FPGA竞赛_AB_待办清单.md §一·4" },
     { "owner": "A", "text": "rtl/ 遗留清理：BROM.v 挂在死数组上的 rom_style、已废弃的 zetas_tables.v", "state": "todo", "as_of": "2026-10-03", "source": "logs/project_state.md §二 B 段末" },
 

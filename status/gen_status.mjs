@@ -306,6 +306,7 @@ function render(data) {
       <div class="now-p" title="${esc(t.source)}">范围 ${esc(t.scope)} · 来源 ${esc(t.source)} · 核对 ${esc(t.as_of)}</div>
     </article>`).join('');
 
+  const ganttNote = json.gantt?.note ? `<p class="gnote">⚠ ${esc(json.gantt.note)}</p>` : '';
   const gan = buildGantt(json, activity);
   const ganttHtml = gan ? `
 <p class="glegend">
@@ -354,7 +355,7 @@ function render(data) {
     ['提交活动（最后提交 / 近 7 天 / 累计）+ 分支与领先落后 + 未提交文件', '自动', 'git log --format=%an|%ae|%ad ；git rev-list --count @{u}..HEAD ；git status --porcelain'],
     ['目录规模（文件数 / 源码与文档行数）', '自动', 'git ls-files <目录>（跳过 _scratch / _broken / _failed_attempts / batch/，只数 .v .py .md .mjs .html .sh .tcl 等）'],
     ['文档新鲜度（各文档自称的更新日期与已过天数）', '自动', '读每份文档头 25 行取第一个 YYYY-MM-DD；取不到则退回 git log -1 --format=%ad -- <该文件>（表里标 (git)）'],
-    ['倒计时（距 11-07 提交 / 决赛）', '自动', '本机当前日期 与 status.json 的 countdown 相减'],
+    ['倒计时（距作品提交 / 决赛）', '自动', '本机当前日期 与 status.json 的 countdown 相减'],
     ['主图横轴（周次与日期）', '人写', 'status/status.json 的 gantt.weeks —— 抄自 team/FPGA竞赛_{A,B,C}_引导与计划.md 第四节「逐周计划」三张表，未加工'],
     ['主图每一根条（做什么 / 什么状态 / 是否关键路径）', '人写', 'status/status.json 的 gantt.bars，每根的 note 与 source 抄自上述三张表的对应周行'],
     ['主图上的 ⚠（哪根条被卡住）', '人写', 'status.json 的 blockers[].bar 指到具体哪根条，图与下面的「欠账」是同一份数据'],
@@ -471,6 +472,7 @@ h2 .h2n{color:var(--muted);font-weight:400;margin-left:8px}
    两套编码分开，所以灰度打印也读得出来。 */
 .glegend{font-size:12.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.9}
 .glegend .k{margin-right:16px;white-space:nowrap;display:inline-block}
+.gnote{font-size:12.5px;color:var(--ink-2);background:var(--surface-1);border:1px solid var(--warn);border-left-width:3px;border-radius:10px;padding:10px 13px;margin:0 0 12px;line-height:1.75}
 .gsw{display:inline-block;width:20px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;overflow:hidden}
 .gsw i{display:block;height:100%}
 .gsw-done{background:var(--ink-2)}
@@ -586,6 +588,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 </section>
 
 <h2>进度<span class="h2n">横轴＝团队计划的真实周次（team/ 三份周计划）· 一行＝一条线一周</span></h2>
+${ganttNote}
 ${ganttHtml}
 
 <h2>三条线现在在哪<span class="h2n">现在 / 下一步</span></h2>

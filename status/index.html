@@ -98,6 +98,7 @@ h2 .h2n{color:var(--muted);font-weight:400;margin-left:8px}
    两套编码分开，所以灰度打印也读得出来。 */
 .glegend{font-size:12.5px;color:var(--ink-2);margin:0 0 10px;line-height:1.9}
 .glegend .k{margin-right:16px;white-space:nowrap;display:inline-block}
+.gnote{font-size:12.5px;color:var(--ink-2);background:var(--surface-1);border:1px solid var(--warn);border-left-width:3px;border-radius:10px;padding:10px 13px;margin:0 0 12px;line-height:1.75}
 .gsw{display:inline-block;width:20px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;overflow:hidden}
 .gsw i{display:block;height:100%}
 .gsw-done{background:var(--ink-2)}
@@ -195,24 +196,25 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   <div>
     <h1>FPGA 创新设计竞赛 · 项目进度</h1>
     <p class="sub">后量子密码 ML-KEM 的 NTT / INTT / 点乘 FPGA 加速核 ｜ 3.3 自主选题（初级组）｜ 纯 PL 实现</p>
-    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-04 17:06 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 6 处未提交</p>
+    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-04 17:13 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 11 处未提交</p>
   </div>
   <button class="btn" id="theme" type="button">切换明暗</button>
 </header>
 
 <section class="hero">
-  <div class="hero-num"><span class="n">34</span><span class="u">天</span></div>
+  <div class="hero-num"><span class="n">31</span><span class="u">天</span></div>
   <div class="hero-side">
-    <div class="hero-l">距 <strong>2026-11-07</strong> 作品提交</div>
+    <div class="hero-l">距 <strong>2026-11-04</strong> 作品提交（官方 18:00 截止）</div>
     <div class="meter" title="关键路径里程碑已完成 8 / 共 14 个（计划口径，来自 status.json）">
       <div class="meter-fill" style="width:57.1%"></div>
     </div>
-    <div class="meter-cap">关键路径里程碑 8/14 已完成 · 决赛（11 月底）（2026-11-30）</div>
+    <div class="meter-cap">关键路径里程碑 8/14 已完成 · 决赛（11/20–11/22，南京江北新区）（2026-11-20）</div>
   </div>
   <div class="fresh"><span class="dot" style="background:var(--good)"></span>✓ 入口记录停在 10-04 · 已 0 天没更新</div>
 </section>
 
 <h2>进度<span class="h2n">横轴＝团队计划的真实周次（team/ 三份周计划）· 一行＝一条线一周</span></h2>
+<p class="gnote">⚠ 官方赛程 2026-10-04 已核（fpgachina.cn 是 JS 应用、REST 接口返 401；改从两所高校转发的通知原文逐字核对）：作品提交 2026-11-04 18:00，决赛 2026-11-20～11-22（南京江北新区）。我们此前的 11/7 是上一届（2025 第八届）的日期，被误当成本届搬了过来。后果：原 W7（11/04–11/07）整周落在截止之后，排在 W7 的「冻结 RTL / 报告定稿 / 视频定稿 / 提交」必须整体前移进 W6（10/28–11/03）。周次重切需三人一起定，这张图暂按原计划渲染，未擅自改动周次。</p>
 
 <p class="glegend">
   <span class="k"><span class="gsw gsw-done"></span>已完成</span>
@@ -230,7 +232,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="grow ghand"><div class="glab">交接点</div><div class="gtrack"><div class="ghchip done" style="left:9.804%;width:13.725%" title="H1 A→B 端口说明 · H3 串口协议冻结 v1.0 · H7 C→A、B 演示页数据格式">H1 H3 H7</div><div class="ghchip" style="left:37.255%;width:13.725%" title="H4 A→C 综合资源数字 · H5 B→C 第一批验证数据 · H10 C 独立复现">H4 H5 H10</div><div class="ghchip key" style="left:50.980%;width:13.725%" title="H6 上板联调 —— B 到 A 的工位，两个人必须在同一台机器前 · H5 B→C 第二批验证数据">H6 · H5</div><div class="ghchip" style="left:64.706%;width:13.725%" title="H8 A、B → C 报告技术初稿">H8</div><div class="ghchip" style="left:78.431%;width:13.725%" title="H10 B 换一台电脑、从零 clone、按 README 走一遍">H10</div></div></div>
     <div class="gsec">
       <div class="glab"><span class="swatch" style="--c:var(--s1)"></span>A · 硬件与上板</div>
-      <div class="gact">最后提交 10-04 · 近 7 天 45 次 · 累计 64 次</div>
+      <div class="gact">最后提交 10-04 · 近 7 天 47 次 · 累计 66 次</div>
     </div><div class="grow">
         <div class="glab"><span class="glab-t" title="装 Vivado、跑通验证台（满屏全绿）、读懂 butterfly.v 与 addressgenerator.v">装 Vivado · 验证台跑通</span></div>
         <div class="gtrack"><div class="gbar st-done"
@@ -408,8 +410,8 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="tile-p">人写 · rtl/vivado/folding_comparison.md §九 · 2026-09-29</div>
   </div><div class="tile" title="自动 · git log">
     <div class="tile-l">三人提交</div>
-    <div class="tile-v">104</div>
-    <div class="tile-n">A 64 · B 15 · C 25</div>
+    <div class="tile-v">106</div>
+    <div class="tile-n">A 66 · B 15 · C 25</div>
     <div class="tile-p">自动 · git log</div>
   </div></div>
 <p class="hint">仓库规模（自动 · git ls-files，跳过草稿与数据目录）：NTT 核（参数化版） 4,381 行 · 验证探针 2,734 行 · 综合脚本与报告 1,347 行 · 上位机（B） 3,287 行 · 验证台（B） 4,903 行 · 报告正文（C） 1,104 行 · 演示页（C） 1,600 行 · 技能包（C） 2,768 行 · 指标表（C） 450 行</p>
@@ -486,11 +488,16 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td>★ 补写自己的 `report/ai-log/` —— §3.3.3.1 是「须」提交大模型协作记录，压 15 分那档；现有 4 篇全是 C 的，A、B 两篇只能本人写。时间敏感：每过一天能记的当天细节就少一天</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
       <td class="c-src" title="logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条">logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条</td>
-    </tr><tr data-owner="A" class="st-todo">
+    </tr><tr data-owner="A" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
-      <td>核官方赛程页 http://www.fpgachina.cn/ —— 手头的 11/7 截止从没跟官方页核过（§3.3.6 写「均以大赛官方公布为准」）</td>
+      <td>核官方赛程页 —— **已核完**：fpgachina.cn 是 JS 应用、其 REST 接口返 401（时间戳签名），改从两所高校转发的通知原文逐字核对 ⇒ **作品提交 2026-11-04 18:00、决赛 11-20～11-22**。手头的 11/7 是**上一届**的日期，全仓库已订正</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
+      <td class="c-src" title="南航教务处 / 集美大学创业学院转发的官方通知（2026-10-04 核）">南航教务处 / 集美大学创业学院转发的官方通知（2026-10-04 核）</td>
+    </tr><tr data-owner="A+B+C" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A+B+C</td>
+      <td>★ **重切 W6/W7** —— 官方截止 11/04 18:00 比原计划早 3 天，原 W7（11/04–11/07）整周落在截止之后。排在 W7 的「冻结 RTL / 报告定稿 / 视频定稿 / 提交」要整体前移进 W6，W7 只剩截止日当天。三人一起定，改完同步 team/ 三份周计划 + logs/schedule_plain.md + status.json 的 gantt.weeks</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
-      <td class="c-src" title="选题指南.pdf p23 §3.3.6">选题指南.pdf p23 §3.3.6</td>
+      <td class="c-src" title="大赛通知原文；status/status.json gantt.note">大赛通知原文；status/status.json gantt.note</td>
     </tr><tr data-owner="A" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
       <td>NOTICE 作者姓名占位符 —— 提交作品前必须填（本人已决定暂缓）</td>
@@ -633,7 +640,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 <h2>数据来源<span class="h2n">哪些是自动抓的、哪些是人写的</span></h2>
 <div class="tw"><table>
   <thead><tr><th>数据</th><th>来源</th><th>怎么来的</th></tr></thead>
-  <tbody><tr><td>提交活动（最后提交 / 近 7 天 / 累计）+ 分支与领先落后 + 未提交文件</td><td>自动</td><td class="c-src">git log --format=%an|%ae|%ad ；git rev-list --count @{u}..HEAD ；git status --porcelain</td></tr><tr><td>目录规模（文件数 / 源码与文档行数）</td><td>自动</td><td class="c-src">git ls-files &lt;目录&gt;（跳过 _scratch / _broken / _failed_attempts / batch/，只数 .v .py .md .mjs .html .sh .tcl 等）</td></tr><tr><td>文档新鲜度（各文档自称的更新日期与已过天数）</td><td>自动</td><td class="c-src">读每份文档头 25 行取第一个 YYYY-MM-DD；取不到则退回 git log -1 --format=%ad -- &lt;该文件&gt;（表里标 (git)）</td></tr><tr><td>倒计时（距 11-07 提交 / 决赛）</td><td>自动</td><td class="c-src">本机当前日期 与 status.json 的 countdown 相减</td></tr><tr><td>主图横轴（周次与日期）</td><td>人写</td><td class="c-src">status/status.json 的 gantt.weeks —— 抄自 team/FPGA竞赛_{A,B,C}_引导与计划.md 第四节「逐周计划」三张表，未加工</td></tr><tr><td>主图每一根条（做什么 / 什么状态 / 是否关键路径）</td><td>人写</td><td class="c-src">status/status.json 的 gantt.bars，每根的 note 与 source 抄自上述三张表的对应周行</td></tr><tr><td>主图上的 ⚠（哪根条被卡住）</td><td>人写</td><td class="c-src">status.json 的 blockers[].bar 指到具体哪根条，图与下面的「欠账」是同一份数据</td></tr><tr><td>主图上的竖线（今天）</td><td>自动</td><td class="c-src">本机当前日期；交接带的宽度＝那一周的真实起止</td></tr><tr><td>下一步 / 卡点 / 里程碑 / 人的判断</td><td>人写</td><td class="c-src">status/status.json（每条自带 source 与 as_of）</td></tr><tr><td>验证覆盖 / 自测项数 / 三档引脚</td><td>人写</td><td class="c-src">status/status.json 的 manual_numbers（数字本身在仓库里有实测出处）</td></tr></tbody>
+  <tbody><tr><td>提交活动（最后提交 / 近 7 天 / 累计）+ 分支与领先落后 + 未提交文件</td><td>自动</td><td class="c-src">git log --format=%an|%ae|%ad ；git rev-list --count @{u}..HEAD ；git status --porcelain</td></tr><tr><td>目录规模（文件数 / 源码与文档行数）</td><td>自动</td><td class="c-src">git ls-files &lt;目录&gt;（跳过 _scratch / _broken / _failed_attempts / batch/，只数 .v .py .md .mjs .html .sh .tcl 等）</td></tr><tr><td>文档新鲜度（各文档自称的更新日期与已过天数）</td><td>自动</td><td class="c-src">读每份文档头 25 行取第一个 YYYY-MM-DD；取不到则退回 git log -1 --format=%ad -- &lt;该文件&gt;（表里标 (git)）</td></tr><tr><td>倒计时（距作品提交 / 决赛）</td><td>自动</td><td class="c-src">本机当前日期 与 status.json 的 countdown 相减</td></tr><tr><td>主图横轴（周次与日期）</td><td>人写</td><td class="c-src">status/status.json 的 gantt.weeks —— 抄自 team/FPGA竞赛_{A,B,C}_引导与计划.md 第四节「逐周计划」三张表，未加工</td></tr><tr><td>主图每一根条（做什么 / 什么状态 / 是否关键路径）</td><td>人写</td><td class="c-src">status/status.json 的 gantt.bars，每根的 note 与 source 抄自上述三张表的对应周行</td></tr><tr><td>主图上的 ⚠（哪根条被卡住）</td><td>人写</td><td class="c-src">status.json 的 blockers[].bar 指到具体哪根条，图与下面的「欠账」是同一份数据</td></tr><tr><td>主图上的竖线（今天）</td><td>自动</td><td class="c-src">本机当前日期；交接带的宽度＝那一周的真实起止</td></tr><tr><td>下一步 / 卡点 / 里程碑 / 人的判断</td><td>人写</td><td class="c-src">status/status.json（每条自带 source 与 as_of）</td></tr><tr><td>验证覆盖 / 自测项数 / 三档引脚</td><td>人写</td><td class="c-src">status/status.json 的 manual_numbers（数字本身在仓库里有实测出处）</td></tr></tbody>
 </table></div>
 
 <footer>
