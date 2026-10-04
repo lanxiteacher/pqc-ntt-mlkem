@@ -1,0 +1,122 @@
+# ===========================================================================
+# synth_board.tcl —— 完整板级流程：综合 → 实现 → 出 bitstream
+#
+#   用法（由 run_board_synth.sh 调用，一般不直接跑）:
+#     vivado -mode batch -source synth_board.tcl \
+#         -tclargs <器件> <源码目录> <板级目录> <报告目录> <输出目录> [<周期ns>]
+#
+#   与同目录 `synth_one.tcl` 的区别 —— 两者**目的不同，不要混用**：
+#     synth_one.tcl    非工程模式，跑到 route 为止，只为了「量数字」（资源/频率）
+#     synth_board.tcl  要多做两件上板必须的事：
+#                       ① 读引脚约束 .xdc（synth_one 不读约束，只给一条时钟）
+#                       ② write_bitstream（synth_one 刻意不写，见其文件头）
+#
+#   ⚠️ 文件清单里**绝不能**出现 `rtl/pe1/`、`rtl/pe4/`、`rtl/pe16/` ——
+#      那里有与 `rtl/ntt_core/` 同名同类的一整套（上游原件），一起加会撞模块名，
+#      Vivado 报的是「模块重复定义」，看着像 RTL 写错了。理由也写在
+#      `rtl/board/ntt_board_top.v` 的文件头。
+#
+#   ⚠️ 时钟约束在 `rtl/board/ntt_board.xdc` 里（create_clock -period 20 于 sys_clk），
+#      **本脚本不再 create_clock** —— 加第二遍会出现重复时钟定义。
+# ===========================================================================
+
+set part    [lindex $argv 0]
+set srcdir  [lindex $argv 1]   ;# rtl/ntt_core     —— 核，整目录
+set brddir  [lindex $argv 2]   ;# rtl/board        —— 板级 wrapper（含 .xdc）
+set repdir  [lindex $argv 3]   ;# 报告输出目录
+set outdir  [lindex $argv 4]   ;# bitstream 输出目录
+set period  [lindex $argv 5]   ;# 可选：覆盖 XDC 里的周期，默认不覆盖
+
+set TOP ntt_board_top
+
+puts "=== board | top=$TOP | part=$part ==="
+puts "    srcdir=$srcdir"
+puts "    brddir=$brddir"
+
+# ---- 设计文件 --------------------------------------------------------------
+# 核：rtl/ntt_core/ 下所有 .v
+set srcs {}
+foreach f [lsort [glob -nocomplain -directory $srcdir *.v]] { lappend srcs $f }
+if {[llength $srcs] == 0} { error "no .v found in $srcdir" }
+
+# 板级 wrapper：rtl/board/ 下所有 .v（**不含子目录**，tb/ 就是靠这一点排除的）
+foreach f [lsort [glob -nocomplain -directory $brddir *.v]] { lappend srcs $f }
+
+# 两个 UART 模块在 rtl/ 根下，不在上面两个目录里
+set rtldir [file dirname $brddir]
+foreach u {uart_rx.v uart_tx.v} {
+    set p [file join $rtldir $u]
+    if {![file exists $p]} { error "missing $p" }
+    lappend srcs $p
+}
+
+puts "    design files: [llength $srcs]"
+foreach f $srcs { puts "      [file tail $f]" }
+
+read_verilog $srcs
+
+# ---- 综合 ------------------------------------------------------------------
+# PE_NUMBER 显式写 1（本轮只做 pe1）。不写也默认是 1，写出来是为了让日志
+# 里能一眼看到这版 bitstream 是哪一档，避免以后拿错 bitstream 上板。
+synth_design -top $TOP -part $part -generic PE_NUMBER=1
+
+# ---- 约束 ------------------------------------------------------------------
+set xdc [file join $brddir ntt_board.xdc]
+if {![file exists $xdc]} { error "missing $xdc" }
+read_xdc $xdc
+puts "    xdc: $xdc"
+
+# 可选：临时收紧/放松时钟周期（调试时序用，不改 XDC 文件）
+if {$period ne ""} {
+    puts "    NOTE: 覆盖时钟周期为 ${period}ns（只影响本次运行）"
+    create_clock -period $period -name sys_clk [get_ports sys_clk]
+}
+
+# ---- 实现 ------------------------------------------------------------------
+# 每步单独 catch：某一步失败时，前面已经拿到的报告仍然要留下 ——
+# 整个脚本崩掉等于什么都没量到（synth_one.tcl 里同样的理由）。
+set impl_ok 1
+foreach step {opt_design place_design route_design} {
+    if {[catch {$step} err]} {
+        puts "  !! $step failed: $err"
+        set impl_ok 0
+        break
+    }
+}
+
+file mkdir $repdir
+report_utilization      -file "$repdir/board_util.rpt"
+report_timing_summary   -max_paths 10 -file "$repdir/board_timing.rpt"
+
+# 未布线完成时也要出时钟报告 / 引脚报告 —— 上板前要核对引脚有没有落对
+report_io -file "$repdir/board_io.rpt" 2>/dev/null
+
+# 一行摘要，方便 grep
+if {[catch {
+    set tp [get_timing_paths -delay_type max -max_paths 1 -nworst 1]
+    if {[llength $tp]} {
+        puts "RESULT board WNS_NS [get_property SLACK $tp]"
+    } else {
+        puts "RESULT board WNS_NS NO_PATH"
+    }
+} err]} {
+    puts "RESULT board WNS_NS QUERY_FAILED -- $err"
+}
+
+# ---- bitstream -------------------------------------------------------------
+# ⚠️ 只在布线**成功**时才写。没布完就 write_bitstream 会报一堆「未布线」的
+#    错，而且可能留下一个半成品文件；上板时拿到坏 bitstream 比拿不到更费时间。
+if {$impl_ok} {
+    file mkdir $outdir
+    if {[catch {write_bitstream -force "$outdir/ntt_board.bit"} err]} {
+        puts "  !! write_bitstream failed: $err"
+        set impl_ok 0
+    } else {
+        puts "RESULT board BIT [file join $outdir ntt_board.bit]"
+    }
+} else {
+    puts "  NOTE: 布线未完成 —— 跳过 write_bitstream（不出 bitstream）"
+}
+
+puts "RESULT board IMPL_OK $impl_ok"
+puts "RESULT board DONE"
