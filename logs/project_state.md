@@ -259,8 +259,16 @@
       （base case 乘法器 + 向量累加器），不在任何人的计划内。
       **故撤销原拟「让 C 生成更外层黄金向量」**（免得白造一批没人用的向量）。
       报告口径：`refsim/README.md` §八 已写明**验证边界止于一次多项式乘法**，照写即可
-- [ ] **`rtl/` 遗留清理** —— `BROM.v` 那条挂在死数组上的 `rom_style="block"`；
-      `zetas_tables.v` 已废弃却仍被《选题指导》当附件引用
+- [x] ~~**`rtl/` 遗留清理**~~ ✅ **2026-10-04 两条都办结** ——
+      ① **`BROM.v` 的 `rom_style="block"`：早就清了** —— `rtl/ntt_core/BROM.v` 里只剩一句
+      解释性注释，活的 `rom_style` 已不存在（该文件由 `rtl/ntt_core/tools/gen_brom.py` 生成）。
+      原文这条是**过期记录**。
+      ② **`zetas_tables.v` 废弃却仍被《选题指导》引用：真没做，本轮修** ——
+      `competition_guide_notes.md` §3.4 改指 **`rtl/zetas_tables_verified.v`**，废弃那份加横幅，
+      `background.md` 附件表同步。
+      ⚠️ **顺带查实它不只是概念过时** —— `ZETAS` 与 `ZETAS_INV` **各自只有前 64 项是真值、
+      后 64 项是填充**（`-1044`×64 / `169`×64），**256 个值里 128 个是假的**，
+      而外形和一张正常的表一模一样。详见 `project_state_changelog.md` 同日
 
 ### C · 仓库与协作
 

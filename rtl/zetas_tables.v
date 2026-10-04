@@ -1,3 +1,20 @@
+// ⚠️⚠️ 本文件已废弃（SUPERSEDED），别再引用 —— 2026-10-04 逐项核过，两个理由：⚠️⚠️
+//   ① 概念错：底下那张 ZETAS_INV 根本不该存在。ref/ntt.c 的 invntt() 复用**同一张
+//      zetas[]、索引从 127 递减到 1**（`k = 127; ... zeta = zetas[k--];`），
+//      逆向不需要、也没有第二张表。原头注释说的「层序未能复现」是个**伪问题**
+//      —— 先假设了表存在，再去啃它。教训见 CLAUDE.md 约定 5。
+//   ② 数值错：ZETAS 与 ZETAS_INV **各自只有前 64 项是真值，后 64 项是填充** ——
+//      ZETAS[64..127] 全是 -1044（= zetas[0]），ZETAS_INV[64..127] 全是 169（= 它自己的第 0 项）。
+//      即 256 个值里 128 个是假的，外形却和一张正常的表一模一样。
+//      ★ 所以下面第 2 行那句 "zetas: VERIFIED - byte-exact match" 只对**前 64 项**成立，
+//        对整表**不成立**。
+//   ✅ 正确且已逐项核验的表：**rtl/zetas_tables_verified.v**
+//      （ZETAS 128 项 vs ref/ntt.c 逐项全同、0 处不一致、128 个值互不相同；
+//        并可用公式 zetas[i] = centered(R·17^bitrev7(i) mod q) 独立重算。无 ZETAS_INV —— 因为不需要。）
+//   本文件**保留不删** —— 它是反面教材，也是约定 5 那条教训的物证。
+//
+// ── 以下为原文，一字未改 ────────────────────────────────────────────────
+//
 // Kyber / ML-KEM NTT twiddle tables  (q=3329, n=256, zeta=17, R=2^16)
 // zetas: VERIFIED - byte-exact match against pq-crystals/kyber ref/ntt.c
 // zetas_inv: DERIVED as modular inverse of zetas (z*zinv = 1 mod q) - VERIFIED consistent,

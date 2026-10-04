@@ -99,8 +99,11 @@ A 的参数化版本 **Task 1~8 已全部走完**（三条判据全过）；**�
 
 ### 5 `rtl/` 遗留清理
 
-- ⬜ `BROM.v` 那条挂在死数组上的 `rom_style="block"`
-- ⬜ `zetas_tables.v` 已废弃，却仍被《选题指导》当附件引用
+- ✅ `BROM.v` 那条挂在死数组上的 `rom_style="block"` —— **已清**（`rtl/ntt_core/BROM.v` 里只剩一句解释性注释；该文件由 `rtl/ntt_core/tools/gen_brom.py` 生成，要改就改脚本）
+- ✅ `zetas_tables.v` 已废弃，却仍被《选题指导》当附件引用 —— **2026-10-04 修**：
+  `competition_guide_notes.md` §3.4 已改指 **`rtl/zetas_tables_verified.v`**，废弃那份加了横幅。
+  ⚠️ 顺带查实它**不只是概念过时**：`ZETAS` 与 `ZETAS_INV` **各自只有前 64 项是真值，后 64 项是填充**
+  （256 个值里 128 个是假的）。细节见 `logs/project_state_changelog.md` 同日
 
 ---
 

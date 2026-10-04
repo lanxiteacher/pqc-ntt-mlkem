@@ -236,7 +236,7 @@ PYNQ」+ p24 §3.3.5.2「**通用 PYNQ Skill 单独加分**」。我们纯 PL，
 | `research/kyber_ref/` | C 参考实现（地面真值） |
 | `research/mlkem_kat/` | FIPS 203 官方考题，**1000 条全过**（⚠️ 出处是社区仓库 `post-quantum-cryptography/KAT`，**非 NIST 官方**，措辞注意） |
 | `research/pqc-ntt_ml-kem_compendium.md` | 22 篇论文 + 标准 |
-| `PQ-NTT 选题指导` | `competition_guide_notes.md` + 单文件网页 `pqc-ntt-guide.html`（可直接发队友）+ 附件 `rtl/zetas_tables.v` |
+| `PQ-NTT 选题指导` | `competition_guide_notes.md` + 单文件网页 `pqc-ntt-guide.html`（可直接发队友）+ 附件 **`rtl/zetas_tables_verified.v`**<br>⚠️ **2026-10-04 订正**：原写 `rtl/zetas_tables.v` —— 那份**已废弃**，且不只是概念过时（教的 `zetas_inv` 表根本不存在；自身 `ZETAS`/`ZETAS_INV` 还各有后 64 项是填充值）。见 `project_state_changelog.md` 同日 |
 | 归档（历史过程） | `project_state_archive.md`、`feasibility_nonvision_navigator7020.md`、`selection/topic_*.md` |
 
 ### 外部链接
