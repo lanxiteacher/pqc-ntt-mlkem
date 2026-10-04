@@ -139,12 +139,15 @@
   },
 
   "todos": [
-    { "owner": "A", "text": "写 NTT 核的板级 wrapper（关键路径，无等待项）", "state": "doing", "as_of": "2026-10-03", "source": "rtl/H1_port_spec.md §六" },
+    { "owner": "A", "text": "板级 wrapper → 上板：三档（pe1/pe4/pe16）各五条计算事务 256/256，已提交推送", "state": "done", "as_of": "2026-10-04", "source": "logs/project_state.md §二；rtl/vivado/reports/board_pe*_txn.txt" },
+    { "owner": "A", "text": "与 B 的上位机联调（H6）—— A 侧仅剩的关键路径。上板本身不等它（已用自写驱动在真板子上跑通），要的是把驱动换成 host/src/ 并让 B 第一次见真板子", "state": "todo", "as_of": "2026-10-04", "source": "team/FPGA竞赛_AB_待办清单.md §一·1" },
     { "owner": "A", "text": "回 B 一句：#RDY 的 <build> 放什么（唯一未闭协议条目）", "state": "todo", "as_of": "2026-10-03", "source": "team/FPGA竞赛_AB_待办清单.md §二·1" },
     { "owner": "A", "text": "更新 logs/ 入口记录 —— 六处过期（Task 8 已完成；C 侧三处；工具链已核）", "state": "todo", "as_of": "2026-10-03", "source": "team/FPGA竞赛_AB_待办清单.md §四；C_待办清单.md §一·3" },
-    { "owner": "A", "text": "定两块验证边界做不做：完整乘法端到端、PWM2 两 bank 装不同数据", "state": "todo", "as_of": "2026-10-03", "source": "rtl/folding_param_plan.md §Task 6" },
+    { "owner": "A", "text": "定两块验证边界做不做：完整乘法端到端（已补，三档都过）、PWM2 两 bank 装不同数据（判定该补）", "state": "done", "as_of": "2026-10-04", "source": "rtl/folding_param_plan.md §Task 6" },
+    { "owner": "A", "text": "补 PWM2 两 bank 不同数据的黄金向量 —— 根因是 gen_batch_vectors.py:141-142 把同一个 ntt_out 写进 _a 和 _b；会牵动 refsim/batch、rtl/board/tb、rtl/probes 三处，refsim/ 是 B 的主责目录，动前要对齐", "state": "todo", "as_of": "2026-10-04", "source": "refsim/gen_batch_vectors.py:141" },
     { "owner": "A", "text": "回 C 三句话（文件名口径／根 README「官方」措辞／logs 同步）", "state": "todo", "as_of": "2026-10-03", "source": "team/FPGA竞赛_C_待办清单.md §一" },
-    { "owner": "A", "text": "仓库与赛事事务：NOTICE 作者姓名占位符、C 加管理员、Gitee→钉钉 webhook、核《选题指南》子赛道与 Vivado 版本要求", "state": "todo", "as_of": "2026-10-03", "source": "team/FPGA竞赛_AB_待办清单.md §一·4" },
+    { "owner": "A", "text": "仓库与赛事事务：C 加管理员 ✅、Gitee→钉钉 webhook ✅（两者 10-04 办结）；剩核《选题指南》子赛道与 Vivado 版本要求", "state": "todo", "as_of": "2026-10-04", "source": "team/FPGA竞赛_AB_待办清单.md §一·4" },
+    { "owner": "A", "text": "NOTICE 作者姓名占位符 —— 提交作品前必须填（本人已决定暂缓）", "state": "todo", "as_of": "2026-10-04", "source": "team/FPGA竞赛_AB_待办清单.md §一·4" },
     { "owner": "A", "text": "rtl/ 遗留清理：BROM.v 挂在死数组上的 rom_style、已废弃的 zetas_tables.v", "state": "todo", "as_of": "2026-10-03", "source": "logs/project_state.md §二 B 段末" },
 
     { "owner": "B", "text": "回 A 一句：<build> 放什么 —— 两人之间唯一未闭条目", "state": "todo", "as_of": "2026-10-03", "source": "team/FPGA竞赛_AB_待办清单.md §二·1" },
