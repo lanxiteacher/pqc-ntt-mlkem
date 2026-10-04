@@ -85,11 +85,27 @@ foreach step {opt_design place_design route_design} {
 }
 
 file mkdir $repdir
-report_utilization      -file "$repdir/board_util.rpt"
-report_timing_summary   -max_paths 10 -file "$repdir/board_timing.rpt"
-
-# 未布线完成时也要出时钟报告 / 引脚报告 —— 上板前要核对引脚有没有落对
-report_io -file "$repdir/board_io.rpt" 2>/dev/null
+set rep_ok 1
+if {[catch {report_utilization -file "$repdir/board_util.rpt"} err]} {
+    puts "  !! report_utilization failed: $err"
+    set rep_ok 0
+}
+if {[catch {report_timing_summary -max_paths 10 -file "$repdir/board_timing.rpt"} err]} {
+    puts "  !! report_timing_summary failed: $err"
+    set rep_ok 0
+}
+# ⚠️ report_io 需要设计里已经有**已布局的 IO**。opt/place 失败时它会报错；
+#    但这时恰恰是「上板前要核对引脚落位」最有价值的时候，所以**不要**让它
+#    拖垮整条流程 —— 用 catch 兜住，只记下来。
+#    ⚠️ 这里**绝不能**写 `2>/dev/null` —— 那是 shell 的重定向语法，Tcl 不认，
+#       会被当成 report_io 的**位置参数**，报错是
+#       「Too many positional options when parsing '2>/dev/null'」。
+#       （2026-10-04 第一版就是这么写的，把一次已经综合成功的运行毁在最后一步。）
+if {[catch {report_io -file "$repdir/board_io.rpt"} err]} {
+    puts "  !! report_io failed: $err"
+    set rep_ok 0
+}
+puts "RESULT board REPORTS $rep_ok"
 
 # 一行摘要，方便 grep
 if {[catch {
