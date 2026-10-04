@@ -1,6 +1,6 @@
 {
   "_how": "本文件只放「机器判不出来」的东西：下一步、卡点、里程碑、人的判断。每条都要写 as_of（这条是几号核的）与 source（出处）。能自动抓的数字不要写进来 —— 见 gen_status.mjs 的 AUTO 段。",
-  "updated": "2026-10-03",
+  "updated": "2026-10-04",
 
   "countdown": {
     "submission": "2026-11-07",
@@ -16,10 +16,10 @@
       "scope": "rtl/ ｜ 综合 ｜ 板子（本机）",
       "color": 1,
       "git_authors": ["lanxiteacher"],
-      "now": "参数化折叠度版本已收尾（Task 1~8，三条判据全过）；当前无阻塞项，可以开工",
-      "next": "写 NTT 核的板级 wrapper —— 照官方 19_uart_loopback：时钟 U18／复位 N16（低有效，要取反）／uart_rx.v、uart_tx.v 原样复用／顶层换成协议状态机（协议已冻结 v1.0）",
-      "as_of": "2026-10-03",
-      "source": "logs/project_state.md §一「下一步」；rtl/folding_param_plan.md 头部"
+      "now": "板级通路已走通：自研核上板，pe1 五条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）；三档参数化已落地（READ_LAT 按档算、bitstream 带档位戳、上位机按 PE 取表）",
+      "next": "pe4 上板：综合 → 烧录 → 五条事务，随后 pe16；⚠️ 报告文件名要带上折叠度（现在每档写的是同一个 board_*.rpt，互相覆盖）",
+      "as_of": "2026-10-04",
+      "source": "logs/project_state.md §一「上板」「下一步」；rtl/vivado/folding_comparison.md §9.1"
     },
     {
       "id": "B",
@@ -28,8 +28,8 @@
       "color": 2,
       "git_authors": ["B", "zzp_330183@qq.com"],
       "now": "上位机已成形：host/src/ 13 个 .py 入库，7 个自测 559 项全绿 —— 但全部跑在陪练（假串口）上，真板子一次没接过",
-      "next": "回 A 一句：#RDY 的 <build> 放什么（两人之间唯一未闭的协议条目）；W2 内跑完 §5.5 三种错误注入并回报",
-      "as_of": "2026-10-03",
+      "next": "两件欠着的：① `#RDY <ver> <build> <errs>` 的 `<build>` 放什么（仍未闭）② `proto.md` §5.3.4 的输入顺序列表本身有错、且缺 `#PMUL TIME` / `#PMUL FULL` 两行 —— 口径与实测见 logs/letter_2026-10-04_A_to_BC_board.txt",
+      "as_of": "2026-10-04",
       "source": "logs/project_state.md §一「还差」；team/FPGA竞赛_AB_待办清单.md §二"
     },
     {
@@ -39,8 +39,8 @@
       "color": 3,
       "git_authors": ["于宸", "yuchen", "C"],
       "now": "不依赖 A、B 的活已做完：报告五章初稿、skill/ 四个子目录、metrics/ 指标表、demo/ 三页、report/figures/ 三张图、assets/ 四张截图",
-      "next": "等 A 三句话（文件名口径／根 README「官方」措辞／logs 同步）；自己那侧：装 gcc + iverilog + python3 —— H10 独立复现（W3/W4）的前提",
-      "as_of": "2026-10-03",
+      "next": "A 那三句话 10-04 已全部答复（文件名口径 / 根 README 改「兼容考题」/ logs 过期条目）—— 剩下是 C 自己的两件：① `report/design/` 5 个 + `assets/` 4 个中文文件名改英文；② 装 gcc + iverilog + python3（H10 独立复现的前提）",
+      "as_of": "2026-10-04",
       "source": "team/FPGA竞赛_C_待办清单.md §〇 §一 §二"
     }
   ],
@@ -58,11 +58,11 @@
     {
       "from": "A",
       "to": "C",
-      "what": "三句话：① 文件名中文要不要提交前批量改英文 ② 仓库根 README:8/:22「FIPS 203 官方考题」→ 改「兼容考题」 ③ logs/ 入口记录里 C 侧三处过期",
-      "impact": "C 手上不依赖 A、B 的活已做完，这三条不定他就停在原地",
+      "what": "中文文件名还剩 17 个（`report/design/` 5 + `assets/` 4 归 C；`team/` 8 共享）—— A 侧 18 个 10-04 已改完",
+      "impact": "《选题指南》§3.2.5 / §3.3.5.4 是「须」用纯英文名，提交前不清零就是返工",
       "bar": { "track": "C", "week": "W2" },
-      "as_of": "2026-10-03",
-      "source": "team/FPGA竞赛_C_待办清单.md §一"
+      "as_of": "2026-10-04",
+      "source": "logs/project_state.md §一；CLAUDE.md「目录名与文件名一律英文」"
     },
     {
       "from": "C",
