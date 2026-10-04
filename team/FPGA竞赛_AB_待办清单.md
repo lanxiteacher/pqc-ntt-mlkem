@@ -90,7 +90,11 @@ A 的参数化版本 **Task 1~8 已全部走完**（三条判据全过）；**�
   从建议变成硬要求：**收到通知先 `git pull` 再动手**
 - ✅ **把 C 加为仓库管理员**（**2026-10-04 已加**；角色「管理员」，**不是**「开发者」）
 - ⬜ **`NOTICE` 里作者姓名还是占位符** —— 提交作品前必须填
-- ⬜ `research/mlkem_kat/_failed_attempts/` **4.9 MB 死文件** `git rm --cached`（不急）
+- ✅ ~~`research/mlkem_kat/_failed_attempts/` **4.9 MB 死文件** `git rm --cached`~~ ——
+  **2026-10-04 核实：不做，理由不成立**（那些 blob 在 `5fdc597` 里可达，删 tip **省不了 clone 流量**，
+  `size-pack` 本来就只有 3.36 MiB）。**改为补上该目录缺失的 `README.md`**，
+  并把失败根因写进去：61 次请求 vs 60 次/小时配额，**差 1 次**
+
 - ⬜ 决定要不要挂 **GitHub 镜像**（若挂，用**两个独立 remote**，不要配成「一次推两边」）
 - ⬜ `kyber-polmul-hw/README.md` 的「for academic research only」与逐文件 CC0 冲突 ——
   已在 `THIRD_PARTY_LICENSES.md` 并列写明按 CC0 理解，**答辩口径要统一**

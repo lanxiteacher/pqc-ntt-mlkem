@@ -369,8 +369,16 @@
       已在 `THIRD_PARTY_LICENSES.md` 并列写明按 CC0 理解；**答辩口径要统一**
 - [ ] `research/kyber_ref/` 副本缺上游 LICENSE —— 已改为在 `THIRD_PARTY_LICENSES.md` 全文列出
 - [ ] 决定要不要挂 **GitHub 镜像**（若挂，用**两个独立 remote**，**不要**配成"一次推两边"）
-- [ ] `research/mlkem_kat/_failed_attempts/` 有 **4.9 MB 死文件**要 `git rm --cached`
-      —— **不急；A、C 均已 clone，可做**
+- [x] ~~`research/mlkem_kat/_failed_attempts/` 有 **4.9 MB 死文件**要 `git rm --cached`~~
+      ✅ **2026-10-04 核实：不做 —— 这条的理由不成立**。这些 blob 在 `5fdc597`（初始化仓库）
+      提交里**可达**（`git cat-file -e` 验过），从 tip 删掉**不影响 pack 内容** ——
+      **任何一次 clone 照样得把它们传下来**（本地实测 `size-pack` 只有 **3.36 MiB**，
+      而 `du` 出的 543 MB 是 gitignore 掉的 Vivado `_runs/`）。能省的只有本地检出目录那 4.8 MB，
+      代价是动 `.gitignore` + 3 处记录 ⇒ **不抵**。真要省只能改写历史，**不做**
+      （已推给三个人，改历史等于让每人重 clone）。
+      ✅ **本轮实际做的是补上该目录缺失的 `README.md`**（此前一个说明文件都没有）——
+      顺带把那次的失败根因算清楚：目标 blob **12,012,890 B ÷ 200 KB = 61 次**请求，
+      而未认证 GitHub API 配额是 **60 次/小时**，**差 1 次**。教训：动手前先算约束
 
 ### D · 开放问题
 
