@@ -1,0 +1,46 @@
+=== 真板子：五条计算事务 ===
+   串口 COM9（USB-SERIAL CH340 (COM9)）115200-8N1
+
+--- #PING ---
+    发出 #PING*33
+    ✅ 板子在听
+
+--- #NTT 1（正向 NTT）---
+    输入 ntt_batch_in.txt [装载 natural]，期望 ntt_batch_exp.txt，灌 256 行
+    发出 #NTT 1*7c
+    ✅ **256 / 256 全中**   耗时 0.181 秒
+       非退化：原样回显得 0 / 256 分（必须≈0）；输入 256 行里有 239 个不同值
+
+--- #INTT 1（逆向 INTT）---
+    输入 intt_batch_in.txt [装载 interleave]，期望 intt_batch_exp.txt，灌 256 行
+    发出 #INTT 1*35
+    ✅ **256 / 256 全中**   耗时 0.181 秒
+       非退化：原样回显得 0 / 256 分（必须≈0）；输入 256 行里有 243 个不同值
+
+--- #PMUL NTT 1（点乘 · A/B 都在 NTT 域（现有向量 a==b，实为平方））---
+    输入 pwm2_batch_a.txt + pwm2_batch_b.txt [装载 natural+natural]，期望 pwm2_batch_exp.txt，灌 512 行
+    发出 #PMUL NTT 1*58
+    ✅ **256 / 256 全中**   耗时 0.269 秒
+       非退化：原样回显得 0 / 256 分（必须≈0）；输入 512 行里有 243 个不同值
+
+--- #PMUL TIME 1（点乘 · A 时域 B NTT 域）---
+    输入 halfmul_a.txt + halfmul_b.txt [装载 natural+natural]，期望 halfmul_exp.txt，灌 512 行
+    发出 #PMUL TIME 1*03
+    ✅ **256 / 256 全中**   耗时 0.270 秒
+       非退化：原样回显得 0 / 256 分（必须≈0）；输入 512 行里有 464 个不同值
+
+--- #PMUL FULL 1（点乘 · A/B 都时域）---
+    输入 fullmul_a.txt + fullmul_b.txt [装载 natural+natural]，期望 fullmul_exp.txt，灌 512 行
+    发出 #PMUL FULL 1*05
+    ✅ **256 / 256 全中**   耗时 0.270 秒
+       非退化：原样回显得 0 / 256 分（必须≈0）；输入 512 行里有 476 个不同值
+
+========================================================
+汇总
+========================================================
+   #NTT 1           ✅ PASS
+   #INTT 1          ✅ PASS
+   #PMUL NTT 1      ✅ PASS
+   #PMUL TIME 1     ✅ PASS
+   #PMUL FULL 1     ✅ PASS
+   5 / 5 条全中

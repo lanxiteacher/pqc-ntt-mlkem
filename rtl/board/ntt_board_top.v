@@ -173,7 +173,12 @@ module ntt_board_top #(
         .T_LINE_CC (T_LINE_CC),
         .T_CMD_CC  (T_CMD_CC),
         .T_CORE_CC (T_CORE_CC),
-        .READ_LAT  (READ_LAT)
+        .READ_LAT  (READ_LAT),
+        // ⚠️ PE_NUMBER 也要传 —— 协议机用它算 A→B 的 bank 切换间隔，
+        //    间隔长度 = 核的装载相位长度（`256 + PE_NUMBER` 拍）。
+        //    2026-10-04 之前没传，协议机里那个间隔就写死成 pe1 的值，
+        //    pe4/pe16 上第二组数据装歪（现象见 proto_fsm.v 里那段 ⚠️）。
+        .PE_NUMBER (PE_NUMBER)
     ) u_fsm (
         .clk            (sys_clk),
         .rst_n          (rst_n),

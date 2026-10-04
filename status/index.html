@@ -195,7 +195,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   <div>
     <h1>FPGA 创新设计竞赛 · 项目进度</h1>
     <p class="sub">后量子密码 ML-KEM 的 NTT / INTT / 点乘 FPGA 加速核 ｜ 3.3 自主选题（初级组）｜ 纯 PL 实现</p>
-    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-04 15:29 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 8 处未提交</p>
+    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-04 16:43 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 15 处未提交</p>
   </div>
   <button class="btn" id="theme" type="button">切换明暗</button>
 </header>
@@ -230,7 +230,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="grow ghand"><div class="glab">交接点</div><div class="gtrack"><div class="ghchip done" style="left:9.804%;width:13.725%" title="H1 A→B 端口说明 · H3 串口协议冻结 v1.0 · H7 C→A、B 演示页数据格式">H1 H3 H7</div><div class="ghchip" style="left:37.255%;width:13.725%" title="H4 A→C 综合资源数字 · H5 B→C 第一批验证数据 · H10 C 独立复现">H4 H5 H10</div><div class="ghchip key" style="left:50.980%;width:13.725%" title="H6 上板联调 —— B 到 A 的工位，两个人必须在同一台机器前 · H5 B→C 第二批验证数据">H6 · H5</div><div class="ghchip" style="left:64.706%;width:13.725%" title="H8 A、B → C 报告技术初稿">H8</div><div class="ghchip" style="left:78.431%;width:13.725%" title="H10 B 换一台电脑、从零 clone、按 README 走一遍">H10</div></div></div>
     <div class="gsec">
       <div class="glab"><span class="swatch" style="--c:var(--s1)"></span>A · 硬件与上板</div>
-      <div class="gact">最后提交 10-04 · 近 7 天 40 次 · 累计 59 次</div>
+      <div class="gact">最后提交 10-04 · 近 7 天 42 次 · 累计 61 次</div>
     </div><div class="grow">
         <div class="glab"><span class="glab-t" title="装 Vivado、跑通验证台（满屏全绿）、读懂 butterfly.v 与 addressgenerator.v">装 Vivado · 验证台跑通</span></div>
         <div class="gtrack"><div class="gbar st-done"
@@ -365,8 +365,8 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 <div class="nows"><article class="now" style="--c: var(--s1)">
       <div class="now-h"><span class="swatch" aria-hidden="true"></span>A · 硬件与上板</div>
       <div class="now-b">
-        <span class="k">现在</span><span class="v">板级通路已走通：自研核上板，pe1 五条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）；三档参数化已落地（READ_LAT 按档算、bitstream 带档位戳、上位机按 PE 取表）</span>
-        <span class="k">下一步</span><span class="v">pe4 上板：综合 → 烧录 → 五条事务，随后 pe16；⚠️ 报告文件名要带上折叠度（现在每档写的是同一个 board_*.rpt，互相覆盖）</span>
+        <span class="k">现在</span><span class="v">板级通路三档全通：pe1 / pe4 / pe16 各 5 条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）。途中修掉 proto_fsm 一个写死的 bank 切换常数 —— 它只在 pe1 上恰好对，pe4 上是 2/5、pe16 上连 #NTT 都挂；改成随折叠度派生后三档全过。⚠️ 三档只覆盖 1/4/16：核的数据通路是「每档一份」不是公式，pe2/pe8 有 FATAL 守卫拦</span>
+        <span class="k">下一步</span><span class="v">提交本轮（RTL 修复 + 三档报告 + 三档事务日志）；等 B 回 §5.3.4 勘误与 &lt;RDY&gt; 字段两条</span>
       </div>
       <div class="now-p" title="logs/project_state.md §一「上板」「下一步」；rtl/vivado/folding_comparison.md §9.1">范围 rtl/ ｜ 综合 ｜ 板子（本机） · 来源 logs/project_state.md §一「上板」「下一步」；rtl/vivado/folding_comparison.md §9.1 · 核对 2026-10-04</div>
     </article><article class="now" style="--c: var(--s2)">
@@ -408,11 +408,11 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="tile-p">人写 · rtl/vivado/folding_comparison.md §九 · 2026-09-29</div>
   </div><div class="tile" title="自动 · git log">
     <div class="tile-l">三人提交</div>
-    <div class="tile-v">99</div>
-    <div class="tile-n">A 59 · B 15 · C 25</div>
+    <div class="tile-v">101</div>
+    <div class="tile-n">A 61 · B 15 · C 25</div>
     <div class="tile-p">自动 · git log</div>
   </div></div>
-<p class="hint">仓库规模（自动 · git ls-files，跳过草稿与数据目录）：NTT 核（参数化版） 4,381 行 · 验证探针 2,734 行 · 综合脚本与报告 1,333 行 · 上位机（B） 3,287 行 · 验证台（B） 4,903 行 · 报告正文（C） 1,104 行 · 演示页（C） 1,600 行 · 技能包（C） 2,768 行 · 指标表（C） 450 行</p>
+<p class="hint">仓库规模（自动 · git ls-files，跳过草稿与数据目录）：NTT 核（参数化版） 4,381 行 · 验证探针 2,734 行 · 综合脚本与报告 1,347 行 · 上位机（B） 3,287 行 · 验证台（B） 4,903 行 · 报告正文（C） 1,104 行 · 演示页（C） 1,600 行 · 技能包（C） 2,768 行 · 指标表（C） 450 行</p>
 
 <h2>欠账<span class="h2n">谁欠谁一句话 / 一个文件 —— 图中挂 ⚠ 的就是这三条</span></h2>
 <div class="blockers"><article class="blk">

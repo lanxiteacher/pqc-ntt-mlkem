@@ -6,16 +6,36 @@
 // A 起草的那版在 `tb/uart_proto_tb.v`，等 B 取走，A 不维护。
 //
 // 这里只回答一个问题：**这块板子值得花十几分钟去综合、实现、下载吗？**
-// 所以只验两条，都是「错了就是白烧一遍板子」的那种：
+// 所以只验三条，都是「错了就是白烧一遍板子」的那种：
 //
 //   S1  #PING 的回帧逐字节正确（含校验和）—— 协议通路的端点检查
-//   S2  #NTT 1 端到端：256 行数据进去、256 行结果出来，
+//   S2  #NTT 1 端到端：256 行数据进去、256 行结果出来，装**一个** bank，
 //       结果逐行对拍 refsim/batch/ntt_batch_exp.txt 第 0 组
 //       （按该折叠度下 FNTT 的读出顺序还原系数下标）
+//   S3  #PMUL NTT 1 端到端：512 行进去、256 行出来，装**两个** bank，
+//       对拍 refsim/batch/pwm2_batch_exp.txt 第 0 组，读出恒 σ
 //
-// S2 是重点：它是**整个数据通路**的检查 —— 串口收发 + 行组装 + 协议机 +
+// S2/S3 是重点：它们是**整个数据通路**的检查 —— 串口收发 + 行组装 + 协议机 +
 // 十六进制解析 + 装载口时序 + NTT 核 + 读出顺序 + 回传。任何一环接错，
-// S2 都会红。而 S2 红了就不该上板（§七 红线：仿真能抓到的问题不要留到板上抓）。
+// 都会红。红了就不该上板（§七 红线：仿真能抓到的问题不要留到板上抓）。
+//
+// ★ 为什么 2026-10-04 补了 S3：S2 只装一个 bank，盖不到 **A→B 的 bank 切换**，
+//   而那次切换的间隔是个**写死的 lc 常数**（proto_fsm.v 里 DATA_LINES+3），
+//   核的装载相位却是 256+PE_NUMBER 拍 —— 两者只在 pe1 对得上。
+//   结果 pe4 上板时 S2 过、五条事务里三条 #PMUL 全挂。教训：
+//   **「过了冒烟台」的覆盖面就是冒烟台自己写的那几条**，别外推。
+//
+// ★ 同一个写死常数还有第二个症状，而且它**连 S2 都挂**（2026-10-04 实测）：
+//   三档跑本台，pe1 ✅ pe4 ✅ **pe16 ❌**（S2 卡在「板子没回话」）。
+//   真因不在数据通路，在 `core_start_*` 的**脉冲宽度**：它是一拍宽的，
+//   而核把它在自由跑时钟上寄存成 sf_R（KyberHPMNTT_top.v:134），
+//   所以 sf_R 高那一拍必须正好撞上 `ce` 被门控打开的一拍。
+//   装载相位没结束时 ce 按 PE 分频，1 拍宽的脉冲撞不上（pe16 分频 16 → 必丢；
+//   pe4 分频 4 恰好对上 → 侥幸过）。start 丢了 ⇒ 核不跑 ⇒ 不回 done
+//   ⇒ 板子 100 ms 后回 `#ERR 06`。
+//   ⚠️ 当时本台报的是「板子没回话」，因为 GUARD_CC（16 ms）短过板子的
+//      核看门狗 T_CORE_CC（100 ms）—— tb 抢在板子前面放弃了，
+//      把一条 `#ERR 06` 误诊成「板子死了」。**护栏必须长过被测方自己的看门狗**。
 //
 // ---------------------------------------------------------------------------
 // ★ 三个折叠度都能跑（2026-10-04 加）。折叠度是**编译期**开关：
@@ -40,8 +60,10 @@
 // ---------------------------------------------------------------------------
 // ⚠️ 这里**故意不测**的东西（不要以为测过了）：
 //   · 各种 #ERR 错误码、超时行为、#ABORT  —— 归 B 的协议验收台
-//   · #INTT / #PMUL（三种域）
-//   · FNTT 以外的读出顺序
+//   · #INTT，以及 #PMUL 的另外两个域（#PMUL TIME / #PMUL FULL）
+//     —— 它们的**装载顺序**与 S2/S3 都不同（见下面那张表），
+//        要加得照抄 S3 换向量与 pm_ld，不是改个文件名的事
+//   · FNTT 以外的读出顺序（S3 恒 σ，不随折叠度变）
 //
 // 跑法：sh run_board_check.sh        （必须经脚本跑 —— 见脚本里的路径说明）
 //       sh run_board_check.sh +dump  ← 诊断用：S2 只读到第 24 行就收工，
@@ -76,6 +98,10 @@ module smoke_tb;
     // ---- 折叠度：编译期选（见文件头）。默认 pe1 --------------------------
     //   ⚠️ 用 `ifdef 而不是运行时变量：PE_NUMBER 是**综合期**参数，
     //      核的 generate 分支要它在编译时就定下来。
+    //   ⚠️ 这三档**不是**「2 的幂的任意取值」—— 核的数据通路是「每档一份」而不是
+    //      公式（`KyberHPMNTT.v:90`），pe2/pe8 拿不到正确的地址位宽，核与顶层各有一句
+    //      FATAL 守卫拦这件事。所以**别往这里加 TB_PE2 / TB_PE8** —— 加了也不会通过，
+    //      只会把「不支持」伪装成「没测过」。
 `ifdef TB_PE16
     localparam integer PE_NUM = 16;
 `elsif TB_PE4
@@ -91,7 +117,13 @@ module smoke_tb;
     //   ⚠️ 板级顶层 ntt_board_top.v 里也写着同一个表达式 —— 两处必须一致。
     localparam integer READ_LAT  = 2 * PE_NUM + 3;
 
-    localparam integer GUARD_CC  = 800_000;         // 收一个字节的护栏（16 ms）
+    // ⚠️ 护栏必须**长过板子自己的核看门狗** T_CORE_CC（下面传 5e6 = 100 ms），
+    //    否则「核没回 done」这种错会表现成 tb 先超时 —— 打出来的是
+    //    「板子没回话」，而板子其实正准备在 100 ms 时回一条 `#ERR 06`。
+    //    2026-10-04 pe16 就是这么误诊的：真因是 start 丢了（核没跑），
+    //    现象却像「板子死了」。护栏放到 6e6 = 120 ms，永远让板子先说。
+    //    代价只在**失败**时付（多跑 100 ms 仿真），通过时一分不花。
+    localparam integer GUARD_CC  = 6_000_000;       // 收一个字节的护栏（120 ms）
     localparam real    MAX_NS    = 900_000_000.0;   // 全局护栏（0.9 s）
 
     // ---- FNTT 的**读出**顺序：pe1 = 交织 0,2,1,3｜pe4、pe16 = 自然序 ----
@@ -137,6 +169,24 @@ module smoke_tb;
         end
     endfunction
 
+    // ---- PWM2（点乘）的两张顺序表 —— 与 FNTT 的**不是同一张** ------------
+    //   装载（上面那张表里的 PWM2 行）：pe1 = 交织 σ｜pe4、pe16 = 自然序
+    //   读出：三档都是 σ（点乘结果落在 bank A，读出顺序不随折叠度变）
+    //   ⚠️ 别把两张表混成一张 —— FNTT 是**读出**那格 pe1 才用 σ，PWM2 是**读出**
+    //      三档都用 σ。两者恰好都用 σ 的只有 pe1。
+    function integer pm_ld(input integer m);
+        begin
+            if (PE_NUM == 1) pm_ld = perm(m);
+            else             pm_ld = m;
+        end
+    endfunction
+
+    function integer pm_out(input integer m);
+        begin
+            pm_out = perm(m);
+        end
+    endfunction
+
     // =====================================================================
     // 1. DUT
     // =====================================================================
@@ -161,6 +211,37 @@ module smoke_tb;
         .uart_rxd  (uart_rxd),
         .uart_txd  (uart_txd)
     );
+
+    // =====================================================================
+    // 1b. 相位探针 —— 每个 load 请求都必须换来一次慢跑相位
+    // =====================================================================
+    //   核的装载口是「脉冲进门 + 按慢跑时钟吃宽数据」两件事分开的：
+    //     · 脉冲本身直接进 KyberHPMNTT 的状态机（OP_IDLE 见到 load_* → OP_LOAD_DATA）
+    //     · 相位机（KyberHPMNTT_top.v:153）负责把核时钟按 1/PE 门控，`ce` 才对
+    //   两件事**不同步**。脉冲若落在相位机认定「相位已结束」之后一秒拍、
+    //   而核自己还在/刚离开 OP_LOAD_DATA，症状是：
+    //     核确实进了 OP_LOAD_DATA，但 ce 一直恒 1（没被门控）——
+    //     于是它按 4 倍速把序列化器抽干，装进 bank 的是一堆**错位后仍像模像样**
+    //     的值，不是全 0。所以「结果数值全错、但每个值都像真的」这个现象，
+    //     既不是顺序错也不是没装，而是这个。
+    //
+    //   判据用**两个计数相等**，不用「slow 期间来请求」——后者漏掉上面这种
+    //   「请求落在相位结束的后一拍」：
+    //     n_req     = load 请求脉冲数（#NTT 1 个 / #PMUL 2 个）
+    //     n_phase   = 相位机真正起过的装载相位数
+    //   相等 ⇒ 每个请求都被伺候了。n_phase < n_req ⇒ 有请求没人管。
+    //
+    //   ⚠️ 用 negedge 采样：posedge 上相位机与 req_load 同拍更新，采样点会打架。
+    // =====================================================================
+    integer n_req_load = 0;
+    integer n_ph_load  = 0;
+    reg     slow_prev  = 1'b0;
+
+    always @(negedge sys_clk) begin
+        if (dut.u_core.req_load) n_req_load = n_req_load + 1;
+        if (dut.u_core.slow && !dut.u_core.slow_rd && !slow_prev) n_ph_load = n_ph_load + 1;
+        slow_prev = dut.u_core.slow;
+    end
 
     // =====================================================================
     // 2. 全局护栏 —— 任何等待都不许没有上限（CLAUDE.md 约定 2）
@@ -382,6 +463,18 @@ module smoke_tb;
     reg [11:0] vin  [0:NV*256-1];
     reg [11:0] vexp [0:NV*256-1];
 
+    // ---- S3 用：#PMUL NTT 1 的两个 bank 与点乘期望（各取第 0 组 256 个）----
+    //   ⚠️ 开 `NV*256`（= 4096），**与上面 vin/vexp 一致**，别开小。
+    //      `$readmemh` 遇到比数组长的文件会报 "Too many words in the file
+    //      for the requested range" —— 那是**警告不是错误**，值照样填，
+    //      但每次跑都刷三行，读日志的人会以为出事了。
+    //      `refsim/batch/` 下的向量文件是 **16 组 × 256 = 4096 行**（NV 组），
+    //      开 512 正好短一截，所以三行警告都出在这里。
+    //      只用前 256 个（第 0 组），开大不影响取到的值。
+    reg [11:0] va  [0:NV*256-1];
+    reg [11:0] vb  [0:NV*256-1];
+    reg [11:0] vpm [0:NV*256-1];
+
     // =====================================================================
     // 8. 主流程
     // =====================================================================
@@ -394,6 +487,9 @@ module smoke_tb;
         if ($test$plusargs("dump")) dump = 1;
         $readmemh("../../../refsim/batch/ntt_batch_in.txt" , vin);
         $readmemh("../../../refsim/batch/ntt_batch_exp.txt", vexp);
+        $readmemh("../../../refsim/batch/pwm2_batch_a.txt"  , va);
+        $readmemh("../../../refsim/batch/pwm2_batch_b.txt"  , vb);
+        $readmemh("../../../refsim/batch/pwm2_batch_exp.txt", vpm);
 
         sys_rst_n = 1'b0;
         #200;
@@ -496,7 +592,11 @@ module smoke_tb;
                          PE_NUM);
         end else begin
             $display("  [FAIL] 256 行里有 %0d 行不符", nerr);
-            nfail = nfail + 1;
+            // ⚠️ 加的是 nerr 不是 1 —— nchk 是**逐行**加的（上面循环里），
+            //    这里若只加 1，256 行全挂会报成「比对点 520 个，失败 1 个」，
+            //    把 256 个失败点瞒成 1 个。判据本身没错，但数字会误导人
+            //    （而且报告要引用这个数）。口径必须与 nchk 一致：一行一个点。
+            nfail = nfail + nerr;
         end
 
         recv_line();
@@ -504,8 +604,77 @@ module smoke_tb;
 
         // =============================================================
         $display("");
+        $display("========== S3  #PMUL NTT 1 端到端（A、B 两个 bank 都装）==========");
+        // =============================================================
+        // S2 只装**一个** bank（FNTT 走 load_a_f），S3 装**两个** ——
+        // 两者之间隔着一次 bank 切换，而那次切换的时序随折叠度变（见下面
+        // 汇总里那条丢弃计数）。2026-10-04 pe4 上板时 S2 过、五条事务里
+        // 三条 #PMUL 全挂，就是这条缝 —— S2 盖不到它。
+        //
+        // ⚠️ 仍然不测 #PMUL TIME / #PMUL FULL（装载顺序与 NTT 那条都不同）。
+        //    要加的话照抄本段、换向量与 pm_ld 即可，别只改文件名。
+        if (PE_NUM == 1)
+            $display("  折叠度 PE_NUM=%0d   装载 A/B 均 交织 σ   读出下标 = perm(m)", PE_NUM);
+        else
+            $display("  折叠度 PE_NUM=%0d   装载 A/B 均 自然序   读出下标 = perm(m)", PE_NUM);
+
+        send_cmd("#PMUL NTT 1", 11);
+        recv_line();
+        chk("#OK PMUL NTT 1", 14, "S3 #OK");
+
+        // ---- 两个 bank 各 256 行，连着发（协议里 nload=2）----
+        for (i = 0; i < 256; i = i + 1) send_data(va[pm_ld(i)]);
+        for (i = 0; i < 256; i = i + 1) send_data(vb[pm_ld(i)]);
+        $display("  已发 512 条数据行（A、B 各 256），等 #BEGIN ...");
+
+        recv_line();
+        chk("#BEGIN PMUL NTT 1 256", 21, "S3 #BEGIN");
+
+        nerr = 0;
+        for (m = 0; m < 256; m = m + 1) begin
+            recv_line();
+            nchk = nchk + 1;
+            if (rlen !== 3) begin
+                if (nerr < 5) $display("  [FAIL] 第 %0d 行不是 3 个字符（收到 %0d）", m, rlen);
+                nerr = nerr + 1;
+            end else begin
+                v   = hex3val(rbuf[0], rbuf[1], rbuf[2]);
+                idx = pm_out(m);
+                if (v !== vpm[idx]) begin
+                    if (nerr < 5)
+                        $display("  [FAIL] 第 %0d 行：实收 %03x，期望 %03x（系数下标 %0d）",
+                                 m, v, vpm[idx], idx);
+                    nerr = nerr + 1;
+                end
+            end
+        end
+        if (nerr == 0)
+            $display("  [ ok ] pe%0d：256/256 行与 pwm2_batch_exp 一致", PE_NUM);
+        else begin
+            $display("  [FAIL] 256 行里有 %0d 行不符", nerr);
+            // ⚠️ 加的是 nerr 不是 1 —— nchk 是**逐行**加的（上面循环里），
+            //    这里若只加 1，256 行全挂会报成「比对点 520 个，失败 1 个」，
+            //    把 256 个失败点瞒成 1 个。判据本身没错，但数字会误导人
+            //    （而且报告要引用这个数）。口径必须与 nchk 一致：一行一个点。
+            nfail = nfail + nerr;
+        end
+
+        recv_line();
+        chk("#DONE PMUL NTT 1 256", 20, "S3 #DONE");
+
+        // =============================================================
+        $display("");
         $display("==================== 汇总 ====================");
         $display("  比对点 %0d 个，失败 %0d 个", nchk, nfail);
+        // 相位计数：S2 一个请求、S3 两个，合计应当 3 个请求换 3 个相位。
+        // 不等就是「有 load 请求没人伺候」—— 别再去调装载顺序，那是另一回事。
+        $display("  load 请求 %0d 个，相位机起了 %0d 个装载相位（应当相等；本台应为 3）",
+                 n_req_load, n_ph_load);
+        nchk = nchk + 1;
+        if (n_req_load != n_ph_load) begin
+            $display("  [FAIL] 有 load 请求没有换来装载相位 —— 问题在 bank 切换的时序，不是顺序。");
+            nfail = nfail + 1;
+        end
         if (nfail == 0) $display("  结论：通过 —— 可以进综合/上板。");
         else            $display("  结论：**有失败** —— 先别上板，回 RTL 查。");
         $display("==============================================");

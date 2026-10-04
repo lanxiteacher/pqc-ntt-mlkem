@@ -16,8 +16,8 @@
       "scope": "rtl/ ｜ 综合 ｜ 板子（本机）",
       "color": 1,
       "git_authors": ["lanxiteacher"],
-      "now": "板级通路已走通：自研核上板，pe1 五条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）；三档参数化已落地（READ_LAT 按档算、bitstream 带档位戳、上位机按 PE 取表）",
-      "next": "pe4 上板：综合 → 烧录 → 五条事务，随后 pe16；⚠️ 报告文件名要带上折叠度（现在每档写的是同一个 board_*.rpt，互相覆盖）",
+      "now": "板级通路三档全通：pe1 / pe4 / pe16 各 5 条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）。途中修掉 proto_fsm 一个写死的 bank 切换常数 —— 它只在 pe1 上恰好对，pe4 上是 2/5、pe16 上连 #NTT 都挂；改成随折叠度派生后三档全过。⚠️ 三档只覆盖 1/4/16：核的数据通路是「每档一份」不是公式，pe2/pe8 有 FATAL 守卫拦",
+      "next": "提交本轮（RTL 修复 + 三档报告 + 三档事务日志）；等 B 回 §5.3.4 勘误与 <RDY> 字段两条",
       "as_of": "2026-10-04",
       "source": "logs/project_state.md §一「上板」「下一步」；rtl/vivado/folding_comparison.md §9.1"
     },
