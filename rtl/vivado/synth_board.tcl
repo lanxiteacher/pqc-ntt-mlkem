@@ -97,12 +97,16 @@ foreach step {opt_design place_design route_design} {
 }
 
 file mkdir $repdir
+# 报告名一律带折叠度前缀 —— 三档的数字本来就不同（pe1 LUT 5025 / pe4 6203），
+# 同名会把已提交的上一次结果覆盖掉。2026-10-04 实际发生过一次：
+# pe4 那轮一启动就 rm 掉了仓库里已提交的 pe1 三份报告。
+set reppfx "board_pe$pe"
 set rep_ok 1
-if {[catch {report_utilization -file "$repdir/board_util.rpt"} err]} {
+if {[catch {report_utilization -file "$repdir/${reppfx}_util.rpt"} err]} {
     puts "  !! report_utilization failed: $err"
     set rep_ok 0
 }
-if {[catch {report_timing_summary -max_paths 10 -file "$repdir/board_timing.rpt"} err]} {
+if {[catch {report_timing_summary -max_paths 10 -file "$repdir/${reppfx}_timing.rpt"} err]} {
     puts "  !! report_timing_summary failed: $err"
     set rep_ok 0
 }
@@ -113,7 +117,7 @@ if {[catch {report_timing_summary -max_paths 10 -file "$repdir/board_timing.rpt"
 #       会被当成 report_io 的**位置参数**，报错是
 #       「Too many positional options when parsing '2>/dev/null'」。
 #       （2026-10-04 第一版就是这么写的，把一次已经综合成功的运行毁在最后一步。）
-if {[catch {report_io -file "$repdir/board_io.rpt"} err]} {
+if {[catch {report_io -file "$repdir/${reppfx}_io.rpt"} err]} {
     puts "  !! report_io failed: $err"
     set rep_ok 0
 }

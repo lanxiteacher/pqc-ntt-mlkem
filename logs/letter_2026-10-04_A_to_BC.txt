@@ -213,7 +213,9 @@ A 侧的实现在 `rtl/board/proto_fsm.v`。这三条**都属于电脑端的判�
 
 2. `report/design/03_性能与资源.md` 现在可以填真数字了 —— 第一节那张表
    （WNS / WHS / LUT / FF / BRAM / DSP / 关键路径 / 频率）是本次综合实测值，
-   出处 `rtl/vivado/reports/board_util.rpt` 与 `board_timing.rpt`，已进 git。
+   出处 `rtl/vivado/reports/board_pe1_util.rpt` 与 `board_pe1_timing.rpt`，已进 git。
+   ⚠️ 报告名**带折叠度**（`board_pe<N>_*.rpt`）—— 10-04 之前不带，pe4 那轮一启动
+   就把已提交的 pe1 三份覆盖掉了（两档数字本来就不同：LUT 5025 vs 6203）。
 
 
 ============================================================

@@ -8,9 +8,12 @@
 #     PERIOD=15 sh rtl/vivado/run_board_synth.sh      # 临时收紧时钟，看时序余量
 #
 #   产物:
-#     rtl/vivado/reports/board_util.rpt     资源占用
-#     rtl/vivado/reports/board_timing.rpt   时序 + 关键路径
-#     rtl/vivado/reports/board_io.rpt       引脚落位（上板前核对用）
+#     rtl/vivado/reports/board_pe<N>_util.rpt     资源占用
+#     rtl/vivado/reports/board_pe<N>_timing.rpt   时序 + 关键路径
+#     rtl/vivado/reports/board_pe<N>_io.rpt       引脚落位（上板前核对用）
+#       ⚠️ **N 是折叠度，三份报告都带** —— 早先不带，于是「跑 pe4 就把 pe1 那三份
+#          覆盖掉了」（2026-10-04 实际发生过：pe4 综合一启动就 rm 掉了已提交的 pe1 报告）。
+#          三档的数字本来就不同（pe4 LUT 6203 vs pe1 5025），覆盖等于把对照关系删掉。
 #     rtl/vivado/_runs/ntt_board.bit        bitstream（**不提交**，见 .gitignore）
 #     rtl/vivado/_runs/board_synth.log      成功那一轮的日志（不提交）
 #     rtl/vivado/_runs/board_synth_tryN.log 第 N 轮的日志（不提交）
@@ -76,6 +79,9 @@ case "$PE" in
     *) echo "  ❌ 折叠度非法：PE='$PE' —— 只支持 1 / 4 / 16" >&2; exit 1 ;;
 esac
 REPDIR="$HERE/reports"
+# 报告一律带折叠度前缀：三档的数字不同，同名会互相覆盖（见文件头）。
+# 与 `run_folding_sweep.sh` 的 pe<N>_*.rpt 是同一套思路。
+REPNAME="board_pe$PE"
 RUNDIR="${VIVADO_RUNS:-$HERE/_runs}"
 SRCDIR="$RTLDIR/rtl/ntt_core"
 BRDDIR="$RTLDIR/rtl/board"
@@ -115,7 +121,7 @@ echo "   读出   READ_LAT = 2*$PE+3 = $((2 * PE + 3)) 拍（由折叠度派生�
 echo "   周期   ${PERIOD:-XDC 里的 20 ns}"
 echo "   启动目录 $SCRATCH   （仓库路径含撇号，必须从仓库外启动）"
 
-rm -f "$REPDIR/board_util.rpt" "$REPDIR/board_timing.rpt" "$REPDIR/board_io.rpt" \
+rm -f "$REPDIR/$REPNAME"_util.rpt "$REPDIR/$REPNAME"_timing.rpt "$REPDIR/$REPNAME"_io.rpt \
       "$RUNDIR/ntt_board.bit" "$RUNDIR/ntt_board.pe" \
       "$RUNDIR/board_synth.log" "$RUNDIR"/board_synth_try*.log
 
@@ -156,7 +162,7 @@ while [ "$attempt" -le "$TRIES" ]; do
     # 残留会让下一次的判据在本次失败时为真。（.Xil/ 在循环开头清。）
     # ⚠️ 档位戳 ntt_board.pe 也要一起清：它和 bit 是一对，留着一个旧的
     #    比没有更坏 —— 烧录脚本会拿着**上一次**的档位去报「这版是 pe4」。
-    rm -f "$REPDIR/board_util.rpt" "$REPDIR/board_timing.rpt" "$REPDIR/board_io.rpt" \
+    rm -f "$REPDIR/$REPNAME"_util.rpt "$REPDIR/$REPNAME"_timing.rpt "$REPDIR/$REPNAME"_io.rpt \
           "$RUNDIR/ntt_board.bit" "$RUNDIR/ntt_board.pe"
 
     attempt=$((attempt + 1))
@@ -181,9 +187,9 @@ echo ""
 echo "─── 结果 ───"
 grep -E "^RESULT board|^  !!|^  NOTE" "$RUNDIR/board_synth.log" || true
 echo ""
-echo "  资源   $REPDIR/board_util.rpt"
-echo "  时序   $REPDIR/board_timing.rpt"
-echo "  引脚   $REPDIR/board_io.rpt"
+echo "  资源   $REPDIR/${REPNAME}_util.rpt"
+echo "  时序   $REPDIR/${REPNAME}_timing.rpt"
+echo "  引脚   $REPDIR/${REPNAME}_io.rpt"
 if [ -s "$RUNDIR/ntt_board.bit" ]; then
     echo "  bit    $RUNDIR/ntt_board.bit"
     if [ -s "$RUNDIR/ntt_board.pe" ]; then
