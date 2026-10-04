@@ -1,16 +1,16 @@
 Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
---------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------
 | Tool Version              : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
-| Date                      : Sun Oct  4 14:19:33 2026
+| Date                      : Sun Oct  4 17:00:29 2026
 | Host                      : lanxiteacher running 64-bit major release  (build 9200)
-| Command                   : report_io -file C:/Users/l'x/Desktop/FPGA/rtl/vivado/reports/board_io.rpt
+| Command                   : report_io -file C:/Users/l'x/Desktop/FPGA/rtl/vivado/reports/board_pe1_io.rpt
 | Design                    : ntt_board_top
 | Device                    : xc7z020
 | Speed File                : -2
 | Package                   : clg400
 | Package Version           : FINAL 2012-06-26
 | Package Pin Delay Version : VERS. 2.0 2012-06-26
---------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------
 
 IO Information
 
