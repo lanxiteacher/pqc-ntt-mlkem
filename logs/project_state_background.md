@@ -253,9 +253,25 @@ PYNQ」+ p24 §3.3.5.2「**通用 PYNQ Skill 单独加分**」。我们纯 PL，
       **确实生效**（用 `-c core.autocrlf=true` 模拟队友 clone 验证，LF 仍是 LF）；
       脚本全部用 `$(dirname "$0")`、无写死绝对路径；全部跟踪文件扫过无凭据；
       `docs/` `demo/` `assets/` `host/` 各有一份 README，不是空壳。
-      **一处需知悉但当前不影响**：5 个文件（`refsim/batch/ntt_batch_in.txt`、`ntt_batch_exp.txt`、
-      `fntt_rtl_out.txt`、`pe1/fntt_batch_tb_dump.v`、`_refbuild/ref_out.txt`）是**内容本身
-      以 CRLF 提交**的，`-text` 忠实地保住了 CRLF，队友拿到的与仓库逐字节一致
+      **一处需知悉但当前不影响**（2026-09-19 首查；**2026-10-04 重核并订正**）：仓库里有一批
+      文件是**内容本身以 CRLF 提交**的，`-text` 忠实地保住了 CRLF，队友拿到的与仓库逐字节一致
+      ⇒ **交付不受影响**。09-19 当时点的是 5 个，其中 `refsim/batch/ntt_batch_in.txt` 与
+      `ntt_batch_exp.txt` **现已回到纯 LF**（有人用 `"wb"` 重写过 —— 这条约定确实在起作用）。
+      10-04 全仓重扫 753 个入库文件（前 8000 字节含 `\x00` 的按二进制跳过，8 个）：
+      **纯 LF 702 ｜ 纯 CRLF 26 ｜ 混合 0**。
+      ★ **「混合 0」是关键结论** —— 真正会咬人的是**一个文件半 LF 半 CRLF**（那才让 `diff`
+      报「全不同」而数值全对），这种**一例都没有**；26 个纯 CRLF 全部**整份一致**（裸 CR 0、裸 LF 0），
+      拿到手就是一份规整的 CRLF 文件，良性。26 个的构成与各自为什么够不着这条约定：
+
+      | 个数 | 文件 | 为什么不在「写文件用 `"wb"`」的适用面上 |
+      |---|---|---|
+      | 15 | `rtl/vivado/reports/*_timing.rpt` | Vivado 自己写的。`metrics/gen_metrics.mjs:97` 用 `readFileSync(p,'utf8')` 读进来跑正则 `\|\s+`（`\s` 匹配 `\r`），**从不逐字节比** |
+      | 7 | `research/mlkem_kat/*.hex` | 第三方原件，`research/` 是只读的，我们不改也不重写 |
+      | 3 | `refsim/batch/fntt_rtl_out.txt`、`refsim/pe1/fntt_batch_tb_dump.v`、`_refbuild/ref_out.txt` | 行尾由 Verilog `$fopen(...,"w")`（`fntt_batch_tb_dump.v:75`）/ 上游 C 参考实现决定，`"wb"` 是**Python** 的建议 |
+      | 1 | `rtl/vivado/probe_out.txt` | Vivado 输出 |
+
+      ⚠️ 同一目录下 `*_util.rpt` 却是纯 LF（不在上表）—— 同一工具的不同报告写出方式都不一致，
+      正说明这批文件的行尾**不由我们控制**，拿它去套我们自己脚本的约定是套错了对象。
 - [ ] **`research/gen_out.txt` 是生成物入库**，内容是含本机绝对路径的日志
       （`C:\Users\l'x\Desktop\FPGA\rtl\zetas_tables_verified.v`）。队友重跑会因路径不同
       把 `git status` 弄脏。未找到它的生成者，像是手工重定向出来的
