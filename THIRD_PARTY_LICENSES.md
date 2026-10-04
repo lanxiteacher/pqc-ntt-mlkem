@@ -84,10 +84,34 @@ and Peter Schwabe
 | 许可证 | **MIT License** |
 | 许可证全文 | 见文末第一节 |
 
-涉及的文件：`kat_MLKEM_768.rsp`（1000 条向量）、`KAT_README.md`、
-`PQCgenKAT_kem.c`。
+涉及的文件：`kat_MLKEM_768.rsp`（1000 条向量）、`KAT_README.md`。
 
 关于这批向量的性质与可信度，见 `research/mlkem_kat/README.md` 开头的说明。
+
+#### 4a. `research/mlkem_kat/` 里的 NIST 生成器代码
+
+同一目录下还有四个文件**不属于**上面那个 MIT 仓库，它们的文件头是：
+
+```
+//  Created by Bassham, Lawrence E (Fed) on 8/29/17.
+//  Copyright © 2017 Bassham, Lawrence E (Fed). All rights reserved.
+```
+
+| 文件 | 用途 |
+|---|---|
+| `PQCgenKAT_kem.c` | KAT 生成器主程序 |
+| `rng.c` | 基于 OpenSSL 的 AES-256 CTR-DRBG |
+| `rng.h` | 上者的接口 |
+| `rng_nossl.c` | 同一 DRBG 的不依赖 OpenSSL 版本（本机用这个，见 `patch_rng.py`） |
+
+**这几行「All rights reserved」不是开源许可。** 需要说明的是：作者是 NIST
+（美国联邦机构）雇员，其职务作品依 17 U.S.C. §105 不受版权保护、属公有领域；
+该声明是美国联邦机构代码里常见的样板文字，与其法律状态不符。此处如实记录
+该声明，以备查阅 —— 处理口径与上文第 1 条 `pe1/README.md` 那句「academic
+research only」相同：**如实记录冲突，不擅自替对方解释**。
+
+⚠️ **转公开前需与第 1 条一并复核。** 相关脚本：`build_kat.sh`、`patch_rng.py`。
+
 
 ### 5. `research/standards/` —— NIST 标准文档
 
@@ -146,5 +170,16 @@ Apache License 2.0 全文见同目录 `LICENSE`。
 本作品（`refsim/`、`host/`、`rtl/`、`docs/`、`team/` 等目录下我方原创的部分）
 依据 **Apache License 2.0** 发布，全文见同目录 `LICENSE`。
 
-本次选用的许可证与上述全部第三方许可证兼容：上游组件均为 CC0（无任何限制）
-或 MIT / Apache-2.0（宽松许可，非传染性），不要求本作品改用其他许可证。
+Apache-2.0 与清单里**明确给出**的许可证全部兼容：CC0（无任何限制）、
+MIT 与 Apache-2.0（宽松许可，非传染性），它们都不要求本作品改用其他许可证。
+
+⚠️ **但清单里还有两处「声明与许可证不符」的条目**，它们的法律状态不能靠这份
+文件的结论代替判断，转公开前须单独复核：
+
+| 条目 | 冲突 | 记载位置 |
+|---|---|---|
+| `research/ref_rtl/kyber-polmul-hw/` | 逐文件 CC0，但 README 写「academic research only」 | §一.1 |
+| `research/mlkem_kat/` 的 NIST 生成器代码 | 是 NIST 雇员职务作品（公有领域），但文件头写「All rights reserved」 | §一.4a |
+
+两处的处理口径一致：**如实记录冲突，不擅自替对方解释**。上面那句结论只适用于
+许可证本身写清楚的条目，不覆盖这两处。

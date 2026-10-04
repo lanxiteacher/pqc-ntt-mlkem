@@ -1,148 +1,165 @@
-//****************************************Copyright (c)***********************************//
-//ԭ�Ӹ����߽�ѧƽ̨��www.yuanzige.com
-//����֧�֣�http://www.openedv.com/forum.php
-//�Ա����̣�https://zhengdianyuanzi.tmall.com
-//��ע΢�Ź���ƽ̨΢�źţ�"����ԭ��"����ѻ�ȡZYNQ & FPGA & STM32 & LINUX���ϡ�
-//��Ȩ���У�����ؾ���
-//Copyright(C) ����ԭ�� 2023-2033
-//All rights reserved                                  
-//----------------------------------------------------------------------------------------
-// File name:           uart_rx
-// Created by:          ����ԭ��
-// Created date:        2025��10��16��14:20:02
-// Version:             V1.0
-// Descriptions:        UART���ڽ���ģ��
+// ===========================================================================
+// uart_rx.v —— UART 接收（8N1：1 起始位 + 8 数据位 + 无校验 + 1 停止位）
 //
-//----------------------------------------------------------------------------------------
-//****************************************************************************************//
+// 本文件为**自主实现**，不是从任何例程复制的。
+// 端口名与参数名与正点原子 `19_uart_loopback` 的 uart_rx 保持一致，这样
+// 板级顶层 `rtl/board/ntt_board_top.v` 的具名端口连接与具名参数覆盖不用改；
+// 内部结构、命名与注释均为重写。
+//
+// ★ 为什么要重写（别以后有人「为了省事」换回例程）
+//
+//   例程文件头写着 `Copyright(C) 正点原子 2023-2033 / All rights reserved`，
+//   这不是开源许可。本仓库按竞赛要求最终要转公开，不能带一份没有拿到授权的
+//   代码进去；例程的源码还是 GBK 编码，与本仓库其余文件的 UTF-8 也不一致。
+//   代价只是几十行 —— UART 收发是成熟结构，没什么可「省」的。
+//
+// ---------------------------------------------------------------------------
+// 时序约定
+//
+//   一位的时间 = CLK_FREQ / UART_BPS 个时钟（本设计 = 50e6/115200 = 434，
+//   434 × 20 ns = 8680 ns，与 115200 bps 的名义位宽 8680.6 ns 差 0.6 ns；
+//   十位累计也才 6 ns，远小于半个位时间，采样不会跑偏）。
+//
+//   采样点取**每一位的正中间**。这不是讲究，是必须：起始位的下降沿与本地
+//   时钟没有任何相位关系，贴着边沿采样会被抖动直接打穿；采在中间，则前后
+//   各留半个位时间的余量。
+//
+//   帧序：起始位（低）→ D0 … D7（LSB 先出）→ 停止位（高）
+//
+// ---------------------------------------------------------------------------
+// 输出约定
+//
+//   uart_rx_done  收到一个完整字节时拉高**正好 1 拍**（拉高那一拍
+//                 uart_rx_data 上已经是收到的字节）
+//   uart_rx_data  收到的字节，1 拍脉冲期间有效
+// ===========================================================================
 
-module uart_rx(
-    input               clk         ,  //ϵͳʱ��
-    input               rst_n       ,  //ϵͳ��λ������Ч
+`timescale 1ns/1ps
 
-    input               uart_rxd    ,  //UART���ն˿�
-    output  reg         uart_rx_done,  //UART��������ź�
-    output  reg  [7:0]  uart_rx_data   //UART���յ�������
-    );
+module uart_rx #(
+    parameter CLK_FREQ = 50000000,   // 系统时钟频率（Hz）
+    parameter UART_BPS = 115200      // 串口波特率
+)(
+    input  wire       clk,
+    input  wire       rst_n,         // 低有效，异步
+    input  wire       uart_rxd,      // 串口接收引脚（空闲为高）
+    output reg        uart_rx_done,  // 收完一个字节，1 拍脉冲
+    output reg  [7:0] uart_rx_data   // 收到的字节
+);
 
-//parameter define
-parameter CLK_FREQ    = 50000000;         //ϵͳʱ��Ƶ��
-parameter UART_BPS    = 115200  ;         //���ڲ�����
-localparam BAUD_CNT_MAX = CLK_FREQ/UART_BPS;//Ϊ�õ�ָ�������ʣ���ϵͳʱ�Ӽ���BPS_CNT��
+    // ---- 一位占多少个时钟 -------------------------------------------------
+    //   注意是**整数除法**，余数丢掉（434.03 → 434）。见文件头的误差估算。
+    localparam integer BAUD_MAX = CLK_FREQ / UART_BPS;
+    localparam integer BAUD_MID = BAUD_MAX / 2;        // 位中点
+    localparam integer CNT_W    = $clog2(BAUD_MAX);    // 波特计数器的位宽
 
-//reg define
-reg          uart_rxd_d0;  //uart_rxd�ӳ�һ��ʱ������������ź�
-reg          uart_rxd_d1;  //uart_rxd�ӳ�����ʱ������������ź�
-reg          uart_rxd_d2;  //uart_rxd�ӳ�����ʱ������������ź�
-reg          rx_flag    ;  //���չ��̱�־�ź�
-reg  [3:0 ]  rx_cnt     ;  //�������ݼ�����
-reg  [15:0]  baud_cnt   ;  //�����ʼ�����
-reg  [7:0 ]  rx_data_t  ;  //�������ݼĴ���
+    // ---- 位序编号 ---------------------------------------------------------
+    //   bitn 数的是「当前正处于哪一位」，起始位算 0 号：
+    //       0        起始位
+    //       1 … 8    D0 … D7
+    //       9        停止位
+    //   所以采样数据位时下标要减 1。
+    localparam [3:0] N_START = 4'd0;
+    localparam [3:0] N_STOP  = 4'd9;
 
-//wire define
-wire        start_en;
+    localparam S_IDLE = 1'b0,
+               S_RECV = 1'b1;
 
-//*****************************************************
-//**                    main code
-//*****************************************************
-//������ն˿��½���(��ʼλ)���õ�һ��ʱ�����ڵ������ź�
-assign start_en = uart_rxd_d2 & (~uart_rxd_d1) & (~rx_flag);
+    reg              state;
+    reg [CNT_W-1:0]  bcnt;      // 波特计数器，数一位之内的时钟
+    reg [3:0]        bitn;      // 当前位号
+    reg [7:0]        shreg;     // 移位/装配寄存器
 
-//����첽�źŵ�ͬ������
-always @(posedge clk or negedge rst_n) begin
-    if(!rst_n) begin
-        uart_rxd_d0 <= 1'b0;
-        uart_rxd_d1 <= 1'b0;
-        uart_rxd_d2 <= 1'b0;
-    end
-    else begin
-        uart_rxd_d0 <= uart_rxd;
-        uart_rxd_d1 <= uart_rxd_d0;
-        uart_rxd_d2 <= uart_rxd_d1;
-    end
-end
-
-//�����ձ�־��ֵ
-always @(posedge clk or negedge rst_n) begin
-    if(!rst_n) 
-        rx_flag <= 1'b0;
-    else if(start_en)    //��⵽��ʼλ
-        rx_flag <= 1'b1; //���չ����У���־�ź�rx_flag����
-    //��ֹͣλһ���ʱ�򣬼����չ��̽�������־�ź�rx_flag����
-    else if((rx_cnt == 4'd9) && (baud_cnt == BAUD_CNT_MAX/2 - 16'b1))
-        rx_flag <= 1'b0;
-    else
-        rx_flag <= rx_flag;
-end        
-
-//�����ʵļ�������ֵ
-always @(posedge clk or negedge rst_n) begin
-    if(!rst_n) 
-        baud_cnt <= 16'd0;
-    else if(rx_flag) begin     //���ڽ��չ���ʱ�������ʼ�������baud_cnt������ѭ������
-        if(baud_cnt < BAUD_CNT_MAX - 16'b1)
-            baud_cnt <= baud_cnt + 16'b1;
-        else 
-            baud_cnt <= 16'd0; //�����ﵽһ�����������ں�����
-    end    
-    else
-        baud_cnt <= 16'd0;     //���չ��̽���ʱ����������
-end
-
-//�Խ������ݼ�������rx_cnt�����и�ֵ
-always @(posedge clk or negedge rst_n) begin
-    if(!rst_n) 
-        rx_cnt <= 4'd0;
-    else if(rx_flag) begin                  //���ڽ��չ���ʱrx_cnt�Ž��м���
-        if(baud_cnt == BAUD_CNT_MAX - 16'b1) //�������ʼ�����������һ������������ʱ
-            rx_cnt <= rx_cnt + 4'b1;        //�������ݼ�������1
-        else
-            rx_cnt <= rx_cnt;
-    end
-    else
-        rx_cnt <= 4'd0;                     //���չ��̽���ʱ����������
-end        
-
-//����rx_cnt���Ĵ�rxd�˿ڵ�����
-always @(posedge clk or negedge rst_n) begin
-    if(!rst_n) 
-        rx_data_t <= 8'b0;
-    else if(rx_flag) begin                            //ϵͳ���ڽ��չ���ʱ
-        if(baud_cnt == BAUD_CNT_MAX/2 - 16'b1) begin  //�ж�baud_cnt�Ƿ����������λ���м�
-           case(rx_cnt)
-               4'd1 : rx_data_t[0] <= uart_rxd_d2;    //�Ĵ����ݵ����λ
-               4'd2 : rx_data_t[1] <= uart_rxd_d2;
-               4'd3 : rx_data_t[2] <= uart_rxd_d2;
-               4'd4 : rx_data_t[3] <= uart_rxd_d2;
-               4'd5 : rx_data_t[4] <= uart_rxd_d2;
-               4'd6 : rx_data_t[5] <= uart_rxd_d2;
-               4'd7 : rx_data_t[6] <= uart_rxd_d2;
-               4'd8 : rx_data_t[7] <= uart_rxd_d2;   //�Ĵ����ݵĸߵ�λ
-               default : ;
-            endcase  
+    // ---- 输入同步：两级触发器 --------------------------------------------
+    //   uart_rxd 是异步信号（来自板子外面的串口线）。先过两级触发器再用，
+    //   否则亚稳态会直接扩散进状态机，故障现象会随温度/电压随机变化。
+    //   复位时置 1（空闲电平）——不是 0。置 0 会在复位后的第一个时钟造出
+    //   一个假的「上升沿」，虽然本模块的起始沿判定是下降沿、碰不到，
+    //   但置成与空闲电平一致总是更稳妥。
+    reg rxd_s0, rxd_s1;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rxd_s0 <= 1'b1;
+            rxd_s1 <= 1'b1;
+        end else begin
+            rxd_s0 <= uart_rxd;
+            rxd_s1 <= rxd_s0;
         end
-        else
-            rx_data_t <= rx_data_t;
     end
-    else
-        rx_data_t <= 8'b0;
-end        
 
-//����������źźͽ��յ������ݸ�ֵ
-always @(posedge clk or negedge rst_n) begin
-    if(!rst_n) begin
-        uart_rx_done <= 1'b0;
-        uart_rx_data <= 8'b0;
+    // ---- 起始沿判定 -------------------------------------------------------
+    //   rxd_s1 是**旧**值、rxd_s0 是**新**值（信号从 s0 流到 s1）。
+    //   所以「旧值 1、新值 0」= 下降沿 = 起始位。
+    //   只在空闲态认沿：接收过程中的低电平是数据位，不是新的起始位。
+    wire start_seen = rxd_s1 & ~rxd_s0 & (state == S_IDLE);
+
+    // ---- 主状态机 ---------------------------------------------------------
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state        <= S_IDLE;
+            bcnt         <= {CNT_W{1'b0}};
+            bitn         <= N_START;
+            shreg        <= 8'd0;
+            uart_rx_done <= 1'b0;
+            uart_rx_data <= 8'd0;
+        end else begin
+            // done 是 1 拍脉冲：默认拉低，只有收完那一拍才拉高
+            uart_rx_done <= 1'b0;
+
+            case (state)
+            // ---------------------------------------------------------------
+            S_IDLE: begin
+                if (start_seen) begin
+                    state <= S_RECV;
+                    bcnt  <= {CNT_W{1'b0}};   // 从检测到沿的这一拍重新数
+                    bitn  <= N_START;         // 当前是起始位
+                    shreg <= 8'd0;
+                end
+            end
+            // ---------------------------------------------------------------
+            S_RECV: begin
+                // 位中点采样。只采数据位（1…8），起始位和停止位不采。
+                if ((bcnt == BAUD_MID - 1) && (bitn >= 4'd1) && (bitn <= 4'd8))
+                    shreg[bitn - 4'd1] <= rxd_s1;
+
+                if (bitn == N_STOP) begin
+                    // 停止位：走到**中点**就收工，不等它走完。
+                    //
+                    // ⚠️ 这条是本模块最容易写错的地方。看似「等停止位结束再回
+                    //    空闲」更自然，实际会丢字节：本模块的采样栅格是从
+                    //    **检测到起始沿**那一刻起算的，而起始沿经过两级同步
+                    //    触发器进来，比真实沿晚约 2 拍 —— 于是整个栅格晚 2 拍。
+                    //    连着的下一个字节的起始沿会**早于**停止位结束 2 拍到达，
+                    //    而那一刻 state 还是 S_RECV，start_seen 被
+                    //    `(state == S_IDLE)` 挡住，那个字节被整个丢掉。
+                    //    现象是「PC 连着发 256 行，板子只认出零星几个字节」。
+                    //
+                    //   取得中点则留出半个位时间（217 拍）的余量，而栅格偏差
+                    //    只有 2 拍 —— 差两个数量级，够了。
+                    //
+                    //    ⚠️ 这里取 shreg 是安全的：最高位 D7 在 bitn==8 的中点
+                    //       就写完了，现在是下一个位时间的中点，早已稳定。
+                    if (bcnt == BAUD_MID - 1) begin
+                        state        <= S_IDLE;
+                        uart_rx_done <= 1'b1;
+                        uart_rx_data <= shreg;
+                    end else begin
+                        bcnt <= bcnt + 1'b1;
+                    end
+                end
+                else if (bcnt == BAUD_MAX - 1) begin
+                    // 数据位走完（起始位与数据位都走这条），进下一位
+                    bcnt <= {CNT_W{1'b0}};
+                    bitn <= bitn + 4'd1;
+                end
+                else begin
+                    bcnt <= bcnt + 1'b1;
+                end
+            end
+            // ---------------------------------------------------------------
+            default: state <= S_IDLE;
+            endcase
+        end
     end
-    //���������ݼ�����������ֹͣλ����baud_cnt������ֹͣλ���м�ʱ
-    else if(rx_cnt == 4'd9 && baud_cnt == BAUD_CNT_MAX/2 - 16'b1) begin
-        uart_rx_done <= 1'b1     ;  //���߽�������ź�
-        uart_rx_data <= rx_data_t;  //����UART���յ������ݽ��и�ֵ
-    end    
-    else begin
-        uart_rx_done <= 1'b0;
-        uart_rx_data <= uart_rx_data;
-    end
-end
 
 endmodule

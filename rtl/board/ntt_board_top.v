@@ -44,7 +44,10 @@
 //   rtl/board/tx_line.v            ← 整行 → 字节流
 //   rtl/board/hex3.v               ← 3 字符 ↔ 12 位 + hex_digit
 //   rtl/board/poly_buf.v           ← 256×12 ×2 系数缓冲
-//   rtl/uart_rx.v  rtl/uart_tx.v   ← 例程原样复用（一个字没改）
+//   rtl/uart_rx.v  rtl/uart_tx.v   ← 自写（端口名沿用正点原子例程，实现是重写的）
+//                                    重写动因见 rtl/uart_rx.v 文件头：例程文件头是
+//                                    「All rights reserved」，不是开源许可，而本仓库
+//                                    要转公开。行为契约未变，见 rtl/uart_tx.v 文件头。
 //   rtl/ntt_core/*.v               ← 核，整目录（KyberHPMNTT_top 及 ntt_* 库）
 //   rtl/board/ntt_board.xdc        ← 引脚与时序约束
 //
@@ -86,7 +89,7 @@ module ntt_board_top #(
         else            rst_sync <= { rst_sync[0], 1'b1 };  // 松开 → 两拍后放行
     end
 
-    wire rst_n      = rst_sync[1];          // 给例程那几个模块（低有效）
+    wire rst_n      = rst_sync[1];          // 给 uart/协议那几级（低有效）
     wire core_reset = ~rst_n;               // 给核（**高**有效）
 
     // =====================================================================
