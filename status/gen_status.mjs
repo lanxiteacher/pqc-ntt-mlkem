@@ -279,6 +279,31 @@ function render(data) {
   const ms = json.milestones;
   const doneCount = ms.filter((m) => m.state === 'done').length;
 
+  // ── 交付进度（英雄数字）────────────────────────────────────────────
+  // 分母＝甘特图那 N 根「周计划」条（每根＝一条线一周的活），不是里程碑。
+  // 用甘特作分母是为了让英雄数字与整页主图**同口径** —— 主图上数一数就知道
+  // 这个百分比是怎么来的。里程碑 8/14 另在下面的 KPI 数字块里，两个不相加。
+  const bars = json.gantt?.bars || [];
+  const barTotal = bars.length;
+  const barDone = bars.filter((b) => b.state === 'done').length;
+  const barDoing = bars.filter((b) => b.state === 'doing').length;
+  const barPct = pct(barDone, barTotal);
+  const barPctWithDoing = pct(barDone + barDoing, barTotal);
+  // ── 日历进度（对照线）──────────────────────────────────────────────
+  // 起点＝W0 首日；终点＝**截止日**（不是 W7 末日 —— W7 已越过截止，见 gantt.note）。
+  const wk0 = json.gantt?.weeks?.[0];
+  const planFrom = wk0 ? wk0.start : null;
+  const dayTotal = planFrom ? dayNum(cd.submission) - dayNum(planFrom) + 1 : null;
+  const dayPassed = planFrom
+    ? Math.min(Math.max(TODAY - dayNum(planFrom) + 1, 0), dayTotal) : null;
+  const dayPct = dayTotal ? pct(dayPassed, dayTotal) : null;
+  // gap ＝ 已交付 − 应到。**负数是落后**（交付的百分比没跟上时间流逝的百分比）。
+  const gap = dayTotal ? Math.round((barPct - dayPct) * 10) / 10 : null;
+  const paceWord = gap === null ? ''
+    : gap <= -5 ? `｜已交付落后日历 ${Math.abs(gap)} 个点${barDoing ? `，差额在 ${barDoing} 条进行中` : ''}`
+    : gap >= 5 ? `｜已交付领先日历 ${gap} 个点`
+    : '｜与日历基本同步';
+
   // 入口记录的新鲜度单独拎出来当头条（它是每次开工读的第一份文件）
   const entry = docs.find((d) => d.rel.includes('project_state.md') && d.rel.startsWith('logs/'));
   const entryHead = entry && entry.stale !== null
@@ -356,6 +381,8 @@ function render(data) {
     ['目录规模（文件数 / 源码与文档行数）', '自动', 'git ls-files <目录>（跳过 _scratch / _broken / _failed_attempts / batch/，只数 .v .py .md .mjs .html .sh .tcl 等）'],
     ['文档新鲜度（各文档自称的更新日期与已过天数）', '自动', '读每份文档头 25 行取第一个 YYYY-MM-DD；取不到则退回 git log -1 --format=%ad -- <该文件>（表里标 (git)）'],
     ['倒计时（距作品提交 / 决赛）', '自动', '本机当前日期 与 status.json 的 countdown 相减'],
+    ['★ 顶部那个百分比（已交付）', '自动', 'status.json 的 gantt.bars —— 分母是**甘特图上条子的总数**（3 条线 × 8 周），分子是 state=done 的条数。**与下面主图同口径，主图上数一数就能核**。空心段＝state=doing，「含则 x%」是 done+doing。⚠️ 与 KPI 块里的「关键路径里程碑 8/14」**不同口径，两个数不要相加**'],
+    ['对照线「按日历应到」', '自动', '（今天 − W0 首日 + 1）÷（countdown.submission − W0 首日 + 1）。⚠️ 终点取**截止日**而不是 W7 末日 —— W7 已整周越过截止，见 status.json 的 gantt.note'],
     ['主图横轴（周次与日期）', '人写', 'status/status.json 的 gantt.weeks —— 抄自 team/FPGA竞赛_{A,B,C}_引导与计划.md 第四节「逐周计划」三张表，未加工'],
     ['主图每一根条（做什么 / 什么状态 / 是否关键路径）', '人写', 'status/status.json 的 gantt.bars，每根的 note 与 source 抄自上述三张表的对应周行'],
     ['主图上的 ⚠（哪根条被卡住）', '人写', 'status.json 的 blockers[].bar 指到具体哪根条，图与下面的「欠账」是同一份数据'],
@@ -436,8 +463,9 @@ h2 .h2n{color:var(--muted);font-weight:400;margin-left:8px}
 .hero-side{padding-bottom:6px}
 .hero-l{font-size:13.5px;color:var(--ink-2)}
 .hero-2{font-size:13px;color:var(--muted);margin-top:2px}
-.meter{height:6px;border-radius:4px;background:var(--track);margin-top:10px;min-width:220px;overflow:hidden}
-.meter-fill{height:100%;background:var(--s1);border-radius:0 4px 4px 0}
+.meter{position:relative;height:10px;border-radius:5px;background:var(--track);margin-top:10px;min-width:280px;overflow:hidden}
+.meter-fill{position:absolute;left:0;top:0;height:100%;background:var(--s1);border-radius:5px 0 0 5px}
+.meter-do{position:absolute;top:0;height:100%;background:var(--s1);opacity:.42;border-radius:0 5px 5px 0}
 .meter-cap{font-size:12px;color:var(--ink-2);margin-top:6px}
 .fresh{
   margin-left:auto;align-self:center;font-size:13px;padding:8px 12px;border-radius:9px;
@@ -576,13 +604,16 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 </header>
 
 <section class="hero">
-  <div class="hero-num"><span class="n">${esc(String(subDays))}</span><span class="u">天</span></div>
+  <div class="hero-num"><span class="n">${Math.round(barPct)}</span><span class="u">% 已交付</span></div>
   <div class="hero-side">
-    <div class="hero-l">距 <strong>${esc(cd.submission)}</strong> ${esc(cd.submission_label)}</div>
-    <div class="meter" title="关键路径里程碑已完成 ${doneCount} / 共 ${ms.length} 个（计划口径，来自 status.json）">
-      <div class="meter-fill" style="width:${pct(doneCount, ms.length)}%"></div>
+    <div class="hero-l">周计划 <b>${barDone}/${barTotal}</b> 条已交付${
+      barDoing ? ` · 另有 <b>${barDoing}</b> 条进行中（含则 ${barPctWithDoing}%）` : ''}</div>
+    <div class="meter" title="已交付 ${barDone} 条 · 进行中 ${barDoing} 条 · 共 ${barTotal} 条周计划（分母＝下面甘特图上的条数，不是里程碑数）">
+      <div class="meter-fill" style="width:${barPct}%"></div>${
+      barDoing ? `<div class="meter-do" style="left:calc(${barPct}% + 2px);width:calc(${pct(barDoing, barTotal)}% - 2px)"></div>` : ''}
     </div>
-    <div class="meter-cap">关键路径里程碑 ${doneCount}/${ms.length} 已完成 · ${esc(cd.finals_label)}（${esc(cd.finals)}）</div>
+    <div class="hero-2">按日历应到 <b>${dayPct}%</b>（第 ${dayPassed}/${dayTotal} 天：${esc(planFrom)} → ${esc(cd.submission)}）${esc(paceWord)}</div>
+    <div class="meter-cap">距 <strong>${esc(cd.submission)}</strong> ${esc(cd.submission_label)}还有 <b>${subDays}</b> 天 · ${esc(cd.finals_label)}（${esc(cd.finals)}）</div>
   </div>
   ${entryHead}
 </section>
