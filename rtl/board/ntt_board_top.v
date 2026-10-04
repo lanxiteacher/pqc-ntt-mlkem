@@ -60,7 +60,10 @@
 `timescale 1ns/1ps
 
 module ntt_board_top #(
-    parameter integer PE_NUMBER = 1,        // 本轮只做 pe1
+    // 折叠度：1 / 4 / 16。由 rtl/vivado/run_board_synth.sh 的 PE=<n> 传给
+    // synth_board.tcl 的 -generic。**不在 RTL 里改这个数** —— 改了就与
+    // 综合脚本、bitstream 名、上位机的顺序表对不上（见 READ_LAT 那条注释）。
+    parameter integer PE_NUMBER = 1,
     parameter integer CLK_FREQ  = 50_000_000,
     parameter integer UART_BPS  = 115200,
     // ---- 下面四个只给测试台用；上板一律走默认值 ----
@@ -71,7 +74,15 @@ module ntt_board_top #(
     parameter integer T_LINE_CC = 50_000_000,   // 1 s
     parameter integer T_CMD_CC  = 500_000_000,  // 10 s（字符间）
     parameter integer T_CORE_CC = 5_000_000,    // 100 ms
-    parameter integer READ_LAT  = 5             // read_a 后第 5 拍出第一个有效 dout
+    // ★ read_a 之后第几拍出第一个有效 dout —— **随折叠度变**，不是常数。
+    //   契约在 rtl/ntt_core/KyberHPMNTT_top.v 文件头（第 38 行）：
+    //     第一条有效 dout = read_* 之后 **2*PE_NUMBER + 3** 拍
+    //   → pe1 = 5（原来写死的那个数）｜**pe4 = 11**｜**pe16 = 35**。
+    //   道理：核自己的读出延迟固定，但核时钟被按 1/PE 门控，第一拍宽结果
+    //   最早也要等第 3 个 ce 才凑齐。硬要三档都用 read+5，只能吐出假数据。
+    //   ⚠️ 这里写的是**表达式**而不是某个档的常数：换成 pe4 综合时它会自己变成 11。
+    //      2026-10-04 之前是写死的 `5`，那是 pe4 上板的第一道拦路虎。
+    parameter integer READ_LAT  = 2 * PE_NUMBER + 3
 )(
     input  sys_clk,         // U18，50 MHz
     input  sys_rst_n,       // N16，**低**有效（按下＝低）
@@ -219,7 +230,7 @@ module ntt_board_top #(
     );
 
     // =====================================================================
-    // 6. NTT 核（pe1）
+    // 6. NTT 核 —— 折叠度由 PE_NUMBER 决定，三档对外都是 12 位
     // =====================================================================
     KyberHPMNTT_top #(
         .PE_NUMBER (PE_NUMBER)

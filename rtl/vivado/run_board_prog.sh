@@ -24,6 +24,9 @@
 #   ── 默认 BIT 用的是哪个 ─────────────────────────────────────────────
 #   `rtl/vivado/_runs/ntt_board.bit`，由 `run_board_synth.sh` 产出。
 #   ⚠️ 它**不在 git 里**（`_runs/` 被忽略）—— 换台机器要先自己综合一遍。
+#   ⚠️ 三档（pe1/pe4/pe16）的 bitstream **同名**，互相覆盖。所以烧之前本脚本
+#      会读同目录的 `ntt_board.pe` 报一下这版是哪一档 —— 拿错档位的症状是
+#      「256 个值全错」，很容易误判成 RTL 挂了。
 # ===========================================================================
 
 set -e
@@ -34,6 +37,12 @@ RTLDIR="$(cd "$HERE/../.." && pwd)"
 VIVADO="${VIVADO:-E:/xilinx/Vivado/2020.2/bin/vivado.bat}"
 RUNDIR="${VIVADO_RUNS:-$HERE/_runs}"
 BIT="${BIT:-$RUNDIR/ntt_board.bit}"
+
+# 档位戳：与 bitstream 同目录的一行文件 `ntt_board.pe`，由 synth_board.tcl 写。
+# ⚠️ 为什么值得在这里读一遍：bitstream 的文件名**三档都一样**（ntt_board.bit），
+#    拿 pe1 的位流去测 pe4，症状是「256 个值全错」—— 看着像 RTL 挂了，其实是
+#    档位不对。烧之前报一下，省掉一轮排查。
+PESTAMP="$(dirname "$BIT")/ntt_board.pe"
 
 MODE="program"
 case "${1:-}" in
@@ -74,6 +83,13 @@ if [ "$MODE" = "scan" ]; then
 else
     echo "== 板级：烧 bitstream 进 PL =="
     echo "   bit   $BIT"
+    if [ -s "$PESTAMP" ]; then
+        echo "   档位   pe$(cat "$PESTAMP")   （读自 $PESTAMP）"
+        echo "          ⚠️ 上位机的装载/读出顺序表要按这一档给，三档不一样"
+    else
+        echo "   档位   ⚠️ 没有档位戳 $PESTAMP —— 这版是哪一档**没有记录**，"
+        echo "          拿不准就重跑一次 run_board_synth.sh（它必然写这个戳）"
+    fi
     echo "   注意  位流掉电即失，断电后要重烧"
 fi
 echo "   启动目录 $SCRATCH   （仓库路径含撇号，必须从仓库外启动）"

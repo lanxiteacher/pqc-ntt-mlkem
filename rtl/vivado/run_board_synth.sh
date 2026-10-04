@@ -4,6 +4,7 @@
 #
 #   用法:
 #     sh rtl/vivado/run_board_synth.sh
+#     PE=4 sh rtl/vivado/run_board_synth.sh           # 出 pe4 那一档的 bitstream
 #     PERIOD=15 sh rtl/vivado/run_board_synth.sh      # 临时收紧时钟，看时序余量
 #
 #   产物:
@@ -21,9 +22,16 @@
 #   环境变量:
 #     VIVADO=<路径>         默认 E:/xilinx/Vivado/2020.2/bin/vivado.bat
 #     PART=<器件>           默认 xc7z020clg400-2（板上那颗 Zynq-7020）
+#     PE=<1|4|16>           折叠度，默认 1。传给 synth_design 的 -generic。
+#                           板级 READ_LAT 由它派生（2*PE+3），不用另给。
 #     PERIOD=<ns>           不给就用 XDC 里的 20 ns。给了则本次运行覆盖它。
 #     VIVADO_RUNS=<目录>    中间产物放哪，默认 rtl/vivado/_runs/
 #     TRIES=<次数>          综合失败重试次数，默认 5，理由见下
+#
+#   ⚠️ bitstream 的**文件名不随档位变**（三档都叫 ntt_board.bit）——
+#      每跑一次覆盖上一次。所以出完立刻会在同目录写一个一行的 `ntt_board.pe`
+#      记着这一版是哪一档，`run_board_prog.sh` 烧录前会把它读出来报一下。
+#      拿错档位上板的症状是「256 个值全错」，很像 RTL 挂了，值得这么防一手。
 #
 #   ── 为什么一定要从仓库外启动 Vivado ────────────────────────────────
 #   Vivado 把 .Xil/<...>/realtime/tmp/ 交给综合引擎 ABC 当工作目录，路径是经
@@ -57,8 +65,16 @@ RTLDIR="$(cd "$HERE/../.." && pwd)"        # 仓库根
 
 VIVADO="${VIVADO:-E:/xilinx/Vivado/2020.2/bin/vivado.bat}"
 PART="${PART:-xc7z020clg400-2}"
+PE="${PE:-1}"
 PERIOD="${PERIOD:-}"
 TRIES="${TRIES:-5}"
+
+# 折叠度守卫放在**脚本**这一层，不只放在 Tcl 里 —— 给错值时宁可一行都不跑，
+# 也别等 Vivado 起了 30 秒才在日志深处报错。
+case "$PE" in
+    1|4|16) ;;
+    *) echo "  ❌ 折叠度非法：PE='$PE' —— 只支持 1 / 4 / 16" >&2; exit 1 ;;
+esac
 REPDIR="$HERE/reports"
 RUNDIR="${VIVADO_RUNS:-$HERE/_runs}"
 SRCDIR="$RTLDIR/rtl/ntt_core"
@@ -94,12 +110,14 @@ vpath() {
 
 echo "== 板级：综合 → 实现 → bitstream =="
 echo "   器件   $PART"
-echo "   顶层   ntt_board_top (PE_NUMBER=1)"
+echo "   顶层   ntt_board_top (PE_NUMBER=$PE)"
+echo "   读出   READ_LAT = 2*$PE+3 = $((2 * PE + 3)) 拍（由折叠度派生）"
 echo "   周期   ${PERIOD:-XDC 里的 20 ns}"
 echo "   启动目录 $SCRATCH   （仓库路径含撇号，必须从仓库外启动）"
 
 rm -f "$REPDIR/board_util.rpt" "$REPDIR/board_timing.rpt" "$REPDIR/board_io.rpt" \
-      "$RUNDIR/ntt_board.bit" "$RUNDIR/board_synth.log" "$RUNDIR"/board_synth_try*.log
+      "$RUNDIR/ntt_board.bit" "$RUNDIR/ntt_board.pe" \
+      "$RUNDIR/board_synth.log" "$RUNDIR"/board_synth_try*.log
 
 attempt=1
 ok=0
@@ -118,7 +136,7 @@ while [ "$attempt" -le "$TRIES" ]; do
     if ( cd "$SCRATCH" && exec "$VIVADO" -mode batch -notrace -nolog -nojournal \
             -source "$(vpath "$HERE/synth_board.tcl")" \
             -tclargs "$PART" "$(vpath "$SRCDIR")" "$(vpath "$BRDDIR")" \
-                     "$(vpath "$REPDIR")" "$(vpath "$RUNDIR")" "$PERIOD" ) \
+                     "$(vpath "$REPDIR")" "$(vpath "$RUNDIR")" "$PERIOD" "$PE" ) \
             > "$TRYLOG" 2>&1 \
        && grep -q "^RESULT board DONE" "$TRYLOG" \
        && [ -s "$RUNDIR/ntt_board.bit" ]
@@ -136,8 +154,10 @@ while [ "$attempt" -le "$TRIES" ]; do
 
     # 清掉上一轮的**全部**产物，不只是报告 —— 判据里有 bit 和 DONE 行，
     # 残留会让下一次的判据在本次失败时为真。（.Xil/ 在循环开头清。）
+    # ⚠️ 档位戳 ntt_board.pe 也要一起清：它和 bit 是一对，留着一个旧的
+    #    比没有更坏 —— 烧录脚本会拿着**上一次**的档位去报「这版是 pe4」。
     rm -f "$REPDIR/board_util.rpt" "$REPDIR/board_timing.rpt" "$REPDIR/board_io.rpt" \
-          "$RUNDIR/ntt_board.bit"
+          "$RUNDIR/ntt_board.bit" "$RUNDIR/ntt_board.pe"
 
     attempt=$((attempt + 1))
     if [ "$attempt" -le "$TRIES" ]; then
@@ -166,6 +186,11 @@ echo "  时序   $REPDIR/board_timing.rpt"
 echo "  引脚   $REPDIR/board_io.rpt"
 if [ -s "$RUNDIR/ntt_board.bit" ]; then
     echo "  bit    $RUNDIR/ntt_board.bit"
+    if [ -s "$RUNDIR/ntt_board.pe" ]; then
+        echo "  档位   pe$(cat "$RUNDIR/ntt_board.pe")   （$RUNDIR/ntt_board.pe）"
+    else
+        echo "  档位   ⚠️ 没有档位戳 ntt_board.pe —— 烧录前先确认这版是哪一档"
+    fi
 else
     echo "  bit    **没有产出** —— 布线没走完，先看日志里的 ERROR"
     exit 1

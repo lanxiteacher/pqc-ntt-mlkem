@@ -11,16 +11,36 @@
 //   S1  #PING 的回帧逐字节正确（含校验和）—— 协议通路的端点检查
 //   S2  #NTT 1 端到端：256 行数据进去、256 行结果出来，
 //       结果逐行对拍 refsim/batch/ntt_batch_exp.txt 第 0 组
-//       （按 FNTT pe1 的交织读出顺序 0,2,1,3 还原系数下标）
+//       （按该折叠度下 FNTT 的读出顺序还原系数下标）
 //
 // S2 是重点：它是**整个数据通路**的检查 —— 串口收发 + 行组装 + 协议机 +
 // 十六进制解析 + 装载口时序 + NTT 核 + 读出顺序 + 回传。任何一环接错，
 // S2 都会红。而 S2 红了就不该上板（§七 红线：仿真能抓到的问题不要留到板上抓）。
 //
 // ---------------------------------------------------------------------------
+// ★ 三个折叠度都能跑（2026-10-04 加）。折叠度是**编译期**开关：
+//
+//     sh rtl/board/run_board_check.sh            # pe1（默认）
+//     PE=4  sh rtl/board/run_board_check.sh      # pe4
+//     PE=16 sh rtl/board/run_board_check.sh      # pe16
+//
+//   随折叠度变的东西只有两样，都是**从 PE_NUM 推出来的**，不是另抄一份：
+//     · READ_LAT = 2*PE_NUM + 3   （核的读出延迟，随核时钟门控比例变）
+//     · FNTT 的**读出**顺序：pe1 = 交织 0,2,1,3｜pe4、pe16 = **自然序**
+//   装载顺序**不随折叠度变**（本台只发 FNTT，走 `load_*_f` → 三档都自然序），
+//   所以灌进去的 256 行、命令文本 `#NTT 1`（那个 1 是 n 批次，不是折叠度）
+//   三档全都一样。
+//   ⚠️ 三档**必须分别跑**：一次只用一份宏定义，跑完一档再跑下一档。
+//
+//   为什么值得单独跑 pe4/pe16：探针 ⑩（`rtl/probes/ntt_func_tb.v`）已经在
+//   三档 × 3 运算 × 16 组上验到 4096/4096，但那是核级的。本台多盖的是
+//   **板级**那一段：折叠度从综合参数一路传到 READ_LAT，以及板子的收发时序
+//   在更慢的核时钟（pe16 的核时钟只有 1/16）下还成不成立。
+//
+// ---------------------------------------------------------------------------
 // ⚠️ 这里**故意不测**的东西（不要以为测过了）：
 //   · 各种 #ERR 错误码、超时行为、#ABORT  —— 归 B 的协议验收台
-//   · #INTT / #PMUL（三种域）—— 本轮只做 pe1 折叠度的 NTT 一条路
+//   · #INTT / #PMUL（三种域）
 //   · FNTT 以外的读出顺序
 //
 // 跑法：sh run_board_check.sh        （必须经脚本跑 —— 见脚本里的路径说明）
@@ -52,25 +72,53 @@ module smoke_tb;
     localparam integer T_LINE_CC = 300_000;
     localparam integer T_CMD_CC  = 500_000_000;
     localparam integer T_CORE_CC =   5_000_000;
-    localparam integer READ_LAT  = 5;               // H1 §二：走 _top 时 read_* 后第 5 拍
+
+    // ---- 折叠度：编译期选（见文件头）。默认 pe1 --------------------------
+    //   ⚠️ 用 `ifdef 而不是运行时变量：PE_NUMBER 是**综合期**参数，
+    //      核的 generate 分支要它在编译时就定下来。
+`ifdef TB_PE16
+    localparam integer PE_NUM = 16;
+`elsif TB_PE4
+    localparam integer PE_NUM = 4;
+`else
+    localparam integer PE_NUM = 1;
+`endif
+
+    // READ_LAT 随折叠度变 —— 口径在 rtl/ntt_core/KyberHPMNTT_top.v 文件头（第 38 行）：
+    //   第一条有效 dout = read_* 之后 2*PE_NUMBER + 3 拍。
+    //   道理：核的时钟被按 1/PE 门控，第一拍宽结果最早也要等第 3 个 ce 才凑齐；
+    //   硬要三档都用 read+5（旧版这里就是写死的 5），pe4/pe16 只能吐出假数据。
+    //   ⚠️ 板级顶层 ntt_board_top.v 里也写着同一个表达式 —— 两处必须一致。
+    localparam integer READ_LAT  = 2 * PE_NUM + 3;
 
     localparam integer GUARD_CC  = 800_000;         // 收一个字节的护栏（16 ms）
     localparam real    MAX_NS    = 900_000_000.0;   // 全局护栏（0.9 s）
 
-    // H1 §五：FNTT pe1 的读出顺序 = 交织 0,2,1,3。
-    //   依据 refsim/pe1/fntt_batch_tb.v:108-113 —— 每 4 拍一组，组内顺序 0,2,1,3。
-    //   即第 m 行结果对应**系数下标** perm(m)。
+    // ---- FNTT 的**读出**顺序：pe1 = 交织 0,2,1,3｜pe4、pe16 = 自然序 ----
+    //   pe1 那格依据 refsim/pe1/fntt_batch_tb.v:108-113 —— 每 4 拍一组，
+    //   组内顺序 0,2,1,3，即第 m 行结果对应**系数下标** perm(m)。
+    //   pe4/pe16 那格依据 `rtl/H1_port_spec.md` §五 实测表（探针 ⑩：
+    //   3 运算 × 3 档 × 16 组黄金向量，各 4096/4096 多重集相等）。
+    //   于是「第 m 行对应 vexp 的哪一号」= FNTT 那一行的分档：
+    //     pe1       → perm(m)   （把交织还原回自然序）
+    //     pe4、pe16 → m         （本来就是自然序，不用还原）
+    //   ⚠️ 这里只写**读出**。装载是另一套规则，见下面那段长注释。
+    //   ⚠️ 实现在 `perm` **之后** —— 函数体里要调 perm，别挪到前面去。
+
+    // ⚠️ **装载顺序按 (运算, 折叠度) 查表 —— 没有一句话能概括**（2026-10-04 第二次改）。
+    //    实测（`rtl/H1_port_spec.md` §五、探针 ⑩，崩溃判据：拨成另一个候选必须塌）：
+    //      运算    路径   pe1      pe4       pe16
+    //      FNTT    _f     自然序   自然序    自然序      拨 σ → 26/4096
+    //      INTT    _i     交织 σ   交织 σ    交织 σ      拨自然序 → 19/4096
+    //      PWM2    _i     交织 σ   自然序    自然序      拨反 → 22/4096
+    //    **最反直觉的一格：`#INTT` 与 `#PMUL NTT` 都走 `load_*_i`，但 pe4/pe16 上要求不同。**
+    //    本台只发 FNTT → 三档都自然序，「灌进去的顺序」这一行三档都不用改。
+    //    ⚠️ 换个运算就要重查这一格。
     //
-    // ⚠️ **装载顺序看「装载路径」，不看命令，而且按折叠度分档**（2026-10-04 改）。
-    //    实测规则（`rtl/H1_port_spec.md` §五 实测表，探针 ⑩：
-    //    3 运算 × 3 档 × 16 组黄金向量，各 4096/4096 多重集相等）：
-    //      load_*_f  →  三档都自然序
-    //      load_*_i  →  pe1 = 交织｜pe4、pe16 = 自然序
-    //    本台是 **pe1 + FNTT（走 `_f`）** → 自然序。换个运算或换个档位就要重查，
-    //    别把这一条当成「装载侧就是这样」。
-    //    旧版这行写的是「装载侧三档都是自然序，不用管」——
-    //    照它写的上位机驱动第一轮五条挂四条（只有 `#NTT 1` 独活，因为只有它要自然序）。
-    //    「三档」那个词没错（FNTT `_f` 确实三档都自然序），错在把它推广到了全部运算。
+    //    这一行改过两次，两次都是**把一格写成了一条规则**：
+    //      初版「装载侧三档都是自然序」→ 上位机驱动第一轮五条挂四条。
+    //      二版「load_*_i → pe1 交织｜pe4·pe16 自然序」→ 把 PWM2 那格推广到了 INTT。
+    //    「FNTT `_f` 三档都自然序」这个事实两版都对，错的一直是推广。
     function integer perm(input integer m);
         integer q;
         begin
@@ -78,6 +126,14 @@ module smoke_tb;
             if      (q == 1) perm = m + 1;
             else if (q == 2) perm = m - 1;
             else             perm = m;
+        end
+    endfunction
+
+    // 「第 m 行结果 ↔ vexp 的第几号」—— 即上一条注释里 FNTT 那行的分档。
+    function integer out_idx(input integer m);
+        begin
+            if (PE_NUM == 1) out_idx = perm(m);
+            else             out_idx = m;
         end
     endfunction
 
@@ -92,7 +148,7 @@ module smoke_tb;
     always #(CLK_HALF_NS) sys_clk = ~sys_clk;
 
     ntt_board_top #(
-        .PE_NUMBER (1),
+        .PE_NUMBER (PE_NUM),
         .CLK_FREQ  (CLK_FREQ),
         .UART_BPS  (UART_BPS),
         .T_LINE_CC (T_LINE_CC),
@@ -358,6 +414,17 @@ module smoke_tb;
         $display("");
         $display("========== S2  #NTT 1 端到端（256 行进、256 行出）==========");
         // =============================================================
+        // 先自报这一轮跑的是哪一档 —— 三档共用一套日志格式，不报出来，
+        // 事后翻日志分不清哪个结果属于哪一档。
+        // ⚠️ 这里用 if/else 两条 $display，不写 `cond ? "串A" : "串B"` ——
+        //    三元表达式两侧字符串长度不同时，iverilog 会取较宽的那个宽度、
+        //    把短的那个**左边补零**，`%0s` 于是打出一串前导 NUL。
+        if (PE_NUM == 1)
+            $display("  折叠度 PE_NUM=%0d   READ_LAT=%0d 拍   读出下标 = perm(m)（交织还原）",
+                     PE_NUM, READ_LAT);
+        else
+            $display("  折叠度 PE_NUM=%0d   READ_LAT=%0d 拍   读出下标 = m（自然序）",
+                     PE_NUM, READ_LAT);
 
         // ---- 非退化检查：向量全是 0/常量时「全中」可能只是巧合（约定 3）----
         uniq = 0;
@@ -398,7 +465,7 @@ module smoke_tb;
                 nerr = nerr + 1;
             end else begin
                 v   = hex3val(rbuf[0], rbuf[1], rbuf[2]);
-                idx = perm(m);
+                idx = out_idx(m);       // pe1 → perm(m)｜pe4、pe16 → m（见 out_idx 注释）
                 if (v !== vexp[idx]) begin
                     if (nerr < 5)
                         $display("  [FAIL] 第 %0d 行：实收 %03x，期望 %03x（系数下标 %0d）",
@@ -412,7 +479,7 @@ module smoke_tb;
                     hit = -1;
                     for (j = 0; j < 256; j = j + 1)
                         if (vexp[j] === v && hit == -1) hit = j;
-                    $display("  dump m=%0d  收 %03x  → vexp[%0d]   (本行期望 vexp[%0d]=%03x  perm=%0d)",
+                    $display("  dump m=%0d  收 %03x  → vexp[%0d]   (本行期望 vexp[%0d]=%03x  idx=%0d)",
                              m, v, hit, idx, vexp[idx], idx);
                     if (m >= 23) begin
                         $display("  （+dump 到头 24 行，提前结束）");
@@ -422,7 +489,11 @@ module smoke_tb;
             end
         end
         if (nerr == 0) begin
-            $display("  [ ok ] 256/256 行结果与黄金向量一致（读出顺序已按 0,2,1,3 还原）");
+            if (PE_NUM == 1)
+                $display("  [ ok ] pe1：256/256 行与黄金向量一致（读出顺序已按交织 0,2,1,3 还原）");
+            else
+                $display("  [ ok ] pe%0d：256/256 行与黄金向量一致（读出自然是自然序，未做还原）",
+                         PE_NUM);
         end else begin
             $display("  [FAIL] 256 行里有 %0d 行不符", nerr);
             nfail = nfail + 1;

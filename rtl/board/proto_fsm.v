@@ -92,9 +92,13 @@ module proto_fsm #(
     parameter integer T_CMD_CC  = 500_000_000,    // 10 s
     parameter integer T_CORE_CC =   5_000_000,    // 100 ms
 
-    // read_a 之后隔几拍照第一个有效 dout。
-    // H1 §二 实测：走 `_top` 是 5 拍。留成参数是为了能用测试台**扫**出来，
-    // 不要凭算式定 —— 见 tb/ 里的说明。
+    // read_a 之后隔几拍照第一个有效 dout。**这个默认值只对 pe1 成立。**
+    //   ⚠️ 真实口径是 `2*PE_NUMBER + 3`，**随折叠度变**（pe1=5 / pe4=11 / pe16=35）。
+    //      正常路径上不由这里定 —— `ntt_board_top` 按它自己的 PE_NUMBER 算出值
+    //      再传进来（见该文件 READ_LAT 那条注释）。
+    //      本默认值只是给「单独例化本模块」的场合留的，那时假定 pe1。
+    //   H1 §二 的 pe1 实测是 5 拍；留成参数是为了能用测试台**扫**出来，
+    //   不要凭算式定死 —— 见 tb/ 里的说明。
     parameter integer READ_LAT  = 5
 )(
     input                     clk,
