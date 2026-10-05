@@ -215,8 +215,9 @@ GEN.push('### §8.3 指标表（按《选题指导》的列）', '',
         `${h('rtl/probes/README.md')} §判据 2、${h('rtl/H1_port_spec.md')} §五 |`,
     `| 端到端延迟 | 核心 | ⬜ 待测 | ms | 未测：需要上板跑一次「PC → 串口 → 核 → 串口 → PC」 | ` +
         `${h('host/')}（协议已冻结 v1.0，等上板） |`,
-    `| KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | FIPS 203 官方 \`.rsp\`（ML-KEM-768），` +
-        `kat_verify.c 四项独立复算、逐比特 | ${h('research/mlkem_kat/')} |`,
+    `| KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | 社区维护的 FIPS 203 兼容 \`.rsp\`（ML-KEM-768），` +
+        `kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 \`report/design/04_功能正确性.md\` §4.4） | ` +
+        `${h('research/mlkem_kat/')} |`,
     `| LUT 占用 | 资源 | ${c(TIERS.map((t) => nc[t].lut.used))} | 个 | post-route；` +
         `顶层边界；占用率 ${c(TIERS.map((t) => nc[t].lut.pct + '%'))} | ` +
         `${TIERS.map((t) => h(`rtl/vivado/reports/${t}_nc_util.rpt`)).join('、')} |`,
@@ -234,7 +235,7 @@ GEN.push('### §8.3 指标表（按《选题指导》的列）', '',
 GEN.push('### 功能正确性（B 侧验证台 + A 侧探针）', '',
     '| 验的是什么 | 判定 | 怎么判的 | 证据文件 |',
     '|---|---|---|---|',
-    '| FIPS 203 KAT | 1000 / 1000 | 官方 `.rsp`，四项独立复算 | `research/mlkem_kat/` |',
+    '| FIPS 203 兼容 KAT | 1000 / 1000 | 社区维护的 `.rsp`，四项独立复算 | `research/mlkem_kat/` |',
     '| 正变换 FNTT（上游 pe1） | 4096 / 4096 | RTL 落盘输出 vs 黄金向量，逐值 | `refsim/batch/fntt_rtl_out.txt` |',
     '| 逆变换 INTT（上游 pe1） | 4096 / 4096 | 16 组独立向量 | `refsim/README.md` §三 |',
     '| 点乘 PWM2（上游 pe1） | 4096 / 4096 | 16 组独立向量 | `refsim/README.md` §三 |',
@@ -277,7 +278,7 @@ for (const t of TIERS) {
     csvRows.push(['NTT 周期数', '核心', t, CYCLES[t].fntt, 'cycles', COND.cycles, 'rtl/probes/README.md']);
     csvRows.push(['端到端延迟', '核心', t, '待测', 'ms', '需要上板', 'host/']);
 }
-csvRows.push(['KAT 通过率', '核心', '—', '1000/1000', '%', 'FIPS 203 官方 .rsp', 'research/mlkem_kat/']);
+csvRows.push(['KAT 通过率', '核心', '—', '1000/1000', '%', '社区维护的 FIPS 203 兼容 .rsp', 'research/mlkem_kat/']);
 
 const csv = csvRows.map((r) => r.join(',')).join('\n') + '\n';
 

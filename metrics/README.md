@@ -62,7 +62,7 @@ node metrics/gen_metrics.mjs      # → 更新本文件里的生成块 + 写 dat
 |---|---|---|---|---|---|
 | NTT 内核吞吐（周期数） | 核心 | 904 ｜ 232 ｜ 69 | cycles | 一次 NTT 全程（7 层）；顶层量 `done` 拍 − `start` − 3；**不含读出延迟**；与上游逐档相同 | `rtl/probes/README.md` §判据 2、`rtl/H1_port_spec.md` §五 |
 | 端到端延迟 | 核心 | ⬜ 待测 | ms | 未测：需要上板跑一次「PC → 串口 → 核 → 串口 → PC」 | `host/`（协议已冻结 v1.0，等上板） |
-| KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | FIPS 203 官方 `.rsp`（ML-KEM-768），kat_verify.c 四项独立复算、逐比特 | `research/mlkem_kat/` |
+| KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | 社区维护的 FIPS 203 兼容 `.rsp`（ML-KEM-768），kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 `report/design/04_功能正确性.md` §4.4） | `research/mlkem_kat/` |
 | LUT 占用 | 资源 | 727 ｜ 2000 ｜ 8922 | 个 | post-route；顶层边界；占用率 1.37% ｜ 3.76% ｜ 16.77% | `rtl/vivado/reports/pe1_nc_util.rpt`、`rtl/vivado/reports/pe4_nc_util.rpt`、`rtl/vivado/reports/pe16_nc_util.rpt` |
 | DSP 占用 | 资源 | 1 ｜ 4 ｜ 16 | 个 | post-route；**严格等于蝶形数**（非退化佐证） | 同上 |
 | 最高频率 / WNS | 资源 | 168 MHz ｜ 160 MHz ｜ 154 MHz | MHz | post-route；约束 `create_clock -period 5`（200 MHz，故意给紧），Fmax = 1000 / (5 − WNS)；WNS -0.936 ns ｜ -1.260 ns ｜ -1.507 ns | `rtl/vivado/reports/pe1_nc_timing.rpt`、`rtl/vivado/reports/pe4_nc_timing.rpt`、`rtl/vivado/reports/pe16_nc_timing.rpt` |
@@ -72,7 +72,7 @@ node metrics/gen_metrics.mjs      # → 更新本文件里的生成块 + 写 dat
 
 | 验的是什么 | 判定 | 怎么判的 | 证据文件 |
 |---|---|---|---|
-| FIPS 203 KAT | 1000 / 1000 | 官方 `.rsp`，四项独立复算 | `research/mlkem_kat/` |
+| FIPS 203 兼容 KAT | 1000 / 1000 | 社区维护的 `.rsp`，四项独立复算 | `research/mlkem_kat/` |
 | 正变换 FNTT（上游 pe1） | 4096 / 4096 | RTL 落盘输出 vs 黄金向量，逐值 | `refsim/batch/fntt_rtl_out.txt` |
 | 逆变换 INTT（上游 pe1） | 4096 / 4096 | 16 组独立向量 | `refsim/README.md` §三 |
 | 点乘 PWM2（上游 pe1） | 4096 / 4096 | 16 组独立向量 | `refsim/README.md` §三 |

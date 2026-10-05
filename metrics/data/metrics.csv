@@ -44,4 +44,4 @@ WHS,资源,pe16,0.077,ns,post-route,rtl/vivado/reports/pe16_nc_timing.rpt
 推算 Fmax,资源,pe16,154,MHz,post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,rtl/vivado/reports/pe16_nc_timing.rpt
 NTT 周期数,核心,pe16,69,cycles,顶层实测 done 拍 − start − 3，不含读出延迟,rtl/probes/README.md
 端到端延迟,核心,pe16,待测,ms,需要上板,host/
-KAT 通过率,核心,—,1000/1000,%,FIPS 203 官方 .rsp,research/mlkem_kat/
+KAT 通过率,核心,—,1000/1000,%,社区维护的 FIPS 203 兼容 .rsp,research/mlkem_kat/

@@ -11,7 +11,7 @@
 
 | 文件 | 用在哪 | 画的是什么 |
 |---|---|---|
-| `folding_sweep.svg` | `design/03_性能与资源.md` §3.3；`design/02_设计与创新点.md` §2.2 | 折叠度三档（1 / 4 / 16 蝶形）的 **NTT 周期数 / LUT 占用 / 推算 Fmax** 三个面板 |
+| `folding_sweep.svg` | `design/03_性能与资源.md` §3.3 | 折叠度三档（1 / 4 / 16 蝶形）的 **NTT 周期数 / LUT 占用 / 推算 Fmax** 三个面板 |
 | `verify_chain.svg` | `design/04_功能正确性.md` §4.3 | 验证链：FIPS 203 KAT → C 参考实现 → 作者期望输出 → RTL 对拍，四个入口脚本与结果标在链上 |
 | `architecture.svg` | `design/02_设计与创新点.md` §2.2 | 架构三层：`KyberHPMNTT_top` 的对外端口 / 核外的序列化-反序列化 / 核内的宽接口。实线 = 数据，虚线 = 控制 |
 | `demo_ntt_layer3.png` | `design/05_可复现性.md` §5.4 | 演示页（**浅色报告版**）：正变换走到第 3 层，右侧显示选中系数的蝶形算式与配对 |

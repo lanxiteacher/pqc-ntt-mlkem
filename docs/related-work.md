@@ -38,7 +38,7 @@ PQShield 的 2/4/8 蝶形），所以「能调折叠度」**本身不构成差�
 
 | # | 论文 / 作者 / 年份 | 平台与器件 | 折叠度 | 资源 LUT / FF / DSP / BRAM | 频率 | 周期 | 测量条件 | 与我们的差别 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `elec` — Deeply Pipelined NTT Accelerator with Ping-Pong Memory and LUT-Only Barrett Reduction<br>*MDPI Electronics 2026 · Sonbul* | Artix-7 **XC7A100T-3** | 折叠 128（单蝶形 + 7 级深流水 + ping-pong BRAM18） | 503 / 未报告 / **1** / 2 | **200 MHz** | FNTT 1029 / INTT 1285 | ✅ **post-PAR 器件实测**，连 slice 数（184）都给了 | **我们折 pe1 的骨架来源**。差别：我们跑在 **-2 速度等级**（低一档）。实测对照见 §二 |
+| 1 | `elec` — Deeply Pipelined NTT Accelerator with Ping-Pong Memory and LUT-Only Barrett Reduction<br>*MDPI Electronics 2026 · Sonbul* | Artix-7 **XC7A100T-3** | 折叠 128（单蝶形 + 7 级深流水 + ping-pong BRAM18） | 503 / 未报告 / **1** / 2 | **192 MHz** | FNTT 1029 / INTT 1285 | ✅ **post-PAR 器件实测**，连 slice 数（184）都给了 | **我们折 pe1 的骨架来源**。差别：我们跑在 **-2 速度等级**（低一档）。实测对照见 §二 |
 | 2 | `j49` — 指令集式 Kyber NTT 核<br>*IEEE TCAS-I 68(11) 2021 · Bisheh-Niasar* | Artix-7 XC7A100T-3 | 折叠 128（迭代 7 级，乒乓 RAM，CT/GS 统一） | **360** / 未报告 / 3 / 2 | 115 MHz | NTT 940 / INTT 1203 | ✅ post-PAR 器件实测 | LUT 只有我们 pe1（808）的 **45%**，但 DSP 是我们 3 倍、频率只有我们 2/3。它用「指令码」暴露控制 |
 | 2b | `j49` 方法二（同上 + 并行蝶形） | Artix-7 XC7A100T-3 | 折叠 128 + 复制蝶形 | 737 / 未报告 / 6 / 4 | 115 MHz | **NTT 474 / INTT 602** | ✅ post-PAR 器件实测 | 「复制蝶形换吞吐」是把 940 砍到 474 周期的办法；我们折 pe4 走同一思路（904 → 232）。对照见 §二 |
 | 3 | `xl` — 最小 Artix-7 全 Kyber 硬件<br>*IACR TCHES 2021(2) · Xing & Li* | Artix-7 **XC7A12T-1**（最小档） | 2 个统一蝶形（偶/奇并行） | 1737（NTT 核）/ 未报告 / 2 / 3 | 161 / 167 MHz | NTT 512 / INTT 576 | ✅ 器件实测，Vivado 2017.3，**过了 KAT** | 它 512 周期比我们 pe1（904）快 **1.77×**，代价是 LUT 2.15×、DSP 2×。它的价值在**系统级**：把 Keccak 采样藏进 NTT 后面 |
@@ -48,8 +48,12 @@ PQShield 的 2/4/8 蝶形），所以「能调折叠度」**本身不构成差�
 | 4c | 同上，「This（NTT+INTT）×2」 | 同上 | 2 蝶形，**NTT+INTT 共用** | 541 / 680 / **0** / 4 | 417 MHz | NTT/INTT 均 461 | 同上 | **它的 NTT/INTT 共用比我们彻底**（我们 INTT 是另走一遍） |
 | 5 | `ht` — A High Throughput Kyber NTT<br>*IACR ePrint 2025/1763 · Bertels* | **Alveo U55c**（服务器档 UltraScale+） | **无折叠**（全展开 radix-256，896 蝶形） | 67210 / 未报告 / **0** / 0 | 400 MHz | 1（**摊销**） | ⚠️ **稳态摊销吞吐，不是端到端延迟**；且**放不进 7020**（53200 LUT 上限） | 我们**只能抄它的单元**：30 LUT / 14 FF / 0 DSP 的模乘、69 LUT 的蝶形 —— 已知最小的无 DSP 方案 |
 | 6 | `foldntt` — arXiv 2026 | Artix-7（**yosys + openXC7 开源流程**） | 折叠 512（**N=1024**） | 819 / 未报告 / 1 / 2 | 138 MHz | 5290 | ⚠️ 作者自述「vendor timing 与板级执行在 scope 之外」，**与 Vivado 计数不可比** | 它的卖点是**全开源工具链**；我们走 Vivado（指南允许其他版本但要说明可复现，见 `../logs/project_state_background.md`） |
-| 7 | `ma_tcas` — TCAS-I 2023 | **Spartan-6**（老 DSP48A1 原语） | 折叠 128（Kyber-HDL 双蝶形 + 掩码） | 7653（**整机**）/ 未报告 / 未报告 / 11 | 20 MHz | 10000（**整流程**） | ✅ 真板实测（SAKURA-G 功耗/电磁曲线）。⚠️ 单位是「整机 / 整流程」，**不是 NTT 核** | 它是唯一给**侧信道真板数据**的。我们不实现侧信道防护，答辩口径见 `../research/…汇编.md` §2.6 |
+| 7 | `ma_tcas` — TCAS-I 2023 | **Spartan-6**（老 DSP48A1 原语） | 折叠 128（Kyber-HDL 双蝶形 + 掩码） | 7653（**整机**）/ 未报告 / 未报告 / 11 | 20 MHz | 10000（**整流程**） | ✅ 真板实测（SAKURA-G 功耗/电磁曲线）。⚠️ 单位是「整机 / 整流程」，**不是 NTT 核** | 它是唯一给**侧信道真板数据**的。我们不实现侧信道防护，答辩口径见 `../research/pqc-ntt_ml-kem_compendium.md` §2.6 |
 | 8 | `butterfly` — A Better Kyber Butterfly for FPGAs<br>*FPL 2024 · Bertels, COSIC* | Artix-7（**综合**） | **仅蝶形单元，非完整 NTT** | 49（模乘）/ 151（蝶形）/ 未报告 / 1 / 0 | **未报告** | **未报告** | ⚠️ 49 LUT 是**综合值**，且**无周期数据** | **我们的模乘单元直接抄它**。差别：它不构成核，我们把它接进了完整数据通路 |
+
+> ⚠️ **第 1 行 `elec` 的频率**：汇编 §2.2 记 **200 MHz**，本表按
+> `../rtl/vivado/folding_comparison.md` §四（同一器件、同一速度等级、1 蝶形配置）取 **192 MHz**，
+> 与 §二的交叉核对一致 —— **两来源不一致，待回原文 PDF 统一**。
 
 ---
 
@@ -101,7 +105,7 @@ PQShield 的 2/4/8 蝶形），所以「能调折叠度」**本身不构成差�
 
 ## 三、⚠️ 读表警告（不读会误判，写报告引用前必看）
 
-源自 `../research/…汇编.md` §2.5，这里保留原文结论。
+源自 `../research/pqc-ntt_ml-kem_compendium.md` §2.5，这里保留原文结论。
 
 **警告一：跨器件不可直接比。**
 - `ht` 是 Alveo U55c（服务器档，LUT 容量档位比 7020 大 3 倍以上），且它的「1 周期/NTT」是**摊销吞吐**
@@ -142,7 +146,7 @@ Zynq-7000 上的 Kyber NTT，**2908 LUT / 170 FF / 9 DSP / 1935 周期 / 45 MHz 
 | ② | Information 2024, 15, 400 —— Kieu-Do-Nguyen 等，*Compact and Low-Latency FPGA-Based NTT Architecture for CRYSTALS Kyber*（主表 4a–4c 行） | `../research/kyber_ref/papers/mdpi_v1.txt`、`mdpi_v2.txt`、`out_table.txt` | **从 PDF 抽取的文本，PDF 本身不在仓库**（版权，见 `../.gitignore`）。Table 1 各列已核对 |
 | ③ | ASHES '24 · Kundi / Bermudo Mera / Strub / Hutter（PQShield），*High-Performance NTT Hardware Accelerator to Support ML-KEM and ML-DSA* —— DOI 10.1145/3689939.3695785 | `../research/kyber_ref/papers/pq_table.txt`、`pqshield.txt` | ⚠️ **Table 3 抽取后有一行丢了设计标签**（`2,893/2,356/4/4.5` 那行），且多行共用面积格。**本表暂未引用它的数字**，等核对过 PDF 再说 |
 | ④ | 我们自己的三档实测 | `../rtl/vivado/folding_comparison.md`（产物 `reports/*.rpt`） | A 实测（H4）。数字以 `reports/` 下的 `.rpt` 为准 |
-| ⑤ | 侧信道相关结论 | `../research/…汇编.md` §2.6 | 只用于答辩防守，不涉及本表 |
+| ⑤ | 侧信道相关结论 | `../research/pqc-ntt_ml-kem_compendium.md` §2.6 | 只用于答辩防守，不涉及本表 |
 | ⑥ | 参数化折叠度设计定稿（**我们改进的载体**） | `../rtl/folding_param_design.md` | A 定稿（2026-09-29）。§一 给三档验收判据、§2.1 重述接口瓶颈、§4.3 定「核外序列化 + 固定 12 位接口」 |
 
 **PQShield 那篇（③）为什么值得单独盯**：它是**产业界**（PQShield）的工作，
@@ -155,10 +159,12 @@ Zynq-7000 上的 Kyber NTT，**2908 LUT / 170 FF / 9 DSP / 1935 周期 / 45 MHz 
 ## 五、还没做的
 
 - ⬜ **A / B 核对**：本表 4a–4c 行的器件型号、③ 的数字，都还没对上原文 PDF
+- ⬜ **`elec` 频率两来源不一致**：汇编 §2.2 记 **200 MHz**，本表与《折叠度对比表》§四取 **192 MHz**
+  —— 与上一项同一批，待回原文 PDF 统一（报告 §1.3 已按 192 取值并加注）
 - ✅ **报告正文已成（09-30）**：`../report/design/01_选题背景与相关工作.md` —— 本文件是它的原料，
   章节体保留了主表与读表警告，去掉了溯源细节（细节留在本文件）
 - ⬜ 配图：折叠度 ↔ 周期数 / 资源 的曲线（数据齐了，在 §二）
-- ⬜ `kred24`(Tosun) 的五种模约减权衡表（`../research/…汇编.md` §2.3）—— 属「设计与创新点」章节，不在这张表里
+- ⬜ `kred24`(Tosun) 的五种模约减权衡表（`../research/pqc-ntt_ml-kem_compendium.md` §2.3）—— 属「设计与创新点」章节，不在这张表里
 
 ## 相关
 
