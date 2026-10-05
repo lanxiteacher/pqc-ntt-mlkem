@@ -54,7 +54,7 @@ node report/figures/gen_figures.mjs      # → report/figures/folding_sweep.svg
 
 | 图 | 要什么 | 谁 / 什么时候 |
 |---|---|---|
-| **关键路径截图** | **两组各一张（pe1）**：① **核** —— `pe{1,4,16}_nc_timing.rpt` 的 `-max_paths 10` 段（对应 `design/03` §3.7）；② **板级** —— `board_pe{1,4,16}_timing.rpt`（对应 §3.13.4）。⚠️ 两个流程是**非工程模式**，跑完**不留 `.xpr` / `.dcp`**，GUI 里没有设计可打开 —— 2026-10-05 已给两者加可选 `DCP=` 产出 checkpoint（见 `../../logs/runbook_2026-10-05_h4_screenshot_and_recording.txt`），此后可截 | 需要 Vivado —— **C 本机做不了**，A 截（两组各 pe1 一张；三档路径结构相同，要全截各多跑一次） |
+| **关键路径截图** | **两组各一张（pe1）**：① **核** —— `pe{1,4,16}_nc_timing.rpt` 的 `-max_paths 10` 段（对应 `design/03` §3.7）；② **板级** —— `board_pe{1,4,16}_timing.rpt`（对应 §3.13.4）。⚠️ 两个流程是**非工程模式**，跑完**不留 `.xpr` / `.dcp`**，GUI 里没有设计可打开 —— 2026-10-05 已给两者加可选 `DCP=` 产出 checkpoint（见 `../../logs/runbook_2026-10-05_h4_screenshot_and_recording.md`），此后可截 | 需要 Vivado —— **C 本机做不了**，A 截（两组各 pe1 一张；三档路径结构相同，要全截各多跑一次） |
 | ~~**架构框图**（矢量版）~~ | ✅ **已成** `architecture.svg`（10-01） | C（已完成；`design/02` §2.2 已引用） |
 | ~~**演示页截图**~~ | ✅ **原图 4 张在 `../../assets/`（深色）**；**报告版 3 张浅色截图已进本目录**（`demo_*.png`，10-02）。浅底版由 `?theme=light` + `clip` 裁到「标题 + 网格」生成 | C（**已完成**） |
 | **波形截图** | `refsim/` 对拍时的波形 | 要 B 给（H5，W3 起） |
