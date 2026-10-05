@@ -193,7 +193,10 @@
       UART 那两颗**改为自写**（见 §一 那条），`CLK_FREQ=50000000` / `UART_BPS=115200` 正是本板的值。
       ✅ 仿真：冒烟台 261 点 / 协议验收台 273 点，均失败 0。
       ✅ **综合 → 实现 → 布线已跑通**（2026-10-04，`sh rtl/vivado/run_board_synth.sh`）：
-      WNS +6.538 ns / WHS +8.338 ns @20 ns，时序全收敛、零告警；LUT 9.45% / FF 3.27% /
+      WNS +6.538 ns / WHS **+0.076** ns / WPWS +8.870 ns @20 ns，时序全收敛、零告警
+      （⚠️ 2026-10-05 订正：此处原写「WHS +8.338」是**串列**，8.338 是 `async_default`
+      组的 slack，见 §一 上板行那条订正；三个数逐列核 `board_pe1_timing.rpt` 得出）；
+      LUT 9.45% / FF 3.27% /
       BRAM 2.5 tile / DSP 1；四引脚全部 `FIXED` 落位；bitstream 已出
       （`rtl/vivado/_runs/ntt_board.bit`，⚠️ 不进 git）。
       ✅ **2026-10-04 烧录 + 真串口五条计算事务已跑通** —— 先 `sh rtl/vivado/run_board_prog.sh scan`
