@@ -149,7 +149,7 @@
       产出 checkpoint，不传则行为不变。板级 `ntt_board_pe1.dcp` 已产出并验过
       （`open_checkpoint` 能开、器件 `xc7z020clg400-2`、关键路径 12 级 / 13.153 ns /
       slack 6.538 与提交报告一致）；核 `pe1_nc.dcp` 在跑。**剩下的纯粹是
-      人在机器前的操作**，逐步见 `logs/runbook_2026-10-05_h4_screenshot_and_recording.txt`
+      人在机器前的操作**，逐步见 `logs/runbook_2026-10-05_h4_screenshot_and_recording.md`
       ⬜ **上板串口录屏**同欠（要人在板子旁），步骤同那份手册 §二
 - [x] ~~**H6 · A → B：`.bit` + XDC + 怎么下载**~~ ✅ **2026-10-04 信已发**
       （`logs/letter_2026-10-04_A_to_B_h6_board.txt`）—— 定了**联调用 pe1**（因
