@@ -138,7 +138,15 @@
       **板级 WNS 不能反推 Fmax**）；另给出一条实测 —— **三档关键路径都不在蝶形**，
       都在 `u_line` 行组装 → `u_fsm` 宽寄存器使能译码上。
       信：`logs/letter_2026-10-04_A_to_C_h4_resources.txt`。
-      ⚠️ 仍欠 C 的两项素材：**关键路径截图**、**上板串口录屏**（后者要人在板子旁）
+      ⚠️ 仍欠 C 的两项素材，**2026-10-05 拆成「数据」与「截图」两半**：
+      ✅ **数据那半已交付** —— `rtl/vivado/critical_paths.md`（+ 生成器
+      `gen_critical_paths.py`、阴性对照 `check_critical_paths_anchors.py`）。
+      从 `reports/board_pe{1,4,16}_timing.rpt` **机械抽取**，报告重跑重跑脚本即可，
+      报告里能引用的一切数字都在里面（三档 WNS / 各档前 10 条 / pe1 最坏那条的
+      逐行网表 / `**async_default**` 组）；出文档前自锚三道，对不上就报错不出文件。
+      ⬜ **截图那半仍欠**：Vivado GUI 那张 Schematic 图要**人在机器前开 GUI**才截得到，
+      本文替代不了它（已写在文首）。
+      ⬜ **上板串口录屏**同欠 —— 要人在板子旁
 - [x] ~~**H6 · A → B：`.bit` + XDC + 怎么下载**~~ ✅ **2026-10-04 信已发**
       （`logs/letter_2026-10-04_A_to_B_h6_board.txt`）—— 定了**联调用 pe1**（因
       `unpack.py` 按 pe1 写死 FNTT 序）、物理接线三步、烧录命令、串口口径。
