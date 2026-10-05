@@ -105,8 +105,26 @@ check_tool() {   # check_tool <显示名> <命令> [版本参数]
     return 0
 }
 
+# python 的解释器名在 Windows 上不一定叫 python3：WindowsApps 里有个同名占位符
+# （`python3.exe` 是跳转存根，退出码 49、无输出），而真解释器常常只提供 `python`。
+# 两个名字都试，哪个能真跑通算哪个 —— 本项目 refsim/ 的入口脚本用的就是 `python`。
+check_python() {
+    for cmd in python3 python; do
+        command -v "$cmd" >/dev/null 2>&1 || continue
+        out=$("$cmd" --version 2>&1); st=$?
+        if [ "$st" -eq 0 ] && [ -n "$out" ]; then
+            echo "  ✅ python  $out   （命令名：$cmd）"
+            return 0
+        fi
+    done
+    echo "  ❌ python  未找到可用解释器（python3 / python 都试过）"
+    echo "         —— python3 若指向 WindowsApps 占位符，会退出码 49、无输出"
+    missing="$missing python"
+    return 1
+}
+
 check_tool gcc      gcc      --version
-check_tool python3  python3  --version
+check_python
 check_tool iverilog iverilog -V || {
     # 不在 PATH 时，看项目约定的安装位置
     if [ -x /c/iverilog/bin/iverilog ] || [ -x /c/iverilog/bin/iverilog.exe ]; then
