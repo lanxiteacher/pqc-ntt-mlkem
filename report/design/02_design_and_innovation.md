@@ -1,7 +1,7 @@
 # 二、设计与创新点
 
 > **状态**：🔄 **初稿（2026-09-30）**。本章讲**设计**（架构与取舍），数字在
-> `03_性能与资源.md`，与公开工作的横向对比在 `01_选题背景与相关工作.md`。
+> `03_performance_and_resources.md`，与公开工作的横向对比在 `01_background_and_related_work.md`。
 >
 > 原料：`../../rtl/folding_param_design.md`（A 的设计定稿）、`../../rtl/H1_port_spec.md`
 > （端口与时序，周期数全部实测）、`../../rtl/vivado/folding_comparison.md`（三档实测数字）。
@@ -247,7 +247,7 @@ KyberHPMNTT_top #(.PE_NUMBER(16))
 
 > ⚠️ **判据 ② 的边界**（不藏）：**完整乘法 FNTT→PWM2→INTT 的端到端**未覆盖；
 > **PWM2 两个 bank 装不同数据**的未覆盖（现有黄金向量 a == b，那一格实际测的是平方）。
-> 详见 `03_性能与资源.md` §3.10 与 `../../refsim/README.md` §八。
+> 详见 `03_performance_and_resources.md` §3.10 与 `../../refsim/README.md` §八。
 
 ---
 

@@ -65,6 +65,11 @@
 
 ---
 
+| 2026-10-05 | **★ 文件名改英文收口：全仓中文名文件 17 → 0，活引用清零（C 认领的 9 个 + `team/` 8 个由 A 一次做完）。** ① **改的是最后 17 个**：`report/design/` 5、`assets/` 4、`team/` 8 —— 全部 `git mv`，判据 `git ls-files` 扫 `[^\x00-\x7f]` 归零。② **★ 定下一条改引用的口径：活引用改，历史记录不改。** `logs/letter_*.txt`、`report/ai-log/*`、`project_state_changelog.md` 旧条**有意保留旧名** —— 它们记的是「当时叫什么」，照 sed 会把**真陈述改成假陈述**（实例：`report/ai-log/2026-09-30_C.md:37`「现有 `03_性能与资源.md` 是中文名」，sed 后变成「英文名是中文名」）。竞赛条文管**文件名**（「中文只出现在文件的正文内容中」），正文旧名不违例。**旁证：上一轮（10-03）A 自己就是这么做的** —— `2026-10-03_C.md:20` 至今仍写 `logs/FPGA竞赛_项目记录.md`（10-03 当天已改名的文件），证明当时没动 ai-log。③ **三处照全名搜不到的引用**（C 已提醒其一）：`demo/gen_shots.mjs` 图名是模板串 `` `${DATE}_C_演示页….png` ``（全名从不出现在文件里）；花括号式 `FPGA竞赛_{A,B}_引导与计划.md` —— 共 4 处（`team/todo_AB.md`、`logs/schedule_plain.md`、`status/gen_status.mjs`、`status/status.json`）；另按 C 建议扫省略号形式，抓出 1 处漏网：`team/todo_C.md:107` 的 `` `report/design/01_…md` ``。④ **`status/` 重新生成 + 销掉一条过期卡点**：`gen_status.mjs` 里的 `team/` 文件表改后重跑，`--check` 自检通过；另**删掉 `status/status.json` blockers 里「A→C 中文文件名还剩 17 个」那条**（办结了就不该再挂页面上），C 轨道 `next` 的「① 改中文名」去掉、后续编号顺移，`updated` 改 10-05。⑤ **验证**：`node metrics/gen_metrics.mjs` 重跑后 `metrics/data/metrics.csv` **逐字节未变**（证明解析没被改名打断）；`refsim/run_fntt_check.sh` 16 组 × 256 系数**全过**；全仓比对 HEAD 与工作区的行尾，**0 个文件行尾被改**。⑥ **顺带查出一条与本轮无关的既有缺陷**：`skill/scripts/check_reproducible.sh` 在 A 本机跑不通 —— 它用 `/c/Users/l'x/...` 做 `git clone`，**撇号让 MSYS 路径转换失效**，报「repository does not exist」；换 `C:/` 前缀即通。评审机无撇号，故只影响本机复跑 |
+| 2026-10-05 | **C 报的两条仓库实况，A 已回源头核完 —— 一条成立、一条是口径而非错误。** ① **`rtl/vivado/reports/board_pe1_txn.txt` 确实不在仓库**：`git ls-files` 只有 pe4/pe16 两份；A 本机**也没有**（`C:/fpga_work/` 全搜过，`board_txn_all.py` 是打到 stdout、当时没落盘）→ **C 在 `report/design/03` §3.13.6 与 `04` §4.8 加的「pe1 原始日志未入库」注是准确的**。② **板级「总端点数」是两个口径，都真**：`board_pe*_timing.rpt` 的**全路径汇总行**（约 :131）是 **11242 / 12723 / 18641**，**`sys_clk` 单域行**（约 :154）是 **7783 / 8785 / 12644**；H4 那封信用的是后者。**核 `Clock Summary`：本设计只有一个时钟域**（:144 只有 `sys_clk` 一行）⇒ **C 报告里用 `sys_clk` 单域是对的，不用改** |
+
+---
+
 ## 已办结项索引（2026-09-22 从「待办」迁出）
 
 原《项目记录》§四 用 `[x]` 记已办结的事，但**待办清单里不该躺着历史**。

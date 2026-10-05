@@ -63,10 +63,10 @@ if (!EDGE) {
 const DATE = '2026-10-01';
 const SHOTS = [
   /* —— 原图（深色）→ assets/ —— */
-  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_演示页正变换第3层蝶形高亮.png`,        page: 'index.html',   next: 3, cell: 0,  btn: null },
-  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_演示页逆变换第4层蝶形高亮.png`,        page: 'intt.html',    next: 4, cell: 0,  btn: null },
-  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_演示页对拍4096系数全中.png`,            page: 'compare.html', next: 0, cell: -1, btn: null },
-  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_演示页对拍阴性对照抓出1个系数不符.png`, page: 'compare.html', next: 0, cell: -1, btn: 'mNeg' },
+  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_demo_fntt_layer3_highlight.png`,        page: 'index.html',   next: 3, cell: 0,  btn: null },
+  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_demo_intt_layer4_highlight.png`,        page: 'intt.html',    next: 4, cell: 0,  btn: null },
+  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_demo_match_4096_all_pass.png`,            page: 'compare.html', next: 0, cell: -1, btn: null },
+  { out: 'assets',  theme: 'dark',  file: `${DATE}_C_demo_negative_control_1_mismatch.png`, page: 'compare.html', next: 0, cell: -1, btn: 'mNeg' },
 
   /* —— 报告版（浅色）→ report/figures/ —— */
   /* NTT 那张不裁：每层**所有**格子都会变（每个蝶形改两个输出），

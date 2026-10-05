@@ -68,7 +68,7 @@ skill/
 
 原料汇总自五处（都是本项目一手记录，不是通用建议）：
 `../CLAUDE.md` 的「约定」6 条、`../refsim/README.md` §七/§八、
-`../team/FPGA竞赛_B_Claude环境对齐指南.md` §四、
+`../team/env_align_B.md` §四、
 `../competition_guide_notes.md` §7、
 `../logs/project_state_changelog.md`。
 
@@ -116,5 +116,5 @@ skill/
 ## 相关
 
 - AI 协作**日志**：`../report/`
-- 分工与逐周计划：`../team/FPGA竞赛_C_引导与计划.md`
+- 分工与逐周计划：`../team/guide_C.md`
 - 项目记录：`../logs/project_state.md`

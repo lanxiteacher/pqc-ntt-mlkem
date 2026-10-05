@@ -23,7 +23,7 @@ FPGA 竞赛项目：**AMD 赛道 · 3.3 自主选题（初级组）· 后量子�
 **用户 = A。本机就是 A 的工位** —— Vivado 与板子都接在本机（见下方「环境」）。
 对话里说"我"= A，**主责目录是 `rtl/`**。
 `refsim/`(B)、`host/`(B)、`demo/ docs/ assets/`(C) **不是本机的主场** ——
-要动先跟对应的队友对齐（见「多人协作」第 2 条）。三人分工见 `team/FPGA竞赛_三人分工.md`。
+要动先跟对应的队友对齐（见「多人协作」第 2 条）。三人分工见 `team/roles_and_duties.md`。
 
 ---
 
@@ -56,7 +56,7 @@ FPGA 竞赛项目：**AMD 赛道 · 3.3 自主选题（初级组）· 后量子�
   （USB UART `T19/J15`、PL_UART(RS232)/RS485 `K14/M15`）；我们只用 **USB UART 那组**。
   ⚠️ rar 里的源码/readme 是 **GBK**，本机**没有 iconv** —— 用 PowerShell
   `[System.IO.File]::ReadAllText($p, [System.Text.Encoding]::GetEncoding(936))`
-- **B 全程不需要板子和 Vivado**，进度不被 A 卡住 —— 见 `team/FPGA竞赛_B_引导与计划.md`
+- **B 全程不需要板子和 Vivado**，进度不被 A 卡住 —— 见 `team/guide_B.md`
 
 ## 目录
 
@@ -172,11 +172,11 @@ Vivado 42 GB、板子）**本来就不进仓库**，谁要谁单独拿。
    `logs/project_state_changelog.md` 2026-09-22 条目）。
 
 **文件互通格式**（黄金向量、批量对拍数据、RTL 端口说明、串口协议）见
-`team/FPGA竞赛_B_Claude环境对齐指南.md` 第六节。
+`team/env_align_B.md` 第六节。
 
 **每人的环境搭建与第一天 checklist** 各有一份，按同一套骨架写：
-`team/FPGA竞赛_B_Claude环境对齐指南.md`（B，验证台与上位机）｜
-`team/FPGA竞赛_C_Claude环境对齐指南.md`（C，演示与文档；**第一节是项目架构**，
+`team/env_align_B.md`（B，验证台与上位机）｜
+`team/env_align_C.md`（C，演示与文档；**第一节是项目架构**，
 是 newcomer 最快看懂这个项目的地方）。
 
 ---

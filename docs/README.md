@@ -44,6 +44,6 @@ docs/
 
 ## 相关
 
-- 分工与交接点：`../team/FPGA竞赛_C_引导与计划.md`
+- 分工与交接点：`../team/guide_C.md`
 - 报告正文与 AI 协作日志：`../report/`
-- 环境与工作方式：`../team/FPGA竞赛_C_Claude环境对齐指南.md`
+- 环境与工作方式：`../team/env_align_C.md`

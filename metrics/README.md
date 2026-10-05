@@ -62,7 +62,7 @@ node metrics/gen_metrics.mjs      # → 更新本文件里的生成块 + 写 dat
 |---|---|---|---|---|---|
 | NTT 内核吞吐（周期数） | 核心 | 904 ｜ 232 ｜ 69 | cycles | 一次 NTT 全程（7 层）；顶层量 `done` 拍 − `start` − 3；**不含读出延迟**；与上游逐档相同 | `rtl/probes/README.md` §判据 2、`rtl/H1_port_spec.md` §五 |
 | 端到端延迟 | 核心 | ~0.18–0.27 | s | 上板事务**墙钟**耗时（含 115200 bps 串口往返）；⚠️ **非正式**：A 的临时脚本测得、未入库，未走 `host/` 正式路径 | `rtl/vivado/reports/board_pe4_txn.txt` |
-| KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | 社区维护的 FIPS 203 兼容 `.rsp`（ML-KEM-768），kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 `report/design/04_功能正确性.md` §4.4） | `research/mlkem_kat/` |
+| KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | 社区维护的 FIPS 203 兼容 `.rsp`（ML-KEM-768），kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 `report/design/04_functional_correctness.md` §4.4） | `research/mlkem_kat/` |
 | LUT 占用 | 资源 | 727 ｜ 2000 ｜ 8922 | 个 | post-route；顶层边界；占用率 1.37% ｜ 3.76% ｜ 16.77% | `rtl/vivado/reports/pe1_nc_util.rpt`、`rtl/vivado/reports/pe4_nc_util.rpt`、`rtl/vivado/reports/pe16_nc_util.rpt` |
 | DSP 占用 | 资源 | 1 ｜ 4 ｜ 16 | 个 | post-route；**严格等于蝶形数**（非退化佐证） | 同上 |
 | 最高频率 / WNS | 资源 | 168 MHz ｜ 160 MHz ｜ 154 MHz | MHz | post-route；约束 `create_clock -period 5`（200 MHz，故意给紧），Fmax = 1000 / (5 − WNS)；WNS -0.936 ns ｜ -1.260 ns ｜ -1.507 ns | `rtl/vivado/reports/pe1_nc_timing.rpt`、`rtl/vivado/reports/pe4_nc_timing.rpt`、`rtl/vivado/reports/pe16_nc_timing.rpt` |

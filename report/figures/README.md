@@ -11,12 +11,12 @@
 
 | 文件 | 用在哪 | 画的是什么 |
 |---|---|---|
-| `folding_sweep.svg` | `design/03_性能与资源.md` §3.3 | 折叠度三档（1 / 4 / 16 蝶形）的 **NTT 周期数 / LUT 占用 / 推算 Fmax** 三个面板 |
-| `verify_chain.svg` | `design/04_功能正确性.md` §4.3 | 验证链：FIPS 203 KAT → C 参考实现 → 作者期望输出 → RTL 对拍，四个入口脚本与结果标在链上 |
-| `architecture.svg` | `design/02_设计与创新点.md` §2.2 | 架构三层：`KyberHPMNTT_top` 的对外端口 / 核外的序列化-反序列化 / 核内的宽接口。实线 = 数据，虚线 = 控制 |
-| `demo_ntt_layer3.png` | `design/05_可复现性.md` §5.4 | 演示页（**浅色报告版**）：正变换走到第 3 层，右侧显示选中系数的蝶形算式与配对 |
-| `demo_compare_pass.png` | `design/05_可复现性.md` §5.4 | 演示页对拍页：RTL 落盘输出 vs 黄金向量，**4096/4096 全中**，全场无红格 |
-| `demo_compare_negctrl.png` | `design/04_功能正确性.md` §4.7 | 演示页阴性对照：改坏一条期望值 → 网格里**恰好 1 个红格** |
+| `folding_sweep.svg` | `design/03_performance_and_resources.md` §3.3 | 折叠度三档（1 / 4 / 16 蝶形）的 **NTT 周期数 / LUT 占用 / 推算 Fmax** 三个面板 |
+| `verify_chain.svg` | `design/04_functional_correctness.md` §4.3 | 验证链：FIPS 203 KAT → C 参考实现 → 作者期望输出 → RTL 对拍，四个入口脚本与结果标在链上 |
+| `architecture.svg` | `design/02_design_and_innovation.md` §2.2 | 架构三层：`KyberHPMNTT_top` 的对外端口 / 核外的序列化-反序列化 / 核内的宽接口。实线 = 数据，虚线 = 控制 |
+| `demo_ntt_layer3.png` | `design/05_reproducibility.md` §5.4 | 演示页（**浅色报告版**）：正变换走到第 3 层，右侧显示选中系数的蝶形算式与配对 |
+| `demo_compare_pass.png` | `design/05_reproducibility.md` §5.4 | 演示页对拍页：RTL 落盘输出 vs 黄金向量，**4096/4096 全中**，全场无红格 |
+| `demo_compare_negctrl.png` | `design/04_functional_correctness.md` §4.7 | 演示页阴性对照：改坏一条期望值 → 网格里**恰好 1 个红格** |
 
 **这 3 张是截图，不是矢量图**（页面是交互式的，只能截）。生成方式：
 `node demo/gen_shots.mjs` —— 无头 Edge 驱动，源页在 `../../demo/`。
@@ -39,7 +39,7 @@ node report/figures/gen_figures.mjs      # → report/figures/folding_sweep.svg
 
 ⚠️ `verify_chain.svg` 和 `architecture.svg` 与上面那张性质不同：它们是**结构示意图，
 不是数据图**，手写 SVG、没有生成脚本。内容分别与 `../../refsim/README.md` §一、
-`design/02_设计与创新点.md` §2.2–§2.5 对齐 —— **改结构时要手工同步这两张图**。
+`design/02_design_and_innovation.md` §2.2–§2.5 对齐 —— **改结构时要手工同步这两张图**。
 
 ⚠️ `architecture.svg` 里**引用了三个数字**（引脚 397 / 芯片可用 125 / 三档 IOB = 37）——
 引用不等于推导，所以没配生成脚本，但**它们会随参数化版本 W5 重测而变，重测后要回来核一遍**

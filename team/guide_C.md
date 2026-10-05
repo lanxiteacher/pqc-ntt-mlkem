@@ -270,6 +270,6 @@ A、B 每完成一小步，应该把**截图／录屏 + 一句话说明**丢进�
 
 ---
 
-> 相关文档：`team/FPGA竞赛_C_Claude环境对齐指南.md`（**项目架构 + 这台机器上怎么开工**，
+> 相关文档：`team/env_align_C.md`（**项目架构 + 这台机器上怎么开工**，
 > 先读它第一节）｜`logs/schedule_plain.md`（总排期 + 术语词典）｜
 > `logs/project_state.md`（当前状态与决策）

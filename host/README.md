@@ -24,5 +24,5 @@ host/
 
 ## 相关
 
-- 分工与交接点：`../team/FPGA竞赛_B_引导与计划.md`
+- 分工与交接点：`../team/guide_B.md`
 - 验证台：`../refsim/README.md`

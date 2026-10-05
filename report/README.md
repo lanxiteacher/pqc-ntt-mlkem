@@ -93,19 +93,19 @@ report/
 
 | 章节 | 状态 | 卡在哪 |
 |---|---|---|
-| 一、选题背景与相关工作 | 🔄 **初稿已成（09-30）** | `design/01_选题背景与相关工作.md`；原料 `../docs/related-work.md`。<br>⚠️ 缺口：主表 4a–4c 器件型号、PQShield Table 3、`elec` 频率（汇编 §2.2 记 200 / 对比表 §四记 192，**已按 192 取值并加注**）**未回原始 PDF 核对** |
-| 二、设计与创新点 | 🔄 **初稿已成（09-30）** | `design/02_设计与创新点.md`；原料 `../rtl/folding_param_design.md`（A 定稿）<br>⚠️ 板级 wrapper 已建成、上板数据在章节三/四，本章未回头补 |
-| 三、性能与资源 | 🔄 **初稿已成（板级实测 10-04 补）** | `design/03_性能与资源.md`；核三档（§3.1–3.9）+ **板级三档实测（§3.13–3.16）**，含四个坑与 Vivado 2020.2 说明。<br>⚠️ 缺口：上板**真实最高频率**（板级 WNS 不能反推 Fmax）、端到端延迟的正式测量（§3.10） |
-| 四、功能正确性 | 🔄 **初稿已成（10-01；上板 10-04 补）** | `design/04_功能正确性.md`；上游基线证据 `../refsim/README.md` §一／§三／§七／§八，三档部分 `../rtl/probes/README.md`，**上板端到端 §4.8**（`../rtl/vivado/reports/board_pe{4,16}_txn.txt`）。<br>配图：`figures/verify_chain.svg` + `figures/demo_compare_negctrl.png`（§4.7，浅底）。<br>⚠️ 缺口：波形截图等 B 的 **H5**（W3 起）；PWM2 两 bank 异数据未覆盖（已写进 §4.9） |
-| 五、可复现性 | 🔄 **初稿已成（10-01）** | `design/05_可复现性.md`；复现步骤取自 `../README.md` §三／§六，判据取自 `../skill/scripts/check_reproducible.sh`，**上板那条链见 §5.3 末**。<br>配图：`figures/demo_ntt_layer3.png` / `demo_compare_pass.png`（§5.4，A 档零工具链所见，浅底）。<br>⚠️ 缺口：`check_reproducible.sh --from-remote` **全绿尚无有工具链的机器跑出**（成文机器缺 gcc/iverilog/python3），已如实写进 §5.6 |
+| 一、选题背景与相关工作 | 🔄 **初稿已成（09-30）** | `design/01_background_and_related_work.md`；原料 `../docs/related-work.md`。<br>⚠️ 缺口：主表 4a–4c 器件型号、PQShield Table 3、`elec` 频率（汇编 §2.2 记 200 / 对比表 §四记 192，**已按 192 取值并加注**）**未回原始 PDF 核对** |
+| 二、设计与创新点 | 🔄 **初稿已成（09-30）** | `design/02_design_and_innovation.md`；原料 `../rtl/folding_param_design.md`（A 定稿）<br>⚠️ 板级 wrapper 已建成、上板数据在章节三/四，本章未回头补 |
+| 三、性能与资源 | 🔄 **初稿已成（板级实测 10-04 补）** | `design/03_performance_and_resources.md`；核三档（§3.1–3.9）+ **板级三档实测（§3.13–3.16）**，含四个坑与 Vivado 2020.2 说明。<br>⚠️ 缺口：上板**真实最高频率**（板级 WNS 不能反推 Fmax）、端到端延迟的正式测量（§3.10） |
+| 四、功能正确性 | 🔄 **初稿已成（10-01；上板 10-04 补）** | `design/04_functional_correctness.md`；上游基线证据 `../refsim/README.md` §一／§三／§七／§八，三档部分 `../rtl/probes/README.md`，**上板端到端 §4.8**（`../rtl/vivado/reports/board_pe{4,16}_txn.txt`）。<br>配图：`figures/verify_chain.svg` + `figures/demo_compare_negctrl.png`（§4.7，浅底）。<br>⚠️ 缺口：波形截图等 B 的 **H5**（W3 起）；PWM2 两 bank 异数据未覆盖（已写进 §4.9） |
+| 五、可复现性 | 🔄 **初稿已成（10-01）** | `design/05_reproducibility.md`；复现步骤取自 `../README.md` §三／§六，判据取自 `../skill/scripts/check_reproducible.sh`，**上板那条链见 §5.3 末**。<br>配图：`figures/demo_ntt_layer3.png` / `demo_compare_pass.png`（§5.4，A 档零工具链所见，浅底）。<br>⚠️ 缺口：`check_reproducible.sh --from-remote` **全绿尚无有工具链的机器跑出**（成文机器缺 gcc/iverilog/python3），已如实写进 §5.6 |
 | 附录 | ⬜ | 等日志积累 |
 
 ---
 
 ## 相关
 
-- 逐周计划与交接点：`../team/FPGA竞赛_C_引导与计划.md`
-- 环境与工作方式：`../team/FPGA竞赛_C_Claude环境对齐指南.md`
+- 逐周计划与交接点：`../team/guide_C.md`
+- 环境与工作方式：`../team/env_align_C.md`
 - 技能包（可复用的提示词/脚本/踩坑）：`../skill/`
 - 支撑材料（相关工作对比表等）：`../docs/`
 - ✅ **`metrics/` 指标汇总表已填**（2026-09-29，`260ef6f`）——

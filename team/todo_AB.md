@@ -3,7 +3,7 @@
 > 整理：C（于宸）｜ **2026-09-30**
 >
 > **这是快照，不是权威。** 每条都标了出处 —— **出处变了以出处为准**。
-> 汇总自：`logs/project_state.md` §一／§二、`team/FPGA竞赛_{A,B}_引导与计划.md`
+> 汇总自：`logs/project_state.md` §一／§二、`team/guide_{A,B}.md`
 > 第四节与第五节、`rtl/folding_param_plan.md`、`host/proto.md` §九、
 > 往来原文 `letter_2026-09-29_A_to_B.txt` 与 `letter_2026-09-29_A_to_C.txt`（仓库根）。
 >
@@ -56,7 +56,7 @@ A 的参数化版本 **Task 1~8 已全部走完**（三条判据全过）；**�
 
 **这一项现在没有任何等待项** —— H3 协议 2026-09-29 已冻结 v1.0。
 
-出处：`logs/project_state.md` §二「B · 技术主线」；`team/FPGA竞赛_A_引导与计划.md` §三。
+出处：`logs/project_state.md` §二「B · 技术主线」；`team/guide_A.md` §三。
 
 ### 2 定两块验证边界做不做
 
@@ -200,7 +200,7 @@ A 的参数化版本 **Task 1~8 已全部走完**（三条判据全过）；**�
 | 1 | `logs/project_state.md` **§一「还差」行 + §一「下一步」+ §二 B 段**（三处） | 「8 个 Task 完成 **6** 个」「余下 1 个 Task：Task 8」 | `rtl/folding_param_plan.md` 头部：**Task 1~8 已完成，本计划全部走完**。Task 8 的四个交付物逐项都在仓库里：H1 §五 导语、`folding_param_design.md` 状态行「已实现」、`letter_2026-09-29_A_to_B.txt`／`letter_2026-09-29_A_to_C.txt` | A |
 | 2 | `host/proto.md` §七(b) | 「A 未完成的（三处）」 | 三条全已解决（纯 PL 已定／H1 已交／板子已通） | B（先跟 A 对） |
 | 3 | `host/proto.md` §七(a) 表 + §七(c) | 「C 的 H7 产物 缺失」「C 尚未加入仓库」 | H7 09-29 办结；C 09-27 已 clone | B |
-| 4 | `team/FPGA竞赛_A_引导与计划.md` W3／W5 行；`team/FPGA竞赛_B_引导与计划.md` W1／W2 行 | A：「Task 7 待做」；B：「假串口要补提交」「上位机 0 行」 | Task 7 已过（判据 1）；`host/src/` 13 个 .py 已入库，`fake_board.py` 与 `test_fake_board_data.py` 都在 | A、B 各自 |
+| 4 | `team/guide_A.md` W3／W5 行；`team/guide_B.md` W1／W2 行 | A：「Task 7 待做」；B：「假串口要补提交」「上位机 0 行」 | Task 7 已过（判据 1）；`host/src/` 13 个 .py 已入库，`fake_board.py` 与 `test_fake_board_data.py` 都在 | A、B 各自 |
 
 > ⚠️ **第 1 处值得留意**：`rtl/folding_param_plan.md` Task 8 的 Step 3 声称
 > 「已更新 `logs/…project_state.md` §一、§二」，但那三处**没改到**。

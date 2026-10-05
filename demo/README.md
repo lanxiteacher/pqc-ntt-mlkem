@@ -180,4 +180,4 @@ node demo/gen_shots.mjs
 - 数学层序表的原始出处：`cd ../refsim && sh run_ntt_layers.sh`
 - 黄金向量：`../research/mlkem_kat/ntt_in.hex`、`ntt_out.hex`、`intt_in.hex`、`intt_out.hex`
 - 验证链全貌（含边界）：`../refsim/README.md`
-- 分工与交接点：`../team/FPGA竞赛_C_引导与计划.md`
+- 分工与交接点：`../team/guide_C.md`

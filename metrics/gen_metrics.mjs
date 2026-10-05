@@ -217,7 +217,7 @@ GEN.push('### §8.3 指标表（按《选题指导》的列）', '',
         `⚠️ **非正式**：A 的临时脚本测得、未入库，未走 ${h('host/')} 正式路径 | ` +
         `${h('rtl/vivado/reports/board_pe4_txn.txt')} |`,
     `| KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | 社区维护的 FIPS 203 兼容 \`.rsp\`（ML-KEM-768），` +
-        `kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 \`report/design/04_功能正确性.md\` §4.4） | ` +
+        `kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 \`report/design/04_functional_correctness.md\` §4.4） | ` +
         `${h('research/mlkem_kat/')} |`,
     `| LUT 占用 | 资源 | ${c(TIERS.map((t) => nc[t].lut.used))} | 个 | post-route；` +
         `顶层边界；占用率 ${c(TIERS.map((t) => nc[t].lut.pct + '%'))} | ` +

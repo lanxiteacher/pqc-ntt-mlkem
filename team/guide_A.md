@@ -282,4 +282,4 @@ RTL 的错先在 `refsim/` 里验干净。板子只用来确认「综合出来�
 
 > 相关文档：`logs/schedule_plain.md`（总排期 + 术语词典）｜
 > `logs/project_state.md`（当前状态与决策）｜
-> `team/FPGA竞赛_B_Claude环境对齐指南.md`（换台机器怎么搭环境）
+> `team/env_align_B.md`（换台机器怎么搭环境）
