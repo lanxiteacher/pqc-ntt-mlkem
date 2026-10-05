@@ -282,6 +282,19 @@ IOB 恒为 **4** —— 时钟 + 复位 + 串口两线，与折叠度无关；�
 换句话：核还有很大的时钟余量，**先被顶到的是外围** —— 与 3.7 那条（核的瓶颈是布线、不是逻辑）
 是**两条互不相干的结论**，不要混为一谈。
 
+**这条路径的延迟构成**（数字来自 `../../rtl/vivado/critical_paths.md`，
+由 `gen_critical_paths.py` 从三份 `.rpt` **机械抽取**、不是手抄）：
+
+| 档 | 数据路径延迟 | 其中逻辑 | 其中布线 | 逻辑级数 |
+|---|---:|---|---:|---:|
+| pe1 | 13.153 ns | 2.562 ns（19.5%） | **10.591 ns（80.5%）** | 12 |
+| pe4 | 12.905 ns | 2.692 ns（20.9%） | **10.213 ns（79.1%）** | 12 |
+| pe16 | 13.472 ns | 2.562 ns（19.0%） | **10.910 ns（81.0%）** | 12 |
+
+根因是**扇出**：起点 `u_line/line_len_reg[2]/Q` 一条网线扇出 **65**；
+单跳最贵的是 `u_fsm/after_state_reg[3]_0`，扇出 49、**一跳 1.804 ns** ——
+比任何一个 LUT（平均 0.182 ns）慢一个数量级。「板级瓶颈是布线」在板级的具体形态就是它。
+
 ### 3.13.5 引脚落位
 
 四个引脚**全部 `FIXED`**，电平均 LVCMOS33：
@@ -332,7 +345,7 @@ wrapper ≈ **3.6k ~ 4.3k LUT，与折叠度基本无关**（它本来就不含�
 
 ---
 
-## 3.14 四个坑（引用本章数字前必须带上）
+## 3.14 五个坑（引用本章数字前必须带上）
 
 | # | 坑 | 说明 |
 |---|---|---|
@@ -340,6 +353,7 @@ wrapper ≈ **3.6k ~ 4.3k LUT，与折叠度基本无关**（它本来就不含�
 | 2 | **上游 pe16 的 WNS 不可比** | 它只跑到综合（place 在 IO 阶段失败），WNS 是综合估算；参数化版是布完线实测 |
 | 3 | **综合数字不是功能正确性证据** | 资源/频率只说明「能装下、能跑多快」；功能正确看 3.4 判据 2/3 与 3.13.6 |
 | 4 | ★ **板级那批是 20 ns 目标，与 §3.6 那批的 5 ns 不是一回事** | 5 ns 那批用来**反推 Fmax**；20 ns 那批只答「50 MHz 下余量多少」。**两份 WNS 不要放在同一列里比大小、更不能用板级 WNS 反推 Fmax** |
+| 5 | ★ **`report_timing_summary` 里有两组都叫 `Max Delay Paths`** | 第二组属于 `**async_default**` 组（复位同步器到异步控制端的 recovery），**它的 slack 不是 WNS** —— pe1 是 **8.338 ns**，比真 WNS（6.538）还好看，**很容易被误当成 WNS 抄走**（本项目真发生过一次）。开 GUI 截关键路径图时尤其要留意：点错组截到的是复位路径、不是时序瓶颈。`critical_paths.md` 的生成器按 `Path Group` **字段**筛、不按节名筛，所以那份数据是对的 |
 
 ---
 
@@ -363,6 +377,7 @@ wrapper ≈ **3.6k ~ 4.3k LUT，与折叠度基本无关**（它本来就不含�
 |---|---|
 | 板级 LUT / FF / BRAM / DSP / IOB | `rtl/vivado/reports/board_pe{1,4,16}_util.rpt` |
 | 板级 WNS / WHS / 端点 / 关键路径 | `rtl/vivado/reports/board_pe{1,4,16}_timing.rpt` |
+| 板级关键路径的逻辑/布线拆分、扇出、前 10 条 | `rtl/vivado/critical_paths.md`（生成器 `gen_critical_paths.py`；自锚 `check_critical_paths_anchors.py`） |
 | 引脚落位 | `rtl/vivado/reports/board_pe{1,4,16}_io.rpt` |
 | 上板五条事务结果与耗时 | `rtl/vivado/reports/board_pe{4,16}_txn.txt`（pe1 原始日志未入库） |
 | 综合 / 烧录脚本 | `rtl/vivado/run_board_synth.sh`、`run_board_prog.sh`、`synth_board.tcl`、`board_prog.tcl` |
