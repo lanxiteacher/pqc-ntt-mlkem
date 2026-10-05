@@ -49,6 +49,21 @@ if [ -z "$SCRIPTS" ]; then
     SCRIPTS=" refsim/run_fntt_check.sh refsim/run_intt_pwm2_check.sh refsim/run_polmul_check.sh refsim/run_ntt_layers.sh"
 fi
 
+# ---- 把 clone 源转成 git 认的路径形态 ------------------------------------
+# ⚠️ Windows（Git Bash / MSYS）上 `pwd` 给的是 `/c/Users/...` 形态。
+#    路径里只要有一个撇号，MSYS 的路径转换就会失效 —— 实测：
+#      git clone "/c/Users/l'x/Desktop/FPGA"  →  repository '...' does not exist
+#      git clone "C:/Users/l'x/Desktop/FPGA"  →  成功
+#    所以交给 git 之前先转成 `C:/...` 原生形态。有 cygpath 就用它，
+#    否则手写转换（只匹配 `/d/` 这种「单字母盘符」，Linux 的 /home/... 不受影响）。
+to_native_path() {
+    if command -v cygpath >/dev/null 2>&1; then
+        cygpath -m "$1"
+    else
+        printf '%s' "$1" | sed -E 's|^/([A-Za-z])/|\1:/|'
+    fi
+}
+
 # ---- 从哪 clone ----------------------------------------------------------
 if [ "$FROM_REMOTE" -eq 1 ]; then
     if ! SRC=$(git -C "$REPO" remote get-url origin 2>/dev/null); then
@@ -57,7 +72,7 @@ if [ "$FROM_REMOTE" -eq 1 ]; then
     fi
     echo "源：远端 $SRC"
 else
-    SRC="$REPO"
+    SRC="$(to_native_path "$REPO")"
     echo "源：本地仓库 $SRC"
     echo "    （本地 clone 查不出「文件没 push」，判定可复现请用 --from-remote）"
 fi
