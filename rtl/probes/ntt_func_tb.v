@@ -10,6 +10,7 @@
 //   （无宏）      装载 A(_f)          → FNTT A → 读 A
 //   -DOP_INTT     装载 A(_i)          → INTT A → 读 A
 //   -DOP_PWM2     装载 A(_i) + B(_i) 各一份 → PWM2 → 读 A
+//   -DOP_PWM2AB   同上，但 **A ≠ B**（B 是 A 的下一组）—— 见下方「为什么要 a ≠ b」
 //
 // ⚠️ **协议按 (运算, 折叠度) 分档，没有一套通用的**。下面是实测表（本 TB 量出来的），
 //    不是从某一份 bench 抄来的 —— 抄 pe1 那套去做 pe4/pe16 的 PWM2 会得到
@@ -54,6 +55,19 @@
 //       `load_grp(v, 0, 0, 0, 0)`），只有 PWM2 那支认 `-DA_NAT/-DA_SIG`。
 //       表征：`-DA_NAT` 重跑 INTT 得到**逐字节相同**的转储，且不报任何错 ——
 //       开关被无声忽略。三支现已统一走 AMODE/A_I，扫描才真的扫得动。
+//
+// ⚠️ 为什么要 `-DOP_PWM2AB`（2026-10-05 补上的一格）：
+//    `OP_PWM2` 用的那份黄金向量 `pwm2_batch_a.txt` 与 `pwm2_batch_b.txt`
+//    **逐字节相同**（4096 行全同）—— A、B 两 bank 装的是同一条多项式，
+//    所以那一格实际验的是 **a²**。「B 口没接上 / 装歪 / 被 A 覆盖」这类缺陷
+//    在 a == b 下**照样给出 4096/4096**，这一格分辨不出来。
+//    `OP_PWM2AB` 把 B 换成 A 的**下一组**（沿用 `refsim/gen_batch_vectors.py`
+//    的 `gen_polmul()` 的配对口径：A 取第 v 组、B 取第 v+1 组循环），
+//    期望值由 `run_probes.sh` 现算 —— 算它的那份 python 先用 **a == b 的平方**
+//    与仓库里已冻结的 `pwm2_batch_exp.txt` 逐位对齐过，对不上就整个脚本中止。
+//    ⚠️ **别把这条读成「PWM2 乘法器没验过 a ≠ b」**：真板子的 `#PMUL TIME` /
+//    `#PMUL FULL` 两条事务喂的就是两份不同的多项式（`halfmul_a/b`、`fullmul_a/b`
+//    逐组逐位都不同），三档 5/5 × 256/256 全过。缺的只是**本探针**这一格。
 //
 // ⚠️ 为什么读出顺序在 TB 里**不做假设**：pe4/pe16 的宽接口从来没有人驱动过，
 //    它们的读出约定**没有文档**。所以本 TB 只把 256 个读出值原样打出来，
@@ -104,7 +118,22 @@ localparam integer OP_WAIT    =
 //   `-DA_NAT` / `-DA_SIG` / `-DB_NAT` / `-DB_SIG`  强制 A / B 的顺序（0 / 1）
 //   `-DA_USE_F` / `-DB_USE_F`                       强制走 `_f` 装载路径
 // 这些覆盖只是留着重跑当初那次扫描用的（见文件头「PWM2 的两套协议」）。
+//
+// ⚠️ 2026-10-05：`OP_PWM2AB` 是 PWM2 的 **a ≠ b** 一版（两 bank 装**不同**多项式）。
+//    硬件路径与 `OP_PWM2` **完全相同**，差别只在 `_work/` 里铺的那三份向量 ——
+//    所以下面凡认 `OP_PWM2` 的地方一律也认它。IEEE 1364-2005 的 `ifdef` 不支持 `||`，
+//    故用别名宏 `PWM2_LIKE` 收口，别在两处各写一遍条件。
+//    为什么要这一版：`OP_PWM2` 的黄金向量 **a == b**（`pwm2_batch_a.txt` 与
+//    `pwm2_batch_b.txt` 逐字节相同），那一格实际验的是**平方**，
+//    「B 口没接上 / 装歪」这类缺陷它分辨不出来。
 `ifdef OP_PWM2
+    `define PWM2_LIKE
+`endif
+`ifdef OP_PWM2AB
+    `define PWM2_LIKE
+`endif
+
+`ifdef PWM2_LIKE
     // PWM2：pe1 用 σ，pe4/pe16 用自然序 —— 两者都是 `_i`，差别只在顺序
     localparam integer DEF_MODE = (PE_NUMBER == 1) ? 1 : 0;
     localparam integer DEF_I    = 1;
@@ -265,7 +294,11 @@ end endtask
 //    这两条探针共用 _work/ 目录，同名会互相盖掉。
 // ⚠️ 三个运算**各自一套文件名**，不要用同一个名字靠「跑之前重铺一遍」——
 //    那样分析脚本一读就串味（我们真踩了一次：拿 pwm2 的期望去判 FNTT）。
-`ifdef OP_PWM2
+`ifdef OP_PWM2AB
+    `define F_IN  "f_pwm2ab_in.txt"
+    `define F_EXP "f_pwm2ab_exp.txt"
+    `define F_B   "f_pwm2ab_b.txt"
+`elsif OP_PWM2
     `define F_IN  "f_pwm2_in.txt"
     `define F_EXP "f_pwm2_exp.txt"
     `define F_B   "f_pwm2_b.txt"
@@ -284,7 +317,7 @@ reg [11:0] vb   [0:NG*256-1];
 initial begin
     $readmemh(`F_IN,  vin);
     $readmemh(`F_EXP, vexp);
-`ifdef OP_PWM2
+`ifdef PWM2_LIKE
     $readmemh(`F_B, vb);
 `endif
 
@@ -304,9 +337,11 @@ initial begin
     step(2);
 
     for (v = 0; v < NG; v = v + 1) begin
-`ifdef OP_PWM2
+`ifdef PWM2_LIKE
         // PWM2：A 和 B 各装一份，再 start_pwm2。
         // 装法由 AMODE/BMODE/B_F 拨（见文件头「PWM2 的两套协议」）。
+        // ⚠️ 用的是 `vb` 的第 v 组 —— **a ≠ b 那一版靠「把 B 文件整体转一组」实现**，
+        //    本 TB 一行都不用改（见 run_probes.sh 的向量生成段）。
         load_grp(v, 0, AMODE, 0, A_I);
         step(LOAD_WAIT);
         load_grp(v, 1, BMODE, 1, B_I);

@@ -34,6 +34,96 @@ cp "$BATCH/pwm2_batch_a.txt"   "$W/f_pwm2_in.txt"
 cp "$BATCH/pwm2_batch_b.txt"   "$W/f_pwm2_b.txt"
 cp "$BATCH/pwm2_batch_exp.txt" "$W/f_pwm2_exp.txt"
 
+# ---- PWM2 的 a ≠ b 一版（2026-10-05 补，段 ⑩ 的第五个 build）---------------
+# ⚠️ `pwm2_batch_a.txt` 与 `pwm2_batch_b.txt` **逐字节相同**（md5 一致，4096 行全同）
+#    —— 所以上面那一套黄金向量验的是 **a²**，分辨不出「B 口没接上 / 装歪 / 被 A 覆盖」。
+# 这里**现算**一套 a ≠ b：A 取第 v 组、B 取第 **v+1** 组（配对口径照
+# `refsim/gen_batch_vectors.py` 的 `gen_polmul()`：A 第 v 组、B 第 v+1 组循环）。
+# ⚠️ **不动 `refsim/batch/` 里任何一个字节** —— 冻结的 H2 向量原样留着，
+#    新增的三份只落在 `_work/`（不进仓库）。
+python - <<'PY'
+# -*- coding: utf-8 -*-
+"""生成 PWM2 的 a != b 向量。**自锚**：先用 a == b 的平方跟仓库里冻结的那份期望
+逐位对齐 —— 对不上就地退出，绝不拿一个没对齐的实现去造新期望。"""
+import pathlib, re, sys
+
+Q, QINV, N, NG = 3329, -3327, 256, 16
+Rb = pow(2, 16, Q)                       # R = 2^16 mod q = 2285
+
+_ntt = pathlib.Path("../../research/kyber_ref/ntt.c").read_text(encoding="utf-8", errors="replace")
+ZETAS = [int(x) for x in re.search(r"zetas\s*\[128\]\s*=\s*\{(.*?)\};", _ntt, re.S)
+         .group(1).replace("\n", " ").split(",") if x.strip()]
+if len(ZETAS) != 128:
+    print("  X zetas 表没读全（%d 项）" % len(ZETAS)); sys.exit(1)
+
+def i16(x):
+    x &= 0xFFFF
+    return x - 0x10000 if x >= 0x8000 else x
+
+def mred(a):                              # 照 reduce.c 的 montgomery_reduce
+    t = i16((a & 0xFFFF) * QINV)
+    return i16((a - t * Q) >> 16)
+
+def fqmul(a, b):
+    return mred(a * b)
+
+def basemul(a0, a1, b0, b1, z):
+    return (fqmul(fqmul(a1, b1), z) + fqmul(a0, b0),
+            fqmul(a0, b1) + fqmul(a1, b0))
+
+def poly_basemul(A, B):                   # 照 poly.c 的 poly_basemul_montgomery
+    out = [0] * N
+    for i in range(N // 4):
+        z = ZETAS[64 + i]
+        out[4*i], out[4*i+1] = basemul(A[4*i],   A[4*i+1], B[4*i],   B[4*i+1], z)
+        out[4*i+2], out[4*i+3] = basemul(A[4*i+2], A[4*i+3], B[4*i+2], B[4*i+3], -z)
+    return [x % Q for x in out]
+
+def rd(p):
+    return [int(x, 16) for x in pathlib.Path(p).read_text(encoding="utf-8").split()]
+
+def wr(p, v):                             # "wb" = 保持 LF（CLAUDE.md 约定 1）
+    with open(p, "wb") as f:
+        f.write("".join("%03x\n" % x for x in v).encode("ascii"))
+
+BATCH = pathlib.Path("../../refsim/batch")
+W = pathlib.Path("_work")
+A = rd(BATCH / "pwm2_batch_a.txt")
+B = rd(BATCH / "pwm2_batch_b.txt")
+E = rd(BATCH / "pwm2_batch_exp.txt")
+if not (len(A) == len(B) == len(E) == NG * N):
+    print("  X 向量长度不对：%d / %d / %d" % (len(A), len(B), len(E))); sys.exit(1)
+
+# ---- 自锚：a == b 的平方必须与冻结的那份期望逐位相同 ----
+sq = []
+for v in range(NG):
+    sq += [(x * Rb) % Q for x in poly_basemul(A[v*N:(v+1)*N], B[v*N:(v+1)*N])]
+if sq != E:
+    d = sum(1 for x, y in zip(sq, E) if x != y)
+    print("  X 自锚失败：本脚本的 basemul 与冻结期望差 %d/4096 —— 停，别往下走" % d)
+    sys.exit(1)
+print("  OK 自锚：本脚本复现冻结的 a==b 期望 4096/4096")
+
+# ---- a != b：B 整体转一组（第 v 组的 B = A 的第 v+1 组）----
+Aab = A[:]
+Bab = [x for v in range(NG) for x in A[((v+1) % NG)*N : ((v+1) % NG)*N + N]]
+Eab = []
+for v in range(NG):
+    Eab += [(x * Rb) % Q for x in poly_basemul(Aab[v*N:(v+1)*N], Bab[v*N:(v+1)*N])]
+
+same = sum(1 for x, y in zip(Eab, E) if x == y)
+ndiff = sum(1 for v in range(NG) if Aab[v*N:(v+1)*N] != Bab[v*N:(v+1)*N])
+print("  OK 非退化：a!=b 期望 %d 个不同值 /4096；与 a==b 期望逐位相同 %d/4096；"
+      "A 组 != B 组的 %d/16 组" % (len(set(Eab)), same, ndiff))
+if same > 64 or ndiff != NG:
+    print("  X a!=b 那一版与 a==b 几乎一样 —— 这一格没有分辨力，别当成新覆盖"); sys.exit(1)
+
+wr(W / "f_pwm2ab_in.txt",  Aab)
+wr(W / "f_pwm2ab_b.txt",   Bab)
+wr(W / "f_pwm2ab_exp.txt", Eab)
+print("  OK 已铺 _work/f_pwm2ab_{in,b,exp}.txt（refsim/batch 一个字节没动）")
+PY
+
 PE1=$(ls ../pe1/*.v | tr '\n' ' ')
 PE4=$(ls ../pe4/*.v | tr '\n' ' ')
 PE16=$(ls ../pe16/*.v | tr '\n' ' ')
@@ -455,7 +545,7 @@ echo "═══ ⑩ 三档功能对拍（判据 3）：16 组 × 256 系数 / �
 #
 # 装载协议按 (运算, 折叠度) 分档，全在 ntt_func_tb.v 的 DEF_MODE 里，
 # 表在那儿、理由也在那儿。这里不给任何 -D 覆盖，用的就是默认的那一套。
-for op in "fntt:" "intt:-DOP_INTT" "pwm2:-DOP_PWM2"; do
+for op in "fntt:" "intt:-DOP_INTT" "pwm2:-DOP_PWM2" "pwm2ab:-DOP_PWM2AB"; do
     opn="${op%%:*}"; opf="${op#*:}"
     for pe in 1 4 16; do
         iverilog -g2005 -DCFG_PE_NUM=$pe $opf -o "$W/func_${opn}_$pe.vvp" \
@@ -491,7 +581,8 @@ EXPECT = {   # 上游/B 的 bench 里写死的那一列，用来校 pe1
 }
 
 bad = []
-for op in ("fntt", "intt", "pwm2"):
+# pwm2ab = 与 pwm2 同一条硬件路径，只把 B 换成**另一条多项式**（a ≠ b）。
+for op in ("fntt", "intt", "pwm2", "pwm2ab"):
     exp = vals(f"f_{op}_exp.txt")
     print(f"  --- {op.upper()} ---  非退化：期望向量 {len(set(exp))} 个不同值 / 4096")
     for pe in (1, 4, 16):
@@ -535,6 +626,8 @@ if bad:
 else:
     print("  ✅ 判据 3 通过：3 个运算 × 3 档，各 4096/4096 多重集相等，"
           "读出顺序在 16 组之间稳定，pe1 三处与 B 的 bench 逐字一致")
+    print("     另加 PWM2 的 **a ≠ b** 一版（pwm2ab，同一条硬件路径、B 换另一组多项式）"
+          "× 3 档，同样 4096/4096")
     print("     ⚠️ 适用范围：多重集相等只证明「装载 + 变换」对；读出顺序是**另一件事**，")
     print("        上面那一列就是它 —— 三档**不统一**（见 top_golden_tb.v 一节与段 ⑨）。")
 PY
@@ -562,6 +655,35 @@ if tot < 200:
     print(f"      ✅ 多重集塌到 {tot}/4096（≈随机），判据有分辨力")
 else:
     print(f"      ❌ 拨错了顺序却仍拿到 {tot}/4096 —— 多重集判据分辨不出装载顺序，要查")
+PY
+
+echo "  --- 阴性对照（a ≠ b 那一格）：拿 **a == b 的期望**去判 a≠b 那一跑，多重集必须塌 ---"
+# 这一跑若「B 口没接上 / 装歪 / 被 A 覆盖」，输出就正好是 a==b 的平方 —— 正是原探针验的那件事。
+# 所以拿**冻结的那份 a==b 期望**来判，多重集必须塌。不塌 = 这一格还是没离开 a == b。
+python - <<'PY'
+# -*- coding: utf-8 -*-
+import pathlib, collections
+d = pathlib.Path("_work")
+exp = [int(x, 16) for x in (d/"f_pwm2_exp.txt").read_text(encoding="utf-8").split()]
+bad = []
+for pe in (1, 4, 16):
+    g = collections.defaultdict(dict)
+    for ln in (d/f"func_pwm2ab_{pe}.log").read_text(encoding="utf-8", errors="replace").splitlines():
+        t = ln.split()
+        if t and t[0] == "DOUT":
+            g[int(t[1])][int(t[2])] = int(t[3], 16) if t[3] != "xxx" else -1
+    tot = 0
+    for k in range(16):
+        if len(g.get(k, {})) < 256: continue
+        row = [g[k][m] for m in range(256)]
+        tot += sum(1 for x, y in zip(sorted(row), sorted(exp[k*256:(k+1)*256])) if x == y)
+    if tot < 200:
+        print(f"      ✅ pe{pe:<3d} 塌到 {tot}/4096（≈随机）⇒ 这一格真换了多项式，不是 a²")
+    else:
+        print(f"      ❌ pe{pe:<3d} 仍拿到 {tot}/4096 —— B 没起作用，这一格白验")
+        bad.append(pe)
+if bad:
+    print(f"      ❌ 阴性对照未过：{bad}")
 PY
 
 echo
