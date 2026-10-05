@@ -15,6 +15,9 @@
 #          覆盖掉了」（2026-10-04 实际发生过：pe4 综合一启动就 rm 掉了已提交的 pe1 报告）。
 #          三档的数字本来就不同（pe4 LUT 6203 vs pe1 5025），覆盖等于把对照关系删掉。
 #     rtl/vivado/_runs/ntt_board.bit        bitstream（**不提交**，见 .gitignore）
+#     <DCP>/ntt_board_pe<N>.dcp             布线后的 checkpoint（**只在给了 DCP 时出**，不提交）
+#       ⚠️ 名字里**带折叠度**，与报告同一个理由：三档的关键路径在不同位置
+#          （pe1/pe4 起点 `line_len_reg[2]`、pe16 是 `[3]`），同名会互相覆盖。
 #     rtl/vivado/_runs/board_synth.log      成功那一轮的日志（不提交）
 #     rtl/vivado/_runs/board_synth_tryN.log 第 N 轮的日志（不提交）
 #       ⚠️ **每轮单独一个日志文件**，不是共用一个 —— 2026-10-04 第一版共用一个，
@@ -30,6 +33,11 @@
 #     PERIOD=<ns>           不给就用 XDC 里的 20 ns。给了则本次运行覆盖它。
 #     VIVADO_RUNS=<目录>    中间产物放哪，默认 rtl/vivado/_runs/
 #     TRIES=<次数>          综合失败重试次数，默认 5，理由见下
+#     DCP=<目录>            给了才写布线后的 checkpoint：<目录>/ntt_board_pe<N>.dcp
+#                           用途是「在 GUI 里打开设计、点开关键路径、截 Schematic」——
+#                           非工程模式默认什么都不留，没有它就截不了图（03 §3.12 第 3 条）。
+#                           不给就不写（上游对照那几轮不需要）。建议指到**仓库外**，如
+#                           DCP=/c/vivado_work/dcp —— 打开它时 Vivado 要从仓库外启动。
 #
 #   ⚠️ bitstream 的**文件名不随档位变**（三档都叫 ntt_board.bit）——
 #      每跑一次覆盖上一次。所以出完立刻会在同目录写一个一行的 `ntt_board.pe`
@@ -71,6 +79,7 @@ PART="${PART:-xc7z020clg400-2}"
 PE="${PE:-1}"
 PERIOD="${PERIOD:-}"
 TRIES="${TRIES:-5}"
+DCP="${DCP:-}"
 
 # 折叠度守卫放在**脚本**这一层，不只放在 Tcl 里 —— 给错值时宁可一行都不跑，
 # 也别等 Vivado 起了 30 秒才在日志深处报错。
@@ -118,16 +127,33 @@ vpath() {
     fi
 }
 
+# 可选的 checkpoint 落点。必须在 vpath() 定义之后算 —— 要转成 C:/ 正斜杠形式。
+# 名字带折叠度（理由见文件头）；DCP 为空则整段不写，一个字都不多占。
+DCPFILE=""
+if [ -n "$DCP" ]; then
+    DCPFILE="$(vpath "$DCP")/ntt_board_pe$PE.dcp"
+fi
+
 echo "== 板级：综合 → 实现 → bitstream =="
 echo "   器件   $PART"
 echo "   顶层   ntt_board_top (PE_NUMBER=$PE)"
 echo "   读出   READ_LAT = 2*$PE+3 = $((2 * PE + 3)) 拍（由折叠度派生）"
 echo "   周期   ${PERIOD:-XDC 里的 20 ns}"
 echo "   启动目录 $SCRATCH   （仓库路径含撇号，必须从仓库外启动）"
+if [ -n "$DCPFILE" ]; then
+    echo "   checkpoint $DCPFILE"
+else
+    echo "   checkpoint 不写（没给 DCP=）—— GUI 截图要用的话给一个"
+fi
 
 rm -f "$REPDIR/$REPNAME"_util.rpt "$REPDIR/$REPNAME"_timing.rpt "$REPDIR/$REPNAME"_io.rpt \
       "$RUNDIR/ntt_board.bit" "$RUNDIR/ntt_board.pe" \
       "$RUNDIR/board_synth.log" "$RUNDIR"/board_synth_try*.log
+
+# 上一轮的 checkpoint 也清掉。判据里没有它，但留着会被误当成「这一轮跑出来的」——
+# .dcp 名字不随时间变，GUI 打开看到的是**上一次**的布线，与报告数字对不上，
+# 而那种错非常难看出来（图像本身完全正常）。
+if [ -n "$DCPFILE" ]; then rm -f "$DCPFILE"; fi
 
 attempt=1
 ok=0
@@ -146,7 +172,7 @@ while [ "$attempt" -le "$TRIES" ]; do
     if ( cd "$SCRATCH" && exec "$VIVADO" -mode batch -notrace -nolog -nojournal \
             -source "$(vpath "$HERE/synth_board.tcl")" \
             -tclargs "$PART" "$(vpath "$SRCDIR")" "$(vpath "$BRDDIR")" \
-                     "$(vpath "$REPDIR")" "$(vpath "$RUNDIR")" "$PERIOD" "$PE" ) \
+                     "$(vpath "$REPDIR")" "$(vpath "$RUNDIR")" "$PERIOD" "$PE" "$DCPFILE" ) \
             > "$TRYLOG" 2>&1 \
        && grep -q "^RESULT board DONE" "$TRYLOG" \
        && [ -s "$RUNDIR/ntt_board.bit" ]
@@ -168,6 +194,7 @@ while [ "$attempt" -le "$TRIES" ]; do
     #    比没有更坏 —— 烧录脚本会拿着**上一次**的档位去报「这版是 pe4」。
     rm -f "$REPDIR/$REPNAME"_util.rpt "$REPDIR/$REPNAME"_timing.rpt "$REPDIR/$REPNAME"_io.rpt \
           "$RUNDIR/ntt_board.bit" "$RUNDIR/ntt_board.pe"
+    if [ -n "$DCPFILE" ]; then rm -f "$DCPFILE"; fi
 
     attempt=$((attempt + 1))
     if [ "$attempt" -le "$TRIES" ]; then
@@ -200,6 +227,15 @@ if [ -s "$RUNDIR/ntt_board.bit" ]; then
         echo "  档位   pe$(cat "$RUNDIR/ntt_board.pe")   （$RUNDIR/ntt_board.pe）"
     else
         echo "  档位   ⚠️ 没有档位戳 ntt_board.pe —— 烧录前先确认这版是哪一档"
+    fi
+    # checkpoint 不进判据（写失败不该让整轮 10 分钟重来），但要报出来 ——
+    # 没给 DCP 时是「没要」，给了却没出来才是问题，两种情况不能都沉默。
+    if [ -n "$DCPFILE" ]; then
+        if [ -s "$DCPFILE" ]; then
+            echo "  检查点 $DCPFILE"
+        else
+            echo "  检查点 ⚠️ 没写出来 —— 看日志里的 write_checkpoint（GUI 截图要用它）"
+        fi
     fi
 else
     echo "  bit    **没有产出** —— 布线没走完，先看日志里的 ERROR"

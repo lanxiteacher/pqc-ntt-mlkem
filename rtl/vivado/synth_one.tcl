@@ -2,7 +2,9 @@
 #
 # 用法（由 run_folding_sweep.sh 调用，一般不直接跑）:
 #   vivado -mode batch -source synth_one.tcl \
-#       -tclargs <标签> <顶层> <器件> <周期ns> <源码目录> <报告目录> [<蝶形数>]
+#       -tclargs <标签> <顶层> <器件> <周期ns> <源码目录> <报告目录> [<蝶形数>] [<dcp输出路径>]
+#
+#   第 8 个参数可选：**给了才写 checkpoint**（GUI 里截关键路径图要用），见下文。
 #
 # 非工程模式（non-project）：不建 .xpr、不写 bitstream，只到 route 为止。
 #   —— 本步的目的只是「量数字」，上板和引脚约束是后面 H6 另起的事。
@@ -26,6 +28,8 @@ set repdir  [lindex $argv 5]
 #    结果 `-generic PE_NUMBER` 让参数取到 0，报的是
 #    「part-select [-1:0] does not match declaration」这种看着像 RTL 写错了的错。
 set penum [lindex $argv 6]
+# 第 8 个参数：布线后 checkpoint 的落点。空 = 不写（上游对照那几轮不需要）。
+set dcpfile [lindex $argv 7]
 
 puts "=== $tag | top=$top | part=$part | period=${period}ns PE_NUMBER=${penum} ==="
 
@@ -69,6 +73,27 @@ report_utilization -file "$repdir/${tag}_util.rpt"
 report_timing_summary -max_paths 10 -file "$repdir/${tag}_timing.rpt"
 if {!$impl_ok} {
     puts "  NOTE: place/route did not finish - timing report is a post-synthesis estimate"
+}
+
+# ---- 设计检查点（GUI 里看关键路径 Schematic 的配图要用）---------------------
+# 与 synth_board.tcl 里同名的那一节同一个理由：非工程模式**什么都不留**，
+# 不留 .dcp 就没法在 GUI 里打开设计、点开关键路径去截图
+# （report/design/03_performance_and_resources.md §3.12 第 3 条的「核」那一组）。
+#
+# ⚠️ 可选：第 8 个参数为空就一个字都不写 —— 上游对照、只量数字的那几轮不需要。
+# ⚠️ 与写报告同一条判断：只有 place/route 真走完才写。没布完的 checkpoint
+#    打开后看不到实际走线，截出来的图跟报告里的数字对不上。
+# ⚠️ 打开 .dcp 时 Vivado 要**从仓库外的目录**启动（病根是启动目录里的撇号，
+#    见 run_folding_sweep.sh 文件头）；文件放在带撇号的路径下本身没问题。
+if {$impl_ok && $dcpfile ne ""} {
+    if {[catch {
+        file mkdir [file dirname $dcpfile]
+        write_checkpoint -force $dcpfile
+    } err]} {
+        puts "  !! write_checkpoint failed: $err"
+    } else {
+        puts "RESULT $tag DCP $dcpfile"
+    }
 }
 
 # 一行摘要，方便 grep，免得为了一个数去整份读日志

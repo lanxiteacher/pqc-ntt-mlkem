@@ -34,6 +34,10 @@
 #     PERIOD=<ns>          默认 5（200MHz）
 #     TAG=<后缀>           报告文件名加后缀，交叉核对跑用，见下。
 #                          不给的话 ncore 档自动用 `_nc`
+#     DCP=<目录>           给了才写布线后的 checkpoint：<目录>/<档><后缀>.dcp
+#                          用途是「在 GUI 里打开设计、点开关键路径、截 Schematic」——
+#                          非工程模式默认什么都不留，没有它就截不了图（03 §3.12 第 3 条）。
+#                          不给就不写。建议指到仓库外，如 DCP=/c/vivado_work/dcp
 #
 #   ── 关于「周期给 5ns」────────────────────────────────────────────
 #   5ns 比这块设计能达到的更快（论文同量级设计在 Artix-7 上是 127–192MHz），
@@ -58,6 +62,7 @@ PART="${PART:-xc7z020clg400-2}"
 PERIOD="${PERIOD:-5}"
 TREE="${TREE:-ncore}"
 TRIES="${TRIES:-3}"
+DCP="${DCP:-}"
 REPDIR="$HERE/reports"
 RUNDIR="${VIVADO_RUNS:-$HERE/_runs}"
 
@@ -148,6 +153,12 @@ for d in $TARGETS; do
     fi
     label="$d$TAG"
 
+    # 可选的 checkpoint 落点。带 label，三档互不覆盖（三档的关键路径不在同一位置）。
+    dcpfile=""
+    if [ -n "$DCP" ]; then
+        dcpfile="$(vpath "$DCP")/${label}.dcp"
+    fi
+
     case "$TREE" in
         ncore)
             # 第 7 个 tclarg = 蝶形数，synth_one.tcl 自己拼成 generic PE_NUMBER=N。
@@ -187,6 +198,9 @@ for d in $TARGETS; do
     # 先清掉本轮要重写的报告 —— 否则上一轮的旧报告会让「报告存在」这个判据
     # 在本次失败时依然为真，把失败当成功
     rm -f "$REPDIR/${label}_util.rpt" "$REPDIR/${label}_timing.rpt"
+    # 上一轮的 checkpoint 也清掉：它不进判据，但留着会被误当成这一轮跑出来的
+    # （.dcp 名字不随时间变，GUI 打开看到的其实是上一次的布线）。
+    if [ -n "$dcpfile" ]; then rm -f "$dcpfile"; fi
 
     attempt=1
     ok=0
@@ -196,7 +210,7 @@ for d in $TARGETS; do
         if ( cd "$SCRATCH" && exec "$VIVADO" -mode batch -notrace -nolog -nojournal \
                 -source "$(vpath "$HERE/synth_one.tcl")" \
                 -tclargs "$label" "$top" "$PART" "$PERIOD" \
-                         "$(vpath "$srcdir")" "$(vpath "$REPDIR")" "$pearg" ) \
+                         "$(vpath "$srcdir")" "$(vpath "$REPDIR")" "$pearg" "$dcpfile" ) \
                 > "$RUNDIR/$label.log" 2>&1 \
            && [ -s "$REPDIR/${label}_util.rpt" ]
         then

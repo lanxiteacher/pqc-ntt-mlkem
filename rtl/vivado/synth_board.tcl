@@ -3,7 +3,10 @@
 #
 #   用法（由 run_board_synth.sh 调用，一般不直接跑）:
 #     vivado -mode batch -source synth_board.tcl \
-#         -tclargs <器件> <源码目录> <板级目录> <报告目录> <输出目录> [<周期ns>] [<折叠度>]
+#         -tclargs <器件> <源码目录> <板级目录> <报告目录> <输出目录> \
+#                  [<周期ns>] [<折叠度>] [<dcp输出路径>]
+#
+#   第 8 个参数（dcp 输出路径）可选：**给了才写 checkpoint**。见下面「设计检查点」一节。
 #
 #   与同目录 `synth_one.tcl` 的区别 —— 两者**目的不同，不要混用**：
 #     synth_one.tcl    非工程模式，跑到 route 为止，只为了「量数字」（资源/频率）
@@ -27,6 +30,7 @@ set repdir  [lindex $argv 3]   ;# 报告输出目录
 set outdir  [lindex $argv 4]   ;# bitstream 输出目录
 set period  [lindex $argv 5]   ;# 可选：覆盖 XDC 里的周期，默认不覆盖
 set pe      [lindex $argv 6]   ;# 可选：折叠度 1/4/16，默认 1
+set dcpfile [lindex $argv 7]   ;# 可选：布线后 checkpoint 的输出路径（空 = 不写）
 
 set TOP ntt_board_top
 
@@ -133,6 +137,29 @@ if {[catch {
     }
 } err]} {
     puts "RESULT board WNS_NS QUERY_FAILED -- $err"
+}
+
+# ---- 设计检查点（GUI 里看关键路径 Schematic 的那张配图要用）-----------------
+# 非工程模式跑完**什么都不留** —— 没有 .xpr、没有 .dcp。于是「打开设计、点开
+# 关键路径、截 Schematic」这条路在 GUI 里根本走不通：没有东西可打开。
+# 报告 `report/design/03_performance_and_resources.md` §3.12 第 3 条要的
+# 「关键路径截图」就卡在这里。
+#
+# ⚠️ 可选：不传第 8 个参数（dcpfile 为空）就一个字都不写。
+#    上游对照、只量数字的那几轮不需要它，别白占几十 MB。
+# ⚠️ 打开 .dcp 时 Vivado 要**从仓库外的目录**启动 —— 病根是启动目录里的撇号，
+#    见 run_board_synth.sh 文件头。文件本身放在带撇号的路径下没问题。
+# ⚠️ 只有 impl_ok 才写：没布完的 checkpoint 打开后看不到实际走线，
+#    拿它截图会得到一张与报告数字对不上的图。
+if {$impl_ok && $dcpfile ne ""} {
+    if {[catch {
+        file mkdir [file dirname $dcpfile]
+        write_checkpoint -force $dcpfile
+    } err]} {
+        puts "  !! write_checkpoint failed: $err"
+    } else {
+        puts "RESULT board DCP $dcpfile"
+    }
 }
 
 # ---- bitstream -------------------------------------------------------------
