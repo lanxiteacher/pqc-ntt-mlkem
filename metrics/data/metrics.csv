@@ -13,7 +13,7 @@ WNS,资源,pe1,-0.936,ns,post-route,rtl/vivado/reports/pe1_nc_timing.rpt
 WHS,资源,pe1,0.072,ns,post-route,rtl/vivado/reports/pe1_nc_timing.rpt
 推算 Fmax,资源,pe1,168,MHz,post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,rtl/vivado/reports/pe1_nc_timing.rpt
 NTT 周期数,核心,pe1,904,cycles,顶层实测 done 拍 − start − 3，不含读出延迟,rtl/probes/README.md
-端到端延迟,核心,pe1,待测,ms,需要上板,host/
+端到端延迟,核心,pe1,约0.18-0.27,s,上板事务墙钟耗时（含串口往返）；A 临时脚本测得、未入库,rtl/vivado/reports/board_pe4_txn.txt
 LUT,资源,pe4,2000,个,post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,rtl/vivado/reports/pe4_nc_util.rpt
 LUT 占用率,资源,pe4,3.76,%,post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,rtl/vivado/reports/pe4_nc_util.rpt
 FF,资源,pe4,880,个,post-route，顶层边界，同上,rtl/vivado/reports/pe4_nc_util.rpt
@@ -28,7 +28,7 @@ WNS,资源,pe4,-1.260,ns,post-route,rtl/vivado/reports/pe4_nc_timing.rpt
 WHS,资源,pe4,0.066,ns,post-route,rtl/vivado/reports/pe4_nc_timing.rpt
 推算 Fmax,资源,pe4,160,MHz,post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,rtl/vivado/reports/pe4_nc_timing.rpt
 NTT 周期数,核心,pe4,232,cycles,顶层实测 done 拍 − start − 3，不含读出延迟,rtl/probes/README.md
-端到端延迟,核心,pe4,待测,ms,需要上板,host/
+端到端延迟,核心,pe4,约0.18-0.27,s,上板事务墙钟耗时（含串口往返）；A 临时脚本测得、未入库,rtl/vivado/reports/board_pe4_txn.txt
 LUT,资源,pe16,8922,个,post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,rtl/vivado/reports/pe16_nc_util.rpt
 LUT 占用率,资源,pe16,16.77,%,post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,rtl/vivado/reports/pe16_nc_util.rpt
 FF,资源,pe16,2933,个,post-route，顶层边界，同上,rtl/vivado/reports/pe16_nc_util.rpt
@@ -43,5 +43,5 @@ WNS,资源,pe16,-1.507,ns,post-route,rtl/vivado/reports/pe16_nc_timing.rpt
 WHS,资源,pe16,0.077,ns,post-route,rtl/vivado/reports/pe16_nc_timing.rpt
 推算 Fmax,资源,pe16,154,MHz,post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,rtl/vivado/reports/pe16_nc_timing.rpt
 NTT 周期数,核心,pe16,69,cycles,顶层实测 done 拍 − start − 3，不含读出延迟,rtl/probes/README.md
-端到端延迟,核心,pe16,待测,ms,需要上板,host/
+端到端延迟,核心,pe16,约0.18-0.27,s,上板事务墙钟耗时（含串口往返）；A 临时脚本测得、未入库,rtl/vivado/reports/board_pe4_txn.txt
 KAT 通过率,核心,—,1000/1000,%,社区维护的 FIPS 203 兼容 .rsp,research/mlkem_kat/

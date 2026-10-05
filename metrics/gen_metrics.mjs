@@ -213,8 +213,9 @@ GEN.push('### §8.3 指标表（按《选题指导》的列）', '',
     `| NTT 内核吞吐（周期数） | 核心 | ${c(TIERS.map((t) => CYCLES[t].fntt))} | cycles | ` +
         `一次 NTT 全程（7 层）；顶层量 \`done\` 拍 − \`start\` − 3；**不含读出延迟**；与上游逐档相同 | ` +
         `${h('rtl/probes/README.md')} §判据 2、${h('rtl/H1_port_spec.md')} §五 |`,
-    `| 端到端延迟 | 核心 | ⬜ 待测 | ms | 未测：需要上板跑一次「PC → 串口 → 核 → 串口 → PC」 | ` +
-        `${h('host/')}（协议已冻结 v1.0，等上板） |`,
+    `| 端到端延迟 | 核心 | ~0.18–0.27 | s | 上板事务**墙钟**耗时（含 115200 bps 串口往返）；` +
+        `⚠️ **非正式**：A 的临时脚本测得、未入库，未走 ${h('host/')} 正式路径 | ` +
+        `${h('rtl/vivado/reports/board_pe4_txn.txt')} |`,
     `| KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | 社区维护的 FIPS 203 兼容 \`.rsp\`（ML-KEM-768），` +
         `kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 \`report/design/04_功能正确性.md\` §4.4） | ` +
         `${h('research/mlkem_kat/')} |`,
@@ -276,7 +277,7 @@ for (const t of TIERS) {
     csvRows.push(['WHS', '资源', t, r.whs, 'ns', COND.wns, tev]);
     csvRows.push(['推算 Fmax', '资源', t, r.fmax, 'MHz', COND.fmax, tev]);
     csvRows.push(['NTT 周期数', '核心', t, CYCLES[t].fntt, 'cycles', COND.cycles, 'rtl/probes/README.md']);
-    csvRows.push(['端到端延迟', '核心', t, '待测', 'ms', '需要上板', 'host/']);
+    csvRows.push(['端到端延迟', '核心', t, '约0.18-0.27', 's', '上板事务墙钟耗时（含串口往返）；A 临时脚本测得、未入库', 'rtl/vivado/reports/board_pe4_txn.txt']);
 }
 csvRows.push(['KAT 通过率', '核心', '—', '1000/1000', '%', '社区维护的 FIPS 203 兼容 .rsp', 'research/mlkem_kat/']);
 
