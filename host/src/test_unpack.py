@@ -3,7 +3,7 @@
 运行
     PYTHONIOENCODING=utf-8 python host/src/test_unpack.py
 
-它在验 11 件事
+它在验 12 件事
     1. **两张表都是双射** —— 256 个下标互不重复、正好盖住 0..255。
     2. **两张表确实不同** —— FNTT 和 INTT 要是同一张，§5.3.4 那张表就是白写的。
     3. **代码里的表和 proto.md 对得上** —— 运行时去读 §5.3.4:370-374 那张表，
@@ -21,6 +21,8 @@
         不静默、不猜、不跳过。
     11. **假绿的机理** —— 把「文件序」当成「板子回的物理序」喂进去，**必然全错**。
         这条是那个假绿陷阱的警钟。
+    12. **折叠度分档** —— FNTT 的读出序随 `#RDY` 的 `<build>` 切（pe1 交织 / pe4、pe16
+        自然序，§5.3.4:370），INTT / PWM2 三档同序；默认 1 = 加这个参数之前的全部行为。
 
 关于第 3 条（这是第 4 步报告之外**我自己加的**一条）
     报告里我只列了 10 条。动手时意识到：如果把两张表的数字**凭记忆抄**进代码，
@@ -290,6 +292,36 @@ def main():
                                                                         diffs[0][0]))
     print("  ⚠️ 所以：谁把陪练的输出直接当物理序喂给 unpack，谁就会看到这一幕。")
     print("     第 5 步把陪练改成吐物理序之后，这一幕才会消失。")
+
+    # ------------------------------------------------------------ 12
+    print("")
+    print("=== 12：折叠度分档 —— FNTT 读出序随 build 切；其余运算三档同序 ===")
+    # 依据 §5.3.4:370：FNTT 读出序 pe1 = 交织，pe4/pe16 = 自然序。
+    # ⚠️ 这一条只在**解包侧**成立 —— 真板子回什么序，依据仍是 §5.3.4:366 引的探针实测。
+    ident = list(range(256))
+    for b in (1, 4, 16):
+        eq(len(unpack.permutation("FNTT", b)), 256, "build=%d 的 FNTT 序长度不对" % b)
+        eq(len(set(unpack.permutation("FNTT", b))), 256,
+           "build=%d 的 FNTT 序不是双射" % b)
+    eq(list(unpack.permutation("FNTT", 1)), list(unpack.permutation("FNTT")),
+       "build 的默认值不是 1 —— 那就会悄悄改掉加这个参数之前的全部行为")
+    eq(list(unpack.permutation("FNTT", 4)), ident, "pe4 的 FNTT 读出序不是自然序")
+    eq(list(unpack.permutation("FNTT", 16)), ident, "pe16 的 FNTT 读出序不是自然序")
+    check(list(unpack.permutation("FNTT", 1)) != ident,
+          "pe1 的 FNTT 读出序竟然是自然序 —— 那前面几条检查全都没意义")
+    for kind in ("INTT", "PWM2"):
+        for b in (1, 4, 16):
+            eq(list(unpack.permutation(kind, b)), list(unpack.permutation(kind)),
+               "%s 的序居然随 build 变了（§5.3.4:371-374 说三档同序）" % kind)
+    vals4 = [(i * 7) % 3329 for i in range(256)]
+    eq(unpack.unpack("FNTT", unpack.to_physical_order("FNTT", vals4, 4), 4), vals4,
+       "pe4 口径下 FNTT 往返没还原")
+    raises(lambda: unpack.permutation("FNTT", 8), "不认识的折叠度（FNTT, 8）")
+    raises(lambda: unpack.permutation("INTT", 2), "不认识的折叠度（INTT, 2）")
+    print("  FNTT：pe1 = 交织 %s … ／ pe4、pe16 = 自然序 0,1,2,3,…"
+          % list(unpack.permutation("FNTT", 1)[:6]))
+    print("  INTT / PWM2：三档同序（不看 build）")
+    print("  不认识的 build → 响亮报错 ✓")
 
     # ------------------------------------------------------------
     print("")

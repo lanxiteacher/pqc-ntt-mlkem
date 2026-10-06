@@ -6,6 +6,7 @@
 
         FNTT / PWM2：每 4 个一组，把第 2、3 个对调 → 0,2,1,3,4,6,5,7,…
                      ⚠️ FNTT 这一行**只在 pe1 成立**；pe4/pe16 上是自然序（见 §5.3.4）
+                        —— 所以 FNTT 的读出序按 `#RDY` 的 `<build>` 分档，见 `permutation`
         INTT      ：前半本和后半本交叉     → 0,128,1,129,2,130,…
 
     §5.3.4:378 已经把这件事定死（选的是「甲」）：**板子按自己读出的物理顺序
@@ -22,6 +23,9 @@
         #INTT                  → INTT 表
         #PMUL NTT              → PWM2 表（和 FNTT 是**同一张**）
         #PMUL TIME / #PMUL FULL → INTT 表
+    **命令名推不出来的那一格**：FNTT 的读出序还随**折叠度**分档（pe1 交织 / pe4、pe16
+    自然序），而折叠度是编译进位流的、命令里没有它（§5.3.4:378 末段）。所以这几张表之外
+    多一个 `build` 参数（默认 1），值来自 `#RDY <ver> <build> <errs>` 的 `<build>`（§5.2:290）。
     ✅ 最后一行**原先不在 proto.md 的表里**（那张表只有 FNTT / INTT / PWM2 三行，
        §5.3.4:370-374）—— **2026-10-06 已按 A 的订正单补成五行**（`#PMUL TIME` /
        `#PMUL FULL` 各有独立一行）。依据是 tb 的实测：`fullmul_batch_tb.v:169-170` 和
@@ -86,6 +90,27 @@ _PERM = {
     PWM2: _perm_fntt(),      # 点乘和 FNTT 同序（§5.3.4:370-374 的输出列）
 }
 
+# ---------------------------------------------------------------- 折叠度档位
+
+# `#RDY <ver> <build> <errs>` 里的 `<build>`（= `PE_NUMBER`，§5.2:290）。
+# **只有 FNTT 的读出序随它分档**（§5.3.4:370）；INTT / PWM2 三档同序，不看它。
+# 默认 1 = 「还没收到 #RDY」时的行为，等同加这个参数之前的**全部**行为。
+DEFAULT_BUILD = 1
+KNOWN_BUILDS = (1, 4, 16)
+
+
+def _perm_identity():
+    """自然序（恒等排列）：`perm[r] == r`。pe4 / pe16 上 FNTT 的**读出**序（§5.3.4:370）。"""
+    return tuple(range(GROUP_LEN))
+
+
+# FNTT 的读出序按 build 查；其余运算仍走上表那张 _PERM。
+_FNTT_PERM = {
+    1: _perm_fntt(),         # 默认档 —— 与 _PERM[FNTT] 是同一个值
+    4: _perm_identity(),
+    16: _perm_identity(),
+}
+
 
 def kind_of(command):
     """从命令名推出该用哪张表。认不出来就**响亮报错**，不猜。
@@ -113,13 +138,25 @@ def kind_of(command):
     raise SystemExit("!! 这条命令推不出解包序：%r" % command)
 
 
-def permutation(kind):
+def permutation(kind, build=DEFAULT_BUILD):
     """给出该运算的读出序。
+
+    build —— `#RDY <ver> <build> <errs>` 的 `<build>`（= 折叠度 `PE_NUMBER`，§5.2:290）。
+             **只有 FNTT 用它**（§5.3.4:370：pe1 交织 / pe4、pe16 自然序）；INTT / PWM2
+             三档同序，传什么都一样。默认 DEFAULT_BUILD(=1)，即「还没收到 `#RDY`」时的
+             行为 —— 等同加这个参数之前的全部行为。
+             ⚠️ 板子端**尚未实现** `#RDY`（A 侧零命中），所以现在只能由调用方显式给
+             （`board_run.py --build`）；「自动从 #RDY 认出折叠度」要等 A 先发得出这一帧。
 
     返回值 `perm[r]` = **收到第 r 行**该摆到**哪个自然下标**去。
     长度 256，而且是**双射**（256 个下标互不重复、正好盖住 0..255）——
     test_unpack.py 第 1 条守着这件事。
     """
+    if build not in KNOWN_BUILDS:
+        raise SystemExit("!! 不认识的折叠度 <build>=%r（只认 %s，见 §5.2:290）"
+                         % (build, " / ".join(str(b) for b in KNOWN_BUILDS)))
+    if kind == FNTT:
+        return _FNTT_PERM[build]
     try:
         return _PERM[kind]
     except KeyError:
@@ -137,11 +174,12 @@ def _as_value(text, where):
     return int(text, 16)
 
 
-def unpack(kind, rows):
+def unpack(kind, rows, build=DEFAULT_BUILD):
     """把板子回传的 256 行摆成自然序，返回 256 个整数。
 
-    kind —— `permutation` 认的类型（FNTT / INTT / PWM2）
-    rows —— 收到的原始行（**物理序**，3 位十六进制字符串），必须**正好 256 行**
+    kind  —— `permutation` 认的类型（FNTT / INTT / PWM2）
+    rows  —— 收到的原始行（**物理序**，3 位十六进制字符串），必须**正好 256 行**
+    build —— 折叠度（`#RDY` 的 `<build>`）。**只有 FNTT 用**，见 `permutation`。
 
     ⚠️ 行数不对就报错。行数不对的常见成因有两个，都会静默出大错，所以宁可炸：
        命令发错了（比如拿 `#NTT` 的向量去喂 `#INTT`）；
@@ -150,15 +188,17 @@ def unpack(kind, rows):
     if len(rows) != GROUP_LEN:
         raise SystemExit("!! 解包要正好 %d 行，收到 %d 行 —— 要么命令发错了，"
                          "要么数据段被截断了。" % (GROUP_LEN, len(rows)))
-    perm = permutation(kind)
+    perm = permutation(kind, build)
     out = [0] * GROUP_LEN
     for r, text in enumerate(rows):
         out[perm[r]] = _as_value(text, "第 %d 行" % r)
     return out
 
 
-def to_physical_order(kind, values):
+def to_physical_order(kind, values, build=DEFAULT_BUILD):
     """`unpack` 的**逆**：把自然序摆成板子读出的物理序。返回 256 行字符串。
+
+    build —— 折叠度（`#RDY` 的 `<build>`）。**只有 FNTT 用**，见 `permutation`。
 
     ⚠️ 现在只有一个用处：**在测试里伪造「板子该回的那 256 行」**（真板子还没有）。
        第 5 步改陪练时也会用到它 —— 陪练要改成吐物理序才算忠实。
@@ -167,7 +207,7 @@ def to_physical_order(kind, values):
     if len(values) != GROUP_LEN:
         raise SystemExit("!! 摆物理序要正好 %d 个值，收到 %d 个。"
                          % (GROUP_LEN, len(values)))
-    perm = permutation(kind)
+    perm = permutation(kind, build)
     return ["%03x" % values[perm[r]] for r in range(GROUP_LEN)]
 
 
