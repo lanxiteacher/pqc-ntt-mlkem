@@ -2,6 +2,8 @@
 
 **主责：C** ｜ 状态：✅ **四项齐了（2026-09-29）**：`checklists/` 34 条、`prompts/` 4 条、
 `scripts/` 3 个零依赖校验脚本、`templates/` 3 个骨架
+｜ ✅ **§3.3.5.2 四件套逐项补齐（2026-10-06）**：每类每一项写明「适用场景 / 使用方法 /
+失效条件 / 已验证的效果」，**效果一列写实测**（见 §3.3.5.2 的四件套）
 ｜ 对应评分项：**大模型协作与技能包（15 分）**
 
 > 位置与内容要求见 `../competition_guide_notes.md` §8.2。
@@ -22,7 +24,7 @@
 
 ```
 skill/
-├── README.md            ← 本文：索引 + 每项的适用范围/使用方法/失效条件
+├── README.md            ← 本文：索引 + 「§3.3.5.2 四件套」的汇总入口
 ├── prompts/             提示词工作流
 ├── checklists/          踩坑清单
 ├── scripts/             校验脚本
@@ -98,8 +100,30 @@ skill/
 | [`templates/batch_testbench.v`](templates/batch_testbench.v) | 批量对拍 testbench 骨架（有界等待 / 好定位的报错 / 顺序注释） |
 | [`templates/run_checks.sh`](templates/run_checks.sh) | 一键验证脚本骨架（相对路径 / 工具预检 / 逐项报） |
 
-⚠️ 后两个是**骨架**，`TODO` 处要填；`batch_testbench.v` 本机没有 iverilog，
-**没有编译验证过**，套用时先跑最小例。
+⚠️ 后两个是**骨架**，`TODO` 处要填。**2026-10-06 更新**：本机 10-05 已装 iverilog
+（`C:\iverilog\bin`，**不在 PATH**，先 `export`），两个骨架已做**编译 / 语法检查**
+（结论见 `templates/README.md`），但**端到端仍需补 DUT 后自验**。
+
+---
+
+## §3.3.5.2 的四件套 —— 每一项都在
+
+《选题指南》p24 §3.3.5.2（同 `../competition_guide_notes.md` §8.2）要求：
+`skill/` 含 `README.md` 说明**每一项的适用范围、使用方法与失效条件**；
+每一项须写明**适用场景、使用方法与已验证的效果**，并说明**是从哪些失败或观察中总结得出**。
+评价标准是**可复用性**。
+
+四类**每一项**的这四条，落在各子目录的 README 里（本节是汇总入口）：
+
+| 类 | 项数 | 四件套在哪 |
+|---|---|---|
+| 提示词工作流 | 4 条 | [`prompts/README.md`](prompts/README.md) §每项的四件套 —— 每条提示词文件内另有 `适用范围` / `怎么用` / `失效条件` / `本项目的实例`（即「从哪总结」） |
+| 踩坑清单 | 5 份 / 34 条 | [`checklists/README.md`](checklists/README.md) §每项的四件套 —— 每条坑按 `现象→原因→怎么修→怎么预防 + 怎么发现的 + 谁扛` 写 |
+| 校验脚本 | 3 个（+ `refsim/` 四条入口） | [`scripts/README.md`](scripts/README.md) §每项的四件套 |
+| 工程骨架模板 | 3 个 | [`templates/README.md`](templates/README.md) §每项的四件套 |
+
+⚠️ 「**已验证的效果**」一列**写实测**（脚本跑出的数、本机编译结果），不写「设计如此」——
+空口的效果不算证据（见 `checklists/verification.md` 第 6 条「一个永远通过的测试没有价值」）。
 
 ---
 
