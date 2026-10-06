@@ -18,6 +18,10 @@
 #   ② 16 组灌 RTL 验 FULL 通路
 #   ③ 16 组灌 RTL 验 HALF 通路
 #
+# 👉 ②③ 两处 `vvp` 由 `vvp_verdict.sh` 的判定函数**自己判**（基线都是 16 组），
+#    不符就 exit 1 —— 不能看 vvp 的退出码：`$finish` 不改退出码，那是假绿
+#    （见该文件头）。
+#
 # 用法：sh run_polmul_check.sh
 # 依赖：gcc、iverilog（/c/iverilog/bin）、python
 # ===========================================================================

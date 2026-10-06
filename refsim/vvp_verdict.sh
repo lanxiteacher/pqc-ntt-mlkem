@@ -102,7 +102,9 @@ vvp_verdict_batch() {
     fi
 
     # ③ 通过锚点必须存在 —— 没有 = 没跑到结尾。
-    if ! printf '%s\n' "$_log" | LC_ALL=C grep -q '★ 全部 '; then
+    #    ⚠️ 要求「★ 全部 … 通过」**整句在同一行**，不能只认「★ 全部 」半句：
+    #    五个 tb 的通过行结尾都是「…组…通过」，少打这个「通过」也是假绿。
+    if ! printf '%s\n' "$_log" | LC_ALL=C grep -q '★ 全部 .*通过'; then
         echo "  ❌ $_name：没找到通过行「★ 全部 N 组…通过」—— 仿真大概没跑到结尾"
         _rc=1
     fi

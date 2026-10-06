@@ -12,6 +12,11 @@
 # FIPS 203 验过"这个事实（见 run_fntt_check.sh）。②③ 的期望值是按反推的
 # 约定生成的，④ 用来证明那个反推没有自欺。
 #
+# 👉 四处 `vvp`（② 一处、③ 一处、④ 两趟）都由 `vvp_verdict.sh` 的判定函数
+#    **自己判**（基线都是 16 组），不符就 exit 1 —— 不能看 vvp 的退出码：
+#    `$finish` 不改退出码，那是假绿（见该文件头）。④ 两趟各 19 行输出，显示上
+#    只留末尾几行，但**判定用的是完整日志**。
+#
 # 用法：sh run_intt_pwm2_check.sh
 # 依赖：gcc、iverilog（/c/iverilog/bin）、python
 # ===========================================================================
@@ -83,7 +88,7 @@ iverilog -g2012 -o batch_fntt_dump.vvp $SRC pe1/fntt_batch_tb_dump.v
 #    数值不受影响（内容逐字节相同），脏的是工作区 —— 所以这条只在「跑完整条链」时才现形。
 tr -d '\r' < "$KAT/ntt_in.hex"  > batch/ntt_batch_in.txt
 tr -d '\r' < "$KAT/ntt_out.hex" > batch/ntt_batch_exp.txt
-# 这一趟的输出很长（+dump 会把系数落盘），照旧只显示末尾 3 行；
+# 这一趟 19 行输出（16 组明细 + 汇总行），照旧只显示末尾 3 行；
 # 但**判定用的是完整日志** $_VVP_LOG，不是被 tail 截过的三行。
 _vvp_capture vvp batch_fntt_dump.vvp +dump=1 || exit 1
 printf '%s\n' "$_VVP_LOG" | tail -3 | sed 's/^/  FNTT: /'

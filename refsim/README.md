@@ -64,13 +64,23 @@ C 参考实现**，只依赖"FNTT 已经验过"，所以能反过来证明那个
 ## 二、怎么跑
 
 ```sh
-sh run_fntt_check.sh          # NTT 全流程：KAT → 参考实现 → RTL
-sh run_intt_pwm2_check.sh     # INTT + 点乘：生成向量 → 灌 RTL → 往返自检
-sh run_polmul_check.sh        # 完整多项式乘法（端到端）：FULL + HALF 两条通路
-sh run_ntt_layers.sh          # 导出并机器验证 twiddle 层序表
+sh run_fntt_check.sh          # 入口① NTT 全流程：KAT → 参考实现 → RTL
+sh run_intt_pwm2_check.sh     # 入口② INTT + 点乘：生成向量 → 灌 RTL → 往返自检
+sh run_polmul_check.sh        # 入口③ 完整多项式乘法（端到端）：FULL + HALF 两条通路
+sh run_ntt_layers.sh          # 入口④ 导出并机器验证 twiddle 层序表
+sh run_uart_check.sh          # 入口⑤ 串口协议验收台：位级假串口 → 真协议机 → 真 NTT
+sh run_uart_check.sh +fast    # 同上，跳过 T5 端到端 NTT（秒级；全套 273 个比对点约 4 分钟）
+sh run_proto_accept.sh        # 入口⑥ proto.md §5.5 三条注入错误（纯 python 陪练，秒级）
 ```
 
-前三个都是全自动的。需要 `gcc`、`iverilog`、`python`。
+全是全自动的。①②③ 需要 `gcc`、`iverilog`、`python`；④ 只需要 `gcc`；
+⑤ 只需要 `iverilog`；⑥ 只需要 `python` —— **不需要板子，也不需要联网**。
+
+**判定不靠眼睛，也不靠 `vvp` 的退出码。** ①②③⑤ 里每一处 `vvp` 都由
+`vvp_verdict.sh` 的判定函数自己判，不符就 `exit 1`；④ 靠 `ntt_layers.c` 的
+返回码；⑥ 自带退出码 + 标记核对 + `NCHECK=0` 防呆。为什么不能看 `vvp` 的退出码，
+见 `vvp_verdict.sh` 的文件头 —— `$finish` 不改变退出码，那是本仓库咬过的最大
+一口假绿。
 
 **iverilog 不在 PATH 里**时脚本会自己加 `/c/iverilog/bin`。
 它是用 winget 装的：`winget install --id Icarus.Verilog`。
@@ -79,28 +89,65 @@ sh run_ntt_layers.sh          # 导出并机器验证 twiddle 层序表
 
 ## 三、实测结果
 
+各入口**判定行的原文**（行首空格一并照抄 —— 那不是排版，是脚本
+`sed 's/^/  /'` 统一加的，原文就是这么多格）。
+
+⚠️ **判定行 ≠ 退出码，谁定退出码各入口不一样。**
+①②③⑤ 是「打印归打印、判定归判定」：那些行由 tb 或 C 程序打出来，
+退出码另由 `vvp_verdict.sh` 的判定函数**读日志重新判**（措辞是「真跑组数
+N 对得上基线 N」或「点数对得上基线 N」）。
+④ 不同：它的退出码就是 `ntt_layers.c` 自己的 `return`，脚本只原样透传 ——
+所以 ④ 是靠**那个 C 程序**保证的，不是 `vvp_verdict`。
+判据细节见 `vvp_verdict.sh` 文件头。
+
 `run_fntt_check.sh`：
 
 ```
-✅ DIN0：作者期望输出 == 参考实现（256/256）
-✅ DIN1：作者期望输出 == 参考实现（256/256）
-✅ 16 组黄金向量自洽（ntt_out.hex == poly_ntt(ntt_in.hex)）
-★ 全部 16 组向量通过 —— RTL 输出与 KAT 校验过的参考实现逐比特一致
+  ✅ DIN0：作者期望输出 == 参考实现（256/256）
+  ✅ DIN1：作者期望输出 == 参考实现（256/256）
+  ✅ 16 组黄金向量自洽（ntt_out.hex == poly_ntt(ntt_in.hex)）
+  ✅ FNTT：16 组向量全部通过（真跑组数 16 对得上基线 16）
 ```
 
 `run_intt_pwm2_check.sh`：
 
 ```
-✅ INTT 16 组全过（4096/4096 个系数）
-✅ PWM2 16 组全过（4096/4096 个系数）
-✅ 往返自检：RTL FNTT 的实际输出 → RTL INTT → 时域原值（4096/4096）
+  ✅ INTT：16 组向量全部通过（真跑组数 16 对得上基线 16）
+  ✅ PWM2：16 组向量全部通过（真跑组数 16 对得上基线 16）
+  ✅ FNTT（往返第 1 趟）：16 组向量全部通过（真跑组数 16 对得上基线 16）
+  ✅ INTT（往返第 2 趟）：16 组向量全部通过（真跑组数 16 对得上基线 16）
 ```
 
 `run_polmul_check.sh`：
 
 ```
-★ 全部 16 组完整乘法（FULL）通过 —— FNTT→FNTT→PWM2→INTT 端到端与参考实现逐比特一致
-★ 全部 16 组半程乘法（HALF）通过 —— FNTT→PWM2→INTT 端到端与参考实现逐比特一致
+  ✅ FULL（完整乘法）：16 组向量全部通过（真跑组数 16 对得上基线 16）
+  ✅ HALF（半程乘法）：16 组向量全部通过（真跑组数 16 对得上基线 16）
+```
+
+`run_ntt_layers.sh`（**没有**脚本自己的判定行 —— 这四行是 C 程序
+`ntt_layers.c` 打的；脚本只把它的退出码原样透出去）：
+
+```
+    my_ntt    vs 裸 ntt()      : ✅ 逐比特完全一致
+    my_invntt vs 裸 invntt()   : ✅ 逐比特完全一致
+    poly_ntt == ntt + reduce   : ✅ 成立
+    往返 invntt(ntt(f)) = f * 2285 (mod q)   : ✅ 全系数同一因子（纯缩放，无畸变）
+```
+
+`run_uart_check.sh`（全套；带 `+fast` 时比对点从 273 掉到 14）：
+
+```
+    比对点 273 个，失败 0 个
+    结论：全部通过。
+  ✅ UART 协议：273 个比对点全部通过（点数对得上基线 273）
+```
+
+`run_proto_accept.sh`：
+
+```
+✓ 4 组全过 —— 三条都在**陪练**上成立。
+  ⚠️ 只到这儿：真 RTL（A 的 uart_proto_tb.v）那侧还没跑，真板子更没跑。
 ```
 
 非退化统计（"通过"必须配"非退化"才作数）：
@@ -151,6 +198,9 @@ mv batch/_bak.txt batch/fullmul_exp.txt        # 恢复
 | `run_intt_pwm2_check.sh` | **入口②** —— INTT + 点乘 + 往返自检 |
 | `run_polmul_check.sh` | **入口③** —— 完整多项式乘法（端到端） |
 | `run_ntt_layers.sh` | 入口④ —— 导出 twiddle 层序表并机器验证 |
+| `run_uart_check.sh` | **入口⑤** —— 串口协议验收台（位级假串口 → 真协议机 → 真 NTT） |
+| `run_proto_accept.sh` | **入口⑥** —— proto.md §5.5 三条注入错误的验收调度器（纯 python 陪练） |
+| `vvp_verdict.sh` | **判定库** —— ①②③⑤ 的 `vvp` 输出由它判定；被 `.` 引入，不单独执行 |
 | `ntt_ref_tool.c` | 参考实现外壳：读系数文本 → `poly_ntt` / `poly_invntt_tomont` → 写回文本 |
 | `ntt_once_tool.c` | 单多项式 NTT/INTT 外壳（`--ntt` / `--invntt`） |
 | `polmul_ref_tool.c` | **两输入**点乘外壳（时域进，内部补两步 NTT） |
@@ -169,6 +219,7 @@ mv batch/_bak.txt batch/fullmul_exp.txt        # 恢复
 | `pe1/pwm2_batch_tb.v` | 同上 —— 点乘，**两路输入** |
 | `pe1/fullmul_batch_tb.v` | 同上 —— 完整乘法，**串四个运算** |
 | `pe1/halfmul_batch_tb.v` | 同上 —— 半程乘法，**B 用 `load_b_i` 灌** |
+| `pe1/uart_proto_tb.v` | 串口协议 testbench —— 从 A 的 `rtl/board/tb/` 取来（原件未删） |
 | `pe1/*.v` | RTL 源码副本（24 个），改动见下 |
 | `pe1/test_pe1/` | 作者自带的数据文件（10 个） |
 | `ref_ntt0/1.txt` | 参考实现复算作者输入的结果，供 diff |
