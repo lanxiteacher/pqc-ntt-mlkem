@@ -68,8 +68,14 @@ echo "═══ ④ RTL 往返自检：FNTT → INTT 是否回到原值 ══�
 iverilog -g2012 -o batch_fntt_dump.vvp $SRC pe1/fntt_batch_tb_dump.v
 
 # 第 1 趟：时域向量 → RTL FNTT（边跑边 dump）→ 同时对照 ntt_out.hex
-cp "$KAT/ntt_in.hex"  batch/ntt_batch_in.txt
-cp "$KAT/ntt_out.hex" batch/ntt_batch_exp.txt
+#
+# ⚠️ 落盘用 tr 去 CR，**不要用 cp**（KNOWN_ISSUES.md B3，C 报的）：
+#    $KAT 那两个 .hex 本身是 CRLF（各 4096 个 CR），而 batch/ntt_batch_{in,exp}.txt
+#    是**已入库**的文件；兄弟脚本 run_fntt_check.sh:68-70 用 python "wb" 写**同一对**
+#    文件、落的是 LF。cp 原样拷字节 → 把入库的 LF 盖成 CRLF，跑完 git status 冒黄字。
+#    数值不受影响（内容逐字节相同），脏的是工作区 —— 所以这条只在「跑完整条链」时才现形。
+tr -d '\r' < "$KAT/ntt_in.hex"  > batch/ntt_batch_in.txt
+tr -d '\r' < "$KAT/ntt_out.hex" > batch/ntt_batch_exp.txt
 vvp batch_fntt_dump.vvp +dump=1 | tail -3 | sed 's/^/  FNTT: /'
 
 if [ ! -s batch/fntt_rtl_out.txt ]; then
