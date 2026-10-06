@@ -51,10 +51,12 @@
   `grep -rnE 'proto\.md:[0-9]' logs team`（进）
 
 ### A2 ❗ `#RDY 1 1 0` 的校验和 `7c` 与 `#NTT 1` 的**撞号**
+
 异或本来就容易撞，纯属巧合。**别拿「校验和相同」当「两行内容相同」的证据** ——
 任何靠校验和去区分行的脚本/测试都可能因此假绿。
 
 ### A3 错误码表的「位置」列与 A 的实装**不一致**（表未改）
+
 - **位置**：`proto.md:296`（`01`）、`:301`（`06`）、`:302`（`07`）的「位置」列写 `` `0` ``；
   A 的实装是**整段省略**（例：`#ERR 01*xx`，见 `letter_2026-10-04_A_to_B.txt` §四②）。
 - **咬人处**：按表写**发送端**会多发一个 `0`；按表写**严格接收端**会拒收 A 的帧。
@@ -64,10 +66,12 @@
 - **怎么验**：`grep -n '#ERR\|split' host/src/*.py`，确认收帧是**按 token 切**不是按宽度切。
 
 ### A4 两条应答口径是 B 单方面认可的，A 还没回话
+
 `#PING`/`#ABORT` 只回 `#OK`、无 `#BEGIN`/`#DONE`（`proto.md:286`）；
 `#ERR` token 数不固定（`proto.md:304`）。**A 若否掉，这两行要改回来。**
 
 ### A5 `proto.md` 是冻结文档 —— 改它要守规矩
+
 - §九(b)：冻结后改动须**双方点头**；只能动 A **点名的处**，别处过时**只报告**。
 - ⚠️ §九(e) **不是**那条规矩本身 —— 它是「本版（2026-09-29）改了什么」的**改动表**。
   「引用本文件请用节号、不要用行号」是**紧跟该表下面的 ⚠️ 注**，而且**只管「引用本文件」**
@@ -80,6 +84,7 @@
 ## B. 解包 / 对拍
 
 ### B1 ❗ `host/src/unpack.py` 的 FNTT 表**按 pe1 写死**
+
 - **位置**：`unpack.py` 的 `kind_of()` —— `#NTT` **无条件**取交织表。
 - **咬人处**：上板若烧 **pe4 / pe16**，FNTT 的**读出**序是**自然序** →
   解包后 **256 个系数全错**（响亮失败，不静默，但很难一眼看出是「档位不对」）。
@@ -89,6 +94,7 @@
 - **怎么验**：`grep -n 'def kind_of' -A 12 host/src/unpack.py`
 
 ### B2 `refsim/batch/` 有 **23 个变长文件**，不能拿 `diff` 比
+
 - **名单**：`fullmul_exp` / `halfmul_exp` / `halfmul_b` / `_full_ref` / `_half_ref` /
   `_gen_scratch_ntt` / `_gen_scratch_out` + 全部 16 个 `vref_*`。
 - **咬人处**：`vectors.read_vector` 对它们会**响亮拒绝**（它的契约是「定长向量」）；
@@ -99,6 +105,7 @@
 - **判定**：**本轮不修**（修 = 改已冻结的 H2 黄金向量，须单独议）。
 
 ### B3 ❗ CRLF 缺陷（C 报的，**尚未修**）
+
 - **位置**：`refsim/run_intt_pwm2_check.sh:71-72` 用 `cp` 拷 `research/mlkem_kat/ntt_{in,out}.hex`
   —— 而**源文件本身各带 4096 个 CR**。
 - **咬人处**：会把**已入库**的 `refsim/batch/ntt_batch_{in,exp}.txt` 从 LF 改成 CRLF，弄脏工作区。
@@ -109,11 +116,13 @@
 - **怎么验**：`tr -dc '\r' < refsim/batch/ntt_batch_in.txt | wc -c`（要 0）
 
 ### B4 ❗ 假绿陷阱：把「文件序」当「板子回的物理序」
+
 `unpack()` 要的是**物理序**（`to_physical_order()` 是它的逆）。
 陪练 `fake_board.py` 一旦回吐「文件序」，整条链**看着全绿、实际全错**。
 `test_unpack.py` 第 4 / 11 条就是钉住这个机理的。
 
 ### B5 落盘铁律
+
 必须**二进制模式 + LF**（`unpack.write_result`）；**不许**用
 `diff --strip-trailing-cr` 遮症状（§5.3.5）。
 
@@ -122,19 +131,36 @@
 ## C. 真板子联调（H6，W4）
 
 ### C1 ❗ 端口写死，与自己的 README 打架
+
 `host/src/link.py:44` `DEFAULT_PORT = "COM10"` —— 而 `host/README.md:23` 明写
 「**不要写死数字**，运行时按设备名 `USB-SERIAL CH340` 找」。板子 2026-10-04 在 **COM9**。
 → **联调第一个卡点。**
 
 ### C2 `host/src/` **没有能对真串口跑一条事务的入口**
+
 只有 `test_*.py` 带 `__main__`。联调前必须补一个真串口 runner（量级：几十行）。
 
-### C3 ❗ 接手 `uart_proto_tb.v` 时的**静默空向量**
-从 A 处接手 `rtl/board/tb/uart_proto_tb.v` + `run_uart_check.sh`、按 §六第 12 条挪进
-`refsim/` 时要改 3 处路径，其中**两个 `$readmemh` 是按进程 CWD 解析的相对深度**：
-路径写错 **不报错**，**静默读到空向量，然后报「全部通过」**。
-- **接手第一件事不是跑它，是确认它真的读到了向量。**
-- 编译 tb 时**只能加 `rtl/ntt_core/`，绝不能加 `rtl/pe1/`**（模块重名）。
+### C3 ✅ **已办（2026-10-06）· 原警示证伪** —— 接手 `uart_proto_tb.v`
+
+已按 §六第 12 条取走 → `refsim/pe1/uart_proto_tb.v` + `refsim/run_uart_check.sh`。
+搬迁**只**动了 `$readmemh` 的深度（`../../../refsim/batch/...` → `batch/...`，
+与 `refsim/pe1/` 兄弟 tb 一致）＋编译源文件路径改从 `refsim/` 出发。
+原地与搬迁后各跑一遍：**+fast 14/0，全套 273/0，逐字一致**。
+
+⚠️ **本条原先写「路径写错不报错、静默读到空向量、报『全部通过』」—— 实测三条全反**
+（阴性对照：把 `batch/ntt_batch_in.txt` 改成 `batch/NO_SUCH_FILE.txt`）：
+
+- iverilog **会喊**：`ERROR: ...: $readmemh: Unable to open ... for reading.`
+- `+fast` → `比对点 14 个，失败 **2** 个`（跑两次一致）；
+  全套 → T5 `FAIL_TIMEOUT` 挂在 tb 的护栏上，**连汇总行都不打**。
+  两种模式都是**响亮失败**，不是假绿。
+- ⚠️ 但有一条尺子**不够用**：`+fast` 下坏路径的「比对点」**仍是 14 = 基线** —— 只看 N 会漏。
+
+**判据（四条缺一不可）**：① 输出里**没有** `$readmemh: Unable to open`；② **汇总行存在**；
+③ `N ==` 基线（**全套 273 / +fast 14**）；④ `失败 == 0`。（③④ 各漏一半。）
+判据已写进 `refsim/run_uart_check.sh` 的文件头。
+编译 tb 时**只能加 `rtl/ntt_core/`，绝不能加 `rtl/pe1/`**（模块重名）。
+A 的原件**仍留在 `rtl/board/tb/`**（B 不删，去留由 A 定）→ **同名副本，改一处要记得另一处**。
 
 ### C4 接线与串口口径
 
@@ -161,3 +187,9 @@
   **教训：对冻结文档动手，前后各 `wc -l` 一次，是最便宜的保险。**
 - **D3** `host/src/unpack.py` 与 `test_unpack.py` 里的注释和行号引用已跟着 §5.3.4 更新
   （`§5.3.4:376`→`:378`、`:374`→`:376`）；`unpack.py` 的 FNTT 表**代码没动**（见 B1）。
+- **D4** 2026-10-06 第二轮，B 的验收入口现在共三个：
+  `refsim/run_proto_accept.sh`（121 行，§5.5 三条注入错误，跑**陪练**）、
+  `refsim/pe1/uart_proto_tb.v`（742 行，板子侧，跑**真 RTL**）、
+  `refsim/run_uart_check.sh`（60 行，跑上面那个）。**三者都是前台、不需板子、不需联网。**
+  详情见 C3。⚠️ `uart_proto_tb.v:449` 里还留着一处指向 `host/proto.md` 的**行号引用**
+  （`proto.md:218/221/233/237/304`）—— 见 A1，**本轮没动**。
