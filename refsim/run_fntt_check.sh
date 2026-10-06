@@ -18,6 +18,9 @@ cd "$HERE"
 REF="../research/kyber_ref"
 KAT="../research/mlkem_kat"
 
+# 判定函数（`$finish` 不改变退出码，光看 vvp 的退出码是假绿，见该文件头）。
+. "$HERE/vvp_verdict.sh"
+
 echo "═══ ① 编译参考实现外壳 ═══"
 gcc -O2 -Wall -I"$REF" -o ntt_ref_tool.exe ntt_ref_tool.c \
     "$REF/poly.c" "$REF/polyvec.c" "$REF/ntt.c" "$REF/reduce.c" "$REF/cbd.c" \
@@ -77,7 +80,9 @@ pe1/modadd.v pe1/modmul.v pe1/modred.v pe1/modsub.v pe1/shiftreg.v pe1/KyberHPM1
 iverilog -g2012 -o batch_fntt.vvp $SRC pe1/fntt_batch_tb.v
 echo "  ✅ 编译 batch_fntt.vvp"
 echo
-vvp batch_fntt.vvp | sed 's/^/  /'
+_vvp_capture vvp batch_fntt.vvp || exit 1
+_vvp_show
+vvp_verdict_batch "FNTT" 16 "$_VVP_LOG" || exit 1
 
 echo
 echo "═══ 完成 ═══"

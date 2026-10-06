@@ -29,6 +29,9 @@ cd "$HERE"
 REF="../research/kyber_ref"
 KAT="../research/mlkem_kat"
 
+# 判定函数（`$finish` 不改变退出码，光看 vvp 的退出码是假绿，见该文件头）。
+. "$HERE/vvp_verdict.sh"
+
 SRC="pe1/addressgenerator.v pe1/BRAM.v pe1/BROM.v pe1/butterfly.v pe1/div2.v \
 pe1/dt0.v pe1/dt1.v pe1/dt2.v pe1/dt3.v pe1/FA.v pe1/HA.v pe1/intmul.v \
 pe1/modadd.v pe1/modmul.v pe1/modred.v pe1/modsub.v pe1/shiftreg.v pe1/KyberHPM1PE.v"
@@ -56,12 +59,16 @@ python gen_batch_vectors.py
 echo
 echo "═══ ② 完整乘法 FULL：A、B 都在时域（16 组）═══"
 iverilog -g2012 -o batch_fullmul.vvp $SRC pe1/fullmul_batch_tb.v
-vvp batch_fullmul.vvp | sed 's/^/  /'
+_vvp_capture vvp batch_fullmul.vvp || exit 1
+_vvp_show
+vvp_verdict_batch "FULL（完整乘法）" 16 "$_VVP_LOG" || exit 1
 
 echo
 echo "═══ ③ 半程乘法 HALF：A 时域、B 在 NTT 域（16 组）═══"
 iverilog -g2012 -o batch_halfmul.vvp $SRC pe1/halfmul_batch_tb.v
-vvp batch_halfmul.vvp | sed 's/^/  /'
+_vvp_capture vvp batch_halfmul.vvp || exit 1
+_vvp_show
+vvp_verdict_batch "HALF（半程乘法）" 16 "$_VVP_LOG" || exit 1
 
 echo
 echo "═══ 完成 ═══"

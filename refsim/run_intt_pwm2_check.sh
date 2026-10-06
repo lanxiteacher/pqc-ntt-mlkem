@@ -23,6 +23,9 @@ cd "$HERE"
 REF="../research/kyber_ref"
 KAT="../research/mlkem_kat"
 
+# 判定函数（`$finish` 不改变退出码，光看 vvp 的退出码是假绿，见该文件头）。
+. "$HERE/vvp_verdict.sh"
+
 SRC="pe1/addressgenerator.v pe1/BRAM.v pe1/BROM.v pe1/butterfly.v pe1/div2.v \
 pe1/dt0.v pe1/dt1.v pe1/dt2.v pe1/dt3.v pe1/FA.v pe1/HA.v pe1/intmul.v \
 pe1/modadd.v pe1/modmul.v pe1/modred.v pe1/modsub.v pe1/shiftreg.v pe1/KyberHPM1PE.v"
@@ -50,12 +53,16 @@ python gen_batch_vectors.py
 echo
 echo "═══ ② INTT：16 组向量灌 RTL ═══"
 iverilog -g2012 -o batch_intt.vvp $SRC pe1/intt_batch_tb.v
-vvp batch_intt.vvp | sed 's/^/  /'
+_vvp_capture vvp batch_intt.vvp || exit 1
+_vvp_show
+vvp_verdict_batch "INTT" 16 "$_VVP_LOG" || exit 1
 
 echo
 echo "═══ ③ PWM2（点乘）：16 组向量灌 RTL ═══"
 iverilog -g2012 -o batch_pwm2.vvp $SRC pe1/pwm2_batch_tb.v
-vvp batch_pwm2.vvp | sed 's/^/  /'
+_vvp_capture vvp batch_pwm2.vvp || exit 1
+_vvp_show
+vvp_verdict_batch "PWM2" 16 "$_VVP_LOG" || exit 1
 
 echo
 echo "═══ ④ RTL 往返自检：FNTT → INTT 是否回到原值 ═══"
@@ -76,7 +83,11 @@ iverilog -g2012 -o batch_fntt_dump.vvp $SRC pe1/fntt_batch_tb_dump.v
 #    数值不受影响（内容逐字节相同），脏的是工作区 —— 所以这条只在「跑完整条链」时才现形。
 tr -d '\r' < "$KAT/ntt_in.hex"  > batch/ntt_batch_in.txt
 tr -d '\r' < "$KAT/ntt_out.hex" > batch/ntt_batch_exp.txt
-vvp batch_fntt_dump.vvp +dump=1 | tail -3 | sed 's/^/  FNTT: /'
+# 这一趟的输出很长（+dump 会把系数落盘），照旧只显示末尾 3 行；
+# 但**判定用的是完整日志** $_VVP_LOG，不是被 tail 截过的三行。
+_vvp_capture vvp batch_fntt_dump.vvp +dump=1 || exit 1
+printf '%s\n' "$_VVP_LOG" | tail -3 | sed 's/^/  FNTT: /'
+vvp_verdict_batch "FNTT（往返第 1 趟）" 16 "$_VVP_LOG" || exit 1
 
 if [ ! -s batch/fntt_rtl_out.txt ]; then
     echo "  ❌ batch/fntt_rtl_out.txt 没生成，往返自检无法继续"
@@ -106,7 +117,9 @@ open("batch/intt_batch_in.txt", "wb").write(("\n".join(fwd) + "\n").encode())
 open("batch/intt_batch_exp.txt", "wb").write(("\n".join(orig) + "\n").encode())
 print("  INTT 输入 = RTL FNTT 的输出（%d 个），期望原样回到时域值" % len(fwd))
 PY
-vvp batch_intt.vvp | tail -2 | sed 's/^/  INTT: /'
+_vvp_capture vvp batch_intt.vvp || exit 1
+printf '%s\n' "$_VVP_LOG" | tail -2 | sed 's/^/  INTT: /'
+vvp_verdict_batch "INTT（往返第 2 趟）" 16 "$_VVP_LOG" || exit 1
 echo "  ⚠️  这一步覆盖了 batch/intt_batch_in.txt。重跑本脚本时 ① 会重新生成它。"
 
 echo

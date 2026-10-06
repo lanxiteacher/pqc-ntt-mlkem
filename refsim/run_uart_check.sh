@@ -18,6 +18,8 @@
 #   「比对点 N 个，失败 0 个」 + 「结论：全部通过。」
 #   ⚠️ 基线（2026-10-06 实测）：全套 N=273，+fast N=14。
 #      **N 突然变小 = 有检查没跑**，那是假绿，不是通过。
+#   👉 这四条判据**脚本现在自己判**（`vvp_verdict_uart`，见 vvp_verdict.sh），
+#      不用人拿眼睛看结尾两行；不符就 exit 1。基线写在本文件末尾的 BASE 里。
 #
 # ⚠️ 为什么工作目录必须是 refsim/：`$readmemh` 的相对路径是按**进程工作目录**
 #    解析的，**不是**按 .v 文件的位置（这是 iverilog 的行为，坑过好几次）。
@@ -31,6 +33,9 @@ set -e
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 cd "$HERE"
+
+# 判定函数（`$finish` 不改变退出码，光看 vvp 的退出码是假绿，见该文件头）。
+. "$HERE/vvp_verdict.sh"
 
 export PATH="/c/iverilog/bin:$PATH"
 
@@ -57,4 +62,15 @@ iverilog -g2005 -o uart_proto_tb.vvp \
     ../rtl/ntt_core/*.v
 
 echo "== 运行 =="
-vvp uart_proto_tb.vvp "$@"
+# 基线随参数走：带 +fast 时 T5（端到端 NTT，慢）不跑，比对点从 273 掉到 14。
+# 这两个数是 2026-10-06 实测的（见文件头），**改 tb 就要同步改这里**。
+BASE=273
+for _a in "$@"; do
+    case "$_a" in
+        +fast*) BASE=14 ;;
+    esac
+done
+
+_vvp_capture vvp uart_proto_tb.vvp "$@" || exit 1
+_vvp_show
+vvp_verdict_uart "UART 协议" "$BASE" "$_VVP_LOG" || exit 1
