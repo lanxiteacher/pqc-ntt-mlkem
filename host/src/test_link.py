@@ -15,6 +15,12 @@
        应答字 / 校验算法。只看**代码**，跳过注释和 docstring：
        注释里提一句协议不改变行为，代码里出现才是「插座开始懂协议」。
     7. 没装 pyserial 时串口那条路报**人话**，而且 loopback 是默认值（不点明不碰硬件）。
+    8. **按设备名找口号**（`match_port`）—— 唯一命中就返回、大小写不敏感、
+       一条都不命中/命中两条都**响亮报错不猜**、设备名为空的条目不许崩。
+       这是 `host/README.md:23`「不要写死数字」的落点：猜错口号 = 把数据发到别人的设备上。
+    9. **SerialLink 的真身**（装了 pyserial 才跑）—— 借 pyserial 自带的 `loop://`
+       假串口，把「开 / 写 / 读整行 / 超时 / discard_pending / 关」在真的 pyserial
+       上走一遍。**没有板子**也能跑，但**电气层验不到**（见文末「覆盖范围的实话」）。
 
 这一版改了什么（两条都是**我自己**写错的，留着当教训）
     · 第 6 条第一版是**整文件字符串搜**禁词，把校验分隔符那个星号也列进去了 ——
@@ -27,9 +33,14 @@
     既可能是真干净，也可能是检查坏了。
 
 ⚠️ 覆盖范围的实话
-    · SerialLink 的**真身**（开串口 / 收发 / 关串口）**一行都没验过** ——
-      本机没装 pyserial，也没有板子。这里只验了「没装时它怎么报错」。
-      等有了虚拟串口或真板子，另开一步补上。别把「本文件全绿」读成「串口能用」。
+    · SerialLink 的**真身**借 `loop://` 假串口验了（**第 9 条**，要装了 pyserial 才跑）：
+      开 / 写 / 读整行 / 超时 / discard / 关，都在真 pyserial 上走过一遍。
+      ⚠️ 但 loop:// 是**进程内**的假串口，**电气层一行没验**：波特率与真实时序、
+      USB 驱动延迟与丢字节、CH340 硬件流控、以及「真板子能不能打开串口号」。
+      这些只有真板子能给 —— 别把「第 9 条全绿」读成「串口可用」。
+    · **第 8 条**：`match_port` 被拆成纯函数（不 import pyserial、不碰硬件），
+      所以「按名字找口号」这段不依赖任何硬件，永远验得到。`host/README.md:23`
+      那句「不要写死数字」的落点就在这。
     · 「发半行就停 → 板子等超时」那条路径在陪练上**复现不了**（进程内没有真时钟），
       原因写在 link.py 的 LoopbackLink docstring 里。这里不假装能跑。
 """
@@ -234,6 +245,113 @@ def main():
         check(False, "乱给一个插座类型居然也能开")
 
     print("")
+    print("=== 8：按设备名找口号（纯函数，喂名字进去，不碰硬件）===")
+    print("  为什么能在这验：match_port 不 import pyserial、不碰硬件。")
+    print("  为什么必须验：它是 README 那句「不要写死数字」的落点 ——")
+    print("  猜错口号不是报错，是**把数据发到别人的设备上**，所以宁可炸也不能猜。")
+
+    # 8a 唯一命中
+    eq(link.match_port([("COM9", "USB-SERIAL CH340"), ("COM1", "标准串口")]),
+       "COM9", "唯一命中时没返回那一条的口号")
+
+    # 8b 大小写不敏感（Windows 报的设备名大小写不稳定）
+    eq(link.match_port([("COM9", "usb-serial ch340")]), "COM9",
+       "设备名大小写不同就找不到了")
+
+    # 8c 一条都不命中 -> 响亮报错
+    try:
+        link.match_port([("COM1", "标准串口"), ("COM4", "")])
+    except SystemExit as e:
+        msg = str(e)
+        check("USB-SERIAL CH340" in msg, "找不到时没报出找的是哪个设备名")
+        check("list_ports" in msg, "找不到时没给出「怎么看本机串口」的办法")
+    else:
+        check(False, "一条都没命中，match_port 居然返回了值（那就是猜了一个）")
+
+    # 8d 命中两条 -> 响亮报错，并把候选都列出来（不许挑一个）
+    try:
+        link.match_port([("COM9", "USB-SERIAL CH340"),
+                         ("COM11", "USB-SERIAL CH340 (2)")])
+    except SystemExit as e:
+        msg = str(e)
+        check("COM9" in msg and "COM11" in msg,
+              "命中两条时没把候选都列出来 —— 那就等于替你猜了")
+    else:
+        check(False, "命中两条，match_port 居然挑了一个")
+
+    # 8e 设备名是空的 / None 的条目 -> 不许崩
+    try:
+        eq(link.match_port([("COM1", None), ("COM2", ""), ("COM3", "USB-SERIAL CH340")]),
+           "COM3", "有空设备名的条目时找错了")
+    except SystemExit as e:
+        check(False, "有设备名为空的条目就崩了：%s" % e)
+
+    # 8f 没装 pyserial 时，find_port 报的该是同一句人话
+    try:
+        import serial                                    # noqa: F401
+    except ImportError:
+        try:
+            link.find_port()
+        except SystemExit as e:
+            check("pyserial" in str(e), "find_port 没装 pyserial 时没报人话")
+        except Exception as e:
+            check(False, "find_port 抛出的是 %s，不是一句人话" % type(e).__name__)
+        else:
+            check(False, "没装 pyserial，find_port 居然跑通了")
+    else:
+        print("  !! 本机装了 pyserial —— 8f 那条「没装时报人话」**这次没验**。")
+
+    print("")
+    print("=== 9：SerialLink 的**真身** —— 借 loop:// 假串口跑（只在装了 pyserial 时）===")
+    try:
+        import serial                                    # noqa: F401
+    except ImportError:
+        print("  !! 没装 pyserial —— 这一条**这次没验**（loop:// 是它的东西）。")
+    else:
+        # loop:// 是 pyserial 自带的**进程内**假串口：写进去的字节原样读回来。
+        # 有了它，SerialLink 的构造 / 开关 / 收发 / 行缓冲接线在**没有板子**的机器上
+        # 也能被真跑一遍 —— 这正是第 1~6 条验不到的那半（见文件头「覆盖范围的实话」）。
+        # ⚠️ 它**验不了电气层**：波特率与真实时序、USB 驱动延迟与丢字节、CH340 硬件
+        #    流控、以及「真板子能不能打开串口号」这一步。下面会把它打出来。
+        try:
+            lk = link.SerialLink(port="loop://")
+        except SystemExit as e:
+            check(False, "loop:// 居然没开起来（改 serial_for_url 之前它必然开不了）：%s" % e)
+            print("  !! 开 loop:// 失败：%s" % e)
+        else:
+            check(isinstance(lk, link.SerialLink), "loop:// 开出来的不是 SerialLink")
+            eq(lk.port, "loop://", "loop:// 下 port 没存对")
+            eq(lk.baud, link.DEFAULT_BAUD, "loop:// 下 baud 没存对")
+
+            # 9a 写进去 → 原样读回来（走真正 pyserial 的 write + flush）
+            lk.write(b"#PING*33\n")
+            eq(lk.read_line(1.0), b"#PING*33\n", "loop:// 下没把整行搬回来")
+
+            # 9b 没数据时到点返回 None —— 不是半行，也不抛
+            eq(lk.read_line(0.05), None, "没数据时 read_line 没返回 None")
+
+            # 9c 一次两条回帧：两次 read_line 分别取到第一、第二条
+            lk.write(b"AAA\nBBB\n")
+            eq(lk.read_line(1.0), b"AAA\n", "loop:// 下第一条取错了")
+            eq(lk.read_line(1.0), b"BBB\n", "loop:// 下第二条取错了")
+            eq(lk.read_line(0.05), None, "两条取完之后不该还有")
+
+            # 9d discard_pending 如实报出扔了什么
+            lk.write(b"CCC\nDDD\n")
+            tossed = lk.discard_pending()
+            check(b"CCC" in tossed and b"DDD" in tossed,
+                  "discard_pending 没如实报出扔掉的字节：%r" % tossed)
+
+            # 9e 关得上，而且真的关了
+            lk.close()
+            check(not lk._ser.is_open, "close() 之后串口还是开的")
+
+            print("  SerialLink 真身：开 / 写 / 读整行 / 超时 / discard / 关 —— 全部真跑过 ✓")
+            print("  ⚠️ loop:// **验不到**：波特率与真实时序、USB 驱动延迟与丢字节、")
+            print("     CH340 硬件流控、以及「真板子能不能打开串口号」这一步。")
+            print("     任何「够不够快 / 会不会超时 / 板子在不在」的结论，必须上真板子。")
+
+    print("")
     if FAILS:
         print("%d 项检查，%d 项不过：" % (CHECKS[0], len(FAILS)))
         for f in FAILS:
@@ -241,7 +359,11 @@ def main():
         return 1
     print("%d 项检查通过。" % CHECKS[0])
     print("")
-    print("⚠️ 记住覆盖范围：**SerialLink 的真身没验过**，见本文件 docstring 末尾。")
+    print("⚠️ 记住覆盖范围：SerialLink 的真身借 loop:// 跑过了（第 9 条），但那是**进程内**")
+    print("   假串口 —— **电气层（波特率/时序、USB 丢字节、CH340 流控、能不能开真口号）")
+    print("   一行没验**。详见本文件 docstring 末尾「覆盖范围的实话」。")
+    print("   另：本文件的项数是**环境相关**的 —— 装了 pyserial 跑第 9 条、不跑第 7/8f 的")
+    print("   「没装时报人话」分支（少 4 项），没装则反过来。上面这个数别当固定值引。")
     return 0
 
 

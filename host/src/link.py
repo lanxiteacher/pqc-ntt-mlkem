@@ -25,11 +25,18 @@
     这里不许出现任何命令字、应答字、校验算法。
     插座一旦开始懂协议，事务状态机就会跟它抢活，那是以后返工的头号来源。
 
-⚠️ 串口那条路（SerialLink）**从没被运行过**
-    本机没装 pyserial，手上也没有板子。这段代码是写好了、但一次都没跑过的。
-    没跑过的代码就是可能有 bug 的代码 —— 别把它当已验证的用。
+⚠️ 串口那条路（SerialLink）**验到什么程度，说清楚**（2026-10-06 订正）
+    它**本身**现在能借 `serial_for_url("loop://")` 在**没有板子**的机器上跑
+    （test_link.py 第 9 条）——「开 / 关 / 收发 / 行缓冲接线」这几件事被跑过了。
+    但 loop:// 是**进程内的假串口**，它验不到**电气层**：
+    波特率与真实时序、USB 丢字节、CH340 流控、以及「真口号到底开不开得起来」。
+    所以口径是：**接线层验过，电气层一行没验** —— H6 联调第一天仍要先跑
+    `host/src/board_run.py`（见 KNOWN_ISSUES C2）。
     pyserial 用**懒加载**：只有真的要开串口时才 import，
     所以没装 pyserial 也照样能跑陪练那一整套。
+
+    ⚠️ 另外单独拆出来验的是**「按设备名找口号」**那一段（match_port）——
+        它是纯函数，不碰硬件、也不 import pyserial，所以本机就能验（test_link.py 第 8 条）。
 """
 
 import time
@@ -40,8 +47,17 @@ LF = b"\n"
 # 8N1 = 1 起始 + 8 数据 + 1 停止 = 每字节 10 位。
 DEFAULT_BAUD = 115200
 
-# CLAUDE.md:37 / host/README.md:21 —— 板载 CH340C 的串口号。
-DEFAULT_PORT = "COM10"
+# host/README.md:21-23 —— 板载 CH340C 的**设备名**。按名字找口，**不写死口号**：
+# 口号是 Windows 按「插在哪个 USB 口」现分配的（这块板子见过 COM10，也见过 COM9），
+# 写死一个数字，迟早把数据发到别的设备上去。找口逻辑见下面的 match_port / find_port。
+CH340_NAME = "USB-SERIAL CH340"
+
+# 想开串口却没有 pyserial 时，统一报这一句人话（两处入口共用，免得各写一版）。
+_NO_PYSERIAL = (
+    "!! 串口这条路要装 pyserial，本机没有。\n"
+    "   装它：pip install pyserial\n"
+    "   只想先跑协议逻辑、不碰硬件：改用默认的 loopback 插座，"
+    "一条命令都不用装。")
 
 # 串口轮询的粒度（秒）。取一小片而不是睡满整个 max_wait，
 # 是为了让「等一行」能及时返回，而不是每次都卡到上限。
@@ -145,18 +161,21 @@ class LoopbackLink(Link):
 class SerialLink(Link):
     """插座后面接**真串口**（板载 CH340C / 或一对虚拟串口）。
 
-    ⚠️ **本类从没被运行过** —— 见模块 docstring 末尾。别当它是已验证的。
+    ⚠️ **它只被 `loop://` 跑过**（test_link.py 第 9 条）—— **电气层没验过**：
+       波特率/真实时序、USB 丢字节、CH340 流控、真口号开不开得起来。
+       别当它是「上板验过」的。见模块 docstring 末尾。
     """
 
-    def __init__(self, port=DEFAULT_PORT, baud=DEFAULT_BAUD):
+    def __init__(self, port=None, baud=DEFAULT_BAUD):
         try:
             import serial
         except ImportError:
-            raise SystemExit(
-                "!! 串口这条路要装 pyserial，本机没有。\n"
-                "   装它：pip install pyserial\n"
-                "   只想先跑协议逻辑、不碰硬件：改用默认的 loopback 插座，"
-                "一条命令都不用装。")
+            raise SystemExit(_NO_PYSERIAL)
+
+        # 不点名就**现找** —— 口号会变，写死一个数字迟早发到别的设备上。
+        # （口号不是「配置」，是 Windows 每次插拔现分的，所以不存在一个正确的默认值。）
+        if port is None:
+            port = find_port()
 
         self.port = port
         self.baud = baud
@@ -165,14 +184,22 @@ class SerialLink(Link):
         try:
             # 8N1：bytesize=8 / PARITY_NONE / STOPBITS_ONE（§4.1:145、§5.5:555）。
             # timeout 设成一小片，配合下面的截止时间做轮询。
-            self._ser = serial.Serial(port, baudrate=baud, bytesize=8,
-                                      parity=serial.PARITY_NONE,
-                                      stopbits=serial.STOPBITS_ONE,
-                                      timeout=POLL_SLICE)
-        except serial.SerialException as e:
+            #
+            # 用 serial_for_url 而不是 serial.Serial：前者是后者的**超集** ——
+            # 给裸口号（"COM9"）时走同一条真串口路径；给 "loop://" 时开一个
+            # **进程内的假串口**，于是 SerialLink 的真身（开关 / 收发 / 行缓冲接线）
+            # 在**没有板子**的机器上也能被 test_link.py 跑到（见它第 9 条）。
+            self._ser = serial.serial_for_url(port, baudrate=baud, bytesize=8,
+                                              parity=serial.PARITY_NONE,
+                                              stopbits=serial.STOPBITS_ONE,
+                                              timeout=POLL_SLICE)
+        # ValueError 必须一起接：serial_for_url 认不出 scheme（如 "foo://bar"）时
+        # 抛的是 ValueError，**不是** SerialException —— 漏掉它就会冒裸 traceback，
+        # 绕过下面这句人话。真口号打不开那条路仍旧走 SerialException。
+        except (serial.SerialException, ValueError) as e:
             raise SystemExit(
                 "!! 打不开串口 %s（%d-8N1）：%s\n"
-                "   常见原因：板子没插 / 串口号不是这个 / 别的程序（串口助手）正占着它。\n"
+                "   常见原因：板子没插 / 别的程序（串口助手）正占着它 / 这块口不是板子。\n"
                 "   看一眼本机有哪些串口：python -m serial.tools.list_ports" % (port, baud, e))
 
     def write(self, data):
@@ -205,11 +232,57 @@ class SerialLink(Link):
             self._ser.close()
 
 
-def open_link(kind="loopback", board=None, port=DEFAULT_PORT, baud=DEFAULT_BAUD):
+def match_port(ports, name=CH340_NAME):
+    """在一列 `(口号, 设备名)` 里按设备名找一个串口，返回它的口号。
+
+    ⚠️ 这是**纯函数**：不 import pyserial、不碰硬件，喂一列名字进去就行。
+       拆出来单放的理由是**手上没有板子**（pyserial 装没装也不一定）—— 找口这段逻辑
+       要是跟开串口写在一起，就一行都验不了（见 test_link.py 第 8 条）。
+       这也正是 host/README.md:21-23 说的「不要写死数字」的落点。
+
+    ⚠️ 一条都不匹配、或者匹配到**不止一条**，都**响亮报错、不猜**：
+       猜错口号就是把数据发到别人的设备上。大小写不敏感 —— Windows 报的
+       设备名大小写不稳定，别让大小写决定找不找得到。
+    """
+    name_l = name.lower()
+    hits = [(dev, desc) for dev, desc in ports
+            if desc and name_l in desc.lower()]
+    if not hits:
+        raise SystemExit(
+            "!! 没找到设备名里含 %r 的串口。\n"
+            "   看一眼本机现在有哪些串口：python -m serial.tools.list_ports\n"
+            "   （板子没插 / 驱动没装 / 设备名变了，都会落到这一条。）" % (name,))
+    if len(hits) > 1:
+        listing = "、".join("%s(%s)" % (d, s) for d, s in hits)
+        raise SystemExit(
+            "!! 设备名里含 %r 的串口有 %d 个：%s\n"
+            "   不替你猜是哪一个 —— 用 --port 显式指定。" % (name, len(hits), listing))
+    return hits[0][0]
+
+
+def list_serial_ports():
+    """列出本机所有串口，返回 `[(口号, 设备名), ...]`。（要 pyserial）
+
+    pyserial 的细节只在本文件里出现 —— 上位机其余部分不认识它。
+    """
+    try:
+        from serial.tools import list_ports
+    except ImportError:
+        raise SystemExit(_NO_PYSERIAL)
+    return [(p.device, p.description or "") for p in list_ports.comports()]
+
+
+def find_port(name=CH340_NAME):
+    """按设备名找**当前**是哪个口号。找不到/多于一个的规矩见 match_port。（要 pyserial）"""
+    return match_port(list_serial_ports(), name)
+
+
+def open_link(kind="loopback", board=None, port=None, baud=DEFAULT_BAUD):
     """按名字开一个插座。**默认 loopback** —— 不点明就不碰硬件。
 
     kind="loopback" 时要一个陪练实例；不给就自己造一个（延迟 import，
     免得只在跑串口时也把陪练整包拉起来）。
+    kind="serial" 时 port 不给就按设备名现找（见 find_port）。
     """
     if kind == "loopback":
         if board is None:
