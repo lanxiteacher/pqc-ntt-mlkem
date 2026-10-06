@@ -76,6 +76,9 @@ class Transaction:
         self.stage = ""               # 卡在哪一步
         self.sent_bytes = []          # 最后一次尝试**实际写到线上的字节**
         self.log = []                 # 规则五：每一次重试、每一次容错都留在这里
+        self.raw = None               # **只有 probe() 会填**：收到的那一行原文（去掉结尾 LF）。
+                                      # run() 不填它 —— 那边有 rows（结果行）和 error（错误原文）。
+                                      # 探活不一样：回帧本身就是它的全部产出，所以单独留着。
 
     def summary(self):
         return ("%s：%s（试了 %d 次，卡在「%s」）%s"
@@ -136,6 +139,54 @@ class Host:
                 txn.outcome = RESULT_FAILED
                 txn.error = "重发 %d 次仍然失败（最后卡在「%s」）" % (self.max_retries, txn.stage)
                 self._note(txn, txn.error)
+        return txn
+
+    def probe(self, command):
+        """发一条**不带数据**的命令（`#PING` / `#ABORT` 这类），只等一条回帧。
+
+        为什么要单独开一个入口：`run()` 走的是**带数据的事务**（发命令 → 等 `#OK` →
+        发数据 → 等 `#BEGIN` → 收结果 → 等 `#DONE`）。而 `#PING` / `#ABORT` 后面跟
+        **0 行数据**，板子**不发** `#BEGIN` / `#DONE`（§5.2:286）。塞进 `run()` 会在
+        「等 #BEGIN」上白等 T_BEGIN（5 s）、再重发 3 次才放弃 —— **实测如此**。
+        探活要的是「此刻有没有回声」，不是「把一条事务走完」。
+
+        返回一个 `Transaction`（`count=0`、`attempts=1`）：
+            outcome == RESULT_OK       回的是 `#OK <原命令>`，而且**回显对得上**
+            outcome == RESULT_FAILED   板子回了 `#ERR ...` —— 它**拒了**这条命令。
+                                       这不是故障：链路活着，板子在按协议应答。
+            outcome == RESULT_STOP     错位（校验错 / 首词不对 / 回显对不上）或超时
+        回帧原文在 `txn.raw`；容错记录（`\r`、空行）照旧进 `txn.log`。
+
+        ⚠️ 本条**只发一次**，不实现 §5.5 规则二的「重新发送」。
+           理由：探活问的是「此刻有没有回声」，重发 3 次只会把等待从 T_OK（1 s）
+           拖到 4 s；而规则二（§5.5:518）属于**事务**，探活没有数据段。
+           **这处口径没有经 A 确认** —— 上板后觉得该重发，再议。
+        """
+        txn = Transaction(command, 0)
+        txn.attempts = 1
+        txn.stage = "等 #OK（T_OK=%g s）" % self.t_ok
+        self._send(txn, proto.append_checksum(command))
+
+        v, p = self._wait_for(self.t_ok, command, "OK", txn)
+        if v == "OK":
+            txn.raw = p
+            txn.outcome = RESULT_OK
+            txn.stage = "完成"
+            self._note(txn, "收到 %s" % p)
+        elif v == "ERR":
+            txn.raw = p
+            txn.outcome = RESULT_FAILED
+            txn.error = p
+            self._note(txn, "收到 %s —— 板子**拒**了这条命令，"
+                            "但这说明链路活着、它在按协议应答。" % p)
+        elif v == "DESYNC":
+            txn.outcome = RESULT_STOP
+            txn.error = p
+            self._note(txn, "错位：%s" % p)
+        else:                                  # TIMEOUT
+            txn.outcome = RESULT_STOP
+            txn.error = "%g s 内一个字节都没收到 —— 后面没有东西在听。" % self.t_ok
+            self._note(txn, txn.error)
         return txn
 
     # ------------------------------------------------------------ 一次尝试

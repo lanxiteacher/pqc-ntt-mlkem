@@ -3,7 +3,7 @@
 运行
     PYTHONIOENCODING=utf-8 python host/src/test_host.py
 
-它在验八件事
+它在验九件事
     1. **顺利路径** —— 一条事务走到底，收到的 256 行逐行等于 *_exp.txt 里那一组；
     2. **超时 → 重试成功**（规则二）—— 先发 #ABORT*69、把 #OK ABORT 读掉、整条重发；
     3. **重试有上限** —— 命令永远超时但 #ABORT 有应答时，**恰好重发 3 次**后放弃，
@@ -14,6 +14,10 @@
     6. **回显对不上就停整轮**（规则四）—— 而且 STOP 和 FAILED 是**两种可区分的结果**；
     7. **每次都留日志**（规则五）；
     8. **发出去的字节严格合规** —— 命令行带小写校验、数据行 3 位小写 hex 且不带校验。
+    9. **`probe()` 那条单独的路**（不带数据的命令 `#PING` / `#ABORT`）——
+       探活成功 / 板子回 `#ERR`（拒，不是故障）/ 静默超时 / 回显对不上 / 校验错 /
+       首词不认识 / 回帧夹 `\r` 与空行，各归哪一类；并且钉住两条约定：
+       **只发一次、不发 `#ABORT`**（那是事务重试的路子）。
 
 关于「重试 3 次」到底算几次
     §5.5:518 写「整条事务从头重发，最多 3 次」。本文件按字面取**重发 3 次**
@@ -264,6 +268,76 @@ def main():
     eq([b.decode("ascii")[:-1] for b in rows], data, "发出去的数据行和输入文件对不上")
     print("  数据行：256 行，前 3 行 %r" % [b.decode("ascii").strip() for b in rows[:3]])
     print("  检查：全是 3 位小写 hex + LF，且一个校验符都没有")
+
+    # ------------------------------------------------------------ 9
+    print("")
+    print("=== 9：probe() —— 不带数据的命令（#PING / #ABORT）走单独一条路 ===")
+    print("  为什么要有这条路：probe 塞进 run() 会在「等 #BEGIN」白等 5 s、再重发 3 次")
+
+    # 9a 探活成功
+    lk = FlakyLink(fresh_board())
+    t = host.Host(lk).probe("#PING")
+    eq(t.outcome, host.RESULT_OK, "探活 #PING 没成功")
+    eq(t.raw, proto.append_checksum("#OK PING"), "回帧原文不对")
+    eq(t.attempts, 1, "探活只该试 1 次")
+    eq(t.rows, [], "探活没有结果行，rows 该是空的")
+    check(t.error is None, "探活成功了却还留着错误信息：%r" % (t.error,))
+    print("  %s" % t.summary())
+
+    # 9b 不带数据、不重试、不发 #ABORT —— 这三条是 probe 与 run 的分界
+    eq(len(lk.writes), 1, "探活只该往线上写一条命令，实测写了 %d 条" % len(lk.writes))
+    check(not aborts(lk.writes), "探活竟然发了 #ABORT —— 那条路是给事务重试用的")
+
+    # 9c #ABORT 本身也走 probe
+    t = host.Host(FlakyLink(fresh_board())).probe("#ABORT")
+    eq(t.outcome, host.RESULT_OK, "探活 #ABORT 没成功")
+    eq(t.raw, proto.append_checksum("#OK ABORT"), "#ABORT 的回帧原文不对")
+
+    # 9d 板子**拒**了这条命令：不是故障，是应答
+    t = host.Host(FlakyLink(fresh_board())).probe("#FOO 1")
+    eq(t.outcome, host.RESULT_FAILED, "#FOO 1 该记 FAILED（板子拒了它）")
+    check(t.raw is not None and t.raw.startswith("#ERR 01"),
+          "未知命令该回 #ERR 01，实收：%r" % (t.raw,))
+    print("  %s" % t.summary())
+
+    # 9e 链路静默 -> STOP + 超时，而且**不重发**
+    lk = FlakyLink(fresh_board(), rule=lambda d: "dead")
+    t = host.Host(lk).probe("#PING")
+    eq(t.outcome, host.RESULT_STOP, "静默链路该记 STOP")
+    check(t.raw is None, "一个字节都没收到，raw 该是 None")
+    check("没收到" in (t.error or ""), "超时的说明里没讲清「没收到」：%r" % (t.error,))
+    eq(len(lk.writes), 1, "链路静默时探活也**不许**重发（约定：探活只发一次）")
+
+    # 9f 回显对不上 -> STOP（拿 `#OK WRONG` 冒充应答）
+    #    ⚠️ inject 喂的是**字节** —— `link.read_line` 交出来的就是字节，
+    #       传字符串会在 host.py 的 decode 那一步炸（这一条我写错过一次）。
+    t = host.Host(FlakyLink(fresh_board(),
+                            inject=[(proto.append_checksum("#OK WRONG")
+                                     + "\n").encode("ascii")]
+                            )).probe("#PING")
+    eq(t.outcome, host.RESULT_STOP, "回显对不上该记 STOP")
+    check("回显对不上" in (t.error or ""), "没报出「回显对不上」：%r" % (t.error,))
+
+    # 9g 校验值错 -> STOP
+    t = host.Host(FlakyLink(fresh_board(),
+                            inject=[b"#OK PING*00\n"])).probe("#PING")
+    eq(t.outcome, host.RESULT_STOP, "回帧校验错该记 STOP")
+    check("校验" in (t.error or ""), "没报出校验问题：%r" % (t.error,))
+
+    # 9h 首词不认识 -> STOP
+    t = host.Host(FlakyLink(fresh_board(),
+                            inject=[(proto.append_checksum("#WAT PING")
+                                     + "\n").encode("ascii")]
+                            )).probe("#PING")
+    eq(t.outcome, host.RESULT_STOP, "回帧首词不认识该记 STOP")
+
+    # 9i 回帧里夹 CR / 空行 -> 按 §5.5:541-542 丢掉，仍然认得出
+    #    （要是 CR 没被丢掉，校验值就会变成 "17\r"，这一步必然红 —— 所以这条
+    #      同时钉住了「CR 真的被处理了」）
+    t = host.Host(FlakyLink(fresh_board(),
+                            inject=[b"\n", b"#OK PING*17\r\n"])).probe("#PING")
+    eq(t.outcome, host.RESULT_OK, "回帧夹了 CR/空行就认不出来了")
+    eq(t.raw, proto.append_checksum("#OK PING"), "夹 CR 之后回帧原文不对")
 
     # ------------------------------------------------------------
     print("")
