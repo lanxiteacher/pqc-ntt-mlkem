@@ -197,7 +197,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   <div>
     <h1>FPGA 创新设计竞赛 · 项目进度</h1>
     <p class="sub">后量子密码 ML-KEM 的 NTT / INTT / 点乘 FPGA 加速核 ｜ 3.3 自主选题（初级组）｜ 纯 PL 实现</p>
-    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-07 19:13 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 7 处未提交</p>
+    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-07 21:21 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 22 处未提交</p>
   </div>
   <button class="btn" id="theme" type="button">切换明暗</button>
 </header>
@@ -231,10 +231,10 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   <div class="gbody">
     <div class="gbg" aria-hidden="true"><div class="gline" style="left:10.417%"></div><div class="gline" style="left:25.000%"></div><div class="gline" style="left:39.583%"></div><div class="gline" style="left:54.167%"></div><div class="gline" style="left:68.750%"></div><div class="gline" style="left:83.333%"></div><div class="gband" style="left:10.417%;width:14.583%"></div><div class="gband key" style="left:39.583%;width:14.583%"></div><div class="gband" style="left:54.167%;width:14.583%"></div><div class="gband" style="left:68.750%;width:14.583%"></div></div>
     <div class="gnowlay" aria-hidden="true"><div class="gnow" style="left:39.583%"></div></div>
-    <div class="grow ghand"><div class="glab">交接点</div><div class="gtrack"><div class="ghchip done" style="left:10.417%;width:14.583%" title="H1 A→B 端口说明 · H3 串口协议冻结 v1.0 · H7 C→A、B 演示页数据格式">H1 H3 H7</div><div class="ghchip key" style="left:39.583%;width:14.583%" title="H6 上板联调 —— B 的上位机接到 A 的真板子上（A 侧 H4 资源数据两批已交）">H4 · H6</div><div class="ghchip" style="left:54.167%;width:14.583%" title="H5 B→C 验证数据 · H8 A、B→C 技术初稿 · H10 换机从零 clone（B 一道 + C 一道）">H5 · H8 · H10</div><div class="ghchip" style="left:68.750%;width:14.583%" title="冻结：报告定稿、视频定稿、提交包组装 + 提交演练">提交包</div></div></div>
+    <div class="grow ghand"><div class="glab">交接点</div><div class="gtrack"><div class="ghchip done" style="left:10.417%;width:14.583%" title="H1 A→B 端口说明 · H3 串口协议冻结 v1.0 · H7 C→A、B 演示页数据格式">H1 H3 H7</div><div class="ghchip key" style="left:39.583%;width:14.583%" title="H6 上板联调 —— 上位机已接真板子（10-07 夜 #NTT 1 过），剩 #PMUL NTT 1：B 远程改 host.py → A 验收，**不用见面**（A 侧 H4 资源数据两批已交）">H4 · H6</div><div class="ghchip" style="left:54.167%;width:14.583%" title="H5 B→C 验证数据 · H8 A、B→C 技术初稿 · H10 换机从零 clone（B 一道 + C 一道）">H5 · H8 · H10</div><div class="ghchip" style="left:68.750%;width:14.583%" title="冻结：报告定稿、视频定稿、提交包组装 + 提交演练">提交包</div></div></div>
     <div class="gsec">
       <div class="glab"><span class="swatch" style="--c:var(--s1)"></span>A · 硬件与上板</div>
-      <div class="gact">最后提交 10-07 · 近 7 天 47 次 · 累计 88 次</div>
+      <div class="gact">最后提交 10-07 · 近 7 天 60 次 · 累计 101 次</div>
     </div><div class="grow">
         <div class="glab"><span class="glab-t" title="装 Vivado、跑通验证台（满屏全绿）、读懂 butterfly.v 与 addressgenerator.v">装 Vivado · 验证台跑通</span></div>
         <div class="gtrack"><div class="gbar st-done"
@@ -251,10 +251,10 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
           style="--hc:var(--s1);left:25.000%;width:14.583%"
           title="协议已冻结、无等待项。10-04 直接做到板级三档全通（原文排在 W4 的活，提前两周） ｜ 出处 rtl/vivado/reports/board_pe*_txn.txt"><i></i></div></div>
       </div><div class="grow">
-        <div class="glab"><span class="glab-t" title="`#RDY` 已落进 proto_fsm + 冒烟台补 S0；板子的活攒一次做：重烧 / 录屏 / 两组截图 / H6 联调">`#RDY` 落地 · 板子一次做完</span><span class="tkey">关键</span></div>
+        <div class="glab"><span class="glab-t" title="`#RDY` 已落进 proto_fsm + 冒烟台补 S0，三档位流 10-07 已重出；板子的活还剩：录屏 / 两组截图。H6 改为远程（B 改 host.py，A 验收）">`#RDY` 落地 · 板子一次做完</span><span class="tkey">关键</span></div>
         <div class="gtrack"><div class="ghalo" style="left:39.583%;width:14.583%"></div><div class="gbar st-doing"
           style="--hc:var(--s1);left:39.583%;width:14.583%"
-          title="`#RDY` 已落进 proto_fsm + 冒烟台补 S0；板子的活攒一次做：重烧 / 录屏 / 两组截图 / H6 联调 ｜ 出处 rtl/board/proto_fsm.v；logs/schedule_plain.md §三 W3"><i></i></div></div>
+          title="`#RDY` 已落进 proto_fsm + 冒烟台补 S0，三档位流 10-07 已重出；板子的活还剩：录屏 / 两组截图。H6 改为远程（B 改 host.py，A 验收） ｜ 出处 rtl/board/proto_fsm.v；logs/schedule_plain.md §三 W3"><i></i></div></div>
       </div><div class="grow">
         <div class="glab"><span class="glab-t" title="补录素材 + 核对旁白数字；最后一次全量回归（refsim 四条脚本 + 板级冒烟台三档），结果存进 logs/">配合视频 · 全量回归</span></div>
         <div class="gtrack"><div class="gbar st-todo"
@@ -272,7 +272,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
           title="不排新活：W3–W5 任何一项没做完的在这里收口。11/04 18:00 截止 ｜ 出处 logs/schedule_plain.md §三 缓冲"><i></i></div></div>
       </div><div class="gsec">
       <div class="glab"><span class="swatch" style="--c:var(--s2)"></span>B · 验证台与上位机</div>
-      <div class="gact">最后提交 10-06 · 近 7 天 13 次 · 累计 28 次</div>
+      <div class="gact">最后提交 10-07 · 近 7 天 14 次 · 累计 29 次</div>
     </div><div class="grow">
         <div class="glab"><span class="glab-t" title="验证台从「只能验 NTT」扩到 INTT／点乘／完整乘法都能验；建 Gitee 仓库并推送">验证台扩到四条通路</span></div>
         <div class="gtrack"><div class="gbar st-done"
@@ -284,15 +284,15 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
           style="--hc:var(--s2);left:10.417%;width:14.583%"
           title="H3 协议草案成文入库；在仿真里做假串口，不用真板子也能跑整套协议 ｜ 出处 team/guide_B.md §四 W1 行"><i></i></div></div>
       </div><div class="grow">
-        <div class="glab"><span class="glab-t" title="host/src/ 13 个 .py 入库，7 个自测 559 项全绿；`#RDY` 三字段口径闭（10-06）">上位机对假串口跑通</span></div>
+        <div class="glab"><span class="glab-t" title="host/src/ 14 个 .py / 4289 行入库，7 个自测 559 项全绿；`#RDY` 三字段口径闭（10-06）">上位机对假串口跑通</span></div>
         <div class="gtrack"><div class="gbar st-done"
           style="--hc:var(--s2);left:25.000%;width:14.583%"
-          title="host/src/ 13 个 .py 入库，7 个自测 559 项全绿；`#RDY` 三字段口径闭（10-06） ｜ 出处 host/src/test_*.py；host/proto.md §5.2"><i></i></div></div>
+          title="host/src/ 14 个 .py / 4289 行入库，7 个自测 559 项全绿；`#RDY` 三字段口径闭（10-06） ｜ 出处 host/src/test_*.py；host/proto.md §5.2"><i></i></div></div>
       </div><div class="grow">
-        <div class="glab"><span class="glab-t" title="上位机第一次接真板子。另：`#RDY` 解包器接上、仓库根 README 加「目录对照说明」">H6 上真板子联调</span><span class="tkey">关键</span><span class="twarn" title="H6 联调还没发生 —— B 的上位机 559 项自测全绿，但**全部跑在陪练（假串口）上**，真板子一次没接过。A 侧的上板本身不等它（已用自写驱动在真板子上跑通），要的是把驱动换成 host/src/ 并让 B 第一次见真板子">⚠</span></div>
+        <div class="glab"><span class="glab-t" title="上位机第一次接真板子 —— 10-07 夜已跑通 `#NTT 1`，剩 `#PMUL NTT 1`（B 改 host.py，A 验收，**不用见面**）。另：`#RDY` 解包器已接上、README「目录对照说明」10-07 已补">H6 上真板子联调</span><span class="tkey">关键</span><span class="twarn" title="H6 只剩一条 —— 2026-10-07 夜 A 已用 **B 的** `host/src/board_run.py` 在真板子跑通 `#NTT 1`（256/256），「上位机 ↔ 真板子」这条链路**不再是零实测**。**`#PMUL NTT 1` 仍 STOP**，根因在 `host/src/host.py`：`txn.count` 同时当「发几行 / 收几行 / 核对几行」三个用途，512 进 256 出时 `:443` 拿 256 比 512 → 误报 DESYNC。**RTL 与协议都没错**。B 远程改 + `--loopback` 自测 + push，A 在真板子验收（不用见面）">⚠</span></div>
         <div class="gtrack"><div class="ghalo" style="left:39.583%;width:14.583%"></div><div class="gbar st-doing is-blocked"
           style="--hc:var(--s2);left:39.583%;width:14.583%"
-          title="上位机第一次接真板子。另：`#RDY` 解包器接上、仓库根 README 加「目录对照说明」 ｜ 出处 host/KNOWN_ISSUES.md C2；logs/schedule_plain.md §三 W3 ｜ 卡在这：B→A H6 联调还没发生 —— B 的上位机 559 项自测全绿，但**全部跑在陪练（假串口）上**，真板子一次没接过。A 侧的上板本身不等它（已用自写驱动在真板子上跑通），要的是把驱动换成 host/src/ 并让 B 第一次见真板子"><i></i></div></div>
+          title="上位机第一次接真板子 —— 10-07 夜已跑通 `#NTT 1`，剩 `#PMUL NTT 1`（B 改 host.py，A 验收，**不用见面**）。另：`#RDY` 解包器已接上、README「目录对照说明」10-07 已补 ｜ 出处 host/KNOWN_ISSUES.md C2；logs/schedule_plain.md §三 W3 ｜ 卡在这：B→A H6 只剩一条 —— 2026-10-07 夜 A 已用 **B 的** `host/src/board_run.py` 在真板子跑通 `#NTT 1`（256/256），「上位机 ↔ 真板子」这条链路**不再是零实测**。**`#PMUL NTT 1` 仍 STOP**，根因在 `host/src/host.py`：`txn.count` 同时当「发几行 / 收几行 / 核对几行」三个用途，512 进 256 出时 `:443` 拿 256 比 512 → 误报 DESYNC。**RTL 与协议都没错**。B 远程改 + `--loopback` 自测 + push，A 在真板子验收（不用见面）"><i></i></div></div>
       </div><div class="grow">
         <div class="glab"><span class="glab-t" title="换一台电脑、从零 clone、按 README 走一遍，跑通截图存档；同时交 C 完整验证数据（H5）">H10 换台电脑从零 clone</span></div>
         <div class="gtrack"><div class="gbar st-todo"
@@ -355,20 +355,20 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <div class="now-h"><span class="swatch" aria-hidden="true"></span>A · 硬件与上板</div>
       <div class="now-b">
         <span class="k">现在</span><span class="v">板级通路三档全通：pe1 / pe4 / pe16 各 5 条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）。途中修掉 proto_fsm 一个写死的 bank 切换常数 —— 它只在 pe1 上恰好对，pe4 上是 2/5、pe16 上连 #NTT 都挂；改成随折叠度派生后三档全过。10-07 把协议里最后一条开口 `#RDY &lt;ver&gt; &lt;build&gt; &lt;errs&gt;` 落进 RTL：复位释放后板子自发一行，&lt;build&gt; 就是折叠度 —— 解掉「电脑端不知道板子里烧的是哪一档、因而不知道该用哪张读出序表」这个缺口。⚠️ 三档只覆盖 1/4/16：核的数据通路是「每档一份」不是公式，pe2/pe8 有 FATAL 守卫拦</span>
-        <span class="k">下一步</span><span class="v">板子这一次做完（攒一次，别分两趟）：① 重烧最终 .bit ② 录屏 ③ 两组截图（Vivado 资源/时序 + 串口实测）④ H6 联调 —— 把 B 的上位机接上真板子。另欠自己一份 `report/ai-log/`（§3.3.3.1 是「须」，压 15 分那档）</span>
+        <span class="k">下一步</span><span class="v">板子这一趟只剩两件：① 录屏 ② 两组截图（Vivado 资源/时序 + 串口实测）。**重烧 .bit 10-07 已完成**（三档 19:45 / 19:34 / 20:01，含 #RDY）。H6 剩一条：B 远程改 `host/src/host.py` 的 txn.count → push → A 在真板子重跑 `#PMUL NTT 1`（**不用见面**）。ai-log 已有 3 篇（10-04 / 10-05 / 10-07），保持一天一篇</span>
       </div>
       <div class="now-p" title="logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2">范围 rtl/ ｜ 综合 ｜ 板子（本机） · 来源 logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2 · 核对 2026-10-07</div>
     </article><article class="now" style="--c: var(--s2)">
       <div class="now-h"><span class="swatch" aria-hidden="true"></span>B · 验证台与上位机</div>
       <div class="now-b">
-        <span class="k">现在</span><span class="v">上位机已成形：host/src/ 13 个 .py 入库，7 个自测 559 项全绿 —— 但全部跑在陪练（假串口）上，真板子一次没接过。10-06 闭了 `#RDY` 的 &lt;build&gt; 口径（`proto.md` §5.2：写折叠度 1/4/16，三档校验和 *7c / *79 / *4a），10-07 起 A 已有实物可对</span>
-        <span class="k">下一步</span><span class="v">三件欠着的：① H6 上真板子联调 —— 上位机至今只在假串口上跑过 ② `#RDY` 解包器接上（&lt;build&gt; 有值了，自动判读出序可以真做）③ 仓库根 `README.md` 加「目录对照说明」（§3.3.5.4 的「须」）④ 写自己的 `report/ai-log/`</span>
+        <span class="k">现在</span><span class="v">上位机已成形：host/src/ **14 个 .py / 4289 行**入库，7 个自测 559 项全绿。**真板子已首次接上** —— 10-07 夜 A 用 B 的 `board_run.py` 在真板子上跑通 `#NTT 1` 256/256；剩 `#PMUL NTT 1`，卡点是 `host.py` 里 `txn.count` 一数三用（`--loopback` 零硬件可复现）。10-06 闭了 `#RDY` 的 &lt;build&gt; 口径（`proto.md` §5.2：写折叠度 1/4/16，三档校验和 *7c / *79 / *4a），B 的 `1df5625` 已接住这一行</span>
+        <span class="k">下一步</span><span class="v">还欠的：① 改 `host/src/host.py` 的 `txn.count`（`:443`，同根 `:316`/`:317`），两条 `--loopback`（`#NTT 1` 与 `#PMUL NTT 1`）都绿后 push —— 这是 H6 最后一条 ② H10 换机从零 clone ③ 交 C 完整验证数据（H5）④ ai-log 保持一天一篇（已有 10-06 首篇）。✅ 仓库根 `README.md` 的「目录对照说明」10-07 已补（`README.md:130`）</span>
       </div>
       <div class="now-p" title="host/proto.md §5.2；logs/project_state.md §一「还差」">范围 refsim/ ｜ host/ · 来源 host/proto.md §5.2；logs/project_state.md §一「还差」 · 核对 2026-10-07</div>
     </article><article class="now" style="--c: var(--s3)">
       <div class="now-h"><span class="swatch" aria-hidden="true"></span>C · 报告与演示</div>
       <div class="now-b">
-        <span class="k">现在</span><span class="v">不依赖 A、B 的活已做完：报告五章初稿 + 封面摘要骨架（10-07）、skill/ 四个子目录、metrics/ 指标表、demo/ 三页、report/figures/ 三张图、assets/ 四张截图。三个人的 ai-log 现在都开张了（C 7 篇 / A 1 篇 / B 10-06 首篇）</span>
+        <span class="k">现在</span><span class="v">不依赖 A、B 的活已做完：报告五章初稿 + 封面摘要骨架（10-07）、skill/ 四个子目录、metrics/ 指标表、demo/ 三页、report/figures/ 6 张图、assets/ 四张截图。三个人的 ai-log 都开张了：**共 11 篇 = C 7 / A 3 / B 1**</span>
         <span class="k">下一步</span><span class="v">剩下都是 C 自己的：① 报告三处缺口 —— 上板真实最高频率、端到端延迟正式测量、正文写明 Vivado 是 2020.2（§3.3.3.1「须在报告中说明」）② 装 gcc + iverilog + python3，跑 H10 独立复现 ③ `skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」（§3.3.5.2）</span>
       </div>
       <div class="now-p" title="report/README.md §三；team/todo_C.md §二">范围 report/ ｜ demo/ ｜ docs/ ｜ skill/ ｜ metrics/ ｜ assets/ · 来源 report/README.md §三；team/todo_C.md §二 · 核对 2026-10-07</div>
@@ -377,7 +377,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 <h2>数字一览<span class="h2n">每块底部都写着来源</span></h2>
 <div class="tiles"><div class="tile" title="自动 · status.json · 核对日期 2026-10-07">
     <div class="tile-l">关键路径里程碑</div>
-    <div class="tile-v">9/16</div>
+    <div class="tile-v">11/17</div>
     <div class="tile-n">已完成 / 全部</div>
     <div class="tile-p">自动 · status.json · 2026-10-07</div>
   </div><div class="tile" title="人写 · refsim/README.md；logs/project_state.md §一 · 核对日期 2026-09-29">
@@ -385,11 +385,11 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="tile-v">4096/4096</div>
     <div class="tile-n">NTT/INTT/点乘/完整乘法四条通路，FIPS 203 兼容 KAT 锚定</div>
     <div class="tile-p">人写 · refsim/README.md；logs/project_state.md §一 · 2026-09-29</div>
-  </div><div class="tile" title="人写 · host/src/test_*.py · 核对日期 2026-09-29">
+  </div><div class="tile" title="人写 · host/src/test_*.py · 核对日期 2026-10-07">
     <div class="tile-l">B 侧自测</div>
     <div class="tile-v">559 项</div>
-    <div class="tile-n">432 + 63 + 42 + 22，7 个自测全绿；全部基于陪练，真板子没接过</div>
-    <div class="tile-p">人写 · host/src/test_*.py · 2026-09-29</div>
+    <div class="tile-n">432 + 63 + 42 + 22，7 个自测全绿；自测本身基于陪练（假串口），但上位机 10-07 已在真板子跑通 #NTT 1</div>
+    <div class="tile-p">人写 · host/src/test_*.py · 2026-10-07</div>
   </div><div class="tile" title="人写 · rtl/vivado/folding_comparison.md §九 · 核对日期 2026-09-29">
     <div class="tile-l">三档引脚</div>
     <div class="tile-v">37 / 37 / 37</div>
@@ -397,11 +397,11 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="tile-p">人写 · rtl/vivado/folding_comparison.md §九 · 2026-09-29</div>
   </div><div class="tile" title="自动 · git log">
     <div class="tile-l">三人提交</div>
-    <div class="tile-v">160</div>
-    <div class="tile-n">A 88 · B 28 · C 44</div>
+    <div class="tile-v">174</div>
+    <div class="tile-n">A 101 · B 29 · C 44</div>
     <div class="tile-p">自动 · git log</div>
   </div></div>
-<p class="hint">仓库规模（自动 · git ls-files，跳过草稿与数据目录）：NTT 核（参数化版） 4,381 行 · 验证探针 2,905 行 · 综合脚本与报告 2,045 行 · 上位机（B） 3,996 行 · 验证台（B） 5,645 行 · 报告正文（C） 1,659 行 · 演示页（C） 1,773 行 · 技能包（C） 2,895 行 · 指标表（C） 452 行</p>
+<p class="hint">仓库规模（自动 · git ls-files，跳过草稿与数据目录）：NTT 核（参数化版） 4,381 行 · 验证探针 2,905 行 · 综合脚本与报告 2,317 行 · 上位机（B） 4,289 行 · 验证台（B） 5,645 行 · 报告正文（C） 1,663 行 · 演示页（C） 1,773 行 · 技能包（C） 2,895 行 · 指标表（C） 452 行</p>
 
 <h2>欠账<span class="h2n">谁欠谁一句话 / 一个文件 —— 图中挂 ⚠ 的就是这三条</span></h2>
 <div class="blockers"><article class="blk">
@@ -411,8 +411,8 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <div class="blk-p" title="team/todo_C.md §二·1；report/design/05_reproducibility.md §5.6">出处 team/todo_C.md §二·1；report/design/05_reproducibility.md §5.6 · 核对 2026-10-03</div>
     </article><article class="blk">
       <div class="blk-who"><span class="who">B</span><span class="arrow">欠</span><span class="who">A</span></div>
-      <div class="blk-what">H6 联调还没发生 —— B 的上位机 559 项自测全绿，但**全部跑在陪练（假串口）上**，真板子一次没接过。A 侧的上板本身不等它（已用自写驱动在真板子上跑通），要的是把驱动换成 host/src/ 并让 B 第一次见真板子</div>
-      <div class="blk-imp"><span class="k">影响</span>「上位机 ↔ 真板子」这条链路目前**零实测**。它同时压着 H5（B 交 C 的验证数据）和演示视频里那段真机演示</div>
+      <div class="blk-what">H6 只剩一条 —— 2026-10-07 夜 A 已用 **B 的** `host/src/board_run.py` 在真板子跑通 `#NTT 1`（256/256），「上位机 ↔ 真板子」这条链路**不再是零实测**。**`#PMUL NTT 1` 仍 STOP**，根因在 `host/src/host.py`：`txn.count` 同时当「发几行 / 收几行 / 核对几行」三个用途，512 进 256 出时 `:443` 拿 256 比 512 → 误报 DESYNC。**RTL 与协议都没错**。B 远程改 + `--loopback` 自测 + push，A 在真板子验收（不用见面）</div>
+      <div class="blk-imp"><span class="k">影响</span>卡着 H6 收口。同时压着 H5（B 交 C 的验证数据）和演示视频里那段真机演示</div>
       <div class="blk-p" title="host/KNOWN_ISSUES.md C2；logs/project_state.md §一">出处 host/KNOWN_ISSUES.md C2；logs/project_state.md §一 · 核对 2026-10-07</div>
     </article></div>
 
@@ -432,19 +432,19 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td class="c-src" title="rtl/board/proto_fsm.v；host/proto.md §5.2">rtl/board/proto_fsm.v；host/proto.md §5.2</td>
     </tr><tr data-owner="A" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
-      <td>★ 板子这一次做完（攒一次，别分两趟）：重烧最终 .bit + 录屏 + 两组截图（Vivado 资源/时序 + 串口实测）+ H6 联调接 B 的上位机。⚠️ 三档现存的 .bit 是 10-04 的（没有 #RDY），要先重出；位流掉电即失</td>
+      <td>★ 板子这一趟：录屏 + 两组截图（Vivado 资源/时序 + 串口实测）。**重烧 10-07 已完成**（三档 .bit 19:45 / 19:34 / 20:01，含 `#RDY`；⚠️ `_runs/` 根下那份仍是 10-04 的旧 pe4，烧录必须带 `BIT=`）。位流掉电即失</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
-      <td class="c-src" title="logs/runbook_2026-10-07_board_trip_and_h6.md">logs/runbook_2026-10-07_board_trip_and_h6.md</td>
-    </tr><tr data-owner="A" class="st-todo">
+      <td class="c-src" title="team/plan_AB_h6_board.md §三；logs/runbook_2026-10-07_board_trip_and_h6.md">team/plan_AB_h6_board.md §三；logs/runbook_2026-10-07_board_trip_and_h6.md</td>
+    </tr><tr data-owner="A" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
-      <td>交 B：`.bit` + XDC + 「怎么下载」三步说明（H6 的另一半）</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td>交 B：`.bit` + XDC + 「怎么下载」三步说明（H6 的另一半）—— 三样都已在仓库里：`rtl/board/ntt_board.xdc`、`rtl/vivado/run_board_prog.sh`、`team/plan_AB_h6_board.md` §三 第 2 步</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="logs/schedule_plain.md §四 H6">logs/schedule_plain.md §四 H6</td>
-    </tr><tr data-owner="A" class="st-todo">
+    </tr><tr data-owner="A" class="st-doing">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
-      <td>★ 补写自己的 `report/ai-log/` —— §3.3.3.1 是「须」提交大模型协作记录，压 15 分那档。时间敏感：每过一天能记的当天细节就少一天</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
-      <td class="c-src" title="logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条">logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条</td>
+      <td>★ 写自己的 `report/ai-log/` —— §3.3.3.1 是「须」提交大模型协作记录，压 15 分那档。已有 3 篇（10-04 / 10-05 / 10-07），保持一天一篇</td>
+      <td class="c-state"><span class="ico">▶</span>进行中</td>
+      <td class="c-src" title="report/ai-log/；logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条">report/ai-log/；logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条</td>
     </tr><tr data-owner="A" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
       <td>最后一次全量回归：refsim 四条脚本 + 板级冒烟台三档，结果存进 logs/</td>
@@ -492,24 +492,24 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td class="c-src" title="refsim/gen_batch_vectors.py:141">refsim/gen_batch_vectors.py:141</td>
     </tr><tr data-owner="B" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
-      <td>★ H6 上真板子联调 —— 上位机至今只在假串口上跑过，真板子一次没接。这是 A 侧唯一剩下的关键路径</td>
+      <td>★ H6 收口 —— 只剩 `#PMUL NTT 1`。改 `host/src/host.py` 里 `txn.count` 一数三用（`:443` 拿 256 比 512；`:316`/`:317` 同根），两条 `--loopback`（`#NTT 1` 与 `#PMUL NTT 1`）都绿后 push，A 在真板子验收。**不用见面**</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
-      <td class="c-src" title="host/KNOWN_ISSUES.md C2">host/KNOWN_ISSUES.md C2</td>
-    </tr><tr data-owner="B" class="st-todo">
+      <td class="c-src" title="logs/letter_2026-10-07_A_to_B_pmul_desync.txt">logs/letter_2026-10-07_A_to_B_pmul_desync.txt</td>
+    </tr><tr data-owner="B" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
-      <td>`#RDY` 解包器接上 —— &lt;build&gt; 现在有值了（10-06 定口径、10-07 A 落地），自动判读出序可以真做</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
-      <td class="c-src" title="host/proto.md §5.2">host/proto.md §5.2</td>
-    </tr><tr data-owner="B" class="st-todo">
+      <td>`#RDY` 解包器接上 —— &lt;build&gt; 现在有值了（10-06 定口径、10-07 A 落地），自动判读出序可以真做。✅ B 的 `1df5625` 已接住这一行（`RDY_PREFIX` + `parse_rdy()`，`board_run.py` 会打 `build_src`）</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
+      <td class="c-src" title="host/proto.md §5.2；host/src/host.py">host/proto.md §5.2；host/src/host.py</td>
+    </tr><tr data-owner="B" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
-      <td>★ 仓库根 `README.md` 加一节「目录对照说明」—— §3.3.5.4 推荐结构「非强制」，但「采用其他组织方式的队伍**须**在 README.md 中给出目录对照说明」</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
-      <td class="c-src" title="logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条 (d)">logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条 (d)</td>
-    </tr><tr data-owner="B" class="st-todo">
+      <td>★ 仓库根 `README.md` 加一节「目录对照说明」—— ✅ **已补**：`README.md:130`「### 目录对照说明（《选题指南》§3.3.5.4）」并逐项对照</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
+      <td class="c-src" title="README.md:130">README.md:130</td>
+    </tr><tr data-owner="B" class="st-doing">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
-      <td>★ 补写自己的 `report/ai-log/` —— 与 A 那条同因，压 15 分那档（10-06 已有首篇）</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
-      <td class="c-src" title="logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条">logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条</td>
+      <td>★ 写自己的 `report/ai-log/` —— 与 A 那条同因，压 15 分那档。已有 1 篇（10-06），保持一天一篇</td>
+      <td class="c-state"><span class="ico">▶</span>进行中</td>
+      <td class="c-src" title="report/ai-log/；logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条">report/ai-log/；logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条</td>
     </tr><tr data-owner="B" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
       <td>★ H10 换一台电脑、从零 clone、按 README 走一遍，跑通截图存档，跑不通修到跑通</td>
@@ -527,9 +527,9 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td class="c-src" title="team/todo_AB.md §二·2">team/todo_AB.md §二·2</td>
     </tr><tr data-owner="B" class="st-blocked">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
-      <td>#PMUL TIME / #PMUL FULL 端到端 —— 被 refsim/batch/ 下 23 个变长文件挡。**10-04 判定不改**（改它 = 动已冻结的 H2 黄金向量），报告里写清边界</td>
+      <td>#PMUL TIME / #PMUL FULL 的**协议侧（假串口）**端到端 —— 被 refsim/batch/ 下 23 个变长文件挡。**10-04 判定不改**（改它 = 动已冻结的 H2 黄金向量），报告里写清边界。⚠️ **真板子那一侧 10-04 已各 256/256**（`board_pe{4,16}_txn.txt`），别把这句读成「没跑过」</td>
       <td class="c-state"><span class="ico">⚠</span>卡住</td>
-      <td class="c-src" title="host/proto.md §九(d) 第 2/3 条">host/proto.md §九(d) 第 2/3 条</td>
+      <td class="c-src" title="host/proto.md §九(d) 第 2/3 条；rtl/vivado/reports/board_pe*_txn.txt">host/proto.md §九(d) 第 2/3 条；rtl/vivado/reports/board_pe*_txn.txt</td>
     </tr><tr data-owner="B" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
       <td>同步 proto.md §七 两处过期陈述（A 已于 10-07 回信说明口径）</td>
@@ -574,8 +574,8 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     </tr><tr>
       <td>logs/schedule_plain.md</td>
       <td class="c-dim">通俗版排期</td>
-      <td class="c-num">2026-09-29</td>
-      <td><span class="chip"><span class="dot" style="background:var(--crit)"></span>⚠ 过期 · 8 天前</span></td>
+      <td class="c-num">2026-10-07</td>
+      <td><span class="chip"><span class="dot" style="background:var(--good)"></span>✓ 新鲜 · 0 天前</span></td>
     </tr><tr>
       <td>team/todo_AB.md</td>
       <td class="c-dim">A、B 待办清单</td>

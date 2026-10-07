@@ -1005,6 +1005,15 @@ git push
 **仍未覆盖**：完整乘法（FNTT→PWM2→INTT）端到端；PWM2 两 bank 装**不同**数据的
 情形（现有黄金向量 a == b，这一格实际是平方）。
 
+> ✅ **2026-10-07 补注 —— 这两格都已闭合，但要说清是哪一层：**
+> - **完整乘法**：**真板子**上三档各 **256/256**（`rtl/vivado/reports/board_pe{4,16}_txn.txt`
+>   的 `#PMUL FULL 1` / `#PMUL TIME 1`）。⚠️ 但**核级 batch 仍只有 pe1** ——
+>   `refsim/run_polmul_check.sh` 的 `SRC` 逐项都是 `pe1/*.v`。
+> - **PWM2 两 bank 装不同数据**：✅ 本探针已补，`-DOP_PWM2AB`，三档各 4096/4096
+>   （`rtl/probes/README.md` 段 ⑩）。
+>
+> 详情与口径见 `rtl/H1_port_spec.md` §五「还没测的」。
+
 ```bash
 cd "C:/Users/l'x/Desktop/FPGA"
 python3 -c "
@@ -1015,7 +1024,7 @@ print('总系数', len(v), '不同值', len(set(v)))
 ```
 预期：4096 个系数、**2000+ 个不同值**。若不同值很少，说明向量是退化的，**换一组再跑**。
 
-- [ ] **Step 2: 写功能对拍 testbench**
+- [x] **Step 2: 写功能对拍 testbench**
 
 判据用「**多重集合相等**」（`rtl/H1_port_spec.md` §八 的手法）：
 装载顺序与读出顺序分开判，不互相污染。
