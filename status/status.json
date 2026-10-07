@@ -137,6 +137,7 @@
     { "owner": "A", "text": "★ 补写自己的 `report/ai-log/` —— §3.3.3.1 是「须」提交大模型协作记录，压 15 分那档。时间敏感：每过一天能记的当天细节就少一天", "state": "todo", "as_of": "2026-10-04", "source": "logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条" },
     { "owner": "A", "text": "最后一次全量回归：refsim 四条脚本 + 板级冒烟台三档，结果存进 logs/", "state": "todo", "as_of": "2026-10-07", "source": "logs/schedule_plain.md §三 W4" },
     { "owner": "A", "text": "NOTICE 作者姓名占位符 —— 提交作品前必须填", "state": "done", "as_of": "2026-10-07", "source": "team/todo_AB.md §一·4（2026-10-07 已填：徐子谦、赵志鹏、于宸）" },
+    { "owner": "A", "text": "★ 封面四项定案（10-07）—— 作品名「后量子密码FPGA加速平台」（⚠️ **与仓库现名不是同一串**，已同步 6 处）/ 队员 徐子谦、赵志鹏、于宸 / 指导教师 张靖奇 / 提交日期 2026-11-04。出处 `project_title_abstract.md` §四；给 C 的信已写（`letter_2026-10-07_A_to_C_frontmatter_addendum.txt`），**等 C 落地 `report/design/00_front_matter.md`**。⚠️ 报名原文没留档，此名为 A 凭记忆确认", "state": "done", "as_of": "2026-10-07", "source": "project_title_abstract.md §一/§四" },
     { "owner": "A", "text": "rtl/ 遗留清理：BROM.v 挂在死数组上的 rom_style、已废弃的 zetas_tables.v", "state": "todo", "as_of": "2026-10-03", "source": "logs/project_state.md §二 B 段末" },
     { "owner": "A", "text": "板级 wrapper → 上板：三档（pe1/pe4/pe16）各五条计算事务 256/256，已提交推送", "state": "done", "as_of": "2026-10-04", "source": "logs/project_state.md §二；rtl/vivado/reports/board_pe*_txn.txt" },
     { "owner": "A", "text": "回 B 一句：#RDY 的 <build> 放什么 —— **10-06 已闭**（proto.md §5.2：写折叠度 1/4/16，三档校验和 *7c / *79 / *4a）", "state": "done", "as_of": "2026-10-06", "source": "host/proto.md:290" },
