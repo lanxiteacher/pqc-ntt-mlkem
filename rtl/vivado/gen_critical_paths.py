@@ -30,14 +30,26 @@ SLACK_RE = re.compile(r"^Slack \((MET|VIOLATED)\)\s*:\s*([\d.]+)ns", re.M)
 # 明细表的三条分隔线，依次收「源时钟路径 / 数据路径 / 目的时钟路径」。
 SEP_RE = re.compile(r"^\s*-{10,}")
 NET_RE = re.compile(r"^\(fo=(\d+)(?:,\s*routed)?\)$")
+# 时序单元（触发器 / 锁存器 / 块 RAM / 移位寄存器）—— 它们**不算**「一级逻辑」。
+# 判 `Logic Levels` 那栏时用来排除，见 main() 里锚 2 的说明。
+SEQ_RE = re.compile(r"^(?:FD|LD|RAMB|SRL)")
 
 
 def design_summary(path):
-    """`Design Timing Summary` 那行的 (WNS, WHS)。
+    """`Design Timing Summary` 那行的 (WNS, WHS) —— **全设计最坏**那条。
 
-    用来**锚定**我们筛出来的那条路径确实就是 WNS 那条 —— 这份报告里
-    `Max Delay Paths` 这个节名出现了两次（`sys_clk` 组和 `**async_default**` 组），
-    筛错组的话 WNS 会变成 8.338（recovery 的 slack）。对不上就报错，别静默出文档。
+    ⚠️ **2026-10-07 订正：这一行不恒等于时钟级 WNS。** 它是全设计最坏；板级三档
+    时序全 MET 时，最坏的那条可能落在 `**async_default**` 组（复位同步器 → 异步
+    控制端的 recovery），那时它比时钟组更**差**。
+
+      · 10-05 那版位流：async_default 是 8.338，比时钟组 6.538 **好**
+        ⇒ 这一行**碰巧**就是时钟级 WNS —— 旧锚（拿它锚「筛对组没有」）因此
+        一直没露馅，直到 RTL 改了才暴露。
+      · 10-07 加了 `#RDY` 重建后反过来：pe1 这一行给 **2.490**（async_default），
+        而时钟组是 **7.339**。**同一个字段，含义变了，且不报错。**
+
+    ⇒ 「筛对路径组了没有」要用 `intra_clock_summary()` 的**时钟级** WNS 来锚，
+      不要用本函数。本函数留着给 1b 锚当「全设计最坏」那一侧用。
     """
     txt = path.read_text(encoding="utf-8", errors="replace")
     i = txt.find("Design Timing Summary")
@@ -47,6 +59,38 @@ def design_summary(path):
         m = re.match(r"^\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)\s+(\d+)\s+(\d+)\s+(-?\d+\.\d+)", ln)
         if m:
             return float(m.group(1)), float(m.group(5))
+    return None
+
+
+def intra_clock_summary(path, clock="sys_clk"):
+    """`Intra Clock Table` 里 `clock` 那一行的 (WNS, WHS) —— **时钟级** WNS。
+
+    这才是「`Path Group` 筛出来的 Setup 首条」应当相等的那个数，也是锚 1 用的数。
+    表长这样（表头下先一行破折号，再是每个时钟一行）：
+
+        Clock             WNS(ns)      TNS(ns)  ...      WHS(ns)      THS(ns)  ...
+        -----             -------      -------  ...      -------      -------  ...
+        sys_clk             7.339        0.000  ...        0.020        0.000  ...
+
+    ⚠️ 同名的表还有 `Inter Clock Table`（首词 `From`）与 `Path Group Table`
+       （首词 `Path Group`）—— 表头**首词是 `Clock`** 的只有这一张，按这个认。
+    """
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    for i, ln in enumerate(lines):
+        if not re.match(r"^\s*Clock\s+WNS\(ns\)", ln):
+            continue
+        j = i + 1
+        while j < len(lines) and lines[j].strip() and set(lines[j].strip()) <= set("-"):
+            j += 1                       # 跳过破折号行
+        while j < len(lines) and lines[j].strip():
+            parts = lines[j].split()
+            if parts and parts[0] == clock:
+                try:
+                    return float(parts[1]), float(parts[5])
+                except (ValueError, IndexError):
+                    return None
+            j += 1
+        return None
     return None
 
 
@@ -136,21 +180,68 @@ def main():
         if not setup:
             print(f"pe{pe}: 报告里没有 sys_clk 组的 Setup 路径 —— 停", file=sys.stderr)
             return 1
-        # 锚 1：筛出来的那条 = WNS 表里那条
+        # 锚 1：筛出来的那条 = **该时钟组**的 WNS（时钟级，取自 Intra Clock Table）
+        #   ⚠️ 别拿 `Design Timing Summary` 的 WNS 来锚这一条 —— 那是全设计最坏，
+        #      2026-10-07 起它落在 async_default 组上，会把对的路径判成错的。
+        #      详见上面 design_summary() 的说明。
+        clk = intra_clock_summary(rpt)
+        if not clk:
+            print(f"pe{pe}: 读不到 Intra Clock Table 里 sys_clk 那一行 —— 停",
+                  file=sys.stderr)
+            return 1
+        cwns, cwhs = clk
+        if abs(setup[0]["slack"] - cwns) > 1e-6:
+            print(f"pe{pe}: 筛出的 slack {setup[0]['slack']:.3f} ≠ Intra Clock Table "
+                  f"里 sys_clk 的 WNS {cwns:.3f} —— 筛错组了，停", file=sys.stderr)
+            return 1
+        # 锚 1b：全设计最坏 = 已知两组里更差的那个 —— 但**必须按检查族分开比**。
+        #   ⚠️ 2026-10-07 撞见：`**async_default**` 这一个组里混着**两种**检查，
+        #      `Recovery`（异步控制端的建立检查，Setup 族，进 WNS）与
+        #      `Removal`（属 Hold 族，进 WHS）。pe1 实测：组内 Recovery 最坏
+        #      2.490、Removal 最坏 1.700 —— 若把 20 条一锅端取 min，会拿 1.700
+        #      去比 `Design Timing Summary` 的 WNS 2.490，**把对的数判成错的**
+        #      （这正是本锚自己第一次跑时就哑掉的原因）。
+        #   ⇒ Recovery 只跟 WNS 比、Removal 只跟 WHS 比；两族相加必须等于该组
+        #      全部条数，冒出第三种类型就是本脚本没认出来的检查，停。
         summ = design_summary(rpt)
         if not summ:
             print(f"pe{pe}: 读不到 Design Timing Summary —— 停", file=sys.stderr)
             return 1
         wns, whs = summ
-        if abs(setup[0]["slack"] - wns) > 1e-6:
-            print(f"pe{pe}: 筛出的 slack {setup[0]['slack']:.3f} ≠ Design Timing "
-                  f"Summary 的 WNS {wns:.3f} —— 筛错组了，停", file=sys.stderr)
-            return 1
-        # 锚 2：明细行里 LUT 的条数 = 报告自报的逻辑级数
-        luts = [r for r in setup[0]["rows"] if r["kind"].startswith("LUT")]
-        if len(luts) != setup[0]["lvl"]:
-            print(f"pe{pe}: 明细里数出 {len(luts)} 个 LUT，报告写 {setup[0]['lvl']} 级 "
-                  f"—— 明细行没解析全，停", file=sys.stderr)
+        fam = {"Setup": [], "Hold": []}
+        for a in asyncs:
+            t = a["ptype"] or ""
+            if t.startswith("Recovery"):
+                fam["Setup"].append(a)
+            elif t.startswith("Removal"):
+                fam["Hold"].append(a)
+            else:
+                print(f"pe{pe}: async 组里出现没认出来的检查类型 {t!r} "
+                      f"（slack {a['slack']:.3f}）—— 停", file=sys.stderr)
+                return 1
+        for name, key, clk_v, rep_v in (("WNS", "Setup", cwns, wns),
+                                        ("WHS", "Hold", cwhs, whs)):
+            pool = [clk_v] + [d["slack"] for d in fam[key]]
+            if abs(rep_v - min(pool)) > 1e-6:
+                detail = "、".join(f"{n:.3f}" for n in pool)
+                print(f"pe{pe}: Design Timing Summary 的 {name} {rep_v:.3f} ≠ "
+                      f"sys_clk 组与 async/{key} 族里更差的那个 {min(pool):.3f}"
+                      f"（{detail}）—— 报告里有本脚本没认出来的路径组/检查，停",
+                      file=sys.stderr)
+                return 1
+        # 锚 2：明细里「逻辑级」的条数 = 报告自报的逻辑级数
+        #   ⚠️ 2026-10-07 撞见：**不能只数 `LUT*`**。pe4 那条关键路径中间有一级
+        #      `MUXF7`（专用多路器）—— 它**算一级逻辑但不叫 LUT**，只数 LUT 得
+        #      14、报告写 15，把解析完全正确的数据判成「没解析全」。
+        #      ⇒ 口径取「非走线、且非时序单元（见 SEQ_RE）」。三档现数据：
+        #        pe1 11 LUT = 11；pe4 14 LUT + 1 MUXF7 = 15；pe16 12 LUT = 12。
+        lv = [r for r in setup[0]["rows"]
+              if not r["net"] and not SEQ_RE.match(r["kind"])]
+        if len(lv) != setup[0]["lvl"]:
+            kinds = "、".join(sorted({r["kind"].split()[0] for r in lv}))
+            print(f"pe{pe}: 明细里数出 {len(lv)} 级逻辑（{kinds}），"
+                  f"报告写 {setup[0]['lvl']} 级 —— 明细行没解析全，停",
+                  file=sys.stderr)
             return 1
         # 锚 3：明细逐行相加 = 报告自报的数据路径延迟（0.02 留给三处三位小数的舍入）
         got, want = sum(r["incr"] for r in setup[0]["rows"]), setup[0]["delay"]
@@ -158,7 +249,11 @@ def main():
             print(f"pe{pe}: 明细逐行相加 {got:.3f} ≠ Data Path Delay {want:.3f} "
                   f"—— 明细行有漏读或多读，停", file=sys.stderr)
             return 1
-        data[pe] = dict(setup=setup, asyncs=asyncs, all=allp, wns=wns, whs=whs)
+        # wns/whs = 全设计最坏（可能落在 async_default）；cwns/cwhs = 时钟级。
+        # wns/whs = 全设计最坏（可能落在 async_default）；cwns/cwhs = 时钟级；
+        # fam = async 组按检查族拆开（Setup 族=Recovery、Hold 族=Removal）。
+        data[pe] = dict(setup=setup, asyncs=asyncs, all=allp, fam=fam,
+                        wns=wns, whs=whs, cwns=cwns, cwhs=cwhs)
 
     L = []
     A = L.append
@@ -178,13 +273,39 @@ def main():
     A("")
     A("| 组 | `Path Group` | 是什么 | 报告里的节 |")
     A("|---|---|---|---|")
-    A("| 1 | `sys_clk` | 真正的时序关键路径；**`Design Timing Summary` 的 WNS 取自它** | `Max Delay Paths`（前） / `Min Delay Paths`（前） |")
-    A("| 2 | `**async_default**` | 复位同步器到异步控制端的 recovery / removal | 后面那两组同名节 |")
+    A("| 1 | `sys_clk` | 真正的时序关键路径；**「时钟级 WNS」指的就是这一组的**"
+      "（取自 `Intra Clock Table` 里 `sys_clk` 那一行） | `Max Delay Paths`（前） / `Min Delay Paths`（前） |")
+    A("| 2 | `**async_default**` | 复位同步器到异步控制端的 recovery / removal "
+      "| 后面那两组同名节 |")
     A("")
     A("⚠️ **两组的 `Max Delay Paths` 都叫这个名字** —— 只按节名找会拿到第二组，")
-    A(f"而第二组的 slack（pe1 是 {data[1]['asyncs'][0]['slack']:.3f} ns）**不是 WNS**。")
-    A("本文按 `Path Group` 字段筛，不按节名；筛完还会拿 `Design Timing Summary` 的")
-    A("WNS 对一遍（见 §六），对不上直接报错、不出文档。")
+    A(f"而第二组的 slack（pe1 的 recovery 最坏一条是 "
+      f"{min(d['slack'] for d in data[1]['fam']['Setup']):.3f} ns）**不是时钟级 WNS**。")
+    A("本文按 `Path Group` 字段筛，不按节名；筛完拿 `Intra Clock Table` 里 `sys_clk`")
+    A("那一行对一遍（见 §六），对不上直接报错、不出文档。")
+    A("")
+    A("⚠️⚠️ **`Design Timing Summary` 的 WNS 从 2026-10-07 起也不再等于时钟级 WNS 了。**")
+    A("它给的是**全设计最坏**：板级三档时序全 MET 时，最坏那条可能落在")
+    A("`**async_default**` 组（复位同步器的 recovery），而不是时钟组。")
+    A("10-05 那版位流里 async 是 8.338、比时钟组 6.538 **好**，两个数**碰巧相等**，")
+    A("所以拿它当锚一直没露馅；10-07 加了 `#RDY` 重建后反过来 —— pe1 那一行给 "
+      f"{data[1]['wns']:.3f}，时钟组却是 {data[1]['cwns']:.3f}。")
+    A("**同一个字段，含义变了，且不报错。**（`rtl/vivado/synth_board.tcl` 里同源的那条")
+    A("2026-10-07 已拆成 `WNS_WORST_ANY_NS` / `WNS_CLOCK_NS` 两行；§六 的 1b 锚是它的机器版。）")
+    A("")
+    A("⚠️ **而且这个坑是逐档的、不是「三档都错」** —— 同一批重建里：")
+    A(f"pe1 全设计最坏 {data[1]['wns']:.3f} / 时钟级 {data[1]['cwns']:.3f}（不等）、"
+      f"pe4 {data[4]['wns']:.3f} / {data[4]['cwns']:.3f}（不等）、")
+    A(f"pe16 {data[16]['wns']:.3f} / {data[16]['cwns']:.3f}（**相等**）。")
+    A("pe16 恰好落在「相等」那一侧，所以只看 pe16 是看不出问题的 —— 这也是为什么")
+    A("§六 的锚要在**三档上逐档跑**，不能挑一档抽样。")
+    A("")
+    A("⚠️ 另有一处同源口径要记住：`**async_default**` **这一个组里混着两种检查** ——")
+    A("`Recovery`（异步控制端的建立检查，进 **WNS**）与 `Removal`（进 **WHS**）。")
+    A(f"pe1 组内：Recovery 最坏 "
+      f"{min(d['slack'] for d in data[1]['fam']['Setup']):.3f}、Removal 最坏 "
+      f"{min(d['slack'] for d in data[1]['fam']['Hold']):.3f}。")
+    A("**取最坏时必须按族分开** —— 一锅端会把 Removal 的数当成 WNS 用。")
     A("")
     A("另一条同类的坑（`project_state.md` §二 已记）：**板级 WNS 不能反推 Fmax** ——")
     A("20 ns 目标是故意放松的，布线器没被逼；核的 Fmax 推算在 `folding_comparison.md` §9.1，")
@@ -269,19 +390,32 @@ def main():
     A("")
     A("## 五、`**async_default**` 组（复位的 recovery / removal）")
     A("")
-    A("| 档 | 组内最坏 Slack (ns) | 类型 | 起点 → 终点 |")
+    A("⚠️ **这一个组里混着两种检查，必须分开看** —— `Recovery` 属 Setup 族、进 **WNS**；")
+    A("`Removal` 属 Hold 族、进 **WHS**。下面的表按族分两列，别把两列放一起比大小。")
+    A("")
+    A("| 档 | Recovery 最坏 (ns) → 进 WNS | Removal 最坏 (ns) → 进 WHS | 起点 → 终点 |")
     A("|---|---|---|---|")
     for pe in PES:
         a = data[pe]["asyncs"]
         if not a:
             A(f"| pe{pe} | — | — | （报告里没给这一组） |")
             continue
-        worst = a[0]
-        A(f"| pe{pe} | {worst['slack']:.3f} | {worst['ptype']} "
-          f"| `{short(worst['src'])}` → `{short(worst['dst'])}` |")
+        rec = min(data[pe]["fam"]["Setup"], key=lambda d: d["slack"])
+        rem = min(data[pe]["fam"]["Hold"], key=lambda d: d["slack"])
+        A(f"| pe{pe} | {rec['slack']:.3f} | {rem['slack']:.3f} "
+          f"| `{short(rec['src'])}` → `{short(rec['dst'])}` |")
     A("")
     A("三档这一组的起点都是 `rst_sync_reg[1]/C` —— 就是 `ntt_board_top.v` 里那级")
-    A("「异步置位、同步释放」复位同步器（比例程多这一步，拦按键毛刺）。")
+    A("「异步置位、同步释放」复位同步器（比例程多这一步，拦按键毛刺）。终点分两类：")
+    A("pe1 / pe4 落在 **NTT 核内部**（`u_core/.../btfu/w5r0_reg`），pe16 落在 `u_fsm`。")
+    A("原因直白 —— 复位网的扇出：核内 `w5r0` 那一排寄存器离 `rst_sync_reg[1]` 的布线更远。")
+    A("⚠️ **这仍然不是「核有时序问题」**：recovery 量的是「异步复位释放沿离时钟沿够不够远」，")
+    A("与核的组合逻辑深度无关 —— 别把它读成 §二 那条「卡时序的不是蝶形」的反例。")
+    A("")
+    A("⚠️ **2026-10-07 起，Recovery 那一列就是「全设计最坏」的所在地**（见 §一 那段）。")
+    A("注意它的性质：这条路径**不 gate 时钟** —— recovery 检查的是「异步控制端别在")
+    A("时钟沿附近动」，它 slack 小**不等于** 50 MHz 跑不动。`Design Timing Summary`")
+    A("的 WNS 现在被它占着，所以**别拿那一格反推板级余量**，要用 §二 的时钟级数。")
     A("")
     A("## 六、怎么复跑")
     A("")
@@ -292,25 +426,45 @@ def main():
     A("报告本身怎么来的：`sh rtl/vivado/run_board_synth.sh`（需 Vivado，**不需要板子**）。")
     A("⚠️ 从**仓库外目录**启动 Vivado —— 仓库路径含撇号会把综合引擎咬死。")
     A("")
-    A("脚本出文档前会自己锚三道，任一道对不上就报错退出、不生成文件：")
+    A("脚本出文档前会自己锚四道，任一道对不上就报错退出、不生成文件：")
     A("")
-    A("1. 筛出来的那条路径的 slack，等于同份报告 `Design Timing Summary` 里的 WNS")
-    A("   —— 防「按节名筛、筛到 `**async_default**` 那组」（§一 那个坑）。")
-    A("2. 明细里数出的 LUT 条数，等于报告自报的 `Logic Levels` —— 防明细行没解析全。")
+    A("1. 筛出来的那条路径的 slack，等于同份报告 `Intra Clock Table` 里 `sys_clk`")
+    A("   那一行的 WNS（**时钟级**）—— 防「按节名筛、筛到 `**async_default**` 那组」")
+    A("   （§一 那个坑）。")
+    A("1b. `Design Timing Summary` 的 **WNS** ＝ `sys_clk` 组与 `**async_default**` 组里的")
+    A("   **Recovery** 里更差的那个；**WHS** 同理，对 `**async_default**` 组的")
+    A("   **Removal** —— 防报告里出现本脚本没认出来的第三组路径 / 第三种检查。")
+    A("   ⚠️ **这条 2026-10-07 才加**：它反过来暴露了旧的")
+    A("   第 1 道锚本身在用错数（拿全设计最坏当时钟级 WNS 使，RTL 一改就误判）。")
+    A("2. 明细里数出的**逻辑级**条数，等于报告自报的 `Logic Levels` —— 防明细行没解析全。")
+    A("   ⚠️ 口径是「非走线、且非时序单元（`FD*`/`LD*`/`RAMB*`/`SRL*`）」，**不是只数**")
+    A("   `LUT*`**：pe4 那条路径中间有一级 `MUXF7`（专用多路器），它算一级逻辑但不叫 LUT。")
     A("3. 明细逐行延迟相加，等于报告自报的 `Data Path Delay` —— 防漏读或多读行。")
     A("")
-    A("这三道锚本身也有人验：**`python check_critical_paths_anchors.py`** 把每道锚本该")
-    A("拦住的失败人造出来（按节名筛、丢一行 LUT、丢一行 net），看它响不响；")
+    A("这四道锚本身也有人验：**`python check_critical_paths_anchors.py`** 把每道锚本该")
+    A("拦住的失败人造出来（按节名筛、把 async 两族混着取最坏、只数 LUT、丢一行 net），")
+    A("看它响不响；")
     A("顺带拿报告自己的 `route` / `logic` 两栏当**独立旁证** —— 那两栏是 Vivado 算的，")
     A("与我们怎么切段无关，对得上才说明数据路径那一段既没切多也没切少。")
+    A("")
+    A("⚠️ **锚 1b 和锚 2 的第一版都是错的，是这套阴性对照当场抓出来的**（2026-10-07）：")
+    A("1b 把 async 组 20 条一锅端取 min，拿 Removal 的 1.700 去比 WNS 2.490；")
+    A("2 只数 LUT，在 pe4 上得 14 而报告写 15。两道都**报假错**（把对的数判成错的）——")
+    A("跟它们本来要防的「报假对」是一对。**没有阴性对照，这两条会一直错下去**，")
+    A("因为三档里 pe1/pe16 恰好都能蒙对。")
     A("")
 
     OUT.write_bytes("\n".join(L).encode("utf-8"))   # "wb" = 保持 LF
     print(f"已生成 {OUT}（{len(L)} 行）")
     for pe in PES:
         p = data[pe]["setup"][0]
-        print(f"  pe{pe}: WNS +{p['slack']:.3f} ns (= Design Timing Summary "
-              f"{data[pe]['wns']:.3f})  {short(p['src'])} -> {short(p['dst'])}")
+        rec = min(data[pe]["fam"]["Setup"], key=lambda d: d["slack"])
+        rem = min(data[pe]["fam"]["Hold"], key=lambda d: d["slack"])
+        extra = (f"，async 组 Recovery {rec['slack']:.3f} / Removal {rem['slack']:.3f}"
+                 if data[pe]["asyncs"] else "，无 async 组")
+        print(f"  pe{pe}: 时钟级 WNS +{p['slack']:.3f} ns"
+              f"（全设计最坏 {data[pe]['wns']:.3f}{extra}）  "
+              f"{short(p['src'])} -> {short(p['dst'])}")
     return 0
 
 

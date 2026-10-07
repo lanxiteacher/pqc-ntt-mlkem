@@ -101,7 +101,7 @@ foreach step {opt_design place_design route_design} {
 }
 
 file mkdir $repdir
-# 报告名一律带折叠度前缀 —— 三档的数字本来就不同（pe1 LUT 5025 / pe4 6203），
+# 报告名一律带折叠度前缀 —— 三档的数字本来就不同（pe1 LUT 5074 / pe4 6529），
 # 同名会把已提交的上一次结果覆盖掉。2026-10-04 实际发生过一次：
 # pe4 那轮一启动就 rm 掉了仓库里已提交的 pe1 三份报告。
 set reppfx "board_pe$pe"

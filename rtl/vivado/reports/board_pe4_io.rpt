@@ -1,7 +1,7 @@
 Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 ------------------------------------------------------------------------------------------------------------
 | Tool Version              : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
-| Date                      : Sun Oct  4 16:03:44 2026
+| Date                      : Wed Oct  7 19:33:47 2026
 | Host                      : lanxiteacher running 64-bit major release  (build 9200)
 | Command                   : report_io -file C:/Users/l'x/Desktop/FPGA/rtl/vivado/reports/board_pe4_io.rpt
 | Design                    : ntt_board_top

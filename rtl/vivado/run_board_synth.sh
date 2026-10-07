@@ -13,7 +13,7 @@
 #     rtl/vivado/reports/board_pe<N>_io.rpt       引脚落位（上板前核对用）
 #       ⚠️ **N 是折叠度，三份报告都带** —— 早先不带，于是「跑 pe4 就把 pe1 那三份
 #          覆盖掉了」（2026-10-04 实际发生过：pe4 综合一启动就 rm 掉了已提交的 pe1 报告）。
-#          三档的数字本来就不同（pe4 LUT 6203 vs pe1 5025），覆盖等于把对照关系删掉。
+#          三档的数字本来就不同（pe4 LUT 6529 vs pe1 5074），覆盖等于把对照关系删掉。
 #     rtl/vivado/_runs/ntt_board.bit        bitstream（**不提交**，见 .gitignore）
 #     <DCP>/ntt_board_pe<N>.dcp             布线后的 checkpoint（**只在给了 DCP 时出**，不提交）
 #       ⚠️ 名字里**带折叠度**，与报告同一个理由：三档的关键路径在不同位置
