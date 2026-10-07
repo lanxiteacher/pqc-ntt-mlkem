@@ -163,8 +163,13 @@ Zynq-7000 上的 Kyber NTT，**2908 LUT / 170 FF / 9 DSP / 1935 周期 / 45 MHz 
   —— 与上一项同一批，待回原文 PDF 统一（报告 §1.3 已按 192 取值并加注）
 - ✅ **报告正文已成（09-30）**：`../report/design/01_background_and_related_work.md` —— 本文件是它的原料，
   章节体保留了主表与读表警告，去掉了溯源细节（细节留在本文件）
-- ⬜ 配图：折叠度 ↔ 周期数 / 资源 的曲线（数据齐了，在 §二）
-- ⬜ `kred24`(Tosun) 的五种模约减权衡表（`../research/pqc-ntt_ml-kem_compendium.md` §2.3）—— 属「设计与创新点」章节，不在这张表里
+- ✅ **配图已出（10-07 复核）**：折叠度 ↔ 周期数 / 资源 的曲线就是
+  `../report/figures/folding_sweep.svg`（`gen_figures.mjs` 从 `metrics.csv` 生成，
+  三面板：NTT 周期数 / LUT / 推算 Fmax）—— 此条原挂「还没做」，是**过期开口**
+- ✅ **`kred24`(Tosun) 五种模约减权衡表：不做** —— 源头
+  `../research/pqc-ntt_ml-kem_compendium.md` §2.3 / §569 自己标明它**面向 FHE 的 32/64 位素数、
+  跑在 DSP48E2 上，与 Kyber（12 位系数 / DSP48E1）不可比大小**，「Kyber 用不上，只读方法论」。
+  **造这张表会引入一列不可比数据**，故不补
 
 ## 相关
 

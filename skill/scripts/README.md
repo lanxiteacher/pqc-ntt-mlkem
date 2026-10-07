@@ -51,7 +51,7 @@
 |---|---|---|---|---|
 | `check_data_format.sh` | 任何要**逐字节比**的数据文件 | `sh check_data_format.sh <文件或目录> [...]` | 只查「**每行 3 位小写十六进制 + LF**」这一种格式 | 10-05 实测 `refsim/batch/`：53 文件 / 71168 行 → **23 文件 / 1290 行**不合规，并标出 **1 个 CRLF 文件**；每条违规给行号与原因（未补零 / CRLF / 末行缺换行可辨） |
 | `check_nondegenerate.sh` | 「全中」结论的可信度存疑时 | `sh check_nondegenerate.sh <文件或目录> [...]` | 判据（不同值 ≥ 30%、最常见 ≤ 2%）是**经验阈值**，非普适 | 10-05 实测：`ntt_batch_in` 4096 行 → **2355 个不同值（57.5%）、最常见值 0.17%**；intt / pwm2 均 2374（58.0%）、0.15% |
-| `check_reproducible.sh` | 判定「别人能不能跑通」时 | `sh check_reproducible.sh [--from-remote]` | 默认从**本地** clone **查不出「没 push」** → 判可复现须加 `--from-remote` | 起源于真实事故（两条脚本依赖 3 个被 `.gitignore` 挡住的 `.exe`，本机看不出来）。10-05 `--from-remote` **首次真绿**（通过 4／跳过 0／失败 0，退 0）；同轮逼出 `run_intt_pwm2_check.sh` 把入库文件写成 CRLF |
+| `check_reproducible.sh` | 判定「别人能不能跑通」时 | `sh check_reproducible.sh [--from-remote]` | 默认从**本地** clone **查不出「没 push」** → 判可复现须加 `--from-remote` | 起源于真实事故（两条脚本依赖 3 个被 `.gitignore` 挡住的 `.exe`，本机看不出来）。10-05 `--from-remote` **首次真绿**（通过 4／跳过 0／失败 0，退 0）；同轮逼出 `run_intt_pwm2_check.sh` 把入库文件写成 CRLF（**10-06 已修**：`cp`→`tr`；10-07 复跑确认工作区干净、4/4 过） |
 | `refsim/` 四条入口（**不复制**） | 验「RTL 算得对不对」（而非「作者 testbench 跑没跑通」） | `cd refsim && sh run_{fntt,intt_pwm2,polmul}_check.sh` / `run_ntt_layers.sh` | 需 gcc + iverilog + python3；覆盖**止于一次多项式乘法** | 四条链各 **16 组 × 256/256** 全过；10-05 在**非作者**机器上、全新 clone 逐条真跑通 |
 
 > 「从哪些失败中总结」：前三条分别来自——`diff` 假失败（格式坑）、

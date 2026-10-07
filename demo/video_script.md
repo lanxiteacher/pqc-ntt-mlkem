@@ -137,8 +137,9 @@
 - **终端跑验证链**（段 4、7）：`export PATH="/c/iverilog/bin:$PATH"` 先，
   再从 `../refsim/` 跑 `run_fntt_check.sh`；段 7 跑
   `sh ../skill/scripts/check_reproducible.sh --from-remote`（要联网，走远端 clone）。
-  ⚠️ 跑完 `--from-remote` 会把 `refsim/batch/ntt_batch_{in,exp}.txt` 写成 CRLF、
-  工作区变脏（已知缺陷，已报 B）—— 录完 `git checkout --` 那两个文件，别提交进去。
+  ✅ **2026-10-07 录制前置体检**：以上两条链路已在本机实跑 —— `run_fntt_check.sh` 16/16 组全绿、
+  `--from-remote` **通过 4／失败 0**。此前那条「跑完 `--from-remote` 会弄脏工作区」的缺陷
+  **已修**（B 10-06 把 `cp` 改成 `tr`），**不必再 `git checkout --`**。
 - **矢量图**（段 2、6）：`../report/figures/*.svg`，用浏览器放大后录屏，别用截图放大（糊）。
 
 ### 要 A、B 给的（本机做不了）
