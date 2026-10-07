@@ -15,6 +15,11 @@
        回 `#OK ABORT` 并作废本事务；**每条错误回帧之后都必须回到等命令行**。
     6. **草案真没写**的那几条路径仍然显式 raise（不替协议编规矩）。
 
+⚠️ 本层**不验**「开机那一行 `#RDY`」
+    2026-10-07 A 把 `#RDY <ver> <build> <errs>` 落进了 RTL，陪练跟着学：复位后
+    第一次 `feed()` 会多吐一行。本文件每条用例都用 `fresh()` 开陪练，**先把它取走** ——
+    那条路径专归 `test_host.py` 第 10 条（`Host.handshake()`）验。理由见 `fresh()`。
+
 ⚠️ 覆盖范围：5 条命令里**只覆盖 3 条**。
    `#PMUL TIME` / `#PMUL FULL` 被**外部问题**挡住 —— 向量文件没补零，见 BLOCKED。
    本脚本装了一条**绊线**：向量一修好，它会主动报错，逼着把这两条接回来。
@@ -74,6 +79,25 @@ def bad_lines(name):
     return out
 
 
+def fresh(build=1):
+    """开一台陪练，并**先把它开机自发的那行 `#RDY` 取走**。
+
+    2026-10-07 A 把 `#RDY <ver> <build> <errs>` 落进了 RTL（`proto_fsm.v` 的
+    `S_RDY`，复位落点由 `S_IDLE` 改成 `S_RDY`），陪练跟着学：复位之后**第一次**
+    `feed()` 会在这条应答**前面**多吐一行 `#RDY`（`fake_board.boot_lines()`）。
+    不取走的话，本文件每条用例读到的第一行都是它，后面全体错位一格。
+
+    ⚠️ 本层验的是**数据段**行为，**不是**「吃掉 `#RDY`」那一条 —— 那一条在
+       `test_host.py` 第 10 条（`Host.handshake()`），生产路径上也由它读掉，
+       而且**内容要留着**（`<build>` 是解包 FNTT 读出序的唯一依据）。
+       这里按测试的方便先取走；取走之后本文件每条断言说的还是「数据段」那件事。
+       （同样的做法：`test_host.py` 的 `drain_boot()`、`test_link.py` 的 `fresh_link()`。）
+    """
+    b = fake_board.FakeBoard(build=build)
+    b.boot_lines()
+    return b
+
+
 def cmd(body):
     return proto.append_checksum(body)
 
@@ -125,7 +149,7 @@ def main():
     print("")
 
     # ---- 1) #PING 不该开数据段 ----
-    b = fake_board.FakeBoard()
+    b = fresh()
     got = b.feed(cmd("#PING"))
     want, _ = frame("#OK PING", table)
     check(got == [want], "#PING 的应答：实际 %r，期望 %r" % (got, [want]))
@@ -140,7 +164,7 @@ def main():
         if cmd_body in BLOCKED:
             continue                       # 被外部问题挡住，见下面 2b
         covered += 1
-        b = fake_board.FakeBoard()
+        b = fresh()
         firsts = {}
         for i in range(n_groups):
             data = []
@@ -200,7 +224,7 @@ def main():
     bad_a = list(good_a)
     bad_a[2] = "000" if good_a[2] != "000" else "001"
 
-    b_bad = fake_board.FakeBoard()
+    b_bad = fresh()
     out_bad = run(b_bad, "#PMUL NTT 1", bad_a + good_b)
     exp_i = group_of("pwm2_batch_exp.txt", i)
     exp_0 = group_of("pwm2_batch_exp.txt", 0)
@@ -228,7 +252,7 @@ def main():
     check(k is not None, "第 %d 组 A 里找不到含字母的系数，大写这条测不了" % i)
     upper = list(good_a)
     upper[k] = upper[k].upper()
-    b_up = fake_board.FakeBoard()
+    b_up = fresh()
     out_up = run(b_up, "#PMUL NTT 1", upper + good_b)
     check(upper[k] != good_a[k], "被改的那一行大小写没变，这条没测到东西")
     check(b_up.group == i, "大写应当等价，应认成第 %d 组，实际 %r" % (i, b_up.group))
@@ -238,7 +262,7 @@ def main():
           % (k + 1, good_a[k], upper[k], b_up.group, len(b_up.mismatches)))
 
     # ---- 5) 空行忽略、不计入行数（§5.5:541） ----
-    b_blank = fake_board.FakeBoard()
+    b_blank = fresh()
     out_blank = run(b_blank, "#PMUL NTT 1",
                     good_a[:10] + ["", "", "\r\n"] + good_a[10:] + good_b)
     check(b_blank.group == i, "夹空行后应仍认成第 %d 组，实际 %r" % (i, b_blank.group))
@@ -263,7 +287,7 @@ def main():
         ("0123",  4, "4 位：第 4 列是第一个越界的"),
     ]
     for line, want_pos, why in bad_cases:
-        b = fake_board.FakeBoard()
+        b = fresh()
         b.feed(cmd("#PMUL NTT 1"))
         got = b.feed(line)
         want = proto.append_checksum("#ERR 04 %d" % want_pos)
@@ -276,7 +300,7 @@ def main():
 
     # 6b) 行超时（T_LINE）-> #ERR 05，位置 = 已收到的行数
     print("")
-    b_to = fake_board.FakeBoard()
+    b_to = fresh()
     b_to.feed(cmd("#PMUL NTT 1"))
     for ln in good_a[:7]:
         b_to.feed(ln)
@@ -287,12 +311,12 @@ def main():
     check(b_to.received == [], "超时后行缓冲该清空，实际 %r" % (b_to.received,))
     print("6b) 收 7 行后 T_LINE 超时 -> %s" % got[0])
 
-    b_idle = fake_board.FakeBoard()
+    b_idle = fresh()
     check(b_idle.timeout() == [], "不在数据段里调 timeout() 不该回行（没有事务可超时）")
 
     # 6c) 数据段里收到 #ABORT -> #OK ABORT，本事务作废，能立刻接新命令
     print("")
-    b_ab = fake_board.FakeBoard()
+    b_ab = fresh()
     b_ab.feed(cmd("#PMUL NTT 1"))
     for ln in good_a[:5]:
         b_ab.feed(ln)
@@ -310,7 +334,7 @@ def main():
     print("    随后 #PING -> %s（说明真的回到了等命令行）" % after[0])
 
     # 校验对不上的 #ABORT 不算数 —— §5.2:299 把数据段里 # 开头的行默认判 04
-    b_ab2 = fake_board.FakeBoard()
+    b_ab2 = fresh()
     b_ab2.feed(cmd("#PMUL NTT 1"))
     got = b_ab2.feed("#ABORT*00")
     check(bool(got) and got[0].startswith("#ERR 04"),
@@ -318,7 +342,7 @@ def main():
     print("    #ABORT 校验错 -> %s" % got[0])
 
     # 6d) 超长命令行（§5.5:544）-> #ERR 04，位置 = 第 65 列
-    b_long = fake_board.FakeBoard()
+    b_long = fresh()
     got = b_long.feed("#" + "0" * 64)
     want = proto.append_checksum("#ERR 04 %d" % (fake_board.MAX_CMD_LEN + 1))
     check(got == [want], "65 字节命令行 -> 实际 %r，期望 %r" % (got, [want]))
@@ -336,7 +360,7 @@ def main():
     ]
     raised = 0
     for line, why in still_undefined:
-        b = fake_board.FakeBoard()
+        b = fresh()
         try:
             b.feed(line)
         except NotImplementedError:
