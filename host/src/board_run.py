@@ -321,7 +321,11 @@ def main(argv):
         print("   那不是 bug（KNOWN_ISSUES B4）—— 数值对拍要在真板子上做。")
 
     # ---- 跑一条事务 ------------------------------------------------------
-    txn = hst.run(args.command, data)
+    # `expect_rows`：五条带数据的命令，结果**恒为一组** = `GROUP_LEN` = 256 行
+    # （§4.2 每组 256 个系数；RTL 侧 `OUT_LINES` 也是写死的 256）。
+    # 传它是为了让 host 手里有一道**独立**核对 —— 见 `host.py` 的 `Transaction.expect`。
+    # ⚠️ 别在这里写 `256` 字面量：`GROUP_LEN` 是「一组多少行」的**唯一**出处。
+    txn = hst.run(args.command, data, expect_rows=vectors.GROUP_LEN)
 
     print("")
     print("收到 %d 行结果：%s" % (len(txn.rows), "、".join(txn.rows[:3]) or "(无)"))

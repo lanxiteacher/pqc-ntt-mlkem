@@ -3,7 +3,7 @@
 运行
     PYTHONIOENCODING=utf-8 python host/src/test_host.py
 
-它在验九件事
+它在验十一件事
     1. **顺利路径** —— 一条事务走到底，收到的 256 行逐行等于 *_exp.txt 里那一组；
     2. **超时 → 重试成功**（规则二）—— 先发 #ABORT*69、把 #OK ABORT 读掉、整条重发；
     3. **重试有上限** —— 命令永远超时但 #ABORT 有应答时，**恰好重发 3 次**后放弃，
@@ -18,6 +18,15 @@
        探活成功 / 板子回 `#ERR`（拒，不是故障）/ 静默超时 / 回显对不上 / 校验错 /
        首词不认识 / 回帧夹 `\r` 与空行，各归哪一类；并且钉住两条约定：
        **只发一次、不发 `#ABORT`**（那是事务重试的路子）。
+   10. **开串口先吃掉开机那行 `#RDY`**（`Host.handshake`，2026-10-07 A 落进 RTL）——
+       吃掉并记下折叠度 / 旧位流没有它时原样返回 False / 第一行不是 `#RDY` 时
+       **原样放回不吞**（这条保证它对旧位流无害）/ 校验错或字段数不对的不认。
+   11. **「发几行」和「收几行」是两个数**（2026-10-07 `#PMUL` 错位）——
+       `#PMUL NTT 1` 下行 512、板子只回 256，走到底；
+       `#DONE` 的行数必须和 `#BEGIN` 自洽；调用方给的 `expect_rows` 也要和
+       `#BEGIN` 自洽（给对了不碍事，给错了停整轮）。
+       ⚠️ **本条是唯一能把改前/改后分开的证据**：其余各条只用 `#NTT 1`，
+          那个命令 256 进 256 出，两个数碰巧相等，分辨不出来。
 
 关于「重试 3 次」到底算几次
     §5.5:518 写「整条事务从头重发，最多 3 次」。本文件按字面取**重发 3 次**
@@ -73,9 +82,14 @@ class FlakyLink(link.Link):
         "swallow"  喂给陪练（板子状态照常推进），但**把回帧吞掉** —— 制造超时
         "dead"     连陪练都不喂 —— 制造「链路死了」
     `inject` 是排队等着顶替 read_line 的假回帧，用来制造 #ERR / 错位。
+    `rewrite` 是**逐行过一道**的改写钩子（`bytes -> bytes`），陪练**照常正常回**，
+                 只把回来的某一行换掉 —— 用来造「回帧本身合法、但内容不对」的错位
+                 （第 11b 条：`#BEGIN` 说 256、`#DONE` 说 100）。
+                 ⚠️ 与 `inject` 的分工：inject 是**凭空**喂一行（板子没发），
+                    rewrite 是**改**板子真发的那一行 —— 后者才不会把帧序搞乱。
     """
 
-    def __init__(self, board, rule=None, inject=None):
+    def __init__(self, board, rule=None, inject=None, rewrite=None):
         # 陪练是**已上电**的：它开机自发的那一行 `#RDY` 已经在线路上了。
         # 本文件验的是**事务状态机**，不是「吃掉 `#RDY`」那一条（那是第 10 条），
         # 所以这里按测试需要先把它取走 —— 否则每条用例的第一行都会读到 `#RDY`。
@@ -84,6 +98,7 @@ class FlakyLink(link.Link):
         self.inner = link.LoopbackLink(board)
         self.rule = rule or (lambda data: "pass")
         self.inject = list(inject or [])
+        self.rewrite = rewrite
         self.writes = []                 # 电脑写出去的每一段字节，原样记着
 
     def write(self, data):
@@ -97,8 +112,12 @@ class FlakyLink(link.Link):
 
     def read_line(self, max_wait):
         if self.inject:
-            return self.inject.pop(0)
-        return self.inner.read_line(max_wait)
+            text = self.inject.pop(0)
+        else:
+            text = self.inner.read_line(max_wait)
+        if self.rewrite is not None and text is not None:
+            text = self.rewrite(text)
+        return text
 
     def discard_pending(self):
         return self.inner.discard_pending()
@@ -417,6 +436,74 @@ def main():
 
     print("  10a 新位流吃掉 + 记下 build=4 ✓ ｜ 10b 旧位流无 #RDY ✓")
     print("  10c 非 #RDY 原样放回（不吞）✓ ｜ 10d 校验错的不认 ✓ ｜ 10e 字段数不对的不认 ✓")
+
+    # ------------------------------------------------------------ 11
+    print("")
+    print("=== 11：#PMUL「发 512 行、只回 256 行」—— 收几行听板子的，不听自己的 ===")
+    # 2026-10-07 真板子撞出来的
+    # （logs/letter_2026-10-07_A_to_B_pmul_desync.txt，症状是整轮在 #BEGIN 上被判错位停掉）。
+    # 根因：host.py 原来只有一个 `count`，既当「我要发几行」又当「我要收几行」。
+    #   `#NTT 1` 恰好 256 进 256 出 —— 两个意思碰巧相等，所以这个 bug 一直没露头；
+    #   `#PMUL NTT 1` 是 512 进 256 出，板子回 `#BEGIN PMUL NTT 1 256`，
+    #   老代码拿它跟「我发了 512 行」比，对不上 → 规则四停整轮。
+    # §5.2:287 定死了：`#BEGIN <count>` 的 count = **板子即将发出的（结果）行数**。
+    # ⚠️ 这条用例是**唯一**能把改前和改后分开的证据 —— 别的模块只用 `#NTT 1`，
+    #    那个数两版都对，分辨不出来。
+    data_pmul = groups("pwm2_batch_a.txt")[0] + groups("pwm2_batch_b.txt")[0]   # 下行 A 256 + B 256
+    exp_pmul = groups("pwm2_batch_exp.txt")[0]
+
+    lk = FlakyLink(fresh_board())          # 用 FlakyLink 是为了能查 `.writes`（发了哪些字节）
+    t = host.Host(lk).run("#PMUL NTT 1", data_pmul)
+    print("  %s" % t.summary())
+    eq(len(data_pmul), 512, "本条用例的前提不成立：下行该是 512 行（A 256 + B 256）")
+    eq(t.sent, 512, "`Transaction.sent` 没记对「我发了几行」")
+    eq(t.recv, 256, "`Transaction.recv` 没记对「板子说回几行」")
+    eq(t.outcome, host.RESULT_OK, "#PMUL NTT 1 没成功 —— 就是 2026-10-07 那个错位")
+    eq(t.attempts, 1, "#PMUL 顺利路径不该重试")
+    eq(len(t.rows), 256, "收到的结果行数不对（该是 256 行结果，不是 512）")
+    eq(t.rows, exp_pmul, "收到的结果和 pwm2_batch_exp.txt 对不上")
+    eq(len(aborts(lk.writes)), 0, "顺利路径竟然发了 #ABORT")
+    eq(sum(1 for w in lk.writes if not w.startswith(b"#")), 512,
+       "往线上写的数据行不是 512 条（发送行数这一半老代码本来是对的，别改坏）")
+
+    # 11b `#DONE` 必须和 `#BEGIN` 自洽
+    #     造法：陪练**照常正常回**，只把 `#DONE` 那一行改掉，校验值重算成合法的 ——
+    #     这样考的就是「前后两个数自洽」，不是校验。
+    def bad_done(text):
+        if text.startswith(b"#DONE"):
+            return (proto.append_checksum("#DONE NTT 1 100") + "\n").encode("ascii")
+        return text
+
+    t = host.Host(FlakyLink(fresh_board(), rewrite=bad_done)).run(cmd, data)
+    eq(t.outcome, host.RESULT_STOP, "#BEGIN 说 256、#DONE 说 100，竟然没停整轮")
+    check("DONE 说的行数" in (t.error or ""),
+          "没报出「DONE 行数对不上」：%r" % (t.error,))
+    print("  11b 伪造 `#DONE NTT 1 100`（#BEGIN 说的是 256）→ STOP ✓")
+
+    # 11c `expect_rows` —— 拆开了「发/收」之后，`#BEGIN` 成了唯一权威，
+    #     板子若报一个「自己前后自洽（BEGIN==DONE）但整体是错的」数，就没第二个人核对。
+    #     `expect_rows` 就是补回来的那一道。先钉「它不许把正常路径搞坏」：
+    lk = FlakyLink(fresh_board())
+    t = host.Host(lk).run("#PMUL NTT 1", data_pmul, expect_rows=256)
+    eq(t.outcome, host.RESULT_OK, "给了**对的** expect_rows，反而把 #PMUL 弄失败了")
+    eq(t.expect, 256, "Transaction.expect 没记住调用方给的数")
+    eq(len(t.rows), 256, "给了 expect_rows 之后收到的行数不对")
+
+    # 11d 再钉「板子自报的数和它不一样 → STOP」，且要说清是哪两个数对不上。
+    #     ⚠️ 这里是拿一个**故意说错的 `expect_rows`** 去触发那道闸门（陪练只会按
+    #        proto.md 回 256，改不动它自己的 OUT_LINES）。所以本条验的是
+    #        「这道闸门会响、响的时候说的话对」，**不是**「真板子会这么干」。
+    lk = FlakyLink(fresh_board())
+    t = host.Host(lk).run("#PMUL NTT 1", data_pmul, expect_rows=512)
+    eq(t.outcome, host.RESULT_STOP, "板子报 256、调用方说该是 512，竟然没停整轮")
+    check("该是 512" in (t.error or ""),
+          "陈述里没写明「该是 512」：%r" % (t.error,))
+    check("256" in (t.error or ""),
+          "陈述里没写明板子报的是 256：%r" % (t.error,))
+    eq(len(t.rows), 0, "停整轮之前不该已经收了结果行")
+    eq(len(aborts(lk.writes)), 0, "停整轮不是重发 —— 不该发 #ABORT")
+    print("  11c 给对的 expect_rows（256）→ 照常 OK ✓")
+    print("  11d 给错的 expect_rows（512，板子报 256）→ STOP，且两个数都写进陈述 ✓")
 
     # ------------------------------------------------------------
     print("")

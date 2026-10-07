@@ -112,9 +112,22 @@ def parse_rdy(text):
 class Transaction:
     """一次事务的全部记录 —— 失败时要能说清「第几条、失败在哪一步」（§5.5:519）。"""
 
-    def __init__(self, command, count):
+    def __init__(self, command, sent, expect=None):
         self.command = command        # 命令正文，不带校验，如 "#NTT 1"
-        self.count = count            # 这条命令该发 / 该收几行
+        self.sent = sent              # **我发出去**几行数据（= len(data_lines)，由调用方给）
+        self.recv = None              # **板子会回**几行结果 —— 由 `#BEGIN <count>` 说了算。
+                                      # None = 还没等到 #BEGIN。探活（#PING/#ABORT）永不填它。
+                                      # ⚠️ 这两个量**不是一回事**，别再合成一个（2026-10-07 的账）：
+                                      #    #NTT 1     256 进 / 256 出  → 恰好相等，所以老代码蒙对了
+                                      #    #PMUL NTT 1 512 进 / 256 出  → 差一倍，老代码在这里错位
+        self.expect = expect          # 可选：这条命令**该**回几行结果。调用方给，host 不猜。
+                                      # 给了就多一道**独立**核对：板子自报的 `recv` != expect → STOP。
+                                      # 为什么要有它：把「发/收」拆开后，`#BEGIN` 成了唯一权威，
+                                      # 板子若报一个「自己前后一致（BEGIN==DONE）但整体是错的」数，
+                                      # 就没有第二个人核对了 —— 这一道把那份核对补回来。
+                                      # ⚠️ 为什么默认 None（不写死 256）：host.py **不该认识**
+                                      #    「哪种命令该回几行」，那是 proto 层的事。写死在这里就等于
+                                      #    在本文件里另立一份真相。所以由 board_run.py 传。
         self.outcome = None           # RESULT_OK / FAILED / STOP
         self.attempts = 0             # 一共试了几次（含首发）
         self.rows = []                # 最后一次尝试收到的结果行
@@ -196,13 +209,22 @@ class Host:
 
     # ------------------------------------------------------------ 对外
 
-    def run(self, command, data_lines):
+    def run(self, command, data_lines, expect_rows=None):
         """把一条事务走完。返回 Transaction（看 .outcome）。
 
         command    —— 命令正文，不带校验，如 "#NTT 1"
-        data_lines —— 要发的数据行（3 位小写 hex 的字符串），个数必须等于命令该收的行数
+        data_lines —— 要发出去的数据行（3 位小写 hex 的字符串）。
+                      ⚠️ **个数不必等于该收的行数** —— `#PMUL` 是 512 进 / 256 出。
+                      收几行**由板子的 `#BEGIN <count>` 说了算**（§5.2:287），不在这里定。
+                      （旧版这句写的是「个数必须等于命令该收的行数」——
+                        那正是 2026-10-07 `#PMUL` 错位的文字来源，A 抓出来的。）
+        expect_rows—— 可选：这条命令**该**回几行结果。**不给就完全信任板子自报的数**
+                      （`#BEGIN` 与 `#DONE` 仍必须自洽）；给了就多一道独立核对，
+                      板子自报的数和它不一样 → STOP（§5.5:527）。
+                      调用方 `board_run.py` 传的是 `vectors.GROUP_LEN`（一组 = 256 行，§4.2）。
+                      详见 `Transaction.expect` 上那段「为什么要它 / 为什么不写死 256」。
         """
-        txn = Transaction(command, len(data_lines))
+        txn = Transaction(command, len(data_lines), expect_rows)
         total = self.max_retries + 1
 
         for attempt in range(1, total + 1):
@@ -245,7 +267,7 @@ class Host:
         「等 #BEGIN」上白等 T_BEGIN（5 s）、再重发 3 次才放弃 —— **实测如此**。
         探活要的是「此刻有没有回声」，不是「把一条事务走完」。
 
-        返回一个 `Transaction`（`count=0`、`attempts=1`）：
+        返回一个 `Transaction`（`sent=0`、`recv=None`、`attempts=1`）：
             outcome == RESULT_OK       回的是 `#OK <原命令>`，而且**回显对得上**
             outcome == RESULT_FAILED   板子回了 `#ERR ...` —— 它**拒了**这条命令。
                                        这不是故障：链路活着，板子在按协议应答。
@@ -300,7 +322,7 @@ class Host:
         if v == "ERR":
             return self._on_err(txn, p)
 
-        txn.stage = "发 %d 行数据" % txn.count
+        txn.stage = "发 %d 行数据" % txn.sent
         for line in data_lines:
             self._send(txn, line)
 
@@ -313,8 +335,19 @@ class Host:
         if v == "ERR":
             return self._on_err(txn, p)
 
-        txn.stage = "收 %d 行结果（每行 T_RX=%g s）" % (txn.count, self.t_rx)
-        for i in range(txn.count):
+        # 独立核对（只有调用方给了 `expect_rows` 才有）：板子自报的结果行数
+        # 该等于**这条命令该回的行数**。不是「我发了几行」—— 那是老代码的病根。
+        # 这一道专门堵那种「板子自报的数前后自洽、但整体是错的」的情形：
+        # 没有它，`#BEGIN` 就是唯一权威，说 100 就收 100，收完还判成功。
+        if txn.expect is not None and txn.recv != txn.expect:
+            return self._stop(txn, "板子在 `#BEGIN` 里说结果有 %d 行，本命令该是 %d 行 —— "
+                                   "对不上（§5.2:287）。再往下收，行框就归属不明了。"
+                                   % (txn.recv, txn.expect))
+
+        # ⚠️ 收几行看**板子刚在 `#BEGIN` 里报的数**（`txn.recv`，§5.2:287），
+        #    不看「我发了几行」—— #PMUL 发 512 行，板子只回 256 行结果。
+        txn.stage = "收 %d 行结果（每行 T_RX=%g s）" % (txn.recv, self.t_rx)
+        for i in range(txn.recv):
             text = self._read_line(self.t_rx)
             if text is None:
                 return "timeout"
@@ -440,9 +473,21 @@ class Host:
             tail = payload[-1]
             if not tail.isdigit():
                 return ("DESYNC", "%s 的行数不是数字：%r" % (want, text))
-            if int(tail) != txn.count:
-                return ("DESYNC", "%s 说的行数是 %s，本事务该是 %d —— 对不上（§5.5:527）"
-                                  % (want, tail, txn.count))
+            n = int(tail)
+            if want == "BEGIN":
+                # §5.2:287 —— `#BEGIN <count>` 的 count = **板子即将发出的（结果）行数**。
+                # 它是这里的唯一权威：主机**无权**拿「自己发了几行」去比它
+                # （#PMUL 发 512 却只回 256，老代码就是在这里把它们混成一个数才错位的）。
+                # 记下来，`_attempt` 接下来就照这个数收行。
+                txn.recv = n
+            else:
+                # §5.2:288 —— `#DONE <count>`「同上」。两道闸门必须自洽：
+                # 开头说回 256 行、结尾又说 100 行，中间那一段归属就不明了。
+                if txn.recv is None:
+                    return ("DESYNC", "收到 #DONE 却从没见过 #BEGIN —— 帧序不对（§5.5:527）")
+                if n != txn.recv:
+                    return ("DESYNC", "DONE 说的行数是 %d，BEGIN 说的是 %s —— 对不上（§5.5:527）"
+                                      % (n, txn.recv))
         return (want, text)
 
     # ------------------------------------------------------------ 错误路径
