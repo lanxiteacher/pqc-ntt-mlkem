@@ -55,10 +55,16 @@ pe4/pe16 是自然序，选错就是 256 个全错。
 两条都**不碰硬件**：
 
 ```bash
-python host/src/board_run.py --loopback "#NTT 1"     # ① 拿陪练当对端，一个硬件都不用
+python host/src/board_run.py --loopback "#NTT 1"        # ① 进 = 出（256 进 / 256 出）
+python host/src/board_run.py --loopback "#PMUL NTT 1"   # ② 进 ≠ 出（512 进 / 256 出）
 ```
 
-判据：**① 必须绿**。
+判据：**两条都必须绿**。
+
+> ⚠️ **② 不能省 —— 2026-10-07 实测它就挂。** `#NTT 1` 走陪练是绿的，
+> `#PMUL NTT 1` 走陪练 **STOP**：`host.py` 里 `txn.count` 同时当「发几行」与
+> 「收几行」用，**只有进 ≠ 出时才露馅**。只跑 ① 等于专挑不会失败的那一档。
+> 细节与出处见 `logs/letter_2026-10-07_A_to_B_pmul_desync.txt`。
 
 **为什么要先做这一步**：真板子上失败时，要能分清是**上位机的问题**还是**电气层的问题**。
 陪练跑不通就是代码问题，跟板子无关。
