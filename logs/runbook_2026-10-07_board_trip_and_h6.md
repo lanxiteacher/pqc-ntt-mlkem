@@ -1,0 +1,301 @@
+# A × B 见面这一趟 · 板子（H6 联调 + 录屏 + 截图）
+
+> 2026-10-07 ｜ A 主责 ｜ 触发时机：**A、B 约好线下见面的那一天**
+>
+> **怎么调用**：见面时说一句「**走和 B 的清单**」→ 从 [§二](#二-见面当天照顺序做每步有判据) 第 1 步开始，
+> 一步一步做，每步都有判据，做完一步再进下一步。
+>
+> ⚠️ **§一 是见面前 A 一个人要做完的**，没做完不要约 B —— 否则白跑一趟：
+> 磁盘上现有那三份位流是 10-04 的，里面**没有 `#RDY`**。
+>
+> **本地副本**：`C:/fpga_work/和B见面_板子这一趟.md`（同一内容）。两份不一致时**以仓库这份为准**。
+
+---
+
+## 〇、这一趟要达成什么
+
+| # | 事 | 谁要 | 判据 |
+|---|---|---|---|
+| 1 | **H6 联调** —— B 的 `host/` 上位机第一次接真板子 | B（A 在场） | 至少一条事务跑通（`#NTT 1`，256/256） |
+| 2 | **录屏** —— C 的视频第 5 段（真板子）原始素材 | C | `assets/2026-10-07_A_*.mp4` |
+| 3 | **两组截图** —— Vivado 关键路径（核 + 板级）+ 串口实测 | C | `assets/` 里 3–4 张 PNG |
+
+（第 2、3 项的详细标准在 `logs/runbook_2026-10-05_h4_screenshot_and_recording.md`，
+本文件[§二](#二-见面当天照顺序做每步有判据) 只写「哪天做、按什么顺序做」。）
+
+---
+
+## 一、见面前（A 一个人做，不用板子、不用 B）
+
+### 第 1 步 ★ 重出三档位流（**这一条不做，整趟作废**）
+
+**为什么**：磁盘上现存的 `ntt_board.bit` 三份都是 **2026-10-04** 出的，
+而 `rtl/board/proto_fsm.v` 是 **2026-10-07 18:36** 才加的 `#RDY` 状态。
+**直接烧现有的 → 一行 `#RDY` 都不会有**，B 那边「自动认出折叠度」这条路当场断掉。
+
+```bash
+cd <仓库根>
+ROOT="$(pwd)"
+for p in 1 4 16; do
+  PE=$p VIVADO_RUNS="$ROOT/rtl/vivado/_runs/pe$p" sh rtl/vivado/run_board_synth.sh
+done
+```
+
+- ⚠️ `VIVADO_RUNS` **必须是绝对路径**。脚本内部用 `cygpath -m` 转 Windows 形式
+  （`rtl/vivado/run_board_synth.sh:122-128`），而它**对相对路径原样透传** ——
+  给相对路径的话 bitstream 会落到 `C:/vivado_scratch/` 底下（Vivado 的工作目录在仓库外），
+  **不报错**，只是你以为它在 `_runs/`。
+- 三档**串行跑**（各 10–20 分钟）：它们共用 `$SCRATCH/.Xil`，并跑会互相清目录。
+- 本机 Vivado 2020.2 的综合 helper 会间歇性报 `couldn't read file`：脚本自带 5 次重试，
+  不用管。**别的错**（`FATAL` / `ERROR`）要停下来看 `<RUNDIR>/board_synth_tryN.log`
+  —— 每轮单独一个日志，不会被下一轮盖掉。
+
+**判据（三档各核一遍）**
+
+| 核什么 | 该看到 |
+|---|---|
+| 日志末行 | `RESULT board DONE` |
+| `rtl/vivado/_runs/pe$p/ntt_board.bit` | 存在，4 045 673 字节，**时间戳是今天** |
+| `.../pe$p/ntt_board.pe` | 内容 = 档位本身（`1` / `4` / `16`） |
+
+> pe1 是**必需**（B 的 `unpack.DEFAULT_BUILD = 1`，联调就走这一档）。
+> pe4 / pe16 是**加分**：让 B 现场用 `--build 4` / `--build 16` 换档跑一遍 ——
+> 那是「三档都验过」的**当面证据**，也是报告 §3.13 那几张表唯一的一次现场复核。
+
+### 第 2 步 三档冒烟台全绿
+
+```bash
+for p in 1 4 16; do PE=$p sh rtl/board/run_board_check.sh; done
+```
+
+每档要看到 **S0 / S1 / S2 / S3 四项全 `[ ok ]`**，其中 S0 那一行是
+`#RDY 1 <档位> 0*7c` / `*79` / `*4a`（三档校验和各不同，见 §5.2）。
+
+- ⚠️ 三档**可以并跑**（各自的 `.vvp` 名字带档位），**同一档不能并跑两遍**。
+- ⚠️ 输出重定向到文件时，`vvp` 是**全缓冲**的 —— 挂住不动的仿真在文件里是
+  **一片空白**，看不出死在哪。tb 里已经加了每 1 ms 刷一次缓冲的心跳
+  （`rtl/board/tb/smoke_tb.v`），还是空白就说明它真没跑到。
+
+### 第 3 步 ⚠️ 重跑会改掉已提交的报告 —— 这次**不是**「漂了要还原」
+
+`run_board_synth.sh` 会**先删再写** `rtl/vivado/reports/board_pe*_{util,timing,io}.rpt`。
+
+`logs/runbook_2026-10-05_h4_screenshot_and_recording.md` §一 第 0 步写的是
+「数字若漂移，`git checkout -- rtl/vivado/reports/` 还原回来」——
+**那条建议的前提是「RTL 没变、数字不该漂」。现在 RTL 变了（加了 `#RDY`），
+漂是正常的、也是有意义的。**
+
+所以这次的做法反过来：
+
+```bash
+git status rtl/vivado/reports/
+git diff --stat rtl/vivado/reports/
+```
+
+- 若数字**变了** → **收下新报告**，并把差异告诉 C：
+  `report/design/03_performance_and_resources.md` §3.13.4 那张表
+  （WNS `+6.538 / +6.840 / +6.241 ns`、LUT 数）引的就是这几份报告。
+  **报告正文的数字必须与仓库里那份报告一致**，否则答辩一翻就露。
+- 若数字**一个都没变** → 在给 C 的信里报一句「加了 `#RDY` 后重跑，三档报告逐字节不变」，
+  这本身是「资源/时序对控制逻辑改动不敏感」的一句旁证。
+- ⚠️ 两种结果都要**说一声**，别让它静默发生。
+
+### 第 4 步 出截图要用的 `.dcp`（可与第 1 步合并）
+
+```bash
+ROOT="$(pwd)"
+DCP=/c/vivado_work/dcp PE=1 VIVADO_RUNS="$ROOT/rtl/vivado/_runs/pe1" \
+  sh rtl/vivado/run_board_synth.sh
+```
+
+⚠️ `C:/vivado_work/dcp/` 里现有的 `ntt_board_pe1.dcp` + `pe1_nc.dcp` 是 **10-05** 的，
+**同样是加 `#RDY` 之前**的布线。截图要跟提交的报告对得上，**必须重出**。
+（核那份 `pe1_nc.dcp` 走另一个脚本：`DCP=/c/vivado_work/dcp TREE=ncore sh rtl/vivado/run_folding_sweep.sh pe1`。）
+
+---
+
+## 二、见面当天（照顺序做，每步有判据）
+
+### 第 1 步 三处硬件，缺一条都表现为「看不到设备」
+
+- 下载器插**底板右侧的 14-Pin JTAG 座**（⚠️ `USB_UART` 与 `USB_SLAVE` 两个口**都不能**下载）
+- 底板 **P5 跳 PL 档**：**3–5、4–6 短接**
+- 启动拨码 **JTAG 档**：**两位都 ON**
+
+### 第 2 步 扫链，确认下载器看得见
+
+```bash
+sh rtl/vivado/run_board_prog.sh scan
+```
+
+只扫 JTAG 链、不烧任何东西。这一步过了再往下。
+
+### 第 3 步 烧 pe1，并**核对档位戳**
+
+```bash
+ROOT="$(pwd)"
+BIT="$ROOT/rtl/vivado/_runs/pe1/ntt_board.bit" sh rtl/vivado/run_board_prog.sh
+```
+
+- 烧之前脚本会把档位戳打印出来（「这版是 peN」）—— **核一眼是不是 1**。
+  档位戳从 `BIT=` 同目录的 `ntt_board.pe` 读，所以指着目录就不会拿错。
+- ⚠️ `_runs/`（根）和 `_runs/pe1/`、`_runs/pe4/`、`_runs/pe16/` 里**各有一份同名
+  `ntt_board.bit`**。裸敲 `sh rtl/vivado/run_board_prog.sh` 读的是 `_runs/` 根下那份
+  —— 那份是 **10-04 的 pe4**，`#RDY` 都没有。**一定带上 `BIT=`。**
+- ⚠️ 位流**掉电即失**，中途断过电就得重烧。
+- ✅ 看到 `End of startup status: HIGH` 才算 PL 配置完成。
+
+### 第 4 步 查串口号（核对用，不是输入）
+
+```bash
+powershell -NoProfile -Command "[System.IO.Ports.SerialPort]::GetPortNames()"
+```
+
+设备名 `USB-SERIAL CH340`，**115200-8N1**。COM 号**会变**（见过 COM10、COM9），
+Windows 按「插在哪个 USB 口」现分配 —— **不要写死**。
+B 的 `board_run.py` 自己扫串口（`link.find_port`），这一步是用来核对的：
+`--list` 扫不到时，先看这里有没有设备。
+
+### 第 5 步 先陪练，再真板子（B 跑）
+
+```bash
+python host/src/board_run.py --list
+python host/src/board_run.py --loopback "#NTT 1"      # ① 陪练，一个硬件都不用
+python host/src/board_run.py --build 1 "#NTT 1"       # ② 真板子
+```
+
+**① 必须先绿**。理由：真板子上失败时，要能分清是**上位机的错**还是**电气层的错**。
+`--loopback` 拿陪练当对端，跑不通就是代码问题，跟板子无关。
+
+### 第 6 步 ★ H6 正题 —— B 的上位机接真板子
+
+```bash
+python host/src/board_run.py --build 1 --check "#NTT 1"
+python host/src/board_run.py --build 1 --check "#PMUL NTT 1"
+```
+
+| 命令 | 期望 |
+|---|---|
+| `#NTT 1` | 256/256；核跑 905 拍 = **18.1 µs** |
+| `#PMUL NTT 1` | 256/256（A、B 两个 bank 都装） |
+| `--build 4` / `--build 16` | 先重烧对应档位再跑；FNTT 读出序随之变（pe1 交织、其余自然序） |
+
+- ⚠️ **`--build` 必须与板子里烧的那一档一致**。烧 pe4 却按 pe1 解包 → **FNTT 256 个全错**，
+  看着像 RTL 挂了。响亮失败，不会静默。
+- ⚠️ **`--loopback` + `--check` 必然全错**，那是陪练回的是文件序，不是 bug。
+- 端到端耗时约 **0.18 s / 0.27 s**，**三档几乎一样** —— 那是**串口搬运**的时间，
+  核本身只占 **0.010%**。**别把它当成「折叠度没生效」**。
+
+### 第 7 步 录屏（C 的视频第 5 段）
+
+画面里要**同时**看得到（清单抄自 `runbook_2026-10-05...md` §二 第 6 步，
+下面这张延迟表是**订正过的**）：
+
+- 串口号 + `115200-8N1`（证明走真串口、参数对）
+- 每条事务**发出去的帧**（形如 `#NTT 1*xx`）
+- 板子回回来的**逐行比对结果**（`256 / 256 全中`）
+- **板子本身在画面里**（电源灯亮着）—— 证明是真板子，不是仿真
+- ⚠️ **别只录「结果对」那一屏** —— 「发出」和「收回」都要在，否则看不出是在跟板子对话
+
+**核的延迟（`rtl/H1_port_spec.md` §七 实测，@板上 50 MHz）**
+
+| 档 | 拍数 | 时间 |
+|---|---:|---:|
+| pe1 | 905 | **18.1 µs** |
+| pe4 | 232 | 4.66 µs |
+| pe16 | 69 | **1.40 µs** |
+
+> ⚠️ 旧手册和 10-05 那封信里写的「pe1 **7005 拍 = 0.140 ms**」是**错的**：
+> 7005 是探针 `rtl/probes/core_equiv_tb.v` **整套场景**的比对长度
+> （2 bank × 5 运算 + 4 次载入 + 8 次读出），**不是核跑一趟**。
+> 已订正在 `logs/letter_2026-10-07_A_to_C.txt` §一。
+
+存 **`assets/2026-10-07_A_<英文一句话>.mp4`**（英文名，见 §3.3.5.4）。
+
+### 第 8 步 两组截图
+
+步骤见 `logs/runbook_2026-10-05_h4_screenshot_and_recording.md` §一（Tcl 那三行可以直接抄），
+**但 `.dcp` 要换成 [§一 第 4 步](#第-4-步-出截图要用的-dcp可与第-1-步合并) 重出的那份**：
+
+| 组 | 源 `.dcp` | 关键路径端点 |
+|---|---|---|
+| 板级 | `C:/vivado_work/dcp/ntt_board_pe1.dcp` | `u_line/line_len_reg[2]/C` → `u_fsm/tx_len_reg[6]/D` |
+| 核 | `C:/vivado_work/dcp/pe1_nc.dcp` | `u_core/BTF_GEN_BLOCK[0].btfu/mm0/im0/P0/CLK` → `.../w5r0_reg[3]/D` |
+
+- ⚠️ 核那份 slack 是 **−0.936（VIOLATED）**，这是**对的** —— 核的约束是故意收紧的 5 ns。
+  **别在截图里把它当问题。**
+- ⚠️ 存 `assets/`，**不要**直接放 `report/figures/`（那里只放 C 排版好的那版）。
+- ⚠️ `show_schematic` 只在 GUI 里有效，批处理里静默返回 —— 失败的三条退路见旧手册 §一 第 5 步。
+
+### 第 9 步 收工核对
+
+- [ ] 位流烧进去了吗？（`End of startup status: HIGH`）
+- [ ] `#RDY` 收到了吗？（这是本次重烧的**唯一目的**，没收到就白烧了）
+- [ ] `#NTT 1` 256/256 了吗？
+- [ ] 录屏、截图各存进 `assets/` 了吗？
+- [ ] `run_board_prog.sh` 的日志留了吗？（`rtl/vivado/_runs/board_prog.log`）
+
+---
+
+## 三、★ B 来之前必须先做的一件事（不改，第一条命令必挂）
+
+`rtl/board/proto_fsm.v` 复位后**不等命令**自发一行 `#RDY <ver> <build> <errs>`（§5.2），
+复位落点已经改成 `S_RDY`（不是 `S_IDLE`）。
+
+而 B 的上位机**现在不认这一行**：
+
+- `host/src/host.py:61` —— `HEAD_KINDS = {"#OK", "#BEGIN", "#DONE", "#ERR"}`，**不含 `#RDY`**
+- `host/src/host.py:297-299` —— `_parse()` 认不出首词就返回 `DESYNC`
+- `host/src/host.py:320-322` —— 就算认出来了，`kind != want` 也是 `DESYNC`
+- `DESYNC` = **规则四：停整轮**（`§5.5:527`）
+
+**症状**：第一条命令就报「回帧首词不认识：`#RDY 1 1 0*7c`」或「正等 `#OK`，收到的却是 `#RDY`」，
+**看起来像协议实现错了**，其实是这一行。
+
+**什么时候会撞上（与顺序有关，两种顺序都要能扛）**
+
+| 顺序 | 会不会撞上 |
+|---|---|
+| 先烧位流、后开串口 | **不会** —— `#RDY` 在串口打开**之前**就发完了，PC 端收不到（也就拿不到 `<build>`） |
+| 先开串口、后烧位流 / 按复位 | **会** —— JTAG 配置会复位设计，`#RDY` 当场就发出来了 |
+
+见面那天两种顺序都可能出现（尤其为了**演示 `#RDY` 本身**，一定会用第二种）。
+
+**B 的改法**（格式 B 定，A 照发）：开串口之后**先无条件收一行**，
+`startswith("#RDY ")` 就吃进去、把 `<build>` 记下来（`--build` 没显式给就用它），
+不是 `#RDY` 就当普通回帧往下走 —— 这样对**还没烧新位流的老板子**也兼容。
+
+**顺带销两条过期的注释**（B 的文件，A 不动）：
+`host/src/board_run.py:35` 与 `host/src/unpack.py:148` 都写着
+「板子端**尚未实现** `#RDY`（A 侧零命中）」—— **2026-10-07 已经不成立了**。
+
+> **给 B 的活**：来之前跑通 `python host/src/board_run.py --loopback "#NTT 1"`，
+> 并**确认它能在真板子上吃掉 `#RDY` 那一行**（没有真板子时，可以先对着
+> `host/src/fake_board.py` 让陪练多发一行 `#RDY` 来测）。
+> 这样见面那天的失败才只可能是电气层的，不是解析层的。
+
+---
+
+## 四、故障对照表
+
+| 症状 | 最可能的原因 | 怎么办 |
+|---|---|---|
+| 扫链扫不到设备 | 第 1 步三处硬件有一处不对 | 下载器是不是插在 14-Pin 座；P5 跳线；拨码 |
+| 烧进去了，但一条 `#RDY` 都没有 | 烧的是 10-04 的旧位流 | 回 [§一 第 1 步](#第-1-步--重出三档位流这一条不做整趟作废) 重出，带 `BIT=` 重烧 |
+| 第一条命令就报错位 / `#ERR 01` | 就是 [§三](#三-b-来之前必须先做的一件事不改第一条命令必挂) 那行 `#RDY` | 让 B 先吃掉首行 |
+| `--build` 给了，FNTT 还是 256 个全错 | 板子里烧的档位与 `--build` 不一致 | 核 `ntt_board.pe`；重烧，或改 `--build` |
+| 全部命令超时 | 串口开错口 / 波特率 / 板子没配置 | `--list` 看设备名；回第 2、3 步 |
+| 综合报 `couldn't read file` | 2020.2 helper 抖动（已知） | 等脚本自己重试；连报 5 次才要人看 |
+| bitstream 生成在 `C:/vivado_scratch/` 底下 | `VIVADO_RUNS` 给了相对路径 | 改用 `$(pwd)` 拼的绝对路径重跑 |
+
+---
+
+## 五、做完之后
+
+1. `assets/` 有新增 → **告诉 C**（他的目录，他是收口的人）
+2. `rtl/vivado/reports/` 若数字变了 → **告诉 C**（报告 §3.13 引的就是它）
+3. B 的 `host/src/` 若在见面当天有改动 → 那在他的目录里，A 不代劳
+4. 位流是**不提交**的（`.gitignore`）—— 要留证据就留**烧录日志**与**录屏**
+5. 收工照旧：`git pull` → `git add` → `git commit -F <UTF-8 文件>` → `git push`
+
+—— 生成于 2026-10-07

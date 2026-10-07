@@ -52,7 +52,24 @@
 //    新命令的第一个字节，uart_line_rx 里 clr 的优先级高于 rx_done，**首字符会被丢掉**。
 //
 // ---------------------------------------------------------------------------
+// 上电后**板子先自发一行**（§5.2 应答表第一行 + §六第 8 条）
+//
+//   复位释放 → S_RDY → 发一次 `#RDY <ver> <build> <errs>` → 进 S_IDLE 等命令。
+//   三个字段（取值由 B 于 2026-10-06 定死，见 proto.md §5.2 / §九(f)）：
+//     <ver>   恒 "1"（协议 v1.0）
+//     <build> = **折叠度** PE_NUMBER（1 / 4 / 16）—— 电脑端**唯一推不出来**的信息：
+//              FNTT 的**读出**序随折叠度分档，而折叠度编译进位流、命令里没有它
+//              （§5.3.4 那张表下唯一需要它的那一格）。**这一行就是那个洞的解**。
+//     <errs>  本次上电（= 本次复位）以来**已发出**的 `#ERR` 条数，十进制、不补零。
+//   三档整行校验和：`#RDY 1 1 0*7c` / `#RDY 1 4 0*79` / `#RDY 1 16 0*4a`。
+//
+//   ⚠️ **尽力而为**：上电瞬间电脑多半还没开串口监听，**丢了照常工作**，
+//      电脑端**不许依赖收到它**（想确认板子在不在，发 `#PING`）。所以不重发、不重试。
+//      ⚠️ 也别指望它当握手 —— 它是**单向通报**，没有任何应答。
+//
+// ---------------------------------------------------------------------------
 // 应答帧长什么样（§5.2 应答表 + 错误码表）
+//   #RDY   <ver> <build> <errs>  上电自发一次，见上
 //   #OK    <原命令>              —— 回显是同步的第一道保险
 //   #BEGIN <原命令> <count>      count = 即将发出的数据行数（计算类是 256）
 //   #DONE  <原命令> <count>      同上
@@ -161,16 +178,19 @@ module proto_fsm #(
                S_LOAD  = 4'd3,   // burst 进核
                S_START = 4'd4,   // 发 start_*，等 done
                S_READ  = 4'd5,   // 发 read_a，把 256 拍接回来
-               S_OUT   = 4'd6;   // 逐行发结果
+               S_OUT   = 4'd6,   // 逐行发结果
+               S_RDY   = 4'd7;   // 复位释放后自发一次 `#RDY`（只走一次，见 §5.2）
 
     // ---- 应答种类 ----
-    localparam RK_OK = 2'd0, RK_BEGIN = 2'd1, RK_DONE = 2'd2, RK_ERR = 2'd3;
+    localparam RK_OK = 3'd0, RK_BEGIN = 3'd1, RK_DONE = 3'd2, RK_ERR = 3'd3,
+               RK_RDY = 3'd4;
 
     // ---- 固定前缀（右对齐；ASCII 写数值不写转义字符串，理由见 cmd_parse.v 头部）----
     localparam [31:0] P_OK    = 32'h23_4F_4B_20;            // "#OK "
     localparam [55:0] P_BEGIN = 56'h23_42_45_47_49_4E_20;   // "#BEGIN "
     localparam [47:0] P_DONE  = 48'h23_44_4F_4E_45_20;      // "#DONE "
     localparam [39:0] P_ERR   = 40'h23_45_52_52_20;         // "#ERR "
+    localparam [39:0] P_RDY   = 40'h23_52_44_59_20;         // "#RDY "
 
     // ---- 计数后缀 ----
     localparam [31:0] SFX_256 = 32'h20_32_35_36;            // " 256"
@@ -270,7 +290,7 @@ module proto_fsm #(
     // =====================================================================
     // 3. 应答缓冲
     // =====================================================================
-    reg  [1:0]         resp_kind;
+    reg  [2:0]         resp_kind;
     reg  [3:0]         after_state;
     reg  [3:0]         resp_ph;         // 0 装正文 / 1 追校验 / 2 起发 / 3 等发完
     reg  [6:0]         bi;
@@ -304,6 +324,35 @@ module proto_fsm #(
             dg = 8'h30 + n;
         end
     endfunction
+
+    // ---- `#RDY <ver> <build> <errs>` 的两个数字字段 ----------------------
+    //   §5.2：复位释放后**主动发一次**，电脑端不问它也照常工作。
+    //   `<build>` 就是**折叠度** —— 电脑端**唯一推不出来**的那个信息：
+    //   FNTT 的**读出**序随折叠度分档（pe1 交织｜pe4、pe16 自然序），
+    //   而折叠度是**编译进位流**的、命令里没有这个字段（见 §5.3.4 那条 ⚠️）。
+    //   三档各自的整行校验和（算法同 §5.4）：*7c / *79 / *4a。
+    wire [3:0]  pe_10  = PE_NUMBER / 10;
+    wire [3:0]  pe_1   = PE_NUMBER % 10;
+    wire [1:0]  pe_len = (PE_NUMBER >= 10) ? 2'd2 : 2'd1;
+    wire [15:0] pe_buf = { dg(pe_10), dg(pe_1) };   // 右对齐，末字节 = 个位
+
+    //   `<errs>` = 本次上电（= 本次复位）以来**已发出**的 `#ERR` 条数，十进制不补零。
+    //   ⚠️ **封顶 999**：它是给人看的诊断量，不是计数器寄存器 —— 真连爆 1000 条错，
+    //      999 已足够说明「一直在错」；封顶同时省掉一套 5 位十进制渲染
+    //      （既省 LUT，也省掉一条除法器的逻辑深度）。
+    reg  [9:0]  errs;
+    wire [3:0]  er_100 = errs / 10'd100;
+    wire [3:0]  er_10  = (errs / 10'd10) % 10'd10;
+    wire [3:0]  er_1   = errs % 10'd10;
+    wire [23:0] er_dec = { dg(er_100), dg(er_10), dg(er_1) };   // 右对齐
+    wire [1:0]  er_len = (errs >= 10'd100) ? 2'd3
+                       : (errs >= 10'd10 ) ? 2'd2 : 2'd1;
+
+    //   `#RDY` 行内各字段的字节起点（行形 `#RDY 1 <build> <errs>`）：
+    //     [0..4] "#RDY " ｜ [5] "1" ｜ [6] 空格 ｜ [7..] <build> ｜ 空格 ｜ <errs>
+    wire [6:0]  rdy_pe_off = 7'd7;
+    wire [6:0]  rdy_sp_off = 7'd7 + { 5'b0, pe_len };
+    wire [6:0]  rdy_er_off = rdy_sp_off + 7'd1;
 
     // 十进制渲染（0..999）→ 3 字节右对齐 + 有效位数（去前导零）
     wire [3:0]  p_100 = e_pos_val / 10'd100;
@@ -405,6 +454,35 @@ module proto_fsm #(
                 end
             end
 
+            // ---- "#RDY " + "1" + " " + <build> + " " + <errs> ----
+            //   行全长 = 5 + 1 + 1 + pe_len + 1 + er_len = 8 + pe_len + er_len
+            //   （pe1/errs=0 → 10 字节 `#RDY 1 1 0` → *7c）
+            RK_RDY: begin
+                rblen = 7'd8 + { 5'b0, pe_len } + { 5'b0, er_len };
+
+                if (bi < 7'd5) begin
+                    is    = 5 - 1 - bi;
+                    rbyte = P_RDY[is*8 +: 8];
+                end
+                else if (bi == 7'd5) begin
+                    rbyte = 8'h31;                          // <ver> 恒为 "1"（协议 v1.0）
+                end
+                else if (bi == 7'd6) begin
+                    rbyte = 8'h20;                          // 空格
+                end
+                else if (bi == rdy_sp_off) begin
+                    rbyte = 8'h20;                          // <build> 与 <errs> 之间的空格
+                end
+                else if (bi < rdy_sp_off) begin
+                    is    = pe_len - 7'd1 - (bi - rdy_pe_off);
+                    rbyte = pe_buf[is*8 +: 8];
+                end
+                else begin
+                    is    = er_len - 7'd1 - (bi - rdy_er_off);
+                    rbyte = er_dec[is*8 +: 8];
+                end
+            end
+
             default: ;
         endcase
     end
@@ -460,8 +538,10 @@ module proto_fsm #(
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            state          <= S_IDLE;
+            // ⚠️ 复位落点是 **S_RDY**，不是 S_IDLE —— 上电/按键后先自发一行 `#RDY`。
+            state          <= S_RDY;
             after_state    <= S_IDLE;
+            errs           <= 10'd0;
             resp_kind      <= RK_OK;
             resp_ph        <= 4'd0;
             bi             <= 7'd0;
@@ -513,6 +593,31 @@ module proto_fsm #(
             rx_max_bytes <= 8'd64;
 
             case (state)
+
+            // =============================================================
+            // S_RDY —— 复位释放后**自发一次** `#RDY <ver> <build> <errs>`
+            //
+            //   §5.2 原文：它是**尽力而为**的一行 —— 上电瞬间电脑多半还没开
+            //   串口监听，**这一行丢了照常工作**，电脑端**不许依赖收到它**
+            //   （想确认板子在不在，发 `#PING`）；它只在复位释放后发**一次**。
+            //
+            //   ⇒ 所以这里**不重发、不等待、不重试、不看任何输入**：
+            //      发完就进 S_IDLE，哪怕对面一个字节都没收到。
+            //      ⚠️ 上电时对面本来也还没发东西；真发了，那些字节会在
+            //         uart_line_rx 里排队，S_IDLE 第一拍就能取到，不会丢。
+            //
+            //   ⚠️ 复位值把 state 直接置成 S_RDY（不是 S_IDLE）—— 这样**每次复位
+            //      都会重发一行**，与「本次上电以来」的口径一致（N16 是按键，
+            //      按一下 = 一次上电）。
+            // =============================================================
+            S_RDY: begin
+                resp_kind   <= RK_RDY;
+                resp_ph     <= 4'd0;
+                bi          <= 7'd0;
+                tx_len      <= 7'd0;
+                after_state <= S_IDLE;
+                state       <= S_RESP;
+            end
 
             // =============================================================
             // S_IDLE —— 等命令行
@@ -714,6 +819,14 @@ module proto_fsm #(
                         if (txl_done) begin
                             resp_ph <= 4'd0;
                             state   <= after_state;
+                            // `#ERR` 计数在**发完那一刻**加 —— 数的是「真的发出去几条」，
+                            // 不是「准备发几条」。§5.2 `<errs>` = 本次上电以来的累计出错数。
+                            // ⚠️ 封顶 999，理由见 errs 声明处那条注释。
+                            // ⚠️ 放在这里而不是「每个 resp_kind <= RK_ERR 的赋值点」：
+                            //    置 RK_ERR 的地方有 5 处（S_IDLE ×3、S_DATA、S_START/S_OUT），
+                            //    分散加计数早晚漏一处；而本相位是**所有**应答的唯一出口。
+                            if ((resp_kind == RK_ERR) && (errs < 10'd999))
+                                errs <= errs + 10'd1;
                         end
                     end
 

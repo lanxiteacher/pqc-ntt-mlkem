@@ -7,7 +7,8 @@
 #   PE=4  sh rtl/board/run_board_check.sh     # 换折叠度（1 / 4 / 16，默认 1）
 #
 # 跑的是什么：位级假串口 → 真 uart_rx/uart_tx → 真协议机 → 真 NTT 核。
-# 验三条（S1/S2/S3）：
+# 验四条（S0/S1/S2/S3）：
+#   S0  上电自发 `#RDY 1 <build> 0`（**必须排在第一**，见 tb 里的说明）
 #   S1  #PING 回帧逐字节正确
 #   S2  #NTT 1       端到端 256 行对拍黄金向量（**一个** bank）
 #   S3  #PMUL NTT 1  端到端 256 行对拍黄金向量（**A、B 两个** bank 都装）
