@@ -144,6 +144,9 @@ module smoke_tb;
     //    代价只在**失败**时付（多跑 100 ms 仿真），通过时一分不花。
     localparam integer GUARD_CC  = 6_000_000;       // 收一个字节的护栏（120 ms）
     localparam real    MAX_NS    = 900_000_000.0;   // 全局护栏（0.9 s）
+    // 收一整行的字节数上限 —— 必须 ≤ rbuf 的容量，否则超界写是**静默**的。
+    //   2026-10-07 补：recv_line 原来是个无界 while（违反 CLAUDE.md 约定 2）。
+    localparam integer RLINE_MAX = 1024;            // = rbuf 容量
 
     // ---- FNTT 的**读出**顺序：pe1 = 交织 0,2,1,3｜pe4、pe16 = 自然序 ----
     //   pe1 那格依据 refsim/pe1/fntt_batch_tb.v:108-113 —— 每 4 拍一组，
@@ -278,9 +281,19 @@ module smoke_tb;
     //   卡了 5 分钟、三份输出都只有两行 shell 的 echo，就是栽在这。
     //   每 1 ms 仿真时间刷一次（= 50000 拍），代价可忽略。
     //   ⚠️ 这不是「让仿真变快」，只是「让挂住的仿真能开口说话」。
+    //
+    //   ★ 2026-10-07 二次修订：**光刷不说，等于没说话。**
+    //   「没有任何新输出」既可能是「这一段本来就安静」，也可能是「仿真时
+    //   间根本不再前进」—— 两者在日志里**一模一样**，都是「文件不再变长」。
+    //   pe16 今天就是这么卡住的：进程 100% CPU 跑了几分钟，MAX_NS 的 0.9 s
+    //   护栏却一直不触发（时间压根没走到）。所以心跳**同时要把 $time 打出来**：
+    //     · 心跳行继续涨  → 时间在走，是「安静的长等待」，看最后一行的时间点
+    //     · 心跳行停在某刻 → 时间冻住了，**那个 t 就是死点**
+    //   1 ms 仿真时间一行（= 50000 拍）；健康跑完也就百来行。
     initial begin
         forever begin
             #1_000_000;
+            $display("[HB] t=%0t ns", $time);
             $fflush();
         end
     end
@@ -445,6 +458,14 @@ module smoke_tb;
     endtask
 
     // 收一整行（到 LF 为止，LF 不计入长度）
+    // ⚠️ 2026-10-07 补上限（CLAUDE.md 约定 2）。
+    //    原来这里是 `while (!stop)` —— recv_byte 本身有起始位护栏，但
+    //    **「一直有字节、却永远不是 LF」这条路没有任何上限**：板子只要
+    //    一直在吐非 LF 字节，这里就永远转下去，而 rbuf[i] 会在 i≥1024 之后
+    //    **静默越界写**，把同一块内存当成无限长的行。
+    //    两个坏处都改掉：i 封顶 RLINE_MAX，到顶就报错退出。
+    //    判据是「报错」而不是「猜」—— 超长行说明板子的行尾没发出来，
+    //    这正是需要人看见的那件事。
     task recv_line;
         integer i; reg stop; reg [7:0] c;
         begin
@@ -452,7 +473,13 @@ module smoke_tb;
             while (!stop) begin
                 recv_byte(c);
                 if (c == 8'h0A) stop = 1;
-                else begin rbuf[i] = c;  i = i + 1; end
+                else if (i < RLINE_MAX) begin rbuf[i] = c;  i = i + 1; end
+                else begin
+                    $display("");
+                    $display("FAIL_OVERLONG: 一行已经收了 %0d 个字节还没见到 LF", RLINE_MAX);
+                    $display("                —— 板子一直在吐、行尾没发出来。t=%0t ns", $time);
+                    $finish;
+                end
             end
             rlen = i;
         end
