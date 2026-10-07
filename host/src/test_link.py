@@ -129,10 +129,17 @@ def protocol_smells(path):
 
 # ---------------------------------------------------------------- 陪练当住户
 
-def fresh_link():
-    """造一个「插座 + 陪练」的完整回路。"""
+def fresh_link(boot=False):
+    """造一个「插座 + 陪练」的完整回路。
+
+    boot=False（默认）—— 先把陪练**开机自发的那一行 `#RDY`** 取走（见 `boot_lines`）。
+        本条 1~4 验的是「来回搬字节」，不关心开机那行。
+    boot=True —— **保留**那一行，用来验「刚建的插座里已躺着 `#RDY`」这个新契约。
+    """
     import fake_board
     board = fake_board.FakeBoard()
+    if not boot:
+        board.boot_lines()
     return link.LoopbackLink(board), board
 
 
@@ -183,8 +190,17 @@ def main():
     eq(buf.discard(), b"#OK P", "discard_pending 没报出扔了什么")
     eq(buf.pending(), b"", "discard 之后缓冲没清干净")
 
+    # ⚠️ 2026-10-07 起，插座**建好的一刻**缓冲里就有板子开机自发的那一行 `#RDY` ——
+    #    陪练是「已上电」的，不是「等你喂第一行才醒」（见 link.py 的
+    #    LoopbackLink.__init__）。这一条把新契约钉住：它正是 `Host.handshake()` 要
+    #    吃掉的那一行，也是「先开串口、再复位板子」时把上位机顶得全体错位一格的那一行。
+    lk, _ = fresh_link(boot=True)
+    eq(lk.discard_pending(), (proto.append_checksum("#RDY 1 1 0") + "\n").encode("ascii"),
+       "刚开的插座，缓冲里该是板子开机自发的那一条 #RDY")
+
+    # 取走开机行之后插座才是空的 —— 上面 1~4 用的就是这种干净插座（fresh_link 默认取走）
     lk, _ = fresh_link()
-    eq(lk.discard_pending(), b"", "刚开的插座，缓冲不该有东西")
+    eq(lk.discard_pending(), b"", "取走开机行之后，缓冲该是空的")
 
     lk, _ = fresh_link()
     lk.write((cmd + "\n").encode("ascii"))       # 板子回了帧，就躺在缓冲里

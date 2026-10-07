@@ -127,12 +127,24 @@ class LoopbackLink(Link):
        后果：**「发半行就停 → 板子等超时」这条路径在陪练上复现不了**。
        那需要有人显式调 `board.timeout()` 来模拟「时间到了」，
        属于协议层的注错自测，不在这里假装能跑。
+
+    ⚠️ **建好的一刻，收缓冲里就已经有板子开机自发的那一行 `#RDY`**（见 __init__）——
+       陪练是「已上电」的，不是「等你喂第一行才醒」。`Host.handshake()` 就靠它。
     """
 
     def __init__(self, board):
         self.board = board
         self._to_board = bytearray()   # 上位机 → 板子，还没凑够一行的字节
         self._rx = LineBuffer()        # 板子 → 上位机
+
+        # 板子**早就上电了**，复位释放时自发的那一行 `#RDY`（§5.2）已经在线路上等着 ——
+        # 「先开串口、再复位板子」是最常见的次序，也是唯一会撞上它的次序。
+        # 所以这里把它预先塞进收缓冲：上位机 `Host.handshake()` 读到的第一行就是它。
+        # 陪练没有 `boot_lines`（比如测试里的替身）就跳过 —— 那种陪练就当它不发这一行。
+        boot = getattr(board, "boot_lines", None)
+        if boot is not None:
+            for reply in boot():
+                self._rx.feed(reply.encode("ascii") + LF)
 
     def write(self, data):
         self._to_board += data

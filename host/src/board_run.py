@@ -27,13 +27,17 @@
     所以拿陪练的输出解包，256 个系数会全错。这条是**已知**的（KNOWN_ISSUES B4 那个
     假绿陷阱的反面）：陪练只用来验「脚本跑不跑得起来」，**数值对拍请在真板子上做**。
 
-⚠️ `--check` 解包按哪个折叠度，用 `--build` 说明（默认 1）
+⚠️ `--check` 解包按哪个折叠度 —— **开串口后会先吃一行 `#RDY` 自动认**（2026-10-07 起）
     `unpack.py` 里 FNTT 的**读出序**随折叠度分档（pe1 交织 / pe4、pe16 自然序，§5.3.4:370），
-    而折叠度是编译进位流的、命令里没有它 —— 所以**必须由你告诉它**。不给就按 pe1。
-    ⚠️ 板子若烧的是 pe4 / pe16 而这里没给 `--build`，**FNTT** 会 256 个全错 ——
-    那是折叠度没说对，不是 RTL 的 bug。H6 联调定的就是 pe1，所以默认这一格是对的。
-    ⚠️ **板子端还没实现 `#RDY`**（A 侧零命中），所以「自动认出折叠度」暂时做不到，
-    只能手工传；`unpack.py` 的 `build` 参数已经留好，A 一发得出 `#RDY` 就能接上。
+    而折叠度是编译进位流的、命令里没有它。A 于 2026-10-07 把 `#RDY` 落进了 RTL
+    （复位释放后板子自发一行），所以本脚本**开串口后先无条件收一行**：
+        · 是 `#RDY`      -> 吃掉它，拿它的 `<build>` 当折叠度（`Host.handshake()`）
+        · 不是 / 没收到  -> 原样放回 / 当作没有，退回 `--build` 或默认 pe1
+    ⚠️ **收不到 `#RDY` 很正常**（§5.2 说它是「尽力而为」的一行：上电瞬间电脑多半还没
+   开串口监听，它就丢了）。所以**别依赖它** —— 板子烧的是 pe4 / pe16 而它又没被收到时，
+   用 `--build` 手工说明。不说就用 pe1，那时 **FNTT** 会 256 个全错 ——
+   那是折叠度没说对，不是 RTL 的 bug。H6 联调定的就是 pe1，所以默认这一格是对的。
+    `--build` 显式给出时**优先于** `#RDY`（人不该被机器盖过）。
 
 本脚本**不重写任何协议断言** —— 发什么、怎么判、超时多久，全在
 `host.py` / `proto.py` / `unpack.py` 里。这里只负责把它们接起来、把结果打成人话。
@@ -143,7 +147,7 @@ def do_list():
 
 # ---------------------------------------------------------------- 探活
 
-def report_probe(lk, command, verbose):
+def report_probe(hst, command):
     """探活类命令：交给 `host.Host.probe()`，这里只把它讲成人话。返回进程退出码。
 
     ⚠️ **判定逻辑一条都不在这里** —— 「回帧校验对不对、首词认不认、回显对不对得上」
@@ -154,8 +158,11 @@ def report_probe(lk, command, verbose):
         `#ERR` 不是故障 —— 板子能回错误码，说明链路活着、它读懂了你的命令、按协议拒了。
         拿 `#FOO 1` 去试板子，**它就该回 `#ERR 01`**，那时 0 才是对的。
         只有「错位」和「没回声」是 1。
+
+    `hst` 是**已经调过 `handshake()`** 的 `Host`（开机那行 `#RDY` 已被捡走）——
+        所以这里**不**再新建一个 Host：新建的那个还得再吃一次开机行，而那时已经没得吃了。
     """
-    txn = host.Host(lk, verbose=verbose).probe(command)
+    txn = hst.probe(command)
 
     for ln in txn.log:
         print("  %s" % ln)
@@ -182,11 +189,13 @@ def report_probe(lk, command, verbose):
 
 # ---------------------------------------------------------------- 对拍
 
-def do_check(command, txn, build=unpack.DEFAULT_BUILD):
+def do_check(command, txn, build=unpack.DEFAULT_BUILD, build_src="默认"):
     """解包 + 按数值对拍。返回 0=全对，1=有不同。
 
-    build —— 折叠度（`#RDY` 的 `<build>`）。**只有 FNTT 的读出序看它**，
-             命令行由 `--build` 给，默认 pe1（见文件头的说明）。
+    build     —— 折叠度（`#RDY` 的 `<build>`）。**只有 FNTT 的读出序看它**。
+    build_src —— 这个值是**哪来的**（`--build` 手工给的 / 从 `#RDY` 认出的 / 退回默认的）。
+                 **打出来**，免得「机器认对了」和「正好蒙对默认值」看起来一样 ——
+                 那正是本仓库反复踩的「假绿」形状。见 `host/KNOWN_ISSUES.md` B4。
     """
     key = vector_key(command)
     if key is None:
@@ -195,8 +204,8 @@ def do_check(command, txn, build=unpack.DEFAULT_BUILD):
     _, exp_file = vectors.VECTORS[key]
 
     print("")
-    print("--check：按 **pe%d** 口径解包（板上烧的是别的折叠度时，FNTT 会全错，见 B1）"
-          % build)
+    print("--check：按 **pe%d** 口径解包（%s；板上烧的是别的折叠度时，FNTT 会全错，见 B1）"
+          % (build, build_src))
     kind = unpack.kind_of(command)
     got = unpack.unpack(kind, txn.rows, build)
     exp = unpack.read_values(vectors.BATCH_DIR / exp_file)[:vectors.GROUP_LEN]
@@ -225,10 +234,16 @@ def main(argv):
     ap.add_argument("--baud", type=int, default=link.DEFAULT_BAUD, help="波特率")
     ap.add_argument("--check", action="store_true",
                     help="跑完解包，和标准答案按数值对拍（口径按 --build）")
-    ap.add_argument("--build", type=int, default=unpack.DEFAULT_BUILD,
+    ap.add_argument("--build", type=int, default=None,
                     choices=unpack.KNOWN_BUILDS,
-                    help="板子烧的折叠度 PE_NUMBER（1/4/16，默认 1）。"
-                         "只有 FNTT 的读出序看它 —— 烧了 pe4/pe16 却不给，FNTT 会全错")
+                    help="板子烧的折叠度 PE_NUMBER（1/4/16）。"
+                         "不给就靠开机那行 #RDY 自动认；#RDY 也没收到才退回 pe1。"
+                         "只有 FNTT 的读出序看它 —— 烧了 pe4/pe16 又认不出时，FNTT 会全错")
+    ap.add_argument("--fake-build", type=int, default=unpack.DEFAULT_BUILD,
+                    choices=unpack.KNOWN_BUILDS,
+                    help="**只影响 --loopback**：让陪练自称烧的是这一档（默认 1）。"
+                         "用来演练上面那条「从 #RDY 自动认折叠度」的路 —— 真板子上"
+                         "这取决于烧进去的位流。")
     ap.add_argument("--verbose", action="store_true", help="把每次重试 / 容错实时打出来")
     args = ap.parse_args(argv)
 
@@ -245,7 +260,11 @@ def main(argv):
 
     # ---- 开插座 ----------------------------------------------------------
     if args.loopback:
-        lk = link.open_link("loopback")
+        board = None
+        if args.fake_build != unpack.DEFAULT_BUILD:
+            import fake_board
+            board = fake_board.FakeBoard(build=args.fake_build)
+        lk = link.open_link("loopback", board=board)
         where = "陪练（loopback）—— 不碰硬件"
     else:
         try:
@@ -255,14 +274,27 @@ def main(argv):
             return 1
         where = "真串口 %s（%d-8N1）" % (lk.port, lk.baud)
 
+    # ---- 吃掉开机那一行 `#RDY`（若在）------------------------------------
+    # ⚠️ 必须在**发第一条命令之前**读掉：板子复位释放后不等命令就自发这一行，
+    #    不吃它的话第一条命令读到的会是 `#RDY` 而不是 `#OK`，之后全体错位一格。
+    hst = host.Host(lk, verbose=args.verbose)
+    got_rdy = hst.handshake()
+
+    print("插座：%s" % where)
+    if got_rdy:
+        print("开机行：收到 `#RDY` —— 板子自称 ver=%d / 折叠度 pe%d / 上电以来 %d 个 #ERR"
+              % (hst.board_version, hst.build, hst.board_errs))
+    else:
+        print("开机行：没收到 `#RDY`（旧位流，或它在串口打开前就发完了 —— "
+              "§5.2 说它是「尽力而为」的一行，这不是故障）")
+
     # ---- 探活类命令：一条短路，不经过事务状态机 --------------------------
     if vector_key(args.command) is None:
-        print("插座：%s" % where)
         print("命令：%s  （探活类：不带数据，只等一条回帧）" % args.command)
         if args.check:
             print("⚠️ 探活类命令没有标准答案向量，`--check` 用不上，已忽略。")
         print("")
-        rc = report_probe(lk, args.command, args.verbose)
+        rc = report_probe(hst, args.command)
         lk.close()
         return rc
 
@@ -273,14 +305,23 @@ def main(argv):
         lk.close()
         return 1
 
-    print("插座：%s" % where)
+    # ---- 折叠度：人给的 > `#RDY` 认的 > 默认 ------------------------------
+    # ⚠️ `--build` 的默认值是 **None**（不是 1），就是为了把「没说」和「说了 1」
+    #    分开 —— 两者行为虽然一样，但「人明确说了 pe1」不该被 `#RDY` 盖掉。
+    if args.build is not None:
+        build, build_src = args.build, "`--build` 显式给的"
+    elif hst.build is not None:
+        build, build_src = hst.build, "从开机行 `#RDY` 自动认出的"
+    else:
+        build, build_src = unpack.DEFAULT_BUILD, "没收到 `#RDY`，退回默认的"
+
     print("命令：%s   数据行：%d" % (args.command, len(data)))
     if args.loopback and args.check:
         print("⚠️ `--loopback` + `--check`：陪练回的是**文件序**，解包必然全错。")
         print("   那不是 bug（KNOWN_ISSUES B4）—— 数值对拍要在真板子上做。")
 
     # ---- 跑一条事务 ------------------------------------------------------
-    txn = host.Host(lk, verbose=args.verbose).run(args.command, data)
+    txn = hst.run(args.command, data)
 
     print("")
     print("收到 %d 行结果：%s" % (len(txn.rows), "、".join(txn.rows[:3]) or "(无)"))
@@ -302,7 +343,7 @@ def main(argv):
         print("")
         print("结论：这条事务成功。（要按数值对拍，加 `--check`。）")
     else:
-        rc = do_check(args.command, txn, args.build)
+        rc = do_check(args.command, txn, build, build_src)
 
     lk.close()
     return rc

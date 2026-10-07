@@ -76,6 +76,11 @@ class FlakyLink(link.Link):
     """
 
     def __init__(self, board, rule=None, inject=None):
+        # 陪练是**已上电**的：它开机自发的那一行 `#RDY` 已经在线路上了。
+        # 本文件验的是**事务状态机**，不是「吃掉 `#RDY`」那一条（那是第 10 条），
+        # 所以这里按测试需要先把它取走 —— 否则每条用例的第一行都会读到 `#RDY`。
+        # ⚠️ 取走 ≠ 丢掉：`Host.handshake()` 在生产路径里读它（见 host.py）。
+        drain_boot(board)
         self.inner = link.LoopbackLink(board)
         self.rule = rule or (lambda data: "pass")
         self.inject = list(inject or [])
@@ -103,6 +108,26 @@ def fresh_board():
     return fake_board.FakeBoard()
 
 
+def drain_boot(board):
+    """把陪练**开机自发的那一行 `#RDY`** 从它手里取走（有就取，没有就跳过）。
+
+    ⚠️ 这是**测试**的方便法门，**不是**生产路径。生产上这一行由
+       `Host.handshake()` 在读第一条回帧**之前**读掉，而且**内容要留着**
+       （`<build>` 是解包 FNTT 的唯一依据）。本文件验的不是那件事，所以直接取走 ——
+       取走之后本文件的每一条断言说的都还是「事务状态机」那件事。
+       第 10 条专门验 handshake 本身。
+    """
+    boot = getattr(board, "boot_lines", None)
+    return boot() if boot is not None else []
+
+
+def fresh_link(board=None):
+    """开一个「陪练当对端」的插座，**开机那一行已取走**（见 drain_boot）。"""
+    board = board if board is not None else fresh_board()
+    drain_boot(board)
+    return link.LoopbackLink(board)
+
+
 def groups(name):
     return vectors.split_groups(vectors.read_vector(vectors.BATCH_DIR / name), name)
 
@@ -120,7 +145,7 @@ def main():
 
     # ------------------------------------------------------------ 1
     print("=== 1：顺利路径 ===")
-    lk = link.LoopbackLink(fresh_board())
+    lk = fresh_link()
     txn = host.Host(lk).run(cmd, data)
     print("  %s" % txn.summary())
     eq(txn.outcome, host.RESULT_OK, "顺利路径没有成功")
@@ -244,7 +269,7 @@ def main():
     # ------------------------------------------------------------ 8
     print("")
     print("=== 8：发出去的字节严格合规 ===")
-    lk = link.LoopbackLink(fresh_board())
+    lk = fresh_link()
     txn = host.Host(lk).run(cmd, data)
     cmds = [b for b in txn.sent_bytes if b.startswith(b"#")]
     rows = [b for b in txn.sent_bytes if not b.startswith(b"#")]
@@ -338,6 +363,60 @@ def main():
                             inject=[b"\n", b"#OK PING*17\r\n"])).probe("#PING")
     eq(t.outcome, host.RESULT_OK, "回帧夹了 CR/空行就认不出来了")
     eq(t.raw, proto.append_checksum("#OK PING"), "夹 CR 之后回帧原文不对")
+
+    # ------------------------------------------------------------ 10
+    print("")
+    print("=== 10：开串口后先吃掉开机那行 #RDY（Host.handshake）===")
+    # 2026-10-07 A 把 `#RDY` 落进了 RTL：复位释放后板子**不等命令**先自发一行。
+    # 上位机是「发一条、读一行」的开环，这一行没人吃就会错位一格 ——
+    # 症状是整轮在规则四上被停掉，看起来像协议错。本条钉住 handshake 的四种情形。
+
+    # 10a 新位流：插座里躺着 `#RDY` -> 吃掉、记下折叠度、**且不影响紧随其后的事务**
+    bd = fake_board.FakeBoard(build=4)
+    lk = link.LoopbackLink(bd)                      # 注意：**不**调 drain_boot
+    hst = host.Host(lk)
+    check(hst.handshake(), "handshake 没认出插座里那行 #RDY")
+    eq(hst.build, 4, "handshake 没记下 #RDY 的 <build>")
+    eq(hst.board_version, 1, "handshake 没记下 #RDY 的 <ver>")
+    eq(hst.board_errs, 0, "handshake 没记下 #RDY 的 <errs>")
+    t = hst.probe("#PING")
+    eq(t.outcome, host.RESULT_OK,
+       "吃掉 #RDY 之后探活该照常成功 —— 没成功说明 handshake 多吃/少吃了一行")
+    eq(t.raw, proto.append_checksum("#OK PING"), "吃掉 #RDY 之后回帧原文不对")
+
+    # 10b 旧位流：插座里没有 `#RDY` -> 返回 False，**行为与加这个方法之前完全相同**
+    lk = fresh_link()
+    hst = host.Host(lk)
+    check(not hst.handshake(), "旧位流（没有 #RDY）handshake 竟然报成功")
+    check(hst.build is None, "没收到 #RDY 时 build 该是 None，不是别的值")
+    eq(hst.probe("#PING").outcome, host.RESULT_OK, "旧位流上探活该照常成功")
+
+    # 10c 第一行**不是** `#RDY` -> **原样放回**，不许吞掉
+    #     （这一条是本方法最关键的一条：它保证 handshake 对旧位流是**无害**的。
+    #       要是吞了，旧位流的第一条回帧就没了 —— 那是把「兼容」说成了「兼容」。）
+    lk = fresh_link()
+    lk.write((proto.append_checksum("#PING") + "\n").encode("ascii"))   # 回帧已在缓冲里
+    hst = host.Host(lk)
+    check(not hst.handshake(), "第一行是普通回帧时 handshake 不该报成功")
+    eq(hst._read_line(1.0), proto.append_checksum("#OK PING"),
+       "handshake 把那条不是 #RDY 的回帧**吞掉了** —— 旧位流上会丢一条帧")
+
+    # 10d 校验对不上的 `#RDY` -> 当它不是 #RDY（放回），不抛异常
+    #     （§5.2 说这一行是「尽力而为」，所以认不出只能当没有，不能当故障）
+    #     ⚠️ 这里必须用 inject 直接喂**字节**，不能 `lk.write` —— write 是**发给板子**的
+    #        命令行，板子会按校验错回 `#ERR 03`，那测的就变成了「#ERR 也算非 #RDY」。
+    hst = host.Host(FlakyLink(fresh_board(), inject=[b"#RDY 1 4 0*00\n"]))
+    check(not hst.handshake(), "校验错的 #RDY 竟然被认下了 —— 那会把错的折叠度当真")
+    check(hst.build is None, "校验错的 #RDY 不该写进 build")
+
+    # 10e 字段数不对的 `#RDY`（少了 <errs>）-> 同样不认
+    hst = host.Host(FlakyLink(fresh_board(),
+                              inject=[(proto.append_checksum("#RDY 1 4")
+                                       + "\n").encode("ascii")]))
+    check(not hst.handshake(), "只有两个字段的 #RDY 竟然被认下了")
+
+    print("  10a 新位流吃掉 + 记下 build=4 ✓ ｜ 10b 旧位流无 #RDY ✓")
+    print("  10c 非 #RDY 原样放回（不吞）✓ ｜ 10d 校验错的不认 ✓ ｜ 10e 字段数不对的不认 ✓")
 
     # ------------------------------------------------------------
     print("")

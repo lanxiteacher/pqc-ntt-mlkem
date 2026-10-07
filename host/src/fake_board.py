@@ -159,6 +159,24 @@ def ok_frame(body):
     return proto.append_checksum("#OK " + echo_of(body))
 
 
+def rdy_frame(ver=1, build=1):
+    """`#RDY <ver> <build> <errs>` —— §5.2 应答表末行；**复位释放后板子自发的一行**。
+
+    2026-10-07 A 把这一帧落进了 RTL（`rtl/board/proto_fsm.v` 的 `S_RDY` /
+    `RK_RDY`，复位落点由 `S_IDLE` 改成 `S_RDY`）。陪练跟上，否则
+    `board_run.py --loopback` **测不到「上位机吃掉这一行」那条路** ——
+    而那正是本次要防的坑（第一行读成 `#RDY` 而不是 `#OK`，之后全体错位一格）。
+
+    `<errs>` 恒填 `0`：陪练只在**上电那一刻**发这一行，那时它还没回过任何 `#ERR`。
+    （真板子是「本次上电以来累计发过的 `#ERR` 条数、封顶 999」，见 §5.2。）
+
+    ⚠️ 三档的校验和：`#RDY 1 1 0*7c` / `#RDY 1 4 0*79` / `#RDY 1 16 0*4a`。
+        与 `#NTT 1` 撞号的正是第一个 `7c`（`host/KNOWN_ISSUES.md` A2）——
+        别拿校验和去区分这两行。
+    """
+    return proto.append_checksum("#RDY %d %d 0" % (ver, build))
+
+
 def err_frame(code, position):
     """`#ERR <code> <位置>` —— §5.2:289。
 
@@ -339,14 +357,35 @@ class FakeBoard:
     板子该回的那一行 `#ERR 05`。这样这一层在真电脑、仿真 tb、单元测试里都同样能用。
     """
 
-    def __init__(self, batch_dir=None, rows=None):
+    def __init__(self, batch_dir=None, rows=None, build=1, ver=1):
         self.rows = rows if rows is not None else _load_rows()
         self.commands = [t for t, _ in self.rows]
         self.batch_dir = Path(batch_dir) if batch_dir else BATCH_DIR
+        # 陪练自称的折叠度 / 协议版本 —— 就是 `#RDY` 里那两个字段（§5.2）。
+        # 让调用方能造一台「烧的是 pe4」的陪练，用来验「上位机从 #RDY 自动认折叠度」。
+        self.build = build
+        self.ver = ver
         self.reset()
+
+    def boot_lines(self):
+        """复位释放后板子**不等命令**自发的那一行（`#RDY`，§5.2），并清掉「待发」。
+
+        真板子（2026-10-07 起）在复位落点 `S_RDY` 上先发这一行、再进 `S_IDLE`。
+        本方法给**插座**用：`LoopbackLink` 一建好就调它，把这一行预先塞进收缓冲 ——
+        精确模拟「板子早上电了、你才开串口」这个**最危险**的次序（`#RDY` 已在线路上
+        等着，电脑第一行读到的就是它）。不预先塞的话，陪练要等到被喂字节才回话，
+        而 `handshake()` 是**发命令之前**读的 —— 那条路就一段都测不到。
+
+        已经取过一次就返回空（对应 §5.2「只在复位释放后发**一次**」）。
+        """
+        if not self.rdy_pending:
+            return []
+        self.rdy_pending = False
+        return [rdy_frame(self.ver, self.build)]
 
     def reset(self):
         self.state = "CMD"       # "CMD" = 等命令行；"DATA" = 数据段
+        self.rdy_pending = True  # 复位释放后要先自发一行 `#RDY`（见 boot_lines）
         self.cmd_body = None     # 正在执行的那条命令原文（不带校验）
         self.in_groups = []      # 每个输入文件切好的组；in_groups[f][i] = 第 i 组
         self.out_groups = []     # 输出文件切好的组；out_groups[i] = 第 i 组结果
@@ -365,11 +404,14 @@ class FakeBoard:
         line 末尾带不带 LF / CR 都行 —— 本函数自己会去掉。
         """
         text = line.replace("\r", "").replace("\n", "")
+        # 复位后还没发过 `#RDY` 的话，排在这一行的应答**前面** ——
+        # 真板子那时正忙着发自发的那一行，你这一刻发的命令排在它后面。
+        pre = self.boot_lines()
         if text == "":
-            return []                      # §5.5:541 空行忽略，不计入行数
+            return pre                     # §5.5:541 空行忽略，不计入行数
         if self.state == "CMD":
-            return self._feed_cmd(text)
-        return self._feed_data(text)
+            return pre + self._feed_cmd(text)
+        return pre + self._feed_data(text)
 
     # ---- 等命令行
     def _feed_cmd(self, text):

@@ -20,6 +20,16 @@
     四（回显对不上就停整轮）       _wait_for() 里的回显核对；run() 返回 STOP
     五（不做静默恢复）             每一次重试、每一次容错都进 txn.log
 
+开串口后**先吃一行** `#RDY`（2026-10-07 新增，因为 A 把它落进了 RTL）
+    板子复位释放后**不等命令**先自发一行 `#RDY <ver> <build> <errs>`（§5.2 那张
+    应答表的最后一行）。而本文件是按「发一条、读一行」的开环写的 —— 这一行要是
+    没人吃，**第一行读到的就是它而不是 `#OK`**，之后每一行错位一格，整轮被规则四
+    停掉（§5.5:527），症状看起来像协议错、其实少读了一行。
+    `Host.handshake()` 就是干这个的：**开串口之后调一次**，把开机那一行捡走。
+    它**不是同步点** —— 收不到 `#RDY` 是完全正常的结果（§5.2 说它是「尽力而为」
+    的一行，上电瞬间电脑多半还没开串口监听），那时的行为与加这个方法之前**逐字节
+    相同**。
+
 ⚠️ 三处 proto.md 没写清 / 有歧义的地方（我在代码里就地标了，别当没看见）
     (1) §5.5:493 的 `T_DONE` 起算点写的是「数据行收齐之后」。可「数据行」是电脑
         **发出去**的（`T_BEGIN` 那格才是「数据行发完之后」）。按事务顺序，
@@ -60,7 +70,43 @@ RESULT_STOP = "STOP"
 # 回帧首词。§5.2:286-290 那张表 + §5.5:529 说的四个词。
 HEAD_KINDS = {"#OK", "#BEGIN", "#DONE", "#ERR"}
 
+# ⚠️ `#RDY` **不**在 HEAD_KINDS 里 —— 它不是事务的一环（没有「正在等它」的那一步），
+#    而是开机自发的通知。它由 parse_rdy() 单独认，且在 handshake() 里被捡走。
+#    放进 HEAD_KINDS 会让 _wait_for() 把它当成「正等的那条不对」以外的种类，
+#    把「开机那一行没被吃掉」伪装成「错位」—— 那正是我们要分辨开的两件事。
+RDY_PREFIX = "#RDY "    # 含尾空格：`#RDY 1 4 0*79`（§5.2）
+
 ABORT = "#ABORT"    # §5.2:258；校验值见 §5.5:515
+
+
+def parse_rdy(text):
+    """认一行 `#RDY <ver> <build> <errs>`（§5.2 应答表末行）。返回 `(ver, build, errs)`。
+
+    **认不出来一律返回 None，不抛异常** —— 调用方要的是「这是不是 `#RDY`」这个判断，
+        而不是「协议错了」。会返回 None 的情形：不是 `#RDY` 开头 / 没有合规的 `*xx` /
+        校验对不上 / 字段不是正好三个十进制数。
+    三个字段按 §5.2 的定义：`<ver>` = 协议版本（v1.0 写 `1`）、`<build>` = 折叠度
+        `PE_NUMBER`（`1` / `4` / `16`）、`<errs>` = 本次上电以来的累计 `#ERR` 数
+        （十进制、不补零、封顶 999）。**本函数不做取值范围检查** —— 「build 认不认」
+        是解包层的事（`unpack.KNOWN_BUILDS`），这一层只管把三个数读出来。
+    ⚠️ 别拿「校验和相同」当「两行内容相同」的证据：`#RDY 1 1 0` 的 `*7c` 与
+        `#NTT 1` 撞号（`host/KNOWN_ISSUES.md` A2）。
+    """
+    if not text.startswith(RDY_PREFIX):
+        return None
+    try:
+        body, got = proto.split_checksum(text)
+    except ValueError:
+        return None
+    if proto.checksum_hex(body) != got:
+        return None
+    words = body.split()
+    if len(words) != 4 or words[0] != "#RDY":
+        return None
+    try:
+        return tuple(int(w) for w in words[1:])
+    except ValueError:
+        return None
 
 
 class Transaction:
@@ -98,6 +144,55 @@ class Host:
         self.t_done = t_done
         self.max_retries = max_retries
         self.verbose = verbose
+        # handshake() 捡到的开机信息。没收到 `#RDY` 时三个都是 None
+        # —— 「没收到」和「收到了值 1」必须能分辨（见 handshake() 的 ⚠️）。
+        self.board_version = None
+        self.build = None
+        self.board_errs = None
+        # handshake() 读到的、但**不是** `#RDY` 的那一行，原样放回这里，
+        # 让下一次 _read_line 先把它交出去 —— 等于那一行没被读过。
+        self._pushback = []
+
+    # ------------------------------------------------------------ 开机那一行
+
+    def handshake(self, timeout=None):
+        """开串口后**先吃一行**：板子上电自发的那条 `#RDY`（§5.2 应答表末行）。
+
+        为什么要这一步：2026-10-07 A 把 `#RDY` 落进了 RTL —— 复位释放后板子
+        **不等命令**先自发一行。本文件是按「发一条、读一行」的开环写的，这一行没人
+        吃就会**错位一格**（见模块 docstring）。本方法专治它，**开串口之后调一次**。
+
+        三种结局，**都不算失败**：
+            · 读到 `#RDY`（校验对、字段齐）→ 记下 `<ver>` / `<build>` / `<errs>`，
+              返回 True。**折叠度是电脑端唯一推不出来的信息**（FNTT 的读出序按它分档，
+              而它编译进位流、命令里没有它，§5.3.4）。
+            · 读到了**别的行** → **原样放回**缓冲（`_pushback`），返回 False。
+              旧位流的任何回帧都走这一条 —— 等于本方法没调用过。
+            · timeout 内没读到 → 返回 False。旧位流，或 `#RDY` 在串口打开前就发完了。
+
+        ⚠️ **收不到 `#RDY` 是完全正常的结果**，不是故障：§5.2 说它是「尽力而为」的一行，
+           上电瞬间电脑多半还没开串口监听，那一行就丢了。所以调用方**不许依赖**它 ——
+           返回 False 时照旧用 `--build` 那份手工给的折叠度。
+        ⚠️ **只该在开串口后调一次**。它不是同步点，也不是「每条事务前都清一下」——
+           它是「把开机那一行捡走」。
+        """
+        if timeout is None:
+            timeout = self.t_ok
+        text = self._read_line(timeout)
+        if text is None:
+            return False
+
+        rdy = parse_rdy(text)
+        if rdy is None:
+            # 不是 `#RDY`：放回去。**不吞** —— 吞了就把旧位流的正常回帧吃掉了。
+            self._pushback.insert(0, text)
+            self._note_global("开机先读到的 %r 不是 `#RDY`，原样放回缓冲（旧位流）。" % text)
+            return False
+
+        self.board_version, self.build, self.board_errs = rdy
+        self._note_global("收到 %s —— 板子上电自发的一行：折叠度 pe%s。"
+                          % (text, self.build))
+        return True
 
     # ------------------------------------------------------------ 对外
 
@@ -254,10 +349,15 @@ class Host:
     def _read_line(self, timeout):
         """读一行，返回**去掉结尾 LF** 的正文（str）；超时返回 None。
 
+        ⚠️ **先看 `_pushback`** —— handshake() 读到一行「不是 `#RDY`」的会放回那里。
+           放回的行**不重新计时**：它读进来那一刻已经在时限内了。
         ⚠️ 空行按 §5.5:541 忽略、`\\r` 按 §5.5:542 丢掉 —— 但**都留日志**（规则五）。
         ⚠️ 忽略之后**接着等**，可**总时限不重置**：否则对方一直发空行就能把电脑
            永久挂住，正好撞上 §5.5:480「不可静默空等」。
         """
+        if self._pushback:
+            return self._pushback.pop(0)
+
         deadline = time.monotonic() + timeout
         while True:
             left = deadline - time.monotonic()
