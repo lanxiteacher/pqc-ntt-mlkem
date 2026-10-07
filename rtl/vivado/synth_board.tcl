@@ -127,16 +127,33 @@ if {[catch {report_io -file "$repdir/${reppfx}_io.rpt"} err]} {
 }
 puts "RESULT board REPORTS $rep_ok"
 
-# 一行摘要，方便 grep
+# 两行摘要，方便 grep。
+#   ⚠️ 2026-10-07 改：原来只有一行 `WNS_NS`，取的是**全设计最坏**那条路径。
+#      板级三档时序全 MET 时，最坏的那条其实落在 `**async_default**` 组
+#      （复位同步器 → 异步控制端的 recovery），**它不是时钟级 WNS**
+#      —— `critical_paths.md` §一 专门警告过这个混淆，但这条机器可读的
+#      `WNS_NS` 行恰恰就是那个容易抄错的数（10-07 两档实测：真 WNS 7.339 / 6.547，
+#      而 `WNS_NS` 给的是 2.490 / 1.879）。所以现在拆成两行、名字各自写明口径，
+#      不再留一个叫「WNS」却装着另一个组的数。
 if {[catch {
     set tp [get_timing_paths -delay_type max -max_paths 1 -nworst 1]
     if {[llength $tp]} {
-        puts "RESULT board WNS_NS [get_property SLACK $tp]"
+        puts "RESULT board WNS_WORST_ANY_NS [get_property SLACK $tp]"
     } else {
-        puts "RESULT board WNS_NS NO_PATH"
+        puts "RESULT board WNS_WORST_ANY_NS NO_PATH"
     }
 } err]} {
-    puts "RESULT board WNS_NS QUERY_FAILED -- $err"
+    puts "RESULT board WNS_WORST_ANY_NS QUERY_FAILED -- $err"
+}
+if {[catch {
+    set tpc [get_timing_paths -delay_type max -max_paths 1 -nworst 1 -group sys_clk]
+    if {[llength $tpc]} {
+        puts "RESULT board WNS_CLOCK_NS [get_property SLACK $tpc]"
+    } else {
+        puts "RESULT board WNS_CLOCK_NS NO_PATH"
+    }
+} err]} {
+    puts "RESULT board WNS_CLOCK_NS QUERY_FAILED -- $err"
 }
 
 # ---- 设计检查点（GUI 里看关键路径 Schematic 的那张配图要用）-----------------
