@@ -197,7 +197,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   <div>
     <h1>FPGA 创新设计竞赛 · 项目进度</h1>
     <p class="sub">后量子密码 ML-KEM 的 NTT / INTT / 点乘 FPGA 加速核 ｜ 3.3 自主选题（初级组）｜ 纯 PL 实现</p>
-    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-08 19:58 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 6 处未提交</p>
+    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-08 20:07 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 9 处未提交</p>
   </div>
   <button class="btn" id="theme" type="button">切换明暗</button>
 </header>
@@ -234,7 +234,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="grow ghand"><div class="glab">交接点</div><div class="gtrack"><div class="ghchip done" style="left:10.417%;width:14.583%" title="H1 A→B 端口说明 · H3 串口协议冻结 v1.0 · H7 C→A、B 演示页数据格式">H1 H3 H7</div><div class="ghchip key" style="left:39.583%;width:14.583%" title="H6 —— 代码侧已闭（B 的 host.py 修复 A 已逐条复核）；剩真板子验收一条，**10-08 定：与录屏 / 截图并成一趟、另择日**（A 侧 H4 资源数据两批已交）">H4 · H6</div><div class="ghchip" style="left:54.167%;width:14.583%" title="H5 B→C 验证数据 · H8 A、B→C 技术初稿 · H10 换机从零 clone（B 一道 + C 一道）">H5 · H8 · H10</div><div class="ghchip" style="left:68.750%;width:14.583%" title="冻结：报告定稿、视频定稿、提交包组装 + 提交演练">提交包</div></div></div>
     <div class="gsec">
       <div class="glab"><span class="swatch" style="--c:var(--s1)"></span>A · 硬件与上板</div>
-      <div class="gact">最后提交 10-08 · 近 7 天 66 次 · 累计 107 次</div>
+      <div class="gact">最后提交 10-08 · 近 7 天 69 次 · 累计 110 次</div>
     </div><div class="grow">
         <div class="glab"><span class="glab-t" title="装 Vivado、跑通验证台（满屏全绿）、读懂 butterfly.v 与 addressgenerator.v">装 Vivado · 验证台跑通</span></div>
         <div class="gtrack"><div class="gbar st-done"
@@ -355,7 +355,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <div class="now-h"><span class="swatch" aria-hidden="true"></span>A · 硬件与上板</div>
       <div class="now-b">
         <span class="k">现在</span><span class="v">板级通路三档全通：pe1 / pe4 / pe16 各 5 条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）。途中修掉 proto_fsm 一个写死的 bank 切换常数 —— 它只在 pe1 上恰好对，pe4 上是 2/5、pe16 上连 #NTT 都挂；改成随折叠度派生后三档全过。10-07 把协议里最后一条开口 `#RDY &lt;ver&gt; &lt;build&gt; &lt;errs&gt;` 落进 RTL：复位释放后板子自发一行，&lt;build&gt; 就是折叠度 —— 解掉「电脑端不知道板子里烧的是哪一档、因而不知道该用哪张读出序表」这个缺口。⚠️ 三档只覆盖 1/4/16：核的数据通路是「每档一份」不是公式，pe2/pe8 有 FATAL 守卫拦</span>
-        <span class="k">下一步</span><span class="v">**板子这趟整体另择日**（2026-10-08 A 定）：① H6 收口（真板子跑 `#PMUL NTT 1` 得 `#RDY` + 256/256，存 `rtl/vivado/reports/board_pe1_txn.txt`）② 录屏 ③ 两组截图（Vivado 资源/时序 + 串口实测）—— **三件并成一趟，不拆**。⚠️ 录屏的前置是 C 先更新 `report/design/03` 的 §3.13.3/§3.13.4（现仍是 `#RDY` 之前的旧值 +6.538 / +6.840 / +6.241，板级实际 **+7.339**），正文不改则图和字对不上。**重烧 .bit 10-07 已完成**（三档 19:45 / 19:34 / 20:01，含 `#RDY`）。H6 的**代码侧已闭** —— B 的修复（`671a91b`）A 已逐条复核，剩的真板子验收并进上面那一趟。ai-log 已有 3 篇（10-04 / 10-05 / 10-07），保持一天一篇</span>
+        <span class="k">下一步</span><span class="v">**板子这趟整体另择日**（2026-10-08 A 定）：① H6 收口（真板子跑 `#PMUL NTT 1` 得 `#RDY` + 256/256，存 `rtl/vivado/reports/board_pe1_txn.txt`）② 录屏 ③ 两组截图（Vivado 资源/时序 + 串口实测）—— **三件并成一趟，不拆**。✅ **录屏的前置已于 2026-10-08 解除** —— `report/design/03` 的 §3.13.2/§3.13.3/§3.13.4/§3.13.7 已换成 `#RDY` 重建后的值（**A 代改**，`report/` 是 C 的目录；只换数、不动行文），图和字现在对得上。**重烧 .bit 10-07 已完成**（三档 19:45 / 19:34 / 20:01，含 `#RDY`）。H6 的**代码侧已闭** —— B 的修复（`671a91b`）A 已逐条复核，剩的真板子验收并进上面那一趟。ai-log 已有 4 篇（10-04 / 10-05 / 10-07 / 10-08），保持一天一篇</span>
       </div>
       <div class="now-p" title="logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2">范围 rtl/ ｜ 综合 ｜ 板子（本机） · 来源 logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2 · 核对 2026-10-07</div>
     </article><article class="now" style="--c: var(--s2)">
@@ -397,11 +397,11 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="tile-p">人写 · rtl/vivado/folding_comparison.md §九 · 2026-09-29</div>
   </div><div class="tile" title="自动 · git log">
     <div class="tile-l">三人提交</div>
-    <div class="tile-v">183</div>
-    <div class="tile-n">A 107 · B 32 · C 44</div>
+    <div class="tile-v">186</div>
+    <div class="tile-n">A 110 · B 32 · C 44</div>
     <div class="tile-p">自动 · git log</div>
   </div></div>
-<p class="hint">仓库规模（自动 · git ls-files，跳过草稿与数据目录）：NTT 核（参数化版） 4,381 行 · 验证探针 2,905 行 · 综合脚本与报告 2,317 行 · 上位机（B） 4,449 行 · 验证台（B） 5,671 行 · 报告正文（C） 1,663 行 · 演示页（C） 1,773 行 · 技能包（C） 2,895 行 · 指标表（C） 452 行</p>
+<p class="hint">仓库规模（自动 · git ls-files，跳过草稿与数据目录）：NTT 核（参数化版） 4,381 行 · 验证探针 2,905 行 · 综合脚本与报告 2,317 行 · 上位机（B） 4,449 行 · 验证台（B） 5,671 行 · 报告正文（C） 1,679 行 · 演示页（C） 1,773 行 · 技能包（C） 2,895 行 · 指标表（C） 452 行</p>
 
 <h2>欠账<span class="h2n">谁欠谁一句话 / 一个文件 —— 图中挂 ⚠ 的就是这三条</span></h2>
 <div class="blockers"><article class="blk">
@@ -432,7 +432,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td class="c-src" title="rtl/board/proto_fsm.v；host/proto.md §5.2">rtl/board/proto_fsm.v；host/proto.md §5.2</td>
     </tr><tr data-owner="A" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
-      <td>★ **板子这一趟 —— 三件并成一件，另择日**（**2026-10-08 A 定**，原先是「H6 收口 + pe1 日志」单独一趟、录屏与截图再一趟）：① **H6 收口** —— 插板 → 先开串口后烧 pe1（`BIT=rtl/vivado/_runs/pe1/ntt_board.bit`）→ `python host/src/board_run.py --build 1 --check &quot;#PMUL NTT 1&quot;`，期望 `#RDY` + 256/256；原始输出存 `rtl/vivado/reports/board_pe1_txn.txt`（**交 B 入库**，那是他唯一能独立核 pe1 的证据）。② **录屏**（C 的视频第 5 段）③ **两组截图**（板级 + 核的关键路径）。⚠️ **②的前置是 C 先更新 `report/design/03` §3.13.3/§3.13.4**（现仍是 `#RDY` 之前的旧值 +6.538 / +6.840 / +6.241、旧端点；板级实际 **+7.339**，端点也已随重出改变）—— 正文不改，图和字对不上。**重烧 10-07 已完成**（三档 .bit 19:45 / 19:34 / 20:01，含 `#RDY`；⚠️ `_runs/` 根下那份仍是 10-04 的旧 pe4，烧录必须带 `BIT=`）。位流掉电即失</td>
+      <td>★ **板子这一趟 —— 三件并成一件，另择日**（**2026-10-08 A 定**，原先是「H6 收口 + pe1 日志」单独一趟、录屏与截图再一趟）：① **H6 收口** —— 插板 → 先开串口后烧 pe1（`BIT=rtl/vivado/_runs/pe1/ntt_board.bit`）→ `python host/src/board_run.py --build 1 --check &quot;#PMUL NTT 1&quot;`，期望 `#RDY` + 256/256；原始输出存 `rtl/vivado/reports/board_pe1_txn.txt`（**交 B 入库**，那是他唯一能独立核 pe1 的证据）。② **录屏**（C 的视频第 5 段）③ **两组截图**（板级 + 核的关键路径）。✅ **②的前置已于 2026-10-08 解除 —— A 代 C 改了 `report/design/03`**：§3.13.2/§3.13.3/§3.13.4/§3.13.7 换成 `#RDY` 重建后的值、§3.14 坑 5 补现行形态（只换数、不动行文）。**图和字对得上，录屏不必再等 C。****重烧 10-07 已完成**（三档 .bit 19:45 / 19:34 / 20:01，含 `#RDY`；⚠️ `_runs/` 根下那份仍是 10-04 的旧 pe4，烧录必须带 `BIT=`）。位流掉电即失</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
       <td class="c-src" title="team/plan_AB_h6_board.md §三；logs/runbook_2026-10-07_board_trip_and_h6.md">team/plan_AB_h6_board.md §三；logs/runbook_2026-10-07_board_trip_and_h6.md</td>
     </tr><tr data-owner="A" class="st-done">

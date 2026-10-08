@@ -49,6 +49,16 @@ DCP=/c/vivado_work/dcp TREE=ncore sh rtl/vivado/run_folding_sweep.sh pe1   # 核
 （两行的 slack / 级数 / 延时都与 `rtl/vivado/reports/` 里提交的报告一致，
 核那个 **5.836** 还与 `03` §3.7 核对得上。）
 
+> ⚠️ **2026-10-08 订正 —— 上表「板级」那一行是 10-05 的实况，现在是旧值，别照抄。**
+> 加 `#RDY` 之后板级位流已重出（10-07），关键路径换成
+> `u_line/line_len_reg[0]/C` → `u_fsm/r_echo_reg[361]/CE`、slack **+7.339** / **11** 级逻辑 / **12.488 ns**。
+> ⚠️ **危险在于它不报错**：`line_len` 与 `tx_len` 都是 `[6:0]`，**旧端点那两个 pin 现在都还在** ——
+> 拿**新** `.dcp` 去查**旧**端点，Vivado 不会报错，只会静默画出一条**非关键**路径，
+> 交出去是一张看起来完全正常的**错图**。
+> ⇒ **以 `rtl/vivado/reports/board_pe1_timing.rpt` 里第一条 `Slack (MET)` 的 `Source` / `Destination`
+> 为准**，或照 `logs/runbook_2026-10-07_board_trip_and_h6.md` §二 第 8 步那张表（`team/plan_AB_h6_board.md`
+> §三 第 8 步同）。⚠️ **核那一行（下面那条）不用改** —— `#RDY` 只动板级 `proto_fsm`。
+
 **另外一个附带收获**：为了产出这两份 `.dcp`，两个流程各自从头重跑了一遍。
 把重跑前后的报告 `diff` 一下 —— **板级三份、核两份，全部只差文件头那个日期行**，
 **每一个数字都逐字节一致**。也就是说 §3.7 / §3.13 里那些数是**可重复**的。

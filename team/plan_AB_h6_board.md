@@ -177,9 +177,15 @@ python host/src/board_run.py --build 1 --check "#PMUL NTT 1"
   **只把 `.dcp` 换成上表这两份**。
 - ⚠️ 核那份 slack 是 **−0.936（VIOLATED）**，这是**对的** —— 核的约束是故意收紧的 5 ns。
   **别在截图里把它当问题。**
-- ⚠️ **先催 C 更新报告正文**：`report/design/03_performance_and_resources.md` 的
-  §3.13.3 / §3.13.4 **目前仍是旧值**（`+6.538 / +6.840 / +6.241`、旧端点）。
-  正文不更新，图和字对不上。这一条已发 `logs/letter_2026-10-07_A_to_C_rebuild.txt`。
+- ✅ **2026-10-08：报告正文已同步，这一条解除，不必再等 C。**
+  `report/design/03_performance_and_resources.md` 的 §3.13.3 / §3.13.4 已换成 `#RDY` 重建后的新值
+  （`+7.339 / +6.547 / +4.789`、新端点），§3.13.2 资源、§3.13.7 wrapper 拆分、§3.14 坑 5 一并跟齐
+  —— **由 A 代改**（`report/` 是 C 的目录；只换数字 + 补口径说明，不动行文）。**图的字与正文现在对得上。**
+  ⚠️ **同批订正** `logs/letter_2026-10-07_A_to_C_rebuild.txt` §四 点名的另两处，**都不动**：
+  `report/design/05_reproducibility.md:160` 是**带日期的实测记录**（10-05 同机重跑、diff 只差日期行，
+  用 `6.538 / 0.076` 证明「数字可重复」），改了就把那场实验改写成它没测过的东西；
+  `demo/data/vectors.js` **本来就没有板级数字**（`6,225` 那些是整数数组里的巧合子串，全文无 `LUT`/`WNS`），
+  那是天真 grep 的假阳性。
 - ⚠️ 存 `assets/`，**不要**直接放 `report/figures/`（那里只放 C 排版好的那版）。
 - ⚠️ `show_schematic` 只在 GUI 里有效，批处理里**静默返回** —— 失败的三条退路见旧手册 §一 第 5 步。
 
