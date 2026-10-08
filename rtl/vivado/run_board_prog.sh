@@ -27,6 +27,17 @@
 #   ⚠️ 三档（pe1/pe4/pe16）的 bitstream **同名**，互相覆盖。所以烧之前本脚本
 #      会读同目录的 `ntt_board.pe` 报一下这版是哪一档 —— 拿错档位的症状是
 #      「256 个值全错」，很容易误判成 RTL 挂了。
+#
+#   ⚠️⚠️ **2026-10-08 加：默认那只未必是新的。**
+#      `#RDY` 重建（10-07）时三档是用 `VIVADO_RUNS=_runs/pe{1,4,16}` **分目录**跑的，
+#      位流落在 `_runs/pe1/ntt_board.bit`（10-07 19:45）等三处；**平铺的
+#      `_runs/ntt_board.bit` 没被覆盖，停在 10-04 15:29（`#RDY` 之前）**，
+#      而两者**文件名、字节数完全一样**（都是 4045673），光看目录分不出来。
+#      裸跑本脚本会烧上旧位流 —— 症状是「开机不报 `#RDY`」，看着像 RTL 坏了。
+#      ⇒ 所以 program 模式下，**默认位流比 `rtl/` 里任何源文件旧就拒烧**
+#        （明确给了 `BIT=` 就跳过这道护栏；确实要用旧位流加 `ALLOW_STALE_BIT=1`）。
+#      ⇒ 今天要烧的是 10-07 那版 pe1，正确用法：
+#        `BIT=rtl/vivado/_runs/pe1/ntt_board.bit sh rtl/vivado/run_board_prog.sh`
 # ===========================================================================
 
 set -e
@@ -36,6 +47,9 @@ RTLDIR="$(cd "$HERE/../.." && pwd)"
 
 VIVADO="${VIVADO:-E:/xilinx/Vivado/2020.2/bin/vivado.bat}"
 RUNDIR="${VIVADO_RUNS:-$HERE/_runs}"
+# BIT 是「调用者明确点名的」还是「回落到默认的」—— 下面的陈旧位流护栏只拦后者。
+BIT_EXPLICIT=1
+if [ -z "${BIT:-}" ]; then BIT_EXPLICIT=""; fi
 BIT="${BIT:-$RUNDIR/ntt_board.bit}"
 
 # 档位戳：与 bitstream 同目录的一行文件 `ntt_board.pe`，由 synth_board.tcl 写。
@@ -62,6 +76,29 @@ if [ "$MODE" = "program" ] && [ ! -f "$BIT" ]; then
     echo "  ❌ 没有 bitstream：$BIT" >&2
     echo "     先跑 sh rtl/vivado/run_board_synth.sh 产出它（_runs/ 不进 git，换机器要自己综合）" >&2
     exit 1
+fi
+
+# ── 陈旧位流护栏（2026-10-08 加，理由见文件头那段 ⚠️⚠️）────────────────
+# 只拦「回落到默认 BIT」这一路：调用者明确给了 BIT= 就当他知道自己在烧什么。
+if [ "$MODE" = "program" ] && [ -z "$BIT_EXPLICIT" ] && [ -z "${ALLOW_STALE_BIT:-}" ]; then
+    NEWER="$(find "$RTLDIR/rtl" \( -name '*.v' -o -name '*.sv' -o -name '*.xdc' \) \
+             -newer "$BIT" 2>/dev/null | head -3)"
+    # 综合脚本本身也算「源」—— 它改了，这只位流同样不能代表当前设计。
+    # ⚠️ 但**不把 `rtl/vivado/*.tcl` 整个收进来**：`board_prog.tcl` 只管烧，
+    #    改它一句就会误报「位流过期」—— 假报错和漏报一样要治。
+    if [ -z "$NEWER" ] && [ "$HERE/synth_board.tcl" -nt "$BIT" ]; then
+        NEWER="$HERE/synth_board.tcl"
+    fi
+    if [ -n "$NEWER" ]; then
+        echo "  ❌ 默认位流比 RTL 旧，拒烧 —— 烧上去会得到与当前 RTL 不符的行为（例如开机不报 \`#RDY\`）。" >&2
+        echo "     位流 $BIT 是 $(date -r "$BIT" '+%F %T')，而这些源文件比它新：" >&2
+        printf '       %s\n' $NEWER >&2
+        echo "     ⇒ 要用哪一版就点名：BIT=<路径> sh rtl/vivado/run_board_prog.sh" >&2
+        echo "       （10-07 重建的三档在 _runs/pe1、_runs/pe4、_runs/pe16 下）" >&2
+        echo "     ⇒ 或者先 sh rtl/vivado/run_board_synth.sh 重综合。" >&2
+        echo "     ⇒ 确认就要这只旧位流：加 ALLOW_STALE_BIT=1。" >&2
+        exit 1
+    fi
 fi
 
 SCRATCH="${VIVADO_SCRATCH:-}"

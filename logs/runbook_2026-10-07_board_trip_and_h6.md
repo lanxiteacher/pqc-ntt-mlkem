@@ -174,7 +174,15 @@ BIT="$ROOT/rtl/vivado/_runs/pe1/ntt_board.bit" sh rtl/vivado/run_board_prog.sh
   档位戳从 `BIT=` 同目录的 `ntt_board.pe` 读，所以指着目录就不会拿错。
 - ⚠️ `_runs/`（根）和 `_runs/pe1/`、`_runs/pe4/`、`_runs/pe16/` 里**各有一份同名
   `ntt_board.bit`**。裸敲 `sh rtl/vivado/run_board_prog.sh` 读的是 `_runs/` 根下那份
-  —— 那份是 **10-04 的 pe4**，`#RDY` 都没有。**一定带上 `BIT=`。**
+  —— 那份是 **10-04 的 pe4**（戳文件 `ntt_board.pe` 写着 `4`，已核），`#RDY` 都没有。
+  **一定带上 `BIT=`。**
+- ✅ **2026-10-08 加了一道护栏**（`run_board_prog.sh` 文件头有理由）：**不带 `BIT=` 裸敲现在会被直接拒掉**
+  —— 判据是「默认位流比 `rtl/` 里任何源文件旧」，位流是 10-04、RTL 是 10-07，所以必然拒。
+  ⇒ 这一趟**照上面那条命令带 `BIT=` 就不会碰到它**；真碰上了说明 `BIT=` 没传进去，别加
+  `ALLOW_STALE_BIT=1` 绕过去。
+- ✅ **三档位流都已就位**（10-07 重建版，**这一趟不用重综合**）：
+  `_runs/pe1/` 19:45、`_runs/pe4/` 19:34、`_runs/pe16/` 20:01；
+  10-07 20:44 那次烧的正是 `_runs/pe1/` 那只（见 `board_prog.log`）。
 - ⚠️ 位流**掉电即失**，中途断过电就得重烧。
 - ✅ 看到 `End of startup status: HIGH` 才算 PL 配置完成。
 
