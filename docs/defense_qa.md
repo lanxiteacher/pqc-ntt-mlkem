@@ -123,6 +123,7 @@
 | 问题 | 答题要点 → 证据 | 谁能答 |
 |---|---|---|
 | 上游 RTL 是谁的？许可？ | 开源基线，逐文件 **CC0**；`../THIRD_PARTY_LICENSES.md` 已并列写明 | C |
+| 上游 README 写着 *for academic research only*，和 CC0 冲突？ | **两句都摆出来，再给口径**：`pe1/README.md` 有 "the implementations are for academic research only and does not come with any support or any responsibility"，而**逐文件头**是 **CC0 1.0**（**不可撤销**的权利放弃）。**我们按 CC0 理解** —— 逐文件声明构成实际授权，README 那句按**免责声明**（不提供支持、不承担责任）理解；两份声明如实并列在 `../THIRD_PARTY_LICENSES.md` §一.1。⚠️ **别只答「CC0」、也别答成「上游不允许商用」** —— 要主动说明这两句怎么并存 | C |
 | 你们改了多少？ | 参数化折叠度：叶子归并、地址生成器、核、顶层固定接口、引脚约束 —— 8 个 Task → `../rtl/folding_param_design.md` | A |
 | 为什么不做侧信道防护？ | **明确不做**，是设计边界不是遗漏 → `../report/design/02_design_and_innovation.md` §2.7 | C |
 | 为什么不做多核并行？ | 我们做的是**折叠**（一个核跑多拍）不是**并行**（多核同时）→ 同上 | A |
