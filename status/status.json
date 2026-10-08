@@ -17,8 +17,8 @@
       "color": 1,
       "git_authors": ["lanxiteacher"],
       "now": "板级通路三档全通：pe1 / pe4 / pe16 各 5 条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）。途中修掉 proto_fsm 一个写死的 bank 切换常数 —— 它只在 pe1 上恰好对，pe4 上是 2/5、pe16 上连 #NTT 都挂；改成随折叠度派生后三档全过。10-07 把协议里最后一条开口 `#RDY <ver> <build> <errs>` 落进 RTL：复位释放后板子自发一行，<build> 就是折叠度 —— 解掉「电脑端不知道板子里烧的是哪一档、因而不知道该用哪张读出序表」这个缺口。⚠️ 三档只覆盖 1/4/16：核的数据通路是「每档一份」不是公式，pe2/pe8 有 FATAL 守卫拦",
-      "next": "**板子这趟整体另择日**（2026-10-08 A 定）：① H6 收口（真板子跑 `#PMUL NTT 1` 得 `#RDY` + 256/256，存 `rtl/vivado/reports/board_pe1_txn.txt`）② 录屏 ③ 两组截图（Vivado 资源/时序 + 串口实测）—— **三件并成一趟，不拆**。✅ **录屏的前置已于 2026-10-08 解除** —— `report/design/03` 的 §3.13.2/§3.13.3/§3.13.4/§3.13.7 已换成 `#RDY` 重建后的值（**A 代改**，`report/` 是 C 的目录；只换数、不动行文），图和字现在对得上。**重烧 .bit 10-07 已完成**（三档 19:45 / 19:34 / 20:01，含 `#RDY`）。H6 的**代码侧已闭** —— B 的修复（`671a91b`）A 已逐条复核，剩的真板子验收并进上面那一趟。ai-log 已有 4 篇（10-04 / 10-05 / 10-07 / 10-08），保持一天一篇",
-      "as_of": "2026-10-07",
+      "next": "**板子这趟整体另择日**（2026-10-08 A 定）：① H6 收口（真板子跑 `#PMUL NTT 1` 得 `#RDY` + 256/256，存 `rtl/vivado/reports/board_pe1_txn.txt`）② 录屏 ③ 两组截图（Vivado 资源/时序 + 串口实测）—— **三件并成一趟，不拆**。**2026-10-08 夜再定：A 单人做 —— B 不到场、也不去通知他**（板子与 Vivado 只接在 A 的机器上，而 B 的 `host/` 代码本来就在仓库里，A 自己就能跑）；日子 **10-09（五）或 10-11（日）**。单人跑当天的未知数当晚就地压掉一个 —— 陪练 `--loopback` 绿、`--fake-build 4` 能认出档位、`--list` 认得出串口、B 的 7 个自测在本机 **rc 全 0** ⇒ **当天只剩电气层一个未知数**。✅ **录屏的前置已于 2026-10-08 解除** —— `report/design/03` 的 §3.13.2/§3.13.3/§3.13.4/§3.13.7 已换成 `#RDY` 重建后的值（**A 代改**，`report/` 是 C 的目录；只换数、不动行文），图和字现在对得上。**重烧 .bit 10-07 已完成**（三档 19:45 / 19:34 / 20:01，含 `#RDY`）。H6 的**代码侧已闭** —— B 的修复（`671a91b`）A 已逐条复核，剩的真板子验收并进上面那一趟。ai-log 已有 4 篇（10-04 / 10-05 / 10-07 / 10-08），保持一天一篇",
+      "as_of": "2026-10-08",
       "source": "logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2"
     },
     {
@@ -49,10 +49,10 @@
     {
       "from": "B",
       "to": "A",
-      "what": "H6 只剩一条 —— ✅ **代码侧 2026-10-08 已闭**：B 的修复（`19e8793` / `671a91b` / `dab7353`）已入库并经 A 逐条复核 —— `host.py` 509 → **554 行**、`expect_rows` 到位、四条 `--loopback` **全 rc=0**（`#PMUL NTT 1` 改前是 1）、七个自测全绿。剩下的只是**在真板子上跑一遍验收**（`board_run.py --build 1 --check \"#PMUL NTT 1\"`，期望 `#RDY` + 256/256）。⚠️ 板子现在没插（COM9 / COM10 两个 CH340 状态都是 `Unknown`，是拔掉后 Windows 记着的幽灵设备）；**2026-10-08 A 定：与录屏、两组截图并成一趟，另择日**",
+      "what": "H6 只剩一条 —— ✅ **代码侧 2026-10-08 已闭**：B 的修复（`19e8793` / `671a91b` / `dab7353`）已入库并经 A 逐条复核 —— `host.py` 509 → **554 行**、`expect_rows` 到位、四条 `--loopback` **全 rc=0**（`#PMUL NTT 1` 改前是 1）、七个自测全绿。剩下的只是**在真板子上跑一遍验收**（`board_run.py --build 1 --check \"#PMUL NTT 1\"`，期望 `#RDY` + 256/256）。⚠️ 板子现在没插（COM9 / COM10 两个 CH340 状态都是 `Unknown`，是拔掉后 Windows 记着的幽灵设备）；**2026-10-08 A 定：与录屏、两组截图并成一趟，另择日**；**同夜再定：A 单人做（B 不到场、不通知），日子 10-09 或 10-11**",
       "impact": "**不再是代码问题，也不是等人 —— 是排期。** 这一趟并进「板子 + 录屏 + 截图」那一件，另择日做。它压着 H6 记账、H5（B 交 C 的验证数据）和演示视频里那段真机演示",
       "bar": { "track": "B", "week": "W3" },
-      "as_of": "2026-10-07",
+      "as_of": "2026-10-08",
       "source": "host/KNOWN_ISSUES.md C2；logs/project_state.md §一"
     }
   ],
@@ -93,7 +93,7 @@
       { "track": "A", "week": "W0", "label": "装 Vivado · 验证台跑通", "state": "done", "critical": false, "note": "装 Vivado、跑通验证台（满屏全绿）、读懂 butterfly.v 与 addressgenerator.v", "source": "team/guide_A.md §四 W0 行" },
       { "track": "A", "week": "W1", "label": "参数化折叠度改造", "state": "done", "critical": true, "note": "不再另写 INTT／点乘（上游基线自带且已验证），改为把三档手工复制的 RTL 合成一份参数化版本", "source": "team/guide_A.md §四 W1 行" },
       { "track": "A", "week": "W2", "label": "板级 wrapper · 上板", "state": "done", "critical": true, "note": "协议已冻结、无等待项。10-04 直接做到板级三档全通（原文排在 W4 的活，提前两周）", "source": "rtl/vivado/reports/board_pe*_txn.txt" },
-      { "track": "A", "week": "W3", "label": "`#RDY` 落地 · 板子一次做完", "state": "doing", "critical": true, "note": "`#RDY` 已落进 proto_fsm + 冒烟台补 S0，三档位流 10-07 已重出。板子这趟（H6 收口 + 录屏 + 两组截图）**10-08 定：并成一件、另择日**；H6 代码侧已闭（B 的 `671a91b`，A 已逐条复核）", "source": "rtl/board/proto_fsm.v；logs/schedule_plain.md §三 W3" },
+      { "track": "A", "week": "W3", "label": "`#RDY` 落地 · 板子一次做完", "state": "doing", "critical": true, "note": "`#RDY` 已落进 proto_fsm + 冒烟台补 S0，三档位流 10-07 已重出。板子这趟（H6 收口 + 录屏 + 两组截图）**10-08 定：并成一件、另择日**、**A 单人做（B 不到场、不通知）**；H6 代码侧已闭（B 的 `671a91b`，A 已逐条复核）", "source": "rtl/board/proto_fsm.v；logs/schedule_plain.md §三 W3" },
       { "track": "A", "week": "W4", "label": "配合视频 · 全量回归", "state": "todo", "critical": false, "note": "补录素材 + 核对旁白数字；最后一次全量回归（refsim 四条脚本 + 板级冒烟台三档），结果存进 logs/", "source": "logs/schedule_plain.md §三 W4" },
       { "track": "A", "week": "W5", "label": "冻结 RTL", "state": "todo", "critical": false, "note": "冻结，不再改 RTL；配合组装提交包与提交演练", "source": "logs/schedule_plain.md §三 W5" },
       { "track": "A", "week": "W6", "label": "缓冲 · 提交", "state": "todo", "critical": false, "note": "不排新活：W3–W5 任何一项没做完的在这里收口。11/04 18:00 截止", "source": "logs/schedule_plain.md §三 缓冲" },
@@ -124,7 +124,7 @@
 
   "todos": [
     { "owner": "A", "text": "✅ `#RDY` 落地：proto_fsm 加 S_RDY 自发行（<ver>=1 / <build>=折叠度 / <errs>=累计出错数），冒烟台补 S0 收这一行 —— 三档 `*7c`/`*79`/`*4a` 已在仿真里收齐", "state": "done", "as_of": "2026-10-07", "source": "rtl/board/proto_fsm.v；host/proto.md §5.2" },
-    { "owner": "A", "text": "★ **板子这一趟 —— 三件并成一件，另择日**（**2026-10-08 A 定**，原先是「H6 收口 + pe1 日志」单独一趟、录屏与截图再一趟）：① **H6 收口** —— 插板 → 先开串口后烧 pe1（`BIT=rtl/vivado/_runs/pe1/ntt_board.bit`）→ `python host/src/board_run.py --build 1 --check \"#PMUL NTT 1\"`，期望 `#RDY` + 256/256；原始输出存 `rtl/vivado/reports/board_pe1_txn.txt`（**交 B 入库**，那是他唯一能独立核 pe1 的证据）。② **录屏**（C 的视频第 5 段）③ **两组截图**（板级 + 核的关键路径）。✅ **②的前置已于 2026-10-08 解除 —— A 代 C 改了 `report/design/03`**：§3.13.2/§3.13.3/§3.13.4/§3.13.7 换成 `#RDY` 重建后的值、§3.14 坑 5 补现行形态（只换数、不动行文）。**图和字对得上，录屏不必再等 C。****重烧 10-07 已完成**（三档 .bit 19:45 / 19:34 / 20:01，含 `#RDY`；⚠️ `_runs/` 根下那份仍是 10-04 的旧 pe4，烧录必须带 `BIT=`）。位流掉电即失", "state": "todo", "as_of": "2026-10-08", "source": "team/plan_AB_h6_board.md §三；logs/runbook_2026-10-07_board_trip_and_h6.md" },
+    { "owner": "A", "text": "★ **板子这一趟 —— 三件并成一件，另择日**（**2026-10-08 A 定**，原先是「H6 收口 + pe1 日志」单独一趟、录屏与截图再一趟；**同夜再定：A 单人做 —— B 不到场、也不通知他**，日子 **10-09（五）或 10-11（日）**）：① **H6 收口** —— 插板 → 先开串口后烧 pe1（`BIT=rtl/vivado/_runs/pe1/ntt_board.bit`）→ `python host/src/board_run.py --build 1 --check \"#PMUL NTT 1\"`，期望 `#RDY` + 256/256；原始输出存 `rtl/vivado/reports/board_pe1_txn.txt`（**交 B 入库**，那是他唯一能独立核 pe1 的证据）。② **录屏**（C 的视频第 5 段）③ **两组截图**（板级 + 核的关键路径）。✅ **②的前置已于 2026-10-08 解除 —— A 代 C 改了 `report/design/03`**：§3.13.2/§3.13.3/§3.13.4/§3.13.7 换成 `#RDY` 重建后的值、§3.14 坑 5 补现行形态（只换数、不动行文）。**图和字对得上，录屏不必再等 C。****重烧 10-07 已完成**（三档 .bit 19:45 / 19:34 / 20:01，含 `#RDY`；⚠️ `_runs/` 根下那份仍是 10-04 的旧 pe4，烧录必须带 `BIT=`）。位流掉电即失", "state": "todo", "as_of": "2026-10-08", "source": "team/plan_AB_h6_board.md §三；logs/runbook_2026-10-07_board_trip_and_h6.md" },
     { "owner": "A", "text": "交 B：`.bit` + XDC + 「怎么下载」三步说明（H6 的另一半）—— 三样都已在仓库里：`rtl/board/ntt_board.xdc`、`rtl/vivado/run_board_prog.sh`、`team/plan_AB_h6_board.md` §三 第 2 步", "state": "done", "as_of": "2026-10-07", "source": "logs/schedule_plain.md §四 H6" },
     { "owner": "A", "text": "★ 写自己的 `report/ai-log/` —— §3.3.3.1 是「须」提交大模型协作记录，压 15 分那档。已有 4 篇（10-04 / 10-05 / 10-07 / 10-08），保持一天一篇", "state": "doing", "as_of": "2026-10-07", "source": "report/ai-log/；logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条" },
     { "owner": "A", "text": "最后一次全量回归：refsim 四条脚本 + 板级冒烟台三档，结果存进 logs/", "state": "todo", "as_of": "2026-10-07", "source": "logs/schedule_plain.md §三 W4" },
