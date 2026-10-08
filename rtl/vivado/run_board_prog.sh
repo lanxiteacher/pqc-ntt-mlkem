@@ -81,8 +81,11 @@ fi
 # ── 陈旧位流护栏（2026-10-08 加，理由见文件头那段 ⚠️⚠️）────────────────
 # 只拦「回落到默认 BIT」这一路：调用者明确给了 BIT= 就当他知道自己在烧什么。
 if [ "$MODE" = "program" ] && [ -z "$BIT_EXPLICIT" ] && [ -z "${ALLOW_STALE_BIT:-}" ]; then
+    # ⚠️ `-not -path '*/tb/*'`：testbench **不进综合**，改它不会让位流过期。
+    #    `synth_board.tcl:55` 是**非递归** glob（「tb/ 就是靠这一点排除的」），
+    #    这里必须与它口径一致 —— 否则改一句 tb 里的 $display 就会误报「位流过期」。
     NEWER="$(find "$RTLDIR/rtl" \( -name '*.v' -o -name '*.sv' -o -name '*.xdc' \) \
-             -newer "$BIT" 2>/dev/null | head -3)"
+             -not -path '*/tb/*' -newer "$BIT" 2>/dev/null | head -3)"
     # 综合脚本本身也算「源」—— 它改了，这只位流同样不能代表当前设计。
     # ⚠️ 但**不把 `rtl/vivado/*.tcl` 整个收进来**：`board_prog.tcl` 只管烧，
     #    改它一句就会误报「位流过期」—— 假报错和漏报一样要治。

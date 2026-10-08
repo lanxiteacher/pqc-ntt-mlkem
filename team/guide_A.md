@@ -175,7 +175,7 @@ export PATH="/c/iverilog/bin:$PATH"
 | | |
 |---|---|
 | **交什么** | `.bit` 文件、XDC、以及「怎么下载」的三步说明 |
-| **注意** | 这次交接发生在**你的工位**——B 过来找你 |
+| **注意** | ⚠️ **2026-10-08 订正：B 不到场。** 板子与 Vivado 只接在你机器上，**你自己跑 B 的 `host/src/board_run.py`**（`host/` 仍归 B，你只跑不改）。见 `team/plan_AB_h6_board.md` §三 |
 
 ---
 
