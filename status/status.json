@@ -1,6 +1,6 @@
 {
   "_how": "本文件只放「机器判不出来」的东西：下一步、卡点、里程碑、人的判断。每条都要写 as_of（这条是几号核的）与 source（出处）。能自动抓的数字不要写进来 —— 见 gen_status.mjs 的 AUTO 段。",
-  "updated": "2026-10-07",
+  "updated": "2026-10-08",
 
   "countdown": {
     "submission": "2026-11-04",
@@ -39,22 +39,13 @@
       "color": 3,
       "git_authors": ["于宸", "yuchen", "C"],
       "now": "不依赖 A、B 的活已做完：报告五章初稿 + 封面摘要骨架（10-07）、skill/ 四个子目录、metrics/ 指标表、demo/ 三页、report/figures/ 6 张图、assets/ 四张截图。三个人的 ai-log 都开张了：**共 13 篇 = C 8 / A 4 / B 1**",
-      "next": "剩下都是 C 自己的：① 报告三处缺口 —— 上板真实最高频率、端到端延迟正式测量、正文写明 Vivado 是 2020.2（§3.3.3.1「须在报告中说明」）② 装 gcc + iverilog + python3，跑 H10 独立复现 ③ `skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」（§3.3.5.2）",
+      "next": "剩下都是 C 自己的：① 报告三处缺口 —— 上板真实最高频率、端到端延迟正式测量、正文写明 Vivado 是 2020.2（§3.3.3.1「须在报告中说明」）② `skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」（§3.3.5.2）。✅ 原第 ② 条「装 gcc + iverilog + python3，跑 H10 独立复现」**10-05 已办结**（非作者视角，`--from-remote` 通过 4 ／ 失败 0），已从本行移出",
       "as_of": "2026-10-07",
       "source": "report/README.md §三；team/todo_C.md §二"
     }
   ],
 
   "blockers": [
-    {
-      "from": "C",
-      "to": "C",
-      "what": "C 本机 gcc / iverilog / python3 三样都没有（10-01 实测）—— H10「外人独立复现」的前提落空",
-      "impact": "报告「文档与可复现」15 分那章现在只能写到「脚本已写好」，写不到「已跑通」；A 本机有 C:\\iverilog，可以直接给他",
-      "bar": { "track": "C", "week": "W3" },
-      "as_of": "2026-10-03",
-      "source": "team/todo_C.md §二·1；report/design/05_reproducibility.md §5.6"
-    },
     {
       "from": "B",
       "to": "A",
@@ -79,7 +70,7 @@
     { "id": "—",  "when": "2026-10-07", "label": "三档位流重出（含 `#RDY`，19:45 / 19:34 / 20:01）；真板子上首次用 **B 的** `board_run.py` 跑通 `#NTT 1`", "owner": "A", "state": "done", "source": "rtl/vivado/_runs/pe*/ntt_board.bit；logs/letter_2026-10-07_A_to_B_pmul_desync.txt" },
     { "id": "H4", "when": "2026-10-13", "label": "H4：交 C 资源数字 —— 已交两批（09-29 核与顶层对比 / 10-04 板级三档）", "owner": "A", "state": "done", "source": "rtl/vivado/folding_comparison.md；rtl/vivado/reports/" },
     { "id": "H6", "when": "2026-10-13", "label": "H6：`.bit` + XDC + 下载说明交给 B，并把上位机接到真板子上跑一遍", "owner": "A+B", "state": "todo", "source": "logs/schedule_plain.md §四 H6" },
-    { "id": "H10", "when": "2026-10-20", "label": "H10：换一台电脑、从零 clone、按 README 走一遍（B 那一遍不省 + C 独立复现一道）", "owner": "B+C", "state": "todo", "source": "logs/schedule_plain.md §四 H10" },
+    { "id": "H10", "when": "2026-10-20", "label": "H10：换一台电脑、从零 clone、按 README 走一遍（**只剩 B 那一遍**；✅ C 独立复现那一道 10-05 已办结）", "owner": "B+C", "state": "todo", "source": "logs/schedule_plain.md §四 H10；report/ai-log/2026-10-05_C.md" },
     { "id": "H5", "when": "2026-10-20", "label": "H5：B 交 C 完整验证数据（含非退化统计）", "owner": "B", "state": "todo", "source": "logs/schedule_plain.md §四 H5" },
     { "id": "H8", "when": "2026-10-20", "label": "H8：A、B 把报告技术初稿交给 C（要点 + 数字即可，不必成文）", "owner": "A+B", "state": "todo", "source": "logs/schedule_plain.md §四 H8" },
     { "id": "—",  "when": "2026-10-27", "label": "W5 冻结：报告定稿、视频定稿、提交包组装完成", "owner": "全员", "state": "todo", "source": "logs/schedule_plain.md §三 W5" },
@@ -118,7 +109,7 @@
       { "track": "C", "week": "W0", "label": "AI 日志 · 命名规范", "state": "done", "critical": false, "note": "建 AI 协作日志（每天 10 分钟）+ 素材目录，定好文件命名规范；读《技术资料汇编》第一部分", "source": "team/guide_C.md §四 W0 行" },
       { "track": "C", "week": "W1", "label": "演示页正向 7 层", "state": "done", "critical": false, "note": "演示页正向部分做完（按一下走一层）；相关工作对比表成文；H7 办结", "source": "team/guide_C.md §四 W1 行" },
       { "track": "C", "week": "W2", "label": "演示页补两页 · 性能章", "state": "done", "critical": false, "note": "报告五章初稿 + 封面摘要骨架、skill/ 四子目录、metrics/ 指标表、demo/ 三页、figures 三张", "source": "report/README.md §三" },
-      { "track": "C", "week": "W3", "label": "报告补缺口 · 装工具链", "state": "doing", "critical": false, "note": "报告三处缺口（上板真实 Fmax / 端到端延迟 / Vivado 2020.2 口径）+ skill/ 四类逐项过四问 + 装 gcc/iverilog/python3 跑 H10", "source": "report/README.md §三；logs/schedule_plain.md §三 W3" },
+    { "track": "C", "week": "W3", "label": "报告补缺口 · H10 已办结", "state": "doing", "critical": false, "note": "报告三处缺口（上板真实 Fmax / 端到端延迟 / Vivado 2020.2 口径）+ `skill/` 四类逐项过四问；✅ 装 gcc/iverilog/python3 跑 **H10 独立复现** 已于 10-05 办结（`--from-remote` 通过 4 ／ 失败 0）", "source": "report/README.md §三；report/ai-log/2026-10-05_C.md" },
       { "track": "C", "week": "W4", "label": "报告成文 · 剪视频", "state": "todo", "critical": false, "note": "报告主体成文、排版、配图（用 A 的 H4 + B 的 H5）；剪演示视频（5–10 分钟）", "source": "logs/schedule_plain.md §三 W4" },
       { "track": "C", "week": "W5", "label": "报告定稿 · 提交包", "state": "todo", "critical": false, "note": "报告定稿、视频定稿、按《指南》§3.2.5 逐项组装提交包", "source": "logs/schedule_plain.md §三 W5" },
       { "track": "C", "week": "W6", "label": "缓冲 · 提交", "state": "todo", "critical": false, "note": "不排新活，收口用", "source": "logs/schedule_plain.md §三 缓冲" }
@@ -126,7 +117,7 @@
     "handoffs": [
       { "week": "W1", "ids": "H1 H3 H7", "state": "done", "label": "H1 A→B 端口说明 · H3 串口协议冻结 v1.0 · H7 C→A、B 演示页数据格式" },
       { "week": "W3", "ids": "H4 · H6", "state": "todo", "key": true, "label": "H6 —— 代码侧已闭（B 的 host.py 修复 A 已逐条复核）；剩真板子验收一条，**10-08 定：与录屏 / 截图并成一趟、另择日**（A 侧 H4 资源数据两批已交）" },
-      { "week": "W4", "ids": "H5 · H8 · H10", "state": "todo", "label": "H5 B→C 验证数据 · H8 A、B→C 技术初稿 · H10 换机从零 clone（B 一道 + C 一道）" },
+    { "week": "W4", "ids": "H5 · H8 · H10", "state": "todo", "label": "H5 B→C 验证数据 · H8 A、B→C 技术初稿 · H10 换机从零 clone（**只剩 B 一道** —— C 那一道 10-05 已办结；B 那道不省、就在本周）" },
       { "week": "W5", "ids": "提交包", "state": "todo", "label": "冻结：报告定稿、视频定稿、提交包组装 + 提交演练" }
     ]
   },
@@ -156,7 +147,7 @@
     { "owner": "B", "text": "#PMUL TIME / #PMUL FULL 的**协议侧（假串口）**端到端 —— 被 refsim/batch/ 下 23 个变长文件挡。**10-04 判定不改**（改它 = 动已冻结的 H2 黄金向量），报告里写清边界。⚠️ **真板子那一侧 10-04 已各 256/256**（`board_pe{4,16}_txn.txt`），别把这句读成「没跑过」", "state": "blocked", "as_of": "2026-10-07", "source": "host/proto.md §九(d) 第 2/3 条；rtl/vivado/reports/board_pe*_txn.txt" },
     { "owner": "B", "text": "同步 proto.md §七 两处过期陈述（A 已于 10-07 回信说明口径）", "state": "todo", "as_of": "2026-10-07", "source": "logs/letter_2026-10-07_A_to_B.txt" },
 
-    { "owner": "C", "text": "装 gcc + iverilog + python3 —— H10 独立复现的唯一前提（A 本机有 C:\\iverilog 可直接给他）", "state": "todo", "as_of": "2026-10-03", "source": "team/todo_C.md §二·1" },
+    { "owner": "C", "text": "✅ **装工具链 + H10 独立复现，10-05 当天一起办结** —— `gcc` 16.2.0 / `python` 3.12.10 / `iverilog` 12.0（winget），四条 `refsim/` 入口脚本全过、`check_reproducible.sh --from-remote` **通过 4 ／ 跳过 0 ／ 失败 0、退 0**（本项目首次真绿），改名后又复验一遍。⚠️ 本行原写「H10 独立复现的唯一前提」并标 `todo` —— **10-05 装机后即失效，10-08 才收掉**，见 `logs/project_state_changelog.md` 2026-10-08（之六）", "state": "done", "as_of": "2026-10-08", "source": "report/ai-log/2026-10-05_C.md 第三段；report/design/05_reproducibility.md §5.6" },
     { "owner": "C", "text": "★ 报告三处缺口：① 上板真实最高频率（板级 WNS 不能反推 Fmax）② 端到端延迟正式测量（§3.10）③ 正文写明 Vivado 是 2020.2", "state": "todo", "as_of": "2026-10-07", "source": "report/README.md §三；report/design/03_performance_and_resources.md §3.10" },
     { "owner": "C", "text": "`skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」（§3.3.5.2）", "state": "todo", "as_of": "2026-10-07", "source": "logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 2 条" },
     { "owner": "C", "text": "演示页截图选版式进正文（深色主题不适合黑白打印）", "state": "todo", "as_of": "2026-10-03", "source": "team/todo_C.md §二·2" },
