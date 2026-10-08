@@ -58,8 +58,8 @@
     {
       "from": "B",
       "to": "A",
-      "what": "H6 只剩一条 —— 2026-10-07 夜 A 已用 **B 的** `host/src/board_run.py` 在真板子跑通 `#NTT 1`（256/256），「上位机 ↔ 真板子」这条链路**不再是零实测**。**`#PMUL NTT 1` 仍 STOP**，根因在 `host/src/host.py`：`txn.count` 同时当「发几行 / 收几行 / 核对几行」三个用途，512 进 256 出时 `:443` 拿 256 比 512 → 误报 DESYNC。**RTL 与协议都没错**。B 远程改 + `--loopback` 自测 + push，A 在真板子验收（不用见面）",
-      "impact": "卡着 H6 收口。同时压着 H5（B 交 C 的验证数据）和演示视频里那段真机演示",
+      "what": "H6 只剩一条 —— ✅ **代码侧 2026-10-08 已不卡**：B 的修复（`19e8793` / `671a91b` / `dab7353`）已入库并经 A 逐条复核 —— `host.py` 509 → **554 行**、`expect_rows` 到位、四条 `--loopback` **全 rc=0**（`#PMUL NTT 1` 改前是 1）、七个自测全绿。⚠️ **现在卡在硬件：板子没插**（COM9 / COM10 两个 CH340 状态都是 `Unknown`，是拔掉后 Windows 记着的幽灵设备）。插上后由 A 跑 `board_run.py --build 1 --check \"#PMUL NTT 1\"` 收口",
+      "impact": "代码侧已解，只等板子插上。卡着 H6 收口；同时压着 H5（B 交 C 的验证数据）和演示视频里那段真机演示",
       "bar": { "track": "B", "week": "W3" },
       "as_of": "2026-10-07",
       "source": "host/KNOWN_ISSUES.md C2；logs/project_state.md §一"
@@ -133,7 +133,7 @@
 
   "todos": [
     { "owner": "A", "text": "✅ `#RDY` 落地：proto_fsm 加 S_RDY 自发行（<ver>=1 / <build>=折叠度 / <errs>=累计出错数），冒烟台补 S0 收这一行 —— 三档 `*7c`/`*79`/`*4a` 已在仿真里收齐", "state": "done", "as_of": "2026-10-07", "source": "rtl/board/proto_fsm.v；host/proto.md §5.2" },
-    { "owner": "A", "text": "★ 板子这一趟：录屏 + 两组截图（Vivado 资源/时序 + 串口实测）。**重烧 10-07 已完成**（三档 .bit 19:45 / 19:34 / 20:01，含 `#RDY`；⚠️ `_runs/` 根下那份仍是 10-04 的旧 pe4，烧录必须带 `BIT=`）。位流掉电即失", "state": "todo", "as_of": "2026-10-07", "source": "team/plan_AB_h6_board.md §三；logs/runbook_2026-10-07_board_trip_and_h6.md" },
+    { "owner": "A", "text": "★ 板子这一趟（**2026-10-08 收窄**）：**只做 H6 收口 + pe1 原始串口日志** —— 插板 → 先开串口后烧 pe1（`BIT=rtl/vivado/_runs/pe1/ntt_board.bit`）→ `python host/src/board_run.py --build 1 --check \"#PMUL NTT 1\"`，期望 `#RDY` + 256/256；原始输出存 `rtl/vivado/reports/board_pe1_txn.txt` 交给 B（他唯一能独立核 pe1 的证据）。**本轮不做** `#PMUL FULL 1`、**不做**录屏与两组截图（另择日）。**重烧 10-07 已完成**（三档 .bit 19:45 / 19:34 / 20:01，含 `#RDY`；⚠️ `_runs/` 根下那份仍是 10-04 的旧 pe4，烧录必须带 `BIT=`）。位流掉电即失", "state": "todo", "as_of": "2026-10-07", "source": "team/plan_AB_h6_board.md §三；logs/runbook_2026-10-07_board_trip_and_h6.md" },
     { "owner": "A", "text": "交 B：`.bit` + XDC + 「怎么下载」三步说明（H6 的另一半）—— 三样都已在仓库里：`rtl/board/ntt_board.xdc`、`rtl/vivado/run_board_prog.sh`、`team/plan_AB_h6_board.md` §三 第 2 步", "state": "done", "as_of": "2026-10-07", "source": "logs/schedule_plain.md §四 H6" },
     { "owner": "A", "text": "★ 写自己的 `report/ai-log/` —— §3.3.3.1 是「须」提交大模型协作记录，压 15 分那档。已有 3 篇（10-04 / 10-05 / 10-07），保持一天一篇", "state": "doing", "as_of": "2026-10-07", "source": "report/ai-log/；logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条" },
     { "owner": "A", "text": "最后一次全量回归：refsim 四条脚本 + 板级冒烟台三档，结果存进 logs/", "state": "todo", "as_of": "2026-10-07", "source": "logs/schedule_plain.md §三 W4" },

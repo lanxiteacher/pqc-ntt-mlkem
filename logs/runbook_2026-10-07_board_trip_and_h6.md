@@ -284,9 +284,14 @@ python host/src/board_run.py --build 1 --check "#PMUL NTT 1"
 
 而 B 的上位机**现在不认这一行**：
 
-- `host/src/host.py:61` —— `HEAD_KINDS = {"#OK", "#BEGIN", "#DONE", "#ERR"}`，**不含 `#RDY`**
-- `host/src/host.py:297-299` —— `_parse()` 认不出首词就返回 `DESYNC`
-- `host/src/host.py:320-322` —— 就算认出来了，`kind != want` 也是 `DESYNC`
+- `host/src/host.py:71` —— `HEAD_KINDS = {"#OK", "#BEGIN", "#DONE", "#ERR"}`，**不含 `#RDY`**
+- `host/src/host.py:413`（`_parse()`；首词不认识那一支在 `:431`）—— 认不出首词就返回 `DESYNC`
+- `host/src/host.py:435`（`_wait_for()`）—— 就算认出来了，`kind != want` 也是 `DESYNC`
+
+> ⚠️ **2026-10-08 订正**：上面三条原写 `:61` / `:297-299` / `:320-322`。
+> `:61` **在写下那一刻就已经是 `:71`**（B 核过 `76d53db`/`daf2a3c`/`2a9db2a` 三个提交，一直是 `:71`）；
+> 另两条随 B 的 `#PMUL` 修复（`671a91b`）那轮一起漂到上面这三个位置。
+> 现在的坐标是 2026-10-08 在 `host.py`（554 行）上回核的。
 - `DESYNC` = **规则四：停整轮**（`§5.5:527`）
 
 **症状**：第一条命令就报「回帧首词不认识：`#RDY 1 1 0*7c`」或「正等 `#OK`，收到的却是 `#RDY`」，
