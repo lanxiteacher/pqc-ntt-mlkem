@@ -95,7 +95,7 @@
       { "track": "A", "week": "W2", "label": "板级 wrapper · 上板", "state": "done", "critical": true, "note": "协议已冻结、无等待项。10-04 直接做到板级三档全通（原文排在 W4 的活，提前两周）", "source": "rtl/vivado/reports/board_pe*_txn.txt" },
       { "track": "A", "week": "W3", "label": "`#RDY` 落地 · 板子一次做完", "state": "doing", "critical": true, "note": "`#RDY` 已落进 proto_fsm + 冒烟台补 S0，三档位流 10-07 已重出。板子这趟（H6 收口 + 录屏 + 两组截图）**10-08 定：并成一件、另择日**、**A 单人做（B 不到场、不通知）**；H6 代码侧已闭（B 的 `671a91b`，A 已逐条复核）", "source": "rtl/board/proto_fsm.v；logs/schedule_plain.md §三 W3" },
       { "track": "A", "week": "W4", "label": "配合视频 · 全量回归", "state": "todo", "critical": false, "note": "补录素材 + 核对旁白数字；最后一次全量回归（refsim 四条脚本 + 板级冒烟台三档），结果存进 logs/", "source": "logs/schedule_plain.md §三 W4" },
-      { "track": "A", "week": "W5", "label": "冻结 RTL", "state": "todo", "critical": false, "note": "冻结，不再改 RTL；配合组装提交包与提交演练", "source": "logs/schedule_plain.md §三 W5" },
+      { "track": "A", "week": "W5", "label": "冻结 RTL", "state": "todo", "critical": false, "note": "冻结，不再改 RTL；配合组装提交包与提交演练。**（2026-10-08 新增）镜像到 GitHub** —— 冻结版一次性推上去、日常不做同步（两个独立 remote，别配成一次推两边）", "source": "logs/schedule_plain.md §三 W5" },
       { "track": "A", "week": "W6", "label": "缓冲 · 提交", "state": "todo", "critical": false, "note": "不排新活：W3–W5 任何一项没做完的在这里收口。11/04 18:00 截止", "source": "logs/schedule_plain.md §三 缓冲" },
 
       { "track": "B", "week": "W0", "label": "验证台扩到四条通路", "state": "done", "critical": false, "note": "验证台从「只能验 NTT」扩到 INTT／点乘／完整乘法都能验；建 Gitee 仓库并推送", "source": "team/guide_B.md §四 W0 行" },
@@ -136,6 +136,7 @@
     { "owner": "A", "text": "核官方赛程页 —— **已核完**：作品提交 2026-11-04 18:00、决赛 11-20～11-22。手头的 11/7 是**上一届**的日期，全仓库已订正", "state": "done", "as_of": "2026-10-04", "source": "南航教务处 / 集美大学创业学院转发的官方通知（2026-10-04 核）" },
     { "owner": "A+B+C", "text": "★ **重切排期** —— **10-07 已重切完**：W3 收口技术尾巴 / W4 报告成文 + 视频 + 复现 / W5 冻结与组装 / 10-28–11-03 整整一周缓冲，提前一周做完。以下三处已同步，team/ 三份周计划待各自认领", "state": "doing", "as_of": "2026-10-07", "source": "logs/schedule_plain.md §三；status/status.json gantt" },
     { "owner": "A", "text": "补 PWM2 两 bank 不同数据的黄金向量 —— 根因是 gen_batch_vectors.py:141-142 把同一个 ntt_out 写进 _a 和 _b。**10-04 判定不改**（改它会动已冻结的 H2 黄金向量，收益是补一格验证、代价是牵动三处），报告里把这条边界写清即可", "state": "done", "as_of": "2026-10-04", "source": "refsim/gen_batch_vectors.py:141" },
+    { "owner": "A", "text": "**GitHub 镜像 —— 2026-10-08 定：挂，但提交前一次性推**（RTL 冻结后推冻结版，日常不做同步；⚠️ 两个独立 remote，不要配成「一次推两边」）—— 排期 logs/schedule_plain.md §三 W5", "state": "todo", "as_of": "2026-10-08", "source": "logs/project_state.md §二 C；logs/project_state_changelog.md 2026-10-08（之十）" },
 
     { "owner": "B", "text": "✅ **H6 收口（B 侧已闭，10-08 A 逐条复核）** —— `host/src/host.py` 的 `txn.count` 一数三用已拆成 `sent` / `recv`（509 → **554 行**），`expect_rows` 到位，两条 `--loopback`（`#NTT 1` 与 `#PMUL NTT 1`）**全绿**，七个自测全绿。提交 `19e8793` / `671a91b` / `dab7353`。**B 侧无欠账**；只剩 A 在真板子上跑一遍验收，已并进 A 那趟板子（另择日）", "state": "done", "as_of": "2026-10-08", "source": "logs/letter_2026-10-08_A_to_B.txt" },
     { "owner": "B", "text": "`#RDY` 解包器接上 —— <build> 现在有值了（10-06 定口径、10-07 A 落地），自动判读出序可以真做。✅ B 的 `1df5625` 已接住这一行（`RDY_PREFIX` + `parse_rdy()`，`board_run.py` 会打 `build_src`）", "state": "done", "as_of": "2026-10-07", "source": "host/proto.md §5.2；host/src/host.py" },

@@ -98,7 +98,10 @@ A 的参数化版本 **Task 1~8 已全部走完**（三条判据全过）；**�
   `size-pack` 本来就只有 3.36 MiB）。**改为补上该目录缺失的 `README.md`**，
   并把失败根因写进去：61 次请求 vs 60 次/小时配额，**差 1 次**
 
-- ⬜ 决定要不要挂 **GitHub 镜像**（若挂，用**两个独立 remote**，不要配成「一次推两边」）
+- ⬜ **GitHub 镜像 —— 已定「挂，但提交前一次性推」**（**2026-10-08 A 定**）：
+  RTL 冻结后把**冻结版**一次性推上去，**日常不做同步**。排期在
+  `logs/schedule_plain.md` §三 **W5**；⚠️ 用**两个独立 remote**，
+  不要配成「一次推两边」。详见 `logs/project_state.md` §二 C 小节
 - ⬜ `kyber-polmul-hw/README.md` 的「for academic research only」与逐文件 CC0 冲突 ——
   已在 `THIRD_PARTY_LICENSES.md` 并列写明按 CC0 理解，**答辩口径要统一**
 - ⬜ 读官网 **2026 AMD《选题指南》**确认本届子赛道划分；
