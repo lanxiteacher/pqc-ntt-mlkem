@@ -67,7 +67,9 @@ H6 那条 `#PMUL NTT 1` 因此还卡在原地 —— 我这边跑的还是旧的
   - `rtl/H1_port_spec.md` 四处（含 4,444,160 → 4,444,444）
   - `status/` 那套数字全部按实况回填，`index.html` 已重跑
   - 数字回填：`host/proto.md` 883 行、`host/src/` 14 个 .py / 4289 行、
-    ai-log 11 篇（C 7 / A 3 / B 1）
+    ai-log 12 篇（C 8 / A 3 / B 1）
+      ⚠️ 2026-10-08 订正：此处原写「11 篇 / C 7」—— **那是 A 上一轮核错的**，
+         与信里其它数字无关。正确数是 12 篇。见 `audit_2026-10-07_plan_drift.md` E-1。
 
 ⬜ 还没办的、不在我手里的：`report/design/03` 的时序表（**C**）。
    ⚠️ `report/design/05_reproducibility.md:157-161` 的「WNS 6.538 / WHS 0.076」

@@ -38,7 +38,7 @@
       "scope": "report/ ｜ demo/ ｜ docs/ ｜ skill/ ｜ metrics/ ｜ assets/",
       "color": 3,
       "git_authors": ["于宸", "yuchen", "C"],
-      "now": "不依赖 A、B 的活已做完：报告五章初稿 + 封面摘要骨架（10-07）、skill/ 四个子目录、metrics/ 指标表、demo/ 三页、report/figures/ 6 张图、assets/ 四张截图。三个人的 ai-log 都开张了：**共 11 篇 = C 7 / A 3 / B 1**",
+      "now": "不依赖 A、B 的活已做完：报告五章初稿 + 封面摘要骨架（10-07）、skill/ 四个子目录、metrics/ 指标表、demo/ 三页、report/figures/ 6 张图、assets/ 四张截图。三个人的 ai-log 都开张了：**共 12 篇 = C 8 / A 3 / B 1**",
       "next": "剩下都是 C 自己的：① 报告三处缺口 —— 上板真实最高频率、端到端延迟正式测量、正文写明 Vivado 是 2020.2（§3.3.3.1「须在报告中说明」）② 装 gcc + iverilog + python3，跑 H10 独立复现 ③ `skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」（§3.3.5.2）",
       "as_of": "2026-10-07",
       "source": "report/README.md §三；team/todo_C.md §二"
