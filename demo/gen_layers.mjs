@@ -22,9 +22,10 @@
  *         逆变换末级  应当逐值等于 research/mlkem_kat/intt_out.hex
  *       两条都当自检判据，任一条不过就非零退出、不写产物。
  *
- * 为什么用 Node 而不是 Python：A 的口径写的是「用 Python 生成」，但 C 这台机器
- *       没装 Python（09/29 自查，PATH 里只有 WindowsApps 占位符），已有 Node v24。
- *       算法与口径不变，只是换了宿主语言 —— 这件事记在 report/ai-log/ 里。
+ * 为什么用 Node 而不是 Python：A 的口径写的是「用 Python 生成」，而 09/29 开工时 C 这台机器
+ *       还没有可用的 Python（PATH 里只有 WindowsApps 占位符），已有 Node v24。
+ *       2026-10-05 已装齐 Python，但生成器保持 Node 不动（换宿主 = 重跑全部自检、没有收益）。
+ *       算法与口径自始至终没变，只是换了宿主语言 —— 这件事记在 report/ai-log/ 里。
  *
  * 用法：node demo/gen_layers.mjs
  * 产物：demo/data/vectors.js

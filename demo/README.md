@@ -59,8 +59,10 @@ node demo/gen_layers.mjs     # → data/vectors.js
 node demo/gen_compare.mjs    # → data/compare.js
 ```
 
-⚠️ **这台机器没有 Python**（09/29 自查：PATH 里只有 WindowsApps 占位符），
-所以宿主语言用的是 **Node**（本机 v24）。算法与数值口径完全没变，只是换了宿主。
+⚠️ **选 Node 是 09/29 定的** —— 那时这台机器还没有可用的 Python
+（PATH 里只有 WindowsApps 占位符）。**2026-10-05 已装齐 Python 3.12.10**，
+但生成器**保持 Node 不动**（本机 v24）：宿主只是外壳，算法与数值口径一个字没变，
+换宿主等于把全部自检重跑一遍、没有收益。
 
 ## 数值口径与自检
 
