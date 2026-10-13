@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>标题卡 —— 片头 / 结尾</title>
+</head>
+<body>
+<!--
+  标题卡：视频脚本 demo/video_script.md 段 0（片头）与段 8（结尾）的画面。
+  「录真东西，不摆拍」—— 这就是那两段的实物，录屏时录它，不是剪片时现编一张字卡。
+
+  用法：
+    title.html                       → 片头卡（带右上角切换按钮）
+    title.html?card=outro&ui=0       → 结尾卡，隐藏按钮（★录屏用这条，画面干净）
+  主题沿用 ntt-view.js 那组 CSS 变量：默认深色（视频用），?theme=light 切浅底（纸面预览）。
+
+  文件名已出英文、正文用中文 —— 对齐《选题指南》§3.2.5/§3.3.5.4 的口径。
+-->
+<script src="ntt-view.js"></script>
+<script>
+(function () {
+  'use strict';
+  NttView.css();                       // 复用演示页主题（?theme=light 由它统一决定）
+
+  const REPO = 'gitee.com/lanxiteacher/pqc-ntt-mlkem';
+
+  /* 卡面专用样式 —— 全走主题变量，不硬编码颜色 */
+  const s = document.createElement('style');
+  s.textContent = `
+    .card { min-height:100vh; display:flex; flex-direction:column;
+            justify-content:center; align-items:center; text-align:center;
+            padding:7vh 6vw; gap:1.5rem; }
+    .kicker { color:var(--dim); font-size:20px; letter-spacing:.22em; }
+    .kicker b { color:var(--accent); font-weight:600; letter-spacing:.22em; }
+    .title { font-size:78px; font-weight:700; line-height:1.16; letter-spacing:.03em;
+             color:var(--fg); }
+    .title .hl { color:var(--accent); }
+    .rule { width:200px; height:2px; background:var(--accent); opacity:.75; }
+    .tag { font-size:25px; line-height:1.7; color:var(--fg); max-width:26em; }
+    .sub { color:var(--dim); font-size:20px; }
+    .peers { font-size:29px; color:var(--fg); }
+    .peers .sep { color:var(--dim); margin:0 .7em; }
+    .repo { font-family:inherit; font-size:27px; color:var(--code); }
+    .repo.big { font-size:34px; }
+    .foot { position:fixed; left:50%; bottom:5vh; transform:translateX(-50%);
+            color:var(--dim); font-size:18px; }
+    .ui { position:fixed; top:18px; right:20px; display:flex; gap:2px; }
+    .ui button { padding:6px 14px; font-size:14px; }
+    .ui button.on { color:var(--accent); border-color:var(--accent); }
+    body[data-hideui] .ui { display:none; }
+  `;
+  document.head.appendChild(s);
+
+  const CARDS = {
+    intro: `
+      <div class="kicker">AMD 赛道 · 3.3 自主选题（初级组）</div>
+      <div class="title">后量子密码<span class="hl">FPGA</span>加速平台</div>
+      <div class="rule"></div>
+      <div class="tag">面向 <b>ML-KEM</b> 的 NTT / INTT / 点乘加速核<br>
+        —— 折叠度可配置（1 / 4 / 16 蝶形）</div>
+      <div class="sub">一套 RTL，改一个 parameter 就是三档</div>
+      <div class="peers">徐子谦<span class="sep">·</span>赵志鹏<span class="sep">·</span>于宸</div>
+      <div class="repo">${REPO}</div>
+    `,
+    outro: `
+      <div class="kicker">后量子密码<b>FPGA</b>加速平台</div>
+      <div class="title">三人零基础<br>全程 <span class="hl">AI-agent</span> 打法</div>
+      <div class="rule"></div>
+      <div class="tag">仓库 · 技能包 · AI 协作日志 —— <b>全部开源</b></div>
+      <div class="repo big">${REPO}</div>
+      <div class="sub">欢迎复现</div>
+    `
+  };
+
+  const m = /[?&]card=(intro|outro)\b/.exec(location.search);
+  let card = (m ? m[1] : 'intro');
+
+  const el = document.createElement('div');
+  el.className = 'card';
+  document.body.appendChild(el);
+
+  const ui = document.createElement('div');
+  ui.className = 'ui';
+  ui.innerHTML =
+    '<button data-c="intro">片头</button><button data-c="outro">结尾</button>';
+  document.body.appendChild(ui);
+
+  function draw() {
+    el.innerHTML = CARDS[card];
+    document.title = (card === 'intro' ? '片头' : '结尾') + ' —— 标题卡';
+    for (const b of ui.children) b.classList.toggle('on', b.dataset.c === card);
+  }
+  ui.addEventListener('click', (e) => {
+    const c = e.target && e.target.dataset && e.target.dataset.c;
+    if (c) { card = c; draw(); }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      card = (card === 'intro' ? 'outro' : 'intro'); draw(); e.preventDefault();
+    }
+  });
+
+  /* ?ui=0 → 隐藏按钮（录屏用，画面干净） */
+  if (/[?&]ui=0\b/.test(location.search)) document.body.setAttribute('data-hideui', '');
+
+  draw();
+})();
+</script>
+</body>
+</html>
