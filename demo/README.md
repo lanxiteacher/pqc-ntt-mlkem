@@ -174,8 +174,9 @@ node demo/gen_shots.mjs
   `demo_compare_pass.png` / `demo_compare_negctrl.png`（`?theme=light` + `clip`，
   由本脚本生成）；折叠度 ↔ 周期数曲线在 `../report/figures/folding_sweep.svg`
 - ⬜ INTT 的逐值对拍（等 B 的落盘文件）
-- 🔄 演示视频旁白脚本 —— **骨架已成**（`video_script.md`，2026-10-05：分镜表 + 旁白要点 +
-  素材缺口），**待 A 的录屏/截图到位后成文**
+- 🔄 演示视频旁白脚本 —— `video_script.md`：**分镜表已成（段 0–8）**；
+  **旁白段 0–4 / 7 / 8 已成文**（B-roll 不依赖别人，可先录），**段 5 / 6 待 A 的录屏/截图**；
+  已成文部分 **2026-10-13 已逐段回报告核过数字**（核出段 3 一处画面描述与 `compare.html` 不符、已改）
 
 ## 相关
 
