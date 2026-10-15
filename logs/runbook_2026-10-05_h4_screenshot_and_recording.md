@@ -250,15 +250,22 @@ sh rtl/vivado/run_board_prog.sh scan
 第 5 步那个录屏要跑的是 **pe1**，所以烧 **pe1** 那份：
 
 ```bash
-BIT=/c/vivado_work/runs_pe1/ntt_board.bit sh rtl/vivado/run_board_prog.sh
+BIT=rtl/vivado/_runs/pe1/ntt_board.bit sh rtl/vivado/run_board_prog.sh
 ```
 
-（`C:/vivado_work/runs_pe1/ntt_board.bit` 是 2026-10-05 为截图那次 run 顺带产出的，
+（`rtl/vivado/_runs/pe1/ntt_board.bit` 是 **2026-10-07 19:45** 那版 —— **加了 `#RDY` 之后**的；
 同目录的 `ntt_board.pe` 戳着 **1**。`BIT=` 指到哪，档位戳就从哪读，两个文件在同一个目录里，
 不会拿错。）
 
+> ⚠️ **2026-10-15 订正**：本节原写的是 `C:/vivado_work/runs_pe1/ntt_board.bit` ——
+> 那是 **10-05** 的、**加 `#RDY` 之前**的版本，**别再用**（症状是「开机不报 `#RDY`」，
+> 看着像 RTL 坏了）。
+> ✅ 相对路径这么写**能用了** —— `run_board_prog.sh` 原先会把相对 `BIT=` 原样透传给
+> 从仓库外启动的 Vivado，报 `RESULT prog BITFILE MISSING`；2026-10-15 已修（按调用时的
+> `$PWD` 补成绝对路径）。从仓库根跑就是这个形式。
+
 > ⚠️ **别**用裸的 `sh rtl/vivado/run_board_prog.sh` —— 它会去读 `_runs/ntt_board.bit`，
-> 也就是那份 **pe4**。
+> 也就是那份 **pe4**（10-04 的，`ntt_board.pe` 里那个 `4` 就是证据）。
 
 烧之前它会把档位戳打印出来（「这版是 peN」），**核一眼是不是 1**。
 
@@ -280,31 +287,44 @@ Windows 按「插在哪个 USB 口」现分配。
 
 ### 第 5 步：驱动串口跑事务
 
-现在能用的是 **`C:\fpga_work\board_txn_all.py`** —— `rtl/vivado/reports/board_pe{4,16}_txn.txt`
-就是它生成的（五条计算事务，各 256/256）。
+现在能用的入口**在仓库里**了 —— `host/src/board_run.py`（B 的主责；解包口径、逐位比较、
+非退化，判据全在它的 `--check` 里）：
 
 ```bash
-PE=1 PYTHONIOENCODING=utf-8 python C:/fpga_work/board_txn_all.py
+export PYTHONIOENCODING=utf-8
+python host/src/board_run.py "#PING"
+python host/src/board_run.py "#NTT 1"       --check --build 1
+python host/src/board_run.py "#INTT 1"      --check --build 1
+python host/src/board_run.py "#PMUL NTT 1"  --check --build 1
+python host/src/board_run.py "#PMUL FULL 1" --check --build 1
 ```
 
-**`PE=1` 要显式写上**（虽然默认就是 1）。理由：这个数**必须和第 3 步烧进去的那版
-bitstream 一致** —— 它决定装载顺序和读出顺序（三档不一样）。写在命令行上，
-第 3 步烧了什么一眼能对上；靠默认值的话，万一哪天默认改了就对不上。
+**`--build 1` 要显式写上**（虽然默认就是 1）。理由：这个数**必须和第 3 步烧进去的那版
+bitstream 一致** —— 它决定**装载顺序**（送进去的数据怎么摆）**和读出顺序**（三档不一样）。
+写在命令行上，第 3 步烧了什么一眼能对上；靠默认值的话，万一哪天默认改了就对不上。
 
-**串口号不用给** —— 脚本自己扫（`list_ports`），扫到就打印
-「串口 COMx（USB-SERIAL CH340）115200-8N1」。所以第 4 步是**核对**不是**输入**。
-它扫不到会自动列出所有串口再退出，那时再回头看第 1 步那三处硬件。
+> ⚠️ **`#PMUL TIME 1` 本轮不录** —— 它现在**发不出数据**：`refsim/batch/halfmul_b.txt`
+> 4096 行里 308 行不是三位十六进制（第 20 行是 `27`），`vectors.read_vector` 直接拒收。
+> **不是板子的问题**，是那批冻结的 H2 黄金向量的格式问题，正等 B 定（`host/KNOWN_ISSUES.md` B2）。
+> 2026-10-15 那份上板报告里，它也是六条中唯一一条 ❌（`rtl/vivado/reports/board_pe1_txn.txt`）。
+> 录屏避开它，旁白一句带过、指到那份报告即可 —— **别把它剪掉不提**，报告里本来就写着这条边界。
+
+**串口号不用给** —— 脚本自己扫，扫到就打印「插座：真串口 COMx（115200-8N1）」。
+所以第 4 步是**核对**不是**输入**。它扫不到会自动列出所有串口再退出，
+那时再回头看第 1 步那三处硬件。
 
 > `PYTHONIOENCODING=utf-8` 不能省：本机控制台是 GBK，脚本要往屏幕上打 `✅` 这类字符。
-> 同目录另有一个 `board_txn.py`，那是**更早的**「首次点亮」版，只跑 `#PING` + `#NTT 1`
-> 两条 —— 录屏要用五条全跑的那个，别拿错。
 
-> ⚠️ **这两个脚本都不在仓库里**（`report/design/03` §3.12 第 2 条说的「A 的**临时脚本**、
-> **未入库**」就是它们）。所以**它跑出来的录屏，别人复现不了**。
+> ✅ **2026-10-15：不必再用 `C:\fpga_work\board_txn_all.py` 了。** 它的文件头自己写着
+> 「正式版应该由 B 收进 `host/src/`」—— 那一天到了：`host/src/board_run.py` 就是那个正式版，
+> 而且**在仓库里**。本节原先那条 ⚠️「这两个脚本都不在仓库里，所以它跑出来的录屏、
+> 别人复现不了」**因此作废**：用仓库里的入口录，这段素材**照着仓库就能复现**。
+> 老脚本别提交进 `host/`（那是 B 的目录，两套实现并存说不清哪套是正式的）。
 
-不过这一条**不是疏忽**：脚本自己的文件头写着「放在仓库外……之所以不放进 `host/`：
-那是 B 的主责目录。等这条通了，正式版应该由 B 收进 `host/src/`，用 B 自己的
-proto.py / host.py 实现」。也就是说它是**有意的临时件**，正式版归 B。那为什么还值得说 —— 见第 8 步。
+> ★ 想一次把「探活 + 五条事务」跑完并**顺手落一份报告**，用
+> `sh rtl/vivado/run_board_txn_report.sh`（它会调上面同一个入口，判据一条都不重写；
+> ⚠️ 它**不覆盖**已存在的报告，要重写加 `FORCE=1`；⚠️ 它跑六条，**含 `#PMUL TIME 1`**，
+> 所以今天收尾是 **5/6**、退出码 1 —— 那是对的状态，不是故障）。
 
 ### 第 6 步：录什么（验收清单）
 
@@ -348,6 +368,13 @@ proto.py / host.py 实现」。也就是说它是**有意的临时件**，正式
 同样**用英文名**（理由见 §一 第 3 步那个 ⚠️）。
 
 ### 第 8 步：现在录，还是 H6 那天录
+
+> ✅ **2026-10-15：这一问已经不用再问了 —— 按「（乙）正式通路」录。**
+> H6 那天到了、`host/` 跑顺了：`host/src/board_run.py` 已在真板子上跑通四条计算事务
+> （各 0/256，报告 `rtl/vivado/reports/board_pe1_txn.txt`），第 5 步那个入口就是它。
+> 下面（甲）那套的理由（「录屏是硬交付，别押在当天才第一次跑通的路径上」）**当时成立**，
+> 而那天已经过去、路径也已经跑通 —— 所以（甲）的代价（素材复现不了）现在**没有理由再付**。
+> 下面这段保留原样，作为「为什么当初那么建议」的记录。
 
 **（甲）现在录**（用 `board_txn_all.py`）
 脚本是现成的、10-04 已经跑通过（五条事务 × 三档全过）。素材今天就能到手，**不依赖任何人**。
