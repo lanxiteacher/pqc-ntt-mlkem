@@ -71,7 +71,11 @@ function collectGitActivity(tracks) {
       t.git_authors.some((a) => a === name || a.toLowerCase() === (mail || '').toLowerCase()));
     const last = mine.length ? mine[0][2] : null;          // git log 默认新→旧
     const lastDays = last ? TODAY - dayOf(+last.slice(0, 4), +last.slice(5, 7), +last.slice(8, 10)) : null;
-    const in7 = mine.filter(([, , d]) => TODAY - dayOf(+d.slice(0, 4), +d.slice(5, 7), +d.slice(8, 10)) <= 7).length;
+    // ⚠️ 2026-10-15 订正：`<= 7` 数的是**含今天在内的 8 天**（今天 − 提交日 ≤ 7），
+    //    而这一栏在页面上写的是「近 7 天」—— 差一天，正好把 10-08 那天也算进来，
+    //    于是 A 显示「近 7 天 16 次」（那 16 次全是 10-08 当天的），与「A 自 10-08 起
+    //    没再提交」的实况看着正好相反。改成 `< 7`：今天与往前 6 天，共 7 个日历日。
+    const in7 = mine.filter(([, , d]) => TODAY - dayOf(+d.slice(0, 4), +d.slice(5, 7), +d.slice(8, 10)) < 7).length;
     return { id: t.id, last, lastDays, in7, total: mine.length };
   });
 }
