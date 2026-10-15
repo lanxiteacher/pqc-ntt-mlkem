@@ -2,8 +2,12 @@
 2026-10-15 · A
 （详细说明见 logs/runbook_2026-10-05_h4_screenshot_and_recording.md）
 
+用哪个终端（两节不一样，不是笔误）
+  §一 截图 → cmd        要跑 vivado.bat + cd /d，Vivado 一律从仓库外、用 cmd 起
+  §二 录屏 → Git Bash   export 是 bash 语法，cmd 里要写成 set
+
 当前状态
-  - Vivado 已开着、板级路径已画出  → §一 从第 3 步开始
+  - Vivado 已开着、板级路径已画出  → §一 今天不用开 cmd，从第 3 步开始
   - 板上烧的是 pe1 那版、通着电     → §二 不用重烧
 
 
