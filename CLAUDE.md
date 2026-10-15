@@ -76,7 +76,14 @@ FPGA 竞赛项目：**AMD 赛道 · 3.3 自主选题（初级组）· 后量子�
 | `docs/` | 支撑文档（相关工作对比表 = 创新性 30 分的论证基础） | C |
 | `skill/` | 技能包：提示词 / 踩坑清单 / 校验脚本 / 骨架模板 | C |
 | `assets/` | 截图 / 录屏 / 波形素材，`YYYY-MM-DD_<who>_<what_it_proves>.<ext>`（**全英文**，见 `assets/README.md`） | C |
+| `metrics/` | 指标数据表与生成器（`node metrics/gen_metrics.mjs` → `data/metrics.csv`）；报告性能章的原料 | C |
+| `selection/` | 选题阶段的调研与可行性论证（为什么是这个方向、为什么不是视觉）—— **历史归档，不再改** | — |
+| `_refbuild/` | 参考实现（`research/kyber_ref/`）的早期 bench 源码与产物 —— **历史归档** | — |
 | `research/` | **只读参考资料，谁都不改** | — |
+
+⚠️ 本表 2026-10-15 补了 `metrics/`／`selection/`／`_refbuild/` 三行 —— 它们一直在库里，
+只是没进这张表（判据是 `ls -d */` 与表对一遍）。另有 `_rebuild_logs/` 是**本机临时目录、
+没进仓库**（git 不跟踪空目录），别人机器上不会有，不要按它写脚本。
 
 `research/` 下四个关键入口：`ref_rtl/kyber-polmul-hw/pe1/`（开源 NTT 硬件基线，
 **已通过 FIPS 203 验证**，是改造起点）｜`kyber_ref/`（C 参考实现 = 地面真值）｜

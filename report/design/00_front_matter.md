@@ -142,4 +142,4 @@
 | **WHS** | Worst Hold Slack | 最差保持裕量 | 同上，针对保持时间 |
 | **Fmax** | Maximum Frequency | 最高时钟频率 | 由 WNS 反推（见 §3.6） |
 | **UART** | Universal Asynchronous Receiver/Transmitter | 通用异步收发器 | 即「串口」；本作品 PC↔板子的通路 |
-| **MMCM / PLL** | Mixed-Mode Clock Manager / Phase-Locked Loop | 混合模式时钟管理器 / 锁相环 | Vivado 里做倍频的时钟资源；**本板用 50 MHz 晶振直给，未用**（见 §3.10.1） |
+| **MMCM / PLL** | Mixed-Mode Clock Manager / Phase-Locked Loop | 混合模式时钟管理器 / 锁相环 | Vivado 里做倍频的时钟资源。板载 50 MHz 晶振直给 `sys_clk`，**本设计首版未例化**；器件内实有 **4 MMCM / 4 PLL**（见 §3.10.1 的 2026-10-15 改判） |

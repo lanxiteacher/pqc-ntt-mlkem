@@ -16,8 +16,8 @@
       "scope": "rtl/ ｜ 综合 ｜ 板子（本机）",
       "color": 1,
       "git_authors": ["lanxiteacher"],
-      "now": "⚠️ **2026-10-15 现状：10-08 之后 A 没有新提交（10-09～10-15 九个提交全是 C 的），板子这趟也没做。** 板级通路三档全通：pe1 / pe4 / pe16 各 5 条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）。途中修掉 proto_fsm 一个写死的 bank 切换常数 —— 它只在 pe1 上恰好对，pe4 上是 2/5、pe16 上连 #NTT 都挂；改成随折叠度派生后三档全过。10-07 把协议里最后一条开口 `#RDY <ver> <build> <errs>` 落进 RTL：复位释放后板子自发一行，<build> 就是折叠度 —— 解掉「电脑端不知道板子里烧的是哪一档、因而不知道该用哪张读出序表」这个缺口。⚠️ 三档只覆盖 1/4/16：核的数据通路是「每档一份」不是公式，pe2/pe8 有 FATAL 守卫拦",
-      "next": "**⚠️ 这趟没做 —— 已逾期。** 「10-08 定：板子 + 录屏 + 截图并成一件、另择日」定下的日子是 **10-09 或 10-11**，两天都过了，10-15 板子仍未插。它现在**卡着 C**（视频段 5 真机演示 = 初赛视频核心、剪不掉；段 6 关键路径截图 + 报告章节三配图）。三件事不变、仍并成一趟、仍 A 单人做：① **H6 收口** —— 真板子跑 `python host/src/board_run.py --build 1 --check \"#PMUL NTT 1\"` 得 `#RDY` + 256/256，原始输出存 `rtl/vivado/reports/board_pe1_txn.txt`（**本轮不做 `#PMUL FULL 1`**；⚠️ 别覆盖 10-04 的 pe4/pe16 两份）② **上板串口录屏**（C 的段 5）③ **两组关键路径截图**（`pe{1,4,16}_nc_timing.rpt` 的 `-max_paths 10` 段，数据已在 `rtl/vivado/critical_paths.md`）。素材按 `assets/README.md` 命名丢 `assets/`（全英文）。✅ **前置都已解除** —— 录屏要的 `report/design/03` 数值 10-08 已由 A 代改到位；陪练 `--loopback` 绿、`--fake-build 4` 认档、`--list` 认串口、B 的 7 个自测本机 rc 全 0 ⇒ **当天只剩电气层一个未知数**。⏳ **另有一件不等板子、开着 PDF 就能做完** —— C 从 10-09 起催了三次（10-09 / 10-11 / 10-14 三封信）的**三处《选题指南》原文**（§3.3.5.3 设计报告七项 / §3.2.5 提交内容 / §3.3.5.1 工程包五项；本机仓库根就有 `选题指南.pdf`，读 p22–p25），那是 C 报告**成文**的唯一结构性输入。另：ai-log 仍停在 4 篇（10-04 / 10-05 / 10-07 / 10-08），10-09～10-15 七天空档",
+      "now": "⚠️ **2026-10-15 现状：板子这趟没做 —— A 自 10-08 起在 `rtl/` 上零提交**（10-15 那次 `fc6d115` **只改 `status/`**：看板按当天现状重核，不是 rtl/ 的活；10-09～10-15 共 10 个提交，C 9 个、A 1 个、B 0 个）。 板级通路三档全通：pe1 / pe4 / pe16 各 5 条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）。途中修掉 proto_fsm 一个写死的 bank 切换常数 —— 它只在 pe1 上恰好对，pe4 上是 2/5、pe16 上连 #NTT 都挂；改成随折叠度派生后三档全过。10-07 把协议里最后一条开口 `#RDY <ver> <build> <errs>` 落进 RTL：复位释放后板子自发一行，<build> 就是折叠度 —— 解掉「电脑端不知道板子里烧的是哪一档、因而不知道该用哪张读出序表」这个缺口。⚠️ 三档只覆盖 1/4/16：核的数据通路是「每档一份」不是公式，pe2/pe8 有 FATAL 守卫拦",
+      "next": "**⚠️ 这趟没做 —— 已逾期。** 「10-08 定：板子 + 录屏 + 截图并成一件、另择日」定下的日子是 **10-09 或 10-11**，两天都过了，10-15 板子仍未插。它现在**卡着 C**（视频段 5 真机演示 = 初赛视频核心、剪不掉；段 6 关键路径截图 + 报告章节三配图）。三件事不变、仍并成一趟、仍 A 单人做：① **H6 收口** —— 真板子跑 `python host/src/board_run.py --build 1 --check \"#PMUL NTT 1\"` 得 `#RDY` + 256/256，原始输出存 `rtl/vivado/reports/board_pe1_txn.txt`（**本轮不做 `#PMUL FULL 1`**；⚠️ 别覆盖 10-04 的 pe4/pe16 两份）② **上板串口录屏**（C 的段 5）③ **两组关键路径截图**（`pe{1,4,16}_nc_timing.rpt` 的 `-max_paths 10` 段，数据已在 `rtl/vivado/critical_paths.md`）。素材按 `assets/README.md` 命名丢 `assets/`（全英文）。✅ **前置都已解除** —— 录屏要的 `report/design/03` 数值 10-08 已由 A 代改到位；陪练 `--loopback` 绿、`--fake-build 4` 认档、`--list` 认串口、B 的 7 个自测本机 rc 全 0 ⇒ **当天只剩电气层一个未知数**。✅ **「不等板子、开着 PDF 就能做完」那件已于 10-15 办完** —— C 从 10-09 起催了三次（10-09 / 10-11 / 10-14 三封信）的《选题指南》原文，已逐字抄进 `logs/guideline_excerpts_2026-10-15.md` 随信交 C（**四处**，比要的多一处：多抄了 §3.3.5.2 技能包，因为那里藏着「**通用 PYNQ Skill 单独加分**」这个我们目前 0 分的口子）。⚠️ 顺带核出**两个结论**：① 报告章节目录现在可以定死了 —— §3.3.5.3 第 ③ 项「**软硬件划分依据与接口设计**」**整章缺** ② 「§3.2.5 决定报告交 PDF/Word/Markdown」**是错的**，全文不规定格式。另：ai-log 仍停在 4 篇（10-04 / 10-05 / 10-07 / 10-08），10-09～10-15 七天空档。★★ **新增（2026-10-15 A 定）· 第 1 项「上板提频」** —— 例化 MMCM 把 50 MHz 提上去，三档各自重综合/实现/布线取新 WNS，五笔计算事务重跑，出一张「优化前 vs 优化后」对比表。**物理可行性已查实**：`sys_clk` 引脚 U18 是 **MRCC**（`IS_CLK_CAPABLE=1`、`PIN_FUNC=IO_L12P_T1_MRCC_34`），xc7z020 器件内有 **4×MMCME2_ADV / 4×PLLE2_ADV / 32×BUFGCTRL** —— 器件是 Vivado 查的，不是文档抄的。⚠️ **改判**：`report/design/03` §3.10.1 理由 1「板上没有 MMCM/PLL」**不成立**（MMCM 是 PL 内部原语、不是板上元件，拿「我们 RTL 里没例化」推不出「芯片里没有」），该处已改判，同句还在 `metrics/README.md` 两处。⚠️ 这条**要板子** —— 与「板子这趟」并成同一天做，是 A 目前在 W4 唯一的新增项",
       "as_of": "2026-10-15",
       "source": "logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2"
     },
@@ -27,8 +27,8 @@
       "scope": "refsim/ ｜ host/",
       "color": 2,
       "git_authors": ["B", "zzp_330183@qq.com"],
-      "now": "⚠️ **2026-10-15 现状：10-08 之后 B 没有新提交（10-09～10-15 九个提交全是 C 的）。** 上位机已成形：host/src/ **14 个 .py / 4289 行**入库，7 个自测 559 项全绿。**真板子已首次接上** —— 10-07 夜 A 用 B 的 `board_run.py` 在真板子上跑通 `#NTT 1` 256/256。10-06 闭了 `#RDY` 的 <build> 口径（`proto.md` §5.2：写折叠度 1/4/16，三档校验和 *7c / *79 / *4a），B 的 `1df5625` 已接住这一行。**B 侧无欠账** —— `host.py` 的 `txn.count` 一数三用 10-08 已拆成 `sent`/`recv`（509 → 554 行），A 已逐条复核",
-      "next": "⚠️ 本行原第 ① 条（改 `host.py` 的 `txn.count`）**2026-10-08 已闭**，已于 10-15 从本行移出。**W4（本周 10/14–10/20）B 真正剩的**：① ★ **H10 换一台电脑、从零 clone、按 README 走一遍**，跑通截图存档、跑不通修到跑通 ② 交 C 完整验证数据（H5，含非退化统计）③ W2 那三种错误注入（§5.5）并回报 —— **这条从 10-03 挂到现在** ④ 同步 `proto.md` §七 两处过期陈述（A 已于 10-07 回信说明口径）⑤ ai-log 仍只有 1 篇（10-06），保持一天一篇。⚠️ 真板子上的 `#PMUL NTT 1` 验收**不在 B 侧** —— 它是 A 那趟板子的最后一条（见「卡点」）",
+      "now": "⚠️ **2026-10-15 现状：B 自 10-08 起零提交**（10-09～10-15 共 10 个提交：C 9 个、A 1 个 —— A 那个只改 `status/`、B 0 个）。 上位机已成形：host/src/ **14 个 .py / 4289 行**入库，7 个自测 559 项全绿。**真板子已首次接上** —— 10-07 夜 A 用 B 的 `board_run.py` 在真板子上跑通 `#NTT 1` 256/256。10-06 闭了 `#RDY` 的 <build> 口径（`proto.md` §5.2：写折叠度 1/4/16，三档校验和 *7c / *79 / *4a），B 的 `1df5625` 已接住这一行。**B 侧无欠账** —— `host.py` 的 `txn.count` 一数三用 10-08 已拆成 `sent`/`recv`（509 → 554 行），A 已逐条复核",
+      "next": "⚠️ 本行原第 ① 条（改 `host.py` 的 `txn.count`）**2026-10-08 已闭**，已于 10-15 从本行移出。**W4（本周 10/14–10/20）B 真正剩的**：① ★ **H10 换一台电脑、从零 clone、按 README 走一遍**，跑通截图存档、跑不通修到跑通 ② 交 C 完整验证数据（H5，含非退化统计）③ W2 那三种错误注入（§5.5）并回报 —— **这条从 10-03 挂到现在** ④ 同步 `proto.md` §七 两处过期陈述（A 已于 10-07 回信说明口径）⑤ ai-log 仍只有 1 篇（10-06），保持一天一篇。⚠️ 真板子上的 `#PMUL NTT 1` 验收**不在 B 侧** —— 它是 A 那趟板子的最后一条（见「卡点」）。★★ **新增（2026-10-15 A 定）· 第 3 项「三档完整多项式乘法端到端回归」** —— `refsim/` 里**新增一条入口脚本**（不动现有 6 个），把「完整多项式乘法端到端」从**只有 pe1** 扩到**三档**，判多重集 **4096/4096**。缺在哪（事实）：`refsim/run_polmul_check.sh:39-41` 的 `SRC` 写死 `pe1/*.v`；两个 testbench（`fullmul_batch_tb.v` / `halfmul_batch_tb.v`）是**位置式例化**上游写死的 `KyberHPM1PE`，里面那个 `parameter PE_NUMBER = 1` **不起作用**。⭐ 现成写法直接抄：`rtl/probes/ntt_func_tb.v:183` 已有参数化例化 `KyberHPMNTT_top #(.PE_NUMBER(PE_NUMBER))` + `-DCFG_PE_NUM=` 传参 + 缺参 FATAL。**这条不等任何人**（只要 iverilog）",
       "as_of": "2026-10-15",
       "source": "host/proto.md §5.2；logs/project_state.md §一「还差」"
     },
@@ -38,8 +38,8 @@
       "scope": "report/ ｜ demo/ ｜ docs/ ｜ skill/ ｜ metrics/ ｜ assets/",
       "color": 3,
       "git_authors": ["于宸", "yuchen", "C"],
-      "now": "⚠️ **2026-10-15 现状：10-08 之后全队 9 个提交全是 C 的（A、B 各 0）—— C 是唯一在动的人。** W4（报告成文 + 视频剪辑）**已提前开工**：10-09 缩略语表 + 参考文献草稿（并给 A 要《指南》原文）；10-10 参考文献整表按公开检索补全书目信息（缺口 20 余处 → 3 处）；10-11 补「为什么不做 PYNQ」的取舍（正文原本只声明「纯 PL」、没写这个取舍）；10-12 清「本机没有 Python」类过期陈述 + 附录逐日索引补回 11 行；10-13 建视频标题卡 `demo/title.html` + 旁白逐段回报告核数（核出段 3 一处画面描述与 `compare.html` 不符）；10-14 备视频 —— 分段录制流水单 + **录制前体检全绿**（`refsim/run_fntt_check.sh` 16/16、`check_reproducible.sh --from-remote` 通过 4 ／ 跳过 0 ／ 失败 0、五个生成器重跑 `git status` 干净、无头 Edge 四张全正确渲染）；10-15 报告配图 + 引用链机械体检，修 3 处实缺陷。**本程没动任何别人的目录**。此前基础仍在：报告五章初稿 + 封面摘要骨架、`skill/` 四个子目录、`metrics/` 指标表、`demo/` 三页、`report/figures/`、`assets/` 四张截图。ai-log：**共 21 篇 = C 16 / A 4 / B 1**",
-      "next": "C 自己的活还剩：① 报告三处缺口 —— 其中「上板真实最高频率」**要靠 A 那趟板子**（板级 WNS 不能反推 Fmax），另两处（端到端延迟正式测量 §3.10、正文写明 Vivado 是 2020.2 口径）不依赖别人 ② `skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」（§3.3.5.2）③ 演示页截图选版式进正文（深色主题不适合黑白打印）④ 剪演示视频（5–10 分钟），旁白里每个数字都要能指到 .rpt 或脚本输出。⏳ **另有三件卡在 A 上**（详见「卡点」）：三处《指南》原文、板子素材段 5/6、视频两个待定（真人配音 / B-roll，要 A 与 C 一起拿主意）",
+      "now": "⚠️ **2026-10-15 现状：C 是唯一在推实物的人** —— 10-09～10-15 共 10 个提交里 C 占 9 个（A 那 1 个 `fc6d115` 只改 `status/`、B 0 个）。 W4（报告成文 + 视频剪辑）**已提前开工**：10-09 缩略语表 + 参考文献草稿（并给 A 要《指南》原文）；10-10 参考文献整表按公开检索补全书目信息（缺口 20 余处 → 3 处）；10-11 补「为什么不做 PYNQ」的取舍（正文原本只声明「纯 PL」、没写这个取舍）；10-12 清「本机没有 Python」类过期陈述 + 附录逐日索引补回 11 行；10-13 建视频标题卡 `demo/title.html` + 旁白逐段回报告核数（核出段 3 一处画面描述与 `compare.html` 不符）；10-14 备视频 —— 分段录制流水单 + **录制前体检全绿**（`refsim/run_fntt_check.sh` 16/16、`check_reproducible.sh --from-remote` 通过 4 ／ 跳过 0 ／ 失败 0、五个生成器重跑 `git status` 干净、无头 Edge 四张全正确渲染）；10-15 报告配图 + 引用链机械体检，修 3 处实缺陷。**本程没动任何别人的目录**。此前基础仍在：报告五章初稿 + 封面摘要骨架、`skill/` 四个子目录、`metrics/` 指标表、`demo/` 三页、`report/figures/`、`assets/` 四张截图。ai-log：**共 21 篇 = C 16 / A 4 / B 1**",
+      "next": "C 自己的活还剩：① 报告三处缺口 —— 其中「上板真实最高频率」**要靠 A 那趟板子**（板级 WNS 不能反推 Fmax），另两处（端到端延迟正式测量 §3.10、正文写明 Vivado 是 2020.2 口径）不依赖别人 ② `skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」（§3.3.5.2）③ 演示页截图选版式进正文（深色主题不适合黑白打印）④ 剪演示视频（5–10 分钟），旁白里每个数字都要能指到 .rpt 或脚本输出。⏳ **原「三件卡在 A 上」现只剩两件**（详见「卡点」）：✅ 三处《指南》原文**已于 10-15 交付**（`logs/guideline_excerpts_2026-10-15.md`）；**板子素材段 5/6** 与**视频两个待定**（真人配音 / B-roll，要 A 与 C 一起拿主意）仍未解。★★ **新增（2026-10-15 A 定）· 第 2 项「瓶颈归因表」** —— 在 **PC 侧**分三段计时：**计算核 µs / 串口搬运 ms / 软件参考实现 µs**，落一张归因表，结论写成一句话：「**瓶颈不在核，在接口**」。**这条只要 PC + python，不碰板子**（串口搬运那段用 B 的假串口陪练即可测，真板子那趟只是复核）。落点：`metrics/` 出数据 + `report/design/03` 进正文。⭐ 为什么这条值钱：评分里「**性能与资源优化效果 20 分**」和「**优化过程，含优化前后的性能与资源对比表**」（§3.3.5.3 第④项）都要这个；现在报告里只有核的周期数，**没有一句话说清端到端是谁在拖后腿**",
       "as_of": "2026-10-15",
       "source": "report/README.md §三；team/todo_C.md §二"
     }
@@ -47,22 +47,22 @@
 
   "blockers": [
     {
-      "from": "B",
-      "to": "A",
+      "from": "A",
+      "to": "B",
       "what": "H6 只剩一条 —— ✅ **代码侧 2026-10-08 已闭**：B 的修复（`19e8793` / `671a91b` / `dab7353`）已入库并经 A 逐条复核 —— `host.py` 509 → **554 行**、`expect_rows` 到位、四条 `--loopback` **全 rc=0**（`#PMUL NTT 1` 改前是 1）、七个自测全绿。剩下的只是**在真板子上跑一遍验收**（`board_run.py --build 1 --check \"#PMUL NTT 1\"`，期望 `#RDY` + 256/256）。⚠️ **2026-10-15：这一趟仍没做** —— 「10-08 定：与录屏、两组截图并成一趟、另择日」定下的日子是 **10-09 或 10-11**，两天都过了，板子仍未插",
       "impact": "**不再是代码问题，也不是等人 —— 是排期，而且已经逾期。** 这一趟并进「板子 + 录屏 + 截图」那一件。它压着 **H6 记账、C 的视频段 5/6 + 报告章节三配图、H5（B 交 C 的验证数据）**。C 的 ai-log 从 10-10 起连着几天写「视频段 5/6 等 A 的板子录屏与截图」，`report/ai-log/2026-10-14_C.md` 直接写「（A 自 10-08 起没再提交）」。**A 现在是关键路径。**",
-      "bar": { "track": "B", "week": "W3" },
+      "bar": { "track": "A", "week": "W3" },
       "as_of": "2026-10-15",
       "source": "host/KNOWN_ISSUES.md C2；logs/project_state.md §一"
     },
     {
       "from": "A",
       "to": "C",
-      "what": "三件只有 A 能给、C 已经在三封信里要过（`logs/letter_2026-10-09_C_to_A.txt` §二 → `letter_2026-10-11_C_to_A.txt` 提醒 → `letter_2026-10-14_C_to_A.txt` §二/§三/§四）：① ★ **《选题指南》三处原文逐字贴** —— §3.3.5.3「设计报告」七项全表（仓库里只知 5 个项名，第 1、2、4、7 项叫什么叫什么无从得知）、§3.2.5「提交内容」（决定报告最终交 PDF / Word / 仓库 Markdown）、§3.3.5.1「工程包」五项（用来逐条对「我们有什么」）② **板子素材** —— H6 收口原始输出、上板串口录屏（C 的段 5）、两组关键路径截图（段 6 + 报告章节三配图）③ **视频两个待定**（要 A 与 C 一起拿主意）—— 旁白用真人配音还是 TTS（真人 > TTS，评委听得出）、B-roll 用什么。⚠️ 另有一处命名缺口请一并给判断：《指南》叫「失败分析」，报告里承担这个职能的标题叫「本章的边界」（01 §1.6 / 02 §2.7 / 03 §3.10 / 04 §4.9）—— 内容有、标题不叫那个",
-      "impact": "**① 是 C 报告「成文」的唯一结构性输入 —— 七项不到手，章节目录不敢定死**（现按**评分项**排，《指南》按**内容项**要，两套不一定一一对应）。**②** 卡住视频段 5/6 —— 真机演示是初赛视频的核心、剪不掉。**③** 不定下来，录制时间排不了。⚠️ 这三件里 **① 不等板子**：本机仓库根就有 `选题指南.pdf`，开着 PDF 就能贴完（C 给了 `fitz` 一行命令读 p22–p25）",
+      "what": "三件只有 A 能给、C 已经在三封信里要过（`logs/letter_2026-10-09_C_to_A.txt` §二 → `letter_2026-10-11_C_to_A.txt` 提醒 → `letter_2026-10-14_C_to_A.txt` §二/§三/§四）：✅ **① 已于 2026-10-15 交付** —— 《选题指南》四处原文逐字抄进 `logs/guideline_excerpts_2026-10-15.md`（§3.3.5.3 七项 / §3.2.5 提交内容全章 / §3.3.5.1 五项 / §3.3.5.2 技能包），随 `letter_2026-10-15_A_to_C.txt` 交 C。⚠️ **顺带订正一条错信息**：原文先写「§3.2.5（决定报告最终交 PDF / Word / 仓库 Markdown）」—— **《指南》全文没有一处规定报告的文件格式**（28 页抽文本后逐词搜 `PDF`/`Word`/`Markdown`/`docx`/`文件格式`/`排版`/`页数`/`字数` 各 0 处命中），那一问是**在等一个不存在的答案**。② **板子素材仍未做** —— H6 收口原始输出、上板串口录屏（C 的段 5）、两组关键路径截图（段 6 + 报告章节三配图）③ **视频两个待定仍未定**（要 A 与 C 一起拿主意）—— 旁白用真人配音还是 TTS、B-roll 用什么。⚠️ 命名缺口已给判断：「失败分析」在《指南》共 2 处（§3.2.5.4 管我们、§3.1.5.4 属另一赛道），**本赛道 §3.3.5.3 七项里没有这个词** ⇒ 是**并集不是硬缺**，建议标题带上「（失败分析）」",
+      "impact": "**① 已于 10-15 解除** —— 七项到手，`report/` 的章节目录现在可以定死了（逐项对照表在抄件第一节；结论是第 ③ 项「软硬件划分依据与接口设计」**整章缺**、第 ④ 项缺「优化前后对比表」那格、第 ⑥ 项只有索引）。**② 是这条现在还开着的原因** —— 卡住视频段 5/6（真机演示是初赛视频的核心、剪不掉）与报告章节三配图。**③** 不定下来，录制时间排不了。⚠️ 本轮已把「① 不等板子」这件事办完；剩下两条都等板子或等 A 与 C 碰头",
       "bar": { "track": "C", "week": "W4" },
       "as_of": "2026-10-15",
-      "source": "logs/letter_2026-10-14_C_to_A.txt §二/§三/§四；report/ai-log/2026-10-14_C.md"
+      "source": "logs/letter_2026-10-15_A_to_C.txt；logs/guideline_excerpts_2026-10-15.md"
     }
   ],
 
@@ -83,6 +83,9 @@
     { "id": "H5", "when": "2026-10-20", "label": "H5：B 交 C 完整验证数据（含非退化统计）", "owner": "B", "state": "todo", "source": "logs/schedule_plain.md §四 H5" },
     { "id": "H8", "when": "2026-10-20", "label": "H8：A、B 把报告技术初稿交给 C（要点 + 数字即可，不必成文）", "owner": "A+B", "state": "todo", "source": "logs/schedule_plain.md §四 H8" },
     { "id": "—",  "when": "2026-10-14", "label": "W4 报告成文提前开工 + 备视频：参考文献书目补全（缺口 20 余处 → 3 处）、缩略语表、分段录制流水单与录制前体检全绿（C）", "owner": "C", "state": "done", "source": "report/ai-log/2026-10-14_C.md；demo/video_script.md §四" },
+    { "id": "—",  "when": "2026-10-20", "label": "★ 新增（2026-10-15 定）：上板提频对比表 —— MMCM 提频后三档新 WNS + 五笔事务重跑，出「优化前 vs 优化后」表", "owner": "A", "state": "todo", "source": "status/status.json tracks[A].next；report/design/03 §3.10" },
+    { "id": "—",  "when": "2026-10-20", "label": "★ 新增（2026-10-15 定）：瓶颈归因表 —— PC 侧分段计时（核 µs / 串口 ms / 软件参考 µs），结论「瓶颈不在核，在接口」", "owner": "C", "state": "todo", "source": "status/status.json tracks[C].next；metrics/" },
+    { "id": "—",  "when": "2026-10-20", "label": "★ 新增（2026-10-15 定）：三档完整多项式乘法端到端回归 —— `refsim/` 新增入口脚本，三档全链 4096/4096", "owner": "B", "state": "todo", "source": "status/status.json tracks[B].next；refsim/run_polmul_check.sh" },
     { "id": "—",  "when": "2026-10-27", "label": "W5 冻结：报告定稿、视频定稿、提交包组装完成", "owner": "全员", "state": "todo", "source": "logs/schedule_plain.md §三 W5" },
     { "id": "—",  "when": "2026-11-04", "label": "作品提交（官方 18:00 截止）", "owner": "全员", "state": "todo", "source": "大赛通知原文（2026-10-04 核）：作品提交 2026-11-04 18:00；决赛 2026-11-20～11-22 南京江北新区" }
   ],
@@ -103,15 +106,15 @@
       { "track": "A", "week": "W0", "label": "装 Vivado · 验证台跑通", "state": "done", "critical": false, "note": "装 Vivado、跑通验证台（满屏全绿）、读懂 butterfly.v 与 addressgenerator.v", "source": "team/guide_A.md §四 W0 行" },
       { "track": "A", "week": "W1", "label": "参数化折叠度改造", "state": "done", "critical": true, "note": "不再另写 INTT／点乘（上游基线自带且已验证），改为把三档手工复制的 RTL 合成一份参数化版本", "source": "team/guide_A.md §四 W1 行" },
       { "track": "A", "week": "W2", "label": "板级 wrapper · 上板", "state": "done", "critical": true, "note": "协议已冻结、无等待项。10-04 直接做到板级三档全通（原文排在 W4 的活，提前两周）", "source": "rtl/vivado/reports/board_pe*_txn.txt" },
-      { "track": "A", "week": "W3", "label": "`#RDY` 落地 · 板子一次做完", "state": "doing", "critical": true, "note": "`#RDY` 已落进 proto_fsm + 冒烟台补 S0，三档位流 10-07 已重出。⚠️ **2026-10-15：板子这趟仍没做 —— 已逾期**（10-08 定的日子是 10-09 或 10-11，两天都过了），且**卡住 C 的视频段 5/6 与报告章节三配图**。H6 代码侧已闭（B 的 `671a91b`，A 已逐条复核）", "source": "rtl/board/proto_fsm.v；logs/schedule_plain.md §三 W3" },
-      { "track": "A", "week": "W4", "label": "配合视频 · 全量回归", "state": "todo", "critical": false, "note": "⚠️ **板子这趟的实际落点**（原定 W3 做、拖进本周）：补录素材（段 5 / 段 6）+ 核对旁白数字 + 最后一次全量回归（refsim 四条脚本 + 板级冒烟台三档，结果存进 logs/）。**另有一件不等板子、开着 PDF 就能做完**：给 C 贴《指南》三处原文", "source": "logs/schedule_plain.md §三 W4" },
+      { "track": "A", "week": "W3", "label": "板子这趟（技术尾巴已闭）", "state": "doing", "critical": true, "note": "**⚠️ 2026-10-15 重写这根的说明 —— 原先那版把「做完了的」和「没做完的」混在一句里，整根只显示 doing，看上去像一条没动。实际是一半一半：** ✅ 做完的：`#RDY` 落进 proto_fsm + 冒烟台补 S0（10-07）、三档位流重出（10-07）、H6 代码侧复核（10-08，B 的 `671a91b`）。❌ 没做的只有**板子这趟**：10-08 定 10-09 或 10-11 做，两天都落在本格内，都过了。⚠️ 仍未插板，卡住 C 的视频段 5/6 与报告章节三配图（**这是本格唯一还开着的原因**）", "source": "rtl/board/proto_fsm.v；logs/schedule_plain.md §三 W3" },
+      { "track": "A", "week": "W4", "label": "板子收口 · 回归 · 提频", "state": "todo", "critical": false, "note": "⚠️ **2026-10-15：本周 A 无提交。** ① 板子这趟（**W3 那根的欠账，本格只写「做完它」，不重复记账**）：补录素材（段 5 / 段 6）+ 核对旁白数字 ② 最后一次全量回归（refsim 四条脚本 + 板级冒烟台三档，结果存进 logs/）③ ✅ **不等板子那件已于 10-15 办完**：给 C 贴《指南》原文（**四处**，见 `logs/guideline_excerpts_2026-10-15.md`）④ ★ **新增（2026-10-15）· 上板提频** —— 例化 MMCM 提 50 MHz，三档重综合取新 WNS，五笔事务重跑，出「优化前 vs 优化后」对比表。物理可行已查实（**U18 是 MRCC**、`IS_CLK_CAPABLE=1`；xc7z020 有 4 MMCM / 4 PLL / 32 BUFG），§3.10.1 那条「板上无 MMCM/PLL」是错的，见 `report/design/03` 改判", "source": "logs/schedule_plain.md §三 W4；logs/letter_2026-10-15_A_to_B.txt" },
       { "track": "A", "week": "W5", "label": "冻结 RTL", "state": "todo", "critical": false, "note": "冻结，不再改 RTL；配合组装提交包与提交演练。**（2026-10-08 新增）镜像到 GitHub** —— 冻结版一次性推上去、日常不做同步（两个独立 remote，别配成一次推两边）", "source": "logs/schedule_plain.md §三 W5" },
       { "track": "A", "week": "W6", "label": "缓冲 · 提交", "state": "todo", "critical": false, "note": "不排新活：W3–W5 任何一项没做完的在这里收口。11/04 18:00 截止", "source": "logs/schedule_plain.md §三 缓冲" },
 
       { "track": "B", "week": "W0", "label": "验证台扩到四条通路", "state": "done", "critical": false, "note": "验证台从「只能验 NTT」扩到 INTT／点乘／完整乘法都能验；建 Gitee 仓库并推送", "source": "team/guide_B.md §四 W0 行" },
       { "track": "B", "week": "W1", "label": "假串口 · 上位机开工", "state": "done", "critical": false, "note": "H3 协议草案成文入库；在仿真里做假串口，不用真板子也能跑整套协议", "source": "team/guide_B.md §四 W1 行" },
       { "track": "B", "week": "W2", "label": "上位机对假串口跑通", "state": "done", "critical": false, "note": "host/src/ 14 个 .py / 4289 行入库，7 个自测 559 项全绿；`#RDY` 三字段口径闭（10-06）", "source": "host/src/test_*.py；host/proto.md §5.2" },
-      { "track": "B", "week": "W3", "label": "H6 上真板子联调", "state": "doing", "critical": true, "note": "上位机第一次接真板子 —— 10-07 夜已跑通 `#NTT 1`；`txn.count` 修复 10-08 已闭（A 逐条复核）。⚠️ **2026-10-15：只剩真板子上的 `#PMUL NTT 1` 验收一条，它在 A 那趟板子里、不在 B 侧 —— B 侧无欠账**。另：`#RDY` 解包器已接上、README「目录对照说明」10-07 已补", "source": "host/KNOWN_ISSUES.md C2；logs/schedule_plain.md §三 W3" },
+      { "track": "B", "week": "W3", "label": "H6 上真板子联调", "state": "doing", "critical": true, "note": "上位机第一次接真板子 —— 10-07 夜已跑通 `#NTT 1`；`txn.count` 修复 10-08 已闭（A 逐条复核）。⚠️ **2026-10-15：只剩真板子上的 `#PMUL NTT 1` 验收一条，它在 A 那趟板子里、不在 B 侧 —— B 侧无欠账；所以那枚 ⚠ 挂在 A 的 W3 那根上，不在这根**。另：`#RDY` 解包器已接上、README「目录对照说明」10-07 已补", "source": "host/KNOWN_ISSUES.md C2；logs/schedule_plain.md §三 W3" },
       { "track": "B", "week": "W4", "label": "H10 换台电脑从零 clone", "state": "todo", "critical": false, "note": "⚠️ **2026-10-15：本周 B 无提交，这条没开工。** 换一台电脑、从零 clone、按 README 走一遍，跑通截图存档；同时交 C 完整验证数据（H5）", "source": "logs/schedule_plain.md §三 W4" },
       { "track": "B", "week": "W5", "label": "冻结 · 数据打包", "state": "todo", "critical": false, "note": "冻结；验证数据与复现结论打包进提交包", "source": "logs/schedule_plain.md §三 W5" },
       { "track": "B", "week": "W6", "label": "缓冲 · 提交", "state": "todo", "critical": false, "note": "不排新活，收口用", "source": "logs/schedule_plain.md §三 缓冲" },
@@ -126,8 +129,8 @@
     ],
     "handoffs": [
       { "week": "W1", "ids": "H1 H3 H7", "state": "done", "label": "H1 A→B 端口说明 · H3 串口协议冻结 v1.0 · H7 C→A、B 演示页数据格式" },
-      { "week": "W3", "ids": "H4 · H6", "state": "todo", "key": true, "label": "H6 —— 代码侧已闭（B 的 `host.py` 修复 A 已逐条复核）；⚠️ **2026-10-15：剩的真板子验收仍没做、已逾期**（10-08 定的 10-09 / 10-11 都过了），现卡住 C 的视频段 5/6（A 侧 H4 资源数据两批已交）" },
-    { "week": "W4", "ids": "H5 · H8 · H10", "state": "todo", "label": "⚠️ **2026-10-15：这三条本周都没见动作（A、B 两侧自 10-08 起零提交）** —— H5 B→C 验证数据 · H8 A、B→C 技术初稿 · H10 换机从零 clone（**只剩 B 一道** —— C 那一道 10-05 已办结）" },
+      { "week": "W3", "ids": "H4 · H6", "state": "todo", "key": true, "label": "H6 —— 代码侧已闭（B 的 `host.py` 修复 A 已逐条复核）；⚠️ **2026-10-15：剩的真板子验收仍没做、已逾期**（10-08 定的 10-09 / 10-11 都过了），现卡住 C 的视频段 5/6（A 侧 H4 资源数据两批已交）。⚠️ **本行 2026-10-15 订正**：这枚 ⚠ 挂在 **A 的 W3** 那根上 —— 是 **A 欠 B** 的真板子验收，原先渲染成「B 欠 A」且挂到了 B 那根（B 侧 10-08 起就无欠账）" },
+    { "week": "W4", "ids": "H5 · H8 · H10", "state": "todo", "label": "⚠️ **2026-10-15：这三条本周都没见动作**（A 10-15 那个 `fc6d115` 只改 `status/`，`rtl/` 自 10-08 起零提交；B 自 10-08 起零提交）—— H5 B→C 验证数据 · H8 A、B→C 技术初稿 · H10 换机从零 clone（**只剩 B 一道** —— C 那一道 10-05 已办结）" },
       { "week": "W5", "ids": "提交包", "state": "todo", "label": "冻结：报告定稿、视频定稿、提交包组装 + 提交演练" }
     ]
   },
@@ -147,6 +150,7 @@
     { "owner": "A+B+C", "text": "★ **重切排期** —— **10-07 已重切完**：W3 收口技术尾巴 / W4 报告成文 + 视频 + 复现 / W5 冻结与组装 / 10-28–11-03 整整一周缓冲，提前一周做完。以下三处已同步，team/ 三份周计划待各自认领", "state": "doing", "as_of": "2026-10-07", "source": "logs/schedule_plain.md §三；status/status.json gantt" },
     { "owner": "A", "text": "补 PWM2 两 bank 不同数据的黄金向量 —— 根因是 gen_batch_vectors.py:141-142 把同一个 ntt_out 写进 _a 和 _b。**10-04 判定不改**（改它会动已冻结的 H2 黄金向量，收益是补一格验证、代价是牵动三处），报告里把这条边界写清即可", "state": "done", "as_of": "2026-10-04", "source": "refsim/gen_batch_vectors.py:141" },
     { "owner": "A", "text": "**GitHub 镜像 —— 2026-10-08 定：挂，但提交前一次性推**（RTL 冻结后推冻结版，日常不做同步；⚠️ 两个独立 remote，不要配成「一次推两边」）—— 排期 logs/schedule_plain.md §三 W5", "state": "todo", "as_of": "2026-10-08", "source": "logs/project_state.md §二 C；logs/project_state_changelog.md 2026-10-08（之十）" },
+    { "owner": "A", "text": "★ **新增（2026-10-15）· 第 1 项：上板提频** —— ① 例化 MMCM（U18 是 MRCC，`IS_CLK_CAPABLE=1`）+ 加 BUFG，把 50 MHz 往上提 ② 三档各自重综合/实现/布线，取新的 WNS（存 `rtl/vivado/reports/`）③ 五笔计算事务在三档上重跑，判 256/256 ④ 出「**优化前 vs 优化后**」对比表（频率 / WNS / 资源三列）。⚠️ **要板子** —— 与「板子这趟」并成同一天做。⚠️ 同一条链上还有 **P0-2**：`report/design/` 缺《指南》§3.3.5.3 第③项「软硬件划分依据与接口设计」整章", "state": "todo", "as_of": "2026-10-15", "source": "status/status.json tracks[A].next；report/design/03 §3.10" },
 
     { "owner": "B", "text": "✅ **H6 收口（B 侧已闭，10-08 A 逐条复核）** —— `host/src/host.py` 的 `txn.count` 一数三用已拆成 `sent` / `recv`（509 → **554 行**），`expect_rows` 到位，两条 `--loopback`（`#NTT 1` 与 `#PMUL NTT 1`）**全绿**，七个自测全绿。提交 `19e8793` / `671a91b` / `dab7353`。**B 侧无欠账**；只剩 A 在真板子上跑一遍验收，已并进 A 那趟板子（另择日）", "state": "done", "as_of": "2026-10-08", "source": "logs/letter_2026-10-08_A_to_B.txt" },
     { "owner": "B", "text": "`#RDY` 解包器接上 —— <build> 现在有值了（10-06 定口径、10-07 A 落地），自动判读出序可以真做。✅ B 的 `1df5625` 已接住这一行（`RDY_PREFIX` + `parse_rdy()`，`board_run.py` 会打 `build_src`）", "state": "done", "as_of": "2026-10-07", "source": "host/proto.md §5.2；host/src/host.py" },
@@ -157,13 +161,16 @@
     { "owner": "B", "text": "⚠️ 2026-10-15：仍挂着（自 10-03 起）。W2 内跑完 §5.5 三种错误注入并回报", "state": "todo", "as_of": "2026-10-15", "source": "team/todo_AB.md §二·2" },
     { "owner": "B", "text": "#PMUL TIME / #PMUL FULL 的**协议侧（假串口）**端到端 —— 被 refsim/batch/ 下 23 个变长文件挡。**10-04 判定不改**（改它 = 动已冻结的 H2 黄金向量），报告里写清边界。⚠️ **真板子那一侧 10-04 已各 256/256**（`board_pe{4,16}_txn.txt`），别把这句读成「没跑过」", "state": "blocked", "as_of": "2026-10-07", "source": "host/proto.md §九(d) 第 2/3 条；rtl/vivado/reports/board_pe*_txn.txt" },
     { "owner": "B", "text": "⚠️ 2026-10-15：本周未动。同步 proto.md §七 两处过期陈述（A 已于 10-07 回信说明口径）", "state": "todo", "as_of": "2026-10-15", "source": "logs/letter_2026-10-07_A_to_B.txt" },
+    { "owner": "B", "text": "★ **新增（2026-10-15）· 第 3 项：三档完整多项式乘法端到端回归** —— `refsim/` **新增一条入口脚本**（不动现有 6 个），把「完整多项式乘法」从只有 pe1 扩到三档，判多重集 4096/4096。事实：`run_polmul_check.sh:39-41` 的 `SRC` 写死 `pe1/*.v`；两个 testbench 是位置式例化上游写死的 `KyberHPM1PE`，其中 `parameter PE_NUMBER = 1` **不起作用**。⭐ 抄 `rtl/probes/ntt_func_tb.v:183`（参数化例化 + `-DCFG_PE_NUM=` + 缺参 FATAL）。**不等任何人**", "state": "todo", "as_of": "2026-10-15", "source": "status/status.json tracks[B].next；refsim/run_polmul_check.sh:39" },
 
     { "owner": "C", "text": "✅ **装工具链 + H10 独立复现，10-05 当天一起办结** —— `gcc` 16.2.0 / `python` 3.12.10 / `iverilog` 12.0（winget），四条 `refsim/` 入口脚本全过、`check_reproducible.sh --from-remote` **通过 4 ／ 跳过 0 ／ 失败 0、退 0**（本项目首次真绿），改名后又复验一遍。⚠️ 本行原写「H10 独立复现的唯一前提」并标 `todo` —— **10-05 装机后即失效，10-08 才收掉**，见 `logs/project_state_changelog.md` 2026-10-08（之六）", "state": "done", "as_of": "2026-10-08", "source": "report/ai-log/2026-10-05_C.md 第三段；report/design/05_reproducibility.md §5.6" },
     { "owner": "C", "text": "★ 报告三处缺口：① 上板真实最高频率（板级 WNS 不能反推 Fmax）—— ⚠️ **要靠 A 那趟板子，已逾期** ② 端到端延迟正式测量（§3.10）③ 正文写明 Vivado 是 2020.2", "state": "todo", "as_of": "2026-10-15", "source": "report/README.md §三；report/design/03_performance_and_resources.md §3.10" },
     { "owner": "C", "text": "⚠️ 2026-10-15：仍未做。`skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」（§3.3.5.2）", "state": "todo", "as_of": "2026-10-15", "source": "logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 2 条" },
     { "owner": "C", "text": "⚠️ 2026-10-15：仍挂着。演示页截图选版式进正文（深色主题不适合黑白打印）", "state": "todo", "as_of": "2026-10-15", "source": "team/todo_C.md §二·2" },
     { "owner": "C", "text": "剪演示视频（5–10 分钟）；**旁白里每个数字都要能指到 .rpt 或脚本输出**。**2026-10-15：已在备视频**（`demo/video_script.md` §四 分段录制流水单 + 录制前体检全绿），录制与剪辑等 A 的板子素材（段 5/6）", "state": "doing", "as_of": "2026-10-15", "source": "logs/schedule_plain.md §三 W4" },
-    { "owner": "C", "text": "⏳ **报告成文的结构性输入：三处《选题指南》原文**（§3.3.5.3 设计报告七项 / §3.2.5 提交内容 / §3.3.5.1 工程包五项）—— **等 A 逐字贴**（10-09 要、10-11 提醒、10-14 第三次催，三封信均未回）。七项不到手，章节目录不敢定死（现按**评分项**排，《指南》按**内容项**要，两套不一定一一对应）", "state": "blocked", "as_of": "2026-10-15", "source": "logs/letter_2026-10-14_C_to_A.txt §二" }
+    { "owner": "C", "text": "✅ **报告成文的结构性输入 —— 2026-10-15 交付**：《选题指南》四处原文逐字抄在 `logs/guideline_excerpts_2026-10-15.md`（§3.3.5.3 七项 / §3.2.5 提交内容全章 / §3.3.5.1 五项 / §3.3.5.2 技能包），随 `letter_2026-10-15_A_to_C.txt` 交 C。⚠️ **附带两个结论**：① 章节目录现在可以定死 —— 逐项对照表在抄件第一节（第 ③ 项「软硬件划分依据与接口设计」**整章缺**）② 原以为「§3.2.5 决定报告交 PDF/Word/Markdown」**是错的**，《指南》全文不规定报告格式（逐词搜 8 个关键词各 0 命中），那一问在等一个不存在的答案", "state": "done", "as_of": "2026-10-15", "source": "logs/letter_2026-10-15_A_to_C.txt；logs/guideline_excerpts_2026-10-15.md" },
+    { "owner": "C", "text": "★ **新增（2026-10-15）· 第 2 项：瓶颈归因表** —— PC 侧分三段计时（计算核 µs / 串口搬运 ms / 软件参考实现 µs），落一张归因表进 `metrics/` + `report/design/03` 正文，结论一句话「**瓶颈不在核，在接口**」。**只要 PC + python，不碰板子**（串口段用 B 的假串口陪练即可，真板子只复核）。⭐ 直接压「性能与资源优化效果 20 分」与 §3.3.5.3 第④项「优化前后的性能与资源对比表」—— 现报告只有核的周期数，没有端到端归因", "state": "todo", "as_of": "2026-10-15", "source": "status/status.json tracks[C].next；metrics/" },
+    { "owner": "C", "text": "★★ **新增（2026-10-15）· 评分缺口：《指南》两处写明「通用 PYNQ Skill 单独加分」，本项目零分** —— §3.3.2 与 §3.3.5.2 各写一次；§3.3.2 还给了 4 个例子，其中两个（「黄金参考比对、性能与资源数据自动采集并生成报告的工具」「从接口契约自动生成主机侧调用代码或测试骨架的脚本」）**我们已经有非 PYNQ 版**：`refsim/` 的 KAT 锚定比对链 + `check_reproducible.sh`，和 `host/` 的协议驱动自测。待定：是否抽一层与题目解绑的通用封装进 `skill/`（换题换板仍可用才算数）", "state": "todo", "as_of": "2026-10-15", "source": "选题指南.pdf 页 17/24（§3.3.2 与 §3.3.5.2 原文）" }
   ],
 
   "manual_numbers": [

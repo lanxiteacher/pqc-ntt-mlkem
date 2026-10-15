@@ -317,7 +317,7 @@ function render(data) {
 
   const totalCommits = activity.reduce((n, a) => n + (a.total || 0), 0);
   const tiles = [
-    tile('关键路径里程碑', `${doneCount}/${ms.length}`, '已完成 / 全部', '自动 · status.json', json.updated),
+    tile('关键路径里程碑', `${doneCount}/${ms.length}`, '已完成 / 全部，逐条清单在这一块下面', '自动 · status.json', json.updated),
     ...(json.manual_numbers || []).map((n) => tile(n.label, n.value, n.note, `人写 · ${n.source}`, n.as_of)),
     tile('三人提交', String(totalCommits), `A ${activity[0]?.total ?? 0} · B ${activity[1]?.total ?? 0} · C ${activity[2]?.total ?? 0}`,
       '自动 · git log', null),
@@ -370,6 +370,21 @@ function render(data) {
       <td>${esc(t.text)}</td>
       <td class="c-state"><span class="ico">${s.icon}</span>${s.text}</td>
       <td class="c-src" title="${esc(t.source)}">${esc(t.source)}</td>
+    </tr>`;
+  }).join('');
+
+  // 里程碑逐条清单 —— 上面那块「关键路径里程碑 x/y」的展开。原先只渲染成一个
+  // 计数器，label / when / owner 一个字节都上不了页面（P0-3，2026-10-15 修）。
+  // 顺序＝status.json 里的原序（大致按时间），不重排 —— 重排会把「哪条是补录的」
+  // 这个信息抹掉。state 用与待办同一套 STATE，不另立一套图标。
+  const msRows = ms.map((m) => {
+    const s = stateOf(m.state);
+    return `<tr class="${s.cls}">
+      <td class="c-num">${esc(m.when)}</td>
+      <td>${esc(m.label)}</td>
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s${ownerColor(json, m.owner)})"></span>${esc(m.owner)}</td>
+      <td class="c-state"><span class="ico">${s.icon}</span>${s.text}</td>
+      <td class="c-src" title="${esc(m.source)}">${esc(m.source)}</td>
     </tr>`;
   }).join('');
 
@@ -632,6 +647,13 @@ ${ganttHtml}
 <h2>数字一览<span class="h2n">每块底部都写着来源</span></h2>
 <div class="tiles">${tiles.join('')}</div>
 <p class="hint">仓库规模（自动 · git ls-files，跳过草稿与数据目录）：${esc(scaleLine)}</p>
+
+<h2>里程碑逐条<span class="h2n">上面那块「关键路径里程碑 ${doneCount}/${ms.length}」的展开 · 分母就是下表行数</span></h2>
+<div class="tw"><table>
+  <thead><tr><th>日期</th><th>是什么</th><th>谁</th><th>状态</th><th>出处</th></tr></thead>
+  <tbody>${msRows}</tbody>
+</table></div>
+<p class="hint">⚠️ 与顶部「已交付 x%」<b>不同口径，两个数不要相加</b> —— 那个的分母是甘特图上的周计划条数，这个的分母是里程碑条数。</p>
 
 <h2>欠账<span class="h2n">谁欠谁一句话 / 一个文件 —— 图中挂 ⚠ 的就是这三条</span></h2>
 <div class="blockers">${blockers}</div>
