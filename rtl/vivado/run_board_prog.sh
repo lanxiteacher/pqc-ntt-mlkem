@@ -38,6 +38,9 @@
 #        （明确给了 `BIT=` 就跳过这道护栏；确实要用旧位流加 `ALLOW_STALE_BIT=1`）。
 #      ⇒ 今天要烧的是 10-07 那版 pe1，正确用法：
 #        `BIT=rtl/vivado/_runs/pe1/ntt_board.bit sh rtl/vivado/run_board_prog.sh`
+#        （相对路径**可以**这么写 —— 脚本会按你当时所在的目录补成绝对路径。
+#          2026-10-15 之前不行，会报 `BITFILE MISSING`，见下面那处 `case` 的说明。
+#          从仓库根跑就是这个形式；在别的目录跑，路径要相对**那个**目录。）
 # ===========================================================================
 
 set -e
@@ -51,6 +54,18 @@ RUNDIR="${VIVADO_RUNS:-$HERE/_runs}"
 BIT_EXPLICIT=1
 if [ -z "${BIT:-}" ]; then BIT_EXPLICIT=""; fi
 BIT="${BIT:-$RUNDIR/ntt_board.bit}"
+
+# ⚠️ 相对路径的 `BIT=` 在这里**补成绝对路径**（2026-10-15 修）。
+#    本脚本最后是 `cd "$SCRATCH"` 再从仓库外启动 Vivado，而 `vpath()` 走的是
+#    `cygpath -m` —— 相对路径原样返回，到 Vivado 那儿就不成立了。症状是
+#    `RESULT prog BITFILE MISSING`，可文件其实好端端躺在仓库里，很容易误判成
+#    「位流没编译出来」。文档里那条示例（`BIT=rtl/vivado/_runs/pe1/ntt_board.bit`）
+#    原先就是这么踩的 —— 2026-10-15 实测过。
+#    基准取**调用者当时的工作目录** `$PWD`：本脚本到这里还没 cd 过（`HERE` 那次在子壳里）。
+case "$BIT" in
+    /* | [A-Za-z]:[/\\]*) ;;                  # 已是绝对路径（MSYS 式 / Windows 式）
+    *) BIT="$PWD/$BIT" ;;
+esac
 
 # 档位戳：与 bitstream 同目录的一行文件 `ntt_board.pe`，由 synth_board.tcl 写。
 # ⚠️ 为什么值得在这里读一遍：bitstream 的文件名**三档都一样**（ntt_board.bit），
