@@ -229,7 +229,7 @@ show_schematic [get_cells -of_objects [get_pins -of_objects $p]]
   选中后 Schematic 窗口会自动跟着显示这一块。
 
 - 干脆**截「时序报告」本身**：`Reports > Timing > Report Timing Summary`，出来的表里那条
-  路径每行都列了 pin、net、累计延时、逻辑级数 —— 「12 级逻辑、13.153 ns」在报告里是
+  路径每行都列了 pin、net、累计延时、逻辑级数 —— 「11 级逻辑、12.488 ns」在报告里是
   **逐行可见**的。对报告正文来说，这张图的信息量其实不比 Schematic 少。
 
 **退路 B：`get_pins` 报错说找不到 pin。**
