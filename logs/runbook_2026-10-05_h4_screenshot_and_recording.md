@@ -108,31 +108,41 @@ Vivado 底部有个 `Tcl Console` 页签，点进去，敲这三行：
 
 ```tcl
 open_checkpoint C:/vivado_work/dcp/ntt_board_pe1.dcp
-set p [get_timing_paths -from [get_pins u_line/line_len_reg[2]/C] -to [get_pins u_fsm/tx_len_reg[6]/D] -max_paths 1]
+set p [get_timing_paths -from [get_pins u_line/line_len_reg[0]/C] -to [get_pins u_fsm/r_echo_reg[361]/CE] -max_paths 1]
 show_schematic [get_cells -of_objects [get_pins -of_objects $p]]
 ```
 
-第 3 行是这个意思：从那对端点取出**整条路径上的所有 cell**（14 个），让示意图把它们
+第 3 行是这个意思：从那对端点取出**整条路径上的所有 cell**（13 个），让示意图把它们
 **连同它们之间的连线**一起画出来 —— 也就是那条关键路径本身。
+
+> ⚠️ **上面那两个 pin 是 2026-10-15 换过的** —— 加 `#RDY` 之后板级关键路径变了，
+> 原先那对（`line_len_reg[2]/C` → `tx_len_reg[6]/D`）**已经作废**。
+> 详见第 0 步开头那条订正。
 
 > **⚠️ 别用 `-pin_pairs`。** 它看着更像「画路径」，其实不是：
 > help 原文说，`-pin_pairs` 给一对 pin 时画的是**这两个 pin 之间那根线**；
 > 「**没给 `-pin_pairs`、或者给的是一对不直接相连的 pin 时，那根线不画**」。
-> 而我们这条路径的两个端点中间隔着 **12 级 LUT**，**没有一根直接的线** ——
+> 而我们这条路径的两个端点中间隔着 **11 级 LUT**，**没有一根直接的线** ——
 > 用 `-pin_pairs` 只会得到两个孤零零的 FF，画不出路径本身，而且**不报错**，
 > 所以不看这段说明就会以为「截出来怎么是空的」。
 
-**为什么这条现在能写死**（2026-10-05 实测，不是查文档推的）：
+**为什么这条现在能写死**（**2026-10-15 用当前这两份 `.dcp` 重验过**，不是查文档推的）：
 
-| 已经验过的事 | 结果 |
-|---|---|
-| `open_checkpoint` 能打开那个 `.dcp` | ✅ OK，器件 `xc7z020clg400-2` |
-| 那两个 pin 名解析得出来 | ✅ `u_line/line_len_reg[2]/C` → FDCE；`u_fsm/tx_len_reg[6]/D` → FDCE |
-| 它们之间那条路径存在 | ✅ slack **6.538** / **12** 级逻辑 / 延时 **13.153 ns** |
-| 路径上的 pin | **26 个**（= 13 跳，正好 12 级逻辑 + 首尾） |
-| 路径上的 cell | **14 个** = 1 个源 FF + **12 个 LUT** + 1 个目的 FF |
+| 已经验过的事 | 结果（板级 `ntt_board_pe1.dcp`） | 结果（核 `pe1_nc.dcp`） |
+|---|---|---|
+| `open_checkpoint` 能打开那个 `.dcp` | ✅ 器件 `xc7z020clg400-2` | ✅ 同左 |
+| 那两个 pin 名解析得出来 | ✅ 源 `line_len_reg[0]/C` → FDCE、目的 `r_echo_reg[361]/CE` → FDCE | ✅ 源 DSP48E1 `im0/P0/CLK`、目的 `w5r0_reg[3]/D` → FDCE |
+| 它们之间那条路径存在 | ✅ slack **+7.339** / **11** 级逻辑 / 延时 **12.488 ns** | ✅ slack **−0.936** / **9** 级逻辑 / 延时 **5.836 ns** |
+| 路径上的 pin | **24 个** | **20 个** |
+| 路径上的 cell | **13 个** = 1 源 FF + **11 个 LUT** + 1 目的 FF | **11 个** = 1 源 DSP + **9** 级逻辑 + 1 目的 FF |
 
-（上面三个数字与 `03` §3.13.4 表里 pe1 那一行、以及 `board_pe1_timing.rpt` 完全一致。）
+（板级三列与 `board_pe1_timing.rpt` 第一条 `Slack (MET)` 逐字一致；核三列与
+`pe1_nc_timing.rpt` 第一条 `Slack (VIOLATED)` 逐字一致。**核那个负 slack 是对的**，见第 4 步的 ⚠️。）
+
+> ⚠️ **2026-10-05 那一版验的是旧端点**（`line_len_reg[2]/C` → `tx_len_reg[6]/D`：
+> slack 6.538 / 12 级 / 13.153 ns / 26 pin / 14 cell）。加 `#RDY` 之后这组数**全部作废** ——
+> 那四个 pin 现在**都还在设计里**，所以拿新 `.dcp` 查旧端点**不报错**，只会静默画出一条
+> **非关键**路径。照 10-05 那版敲会得到一张看着正常的错图。
 
 > ⚠️ 还有一条：`show_schematic` **只在 GUI 里有效**。help 原文：「在 Tcl 或 Batch 模式下，
 > 该命令只是静默返回，不报错也不输出」—— 所以**没法**在批处理里预先验证它。
@@ -145,8 +155,9 @@ show_schematic [get_cells -of_objects [get_pins -of_objects $p]]
 
 - 截 **Schematic 窗口**那块（把高亮的那条路径含进去），**别缩放**（细线会糊）
 - 格式 **PNG**（`report/figures/README.md` §三：位图用 PNG 不用 JPG）
-- 存 **`assets/`**，命名 `2026-10-05_A_<英文一句话>.png`，
-  例如 `2026-10-05_A_critical_path_board_pe1.png`
+- 存 **`assets/`**，命名 `2026-10-15_A_<英文一句话>.png`（日期写**实际动手那天**，
+  本手册 10-05 写、10-15 做，所以是 `2026-10-15`），
+  例如 `2026-10-15_A_critical_path_board_pe1.png` / `2026-10-15_A_critical_path_core_pe1.png`
 - **不要**直接往 `report/figures/` 放 —— 那里按约定只放 C 排版好、要进报告的那一版
   （`report/figures/README.md` 文首那一段）
 
@@ -364,8 +375,8 @@ bitstream 一致** —— 它决定**装载顺序**（送进去的数据怎么�
 
 ### 第 7 步：存哪 / 命名
 
-`assets/2026-10-05_A_<英文一句话>.mp4`（录屏用 `.mp4`；30 秒以内可用 `.gif`）。
-同样**用英文名**（理由见 §一 第 3 步那个 ⚠️）。
+`assets/2026-10-15_A_<英文一句话>.mp4`（录屏用 `.mp4`；30 秒以内可用 `.gif`）。
+同样**用英文名**（理由见 §一 第 3 步那个 ⚠️）。日期写**实际动手那天**。
 
 ### 第 8 步：现在录，还是 H6 那天录
 
