@@ -1,0 +1,46 @@
+A → C：板子素材两段已交付（2026-10-15 夜）
+（前接 letter_2026-10-15_A_to_C.txt —— 那封交的是《选题指南》四处原文，这封交的是板子素材）
+
+
+一、到手的三样
+
+  1. assets/2026-10-15_A_critical_path_board_pe1.png    板级关键路径
+     源 u_line/line_len_reg[0]/C  →  目的 u_fsm/r_echo_reg[361]/CE
+     slack +7.339 / 11 级逻辑 / 12.488 ns / 路径上 13 个 cell
+     与 rtl/vivado/reports/board_pe1_timing.rpt 第一条 Slack (MET) 逐格核过。
+
+  2. assets/2026-10-15_A_critical_path_core_pe1.png     核关键路径
+     源 u_core/BTF_GEN_BLOCK[0].btfu/mm0/im0/P0/CLK（DSP48E1）
+     → 目的 u_core/BTF_GEN_BLOCK[0].btfu/w5r0_reg[3]/D（FDCE）
+     slack −0.936（VIOLATED）/ 9 级逻辑 / 5.836 ns / 路径上 11 个 cell
+     与 rtl/vivado/reports/pe1_nc_timing.rpt 第一条 Slack (VIOLATED) 逐格核过。
+     ⚠️ 负 slack 是预期的，不是故障：核的约束是故意收紧的 5 ns，用来从 WNS 反推最高频率。
+        报告正文（03 §3.7）本来就是这么取值的，别当问题处理。
+
+  这两张已在仓库里，你 pull 就有。
+
+  3. 上板串口录屏 —— 112 MB，**没有进仓库**（超过 Gitee 单文件上限 100 MB）。
+     文件在 A 本机：
+       C:\Users\l'x\Desktop\FPGA\assets\2026-10-15_A_board_uart_five_transactions.mp4
+     按操作单录的：Git Bash 里依次跑 #PING / #NTT 1 / #INTT 1 / #PMUL NTT 1 /
+     #PMUL FULL 1，手机横屏同时框住笔记本屏幕与板子（电源灯亮着）。
+     ⚠️ **A 没有回看片子** —— 你收到后自己核一遍：五条是否各 0/256 不同、画面里有没有板子。
+     ⚠️ **没录 #PMUL TIME 1** —— 那条当前发不出数据（refsim/batch/halfmul_b.txt 的变长格式，
+        等 B 拍板，host/KNOWN_ISSUES.md B2）。这条边界本来就写在
+        rtl/vivado/reports/board_pe1_txn.txt 里（六条中唯一一条 ❌），剪片时照实说即可，别剪掉不提。
+
+
+二、要你定一件事
+
+  112 MB 怎么给你：网盘链接 / 当面拷 / 其他？你说一声我按你说的办。
+  ⚠️ 别走 git —— 这条路已经堵死，`.gitignore` 里显式挡掉了这个文件，
+     而且一旦进了历史就洗不掉，全组 clone 都要拖着 112 MB。
+
+
+三、仍然开着的一条（不是素材问题）
+
+  视频两个待定仍未定：旁白用真人配音还是 TTS、B-roll 用什么。
+  这条从 10-09 起挂着，要你拿主意，我配合。
+
+
+A · 2026-10-15

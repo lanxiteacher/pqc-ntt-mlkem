@@ -102,3 +102,9 @@ Thumbs.db
 # 只挡 .local 那一份。若以后要全队共用一套配置，可以提交
 # `.claude/settings.json`（不带 .local），那条**故意不挡**。
 .claude/settings.local.json
+
+# ===== 大文件：上板录屏不进仓库 =====
+# 112 MB，超过 Gitee 单文件上限（免费仓库 100 MB），push 会被直接拒。
+# 文件在 A 本机 assets/ 下，交付方式（网盘 / 现场拷贝）见 logs/project_state.md。
+# 别用 `git add -f` 硬加 —— 一旦进了历史就洗不掉，全组 clone 都要拖这个包。
+assets/2026-10-15_A_board_uart_five_transactions.mp4
