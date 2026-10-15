@@ -75,8 +75,8 @@ dout<───│  │  序列化器   │<────────────�
 对外只有 `clk / rst / start_* / din[11:0] / dout[11:0] / done`，
 **三档一模一样**；宽接口只留在核内部。
 
-> **图 2-1　架构（`../figures/architecture.svg`）**
->
+![架构：宽接口留在核内，对外固定 12 位](../figures/architecture.svg)
+
 > 三层，从上到下依次是：`KyberHPMNTT_top` 的对外端口 ／ 核外那对序列化-反序列化器 ／
 > 核 `KyberHPMNTT` 的宽接口。**这张图要说明的是「边界画在哪」** ——
 > 12 位的窄接口在 `top` 上，`12 × PE_NUMBER` 的宽接口只在核内，
