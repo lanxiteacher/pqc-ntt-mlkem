@@ -112,6 +112,27 @@ _FNTT_PERM = {
 }
 
 
+# ---------------------------------------------------------------- 装载序（电脑 → 板子）
+
+# §5.3.4:372 那张表的**「输入顺序」列** —— 与上面的**读出序是两回事**：读出看运算
+# 类型，装载看 **(运算, 折叠度)**。规格原话：「装载那一列按 (运算, 折叠度) 分档，
+# 没有一句话能概括……**别按装载路径外推，查表**」。
+#
+# ⚠️ 基准是**向量文件自己存的顺序**（`refsim/batch/*.txt`），登记的是**「要重排成
+#    什么样」**，不是「文件长什么样」。所以**别按「文件一定是自然序」外推** ——
+#    `intt_batch_in.txt` 就是个反例：它存的是自然序，而 §5.3.4:372 那一格
+#    **三档都要求交织**，于是三档都得重排（2026-10-04 记录原话即为
+#    `intt_batch_in.txt [装载 interleave]`，当时是那个临时脚本现排的）。
+# ⚠️ 这张表**只管喂进去的数据**；解包（板子 → 电脑）看下面的 `permutation()`。
+_LOAD_PERM = {
+    # key              折叠度 -> (第 0 个 bank, 第 1 个 bank, ...)
+    # INTT：三档都交织（§5.3.4:372），文件却是自然序 → 三档都要排
+    ("#INTT",):        dict((b, (_perm_fntt(),)) for b in KNOWN_BUILDS),
+    ("#PMUL", "NTT"):  {1: (_perm_fntt(), _perm_fntt())},      # pe1：两 bank 都交织
+    ("#PMUL", "TIME"): {1: (_perm_identity(), _perm_fntt())},  # pe1：A 自然、B 交织
+}
+
+
 def kind_of(command):
     """从命令名推出该用哪张表。认不出来就**响亮报错**，不猜。
 
@@ -165,6 +186,36 @@ def permutation(kind, build=DEFAULT_BUILD):
     except KeyError:
         raise SystemExit("!! 不认识的运算类型：%r（只认 %s）"
                          % (kind, " / ".join(sorted(_PERM))))
+
+
+def load_permutation(key, bank, build=DEFAULT_BUILD):
+    """给出第 `bank` 个 bank **送进板子前**的重排表。
+
+    key   —— `vectors.VECTORS` 的键，形如 `("#PMUL", "NTT")`；认不出的一律恒等。
+    bank  —— 第几个 bank（0 起）：`#NTT` / `#INTT` 只有一个，`#PMUL *` 是 A、B 两个。
+    build —— 折叠度（`#RDY <ver> <build> <errs>` 的 `<build>`）。
+
+    返回值 `perm[i]` = **送出去的第 i 行**该取向量文件里的第 `perm[i]` 行。
+    长度 256。没有特殊规定的 (运算, 折叠度, bank) 一律**恒等**。
+
+    ⚠️ **与 `permutation()` 是两回事，别互相套用**：那个是**读出**序
+       （板子 → 电脑，按运算类型查，只有 FNTT 看 build）；这个是**装载**序
+       （电脑 → 板子，按 (运算, 折叠度) 查）。两张表都出自 §5.3.4:370-374 的同
+       一张表，但是**两列**。
+
+    ⚠️ 这一格**曾经漏掉过**（2026-10-15 在真板子上查出来的）：B1 那次只补了读出
+       侧，装载侧照原样送文件，于是 pe1 上 `#PMUL NTT 1` 稳定 252/256 全错 ——
+       板子算得对，是喂进去的 NTT 域布局不对。规格 §5.3.4:372 对 pe1 的
+       `#PMUL NTT` / `#PMUL TIME` 另有要求，见 `_LOAD_PERM`。
+    """
+    banks = _LOAD_PERM.get(key, {}).get(build)
+    if banks is None:
+        return _perm_identity()
+    if bank >= len(banks):
+        raise SystemExit(
+            "!! %r 在 pe%d 档下只登记了 %d 个 bank 的装载序，却问到了第 %d 个。"
+            % (key, build, len(banks), bank))
+    return banks[bank]
 
 
 # ---------------------------------------------------------------- 解包 / 反解包

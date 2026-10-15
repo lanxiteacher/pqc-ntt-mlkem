@@ -163,6 +163,12 @@
 - **兜底**：对拍一律走 `unpack.read_values`（宽容 1~3 位）+ `unpack.compare_values`
   （**按数值比**）。
 - **判定**：**本轮不修**（修 = 改已冻结的 H2 黄金向量，须单独议）。
+- ⚠️ **2026-10-15 复核：这个数现在是 24，不是 23。** A 拿 `vectors.read_vector` 的判据
+  全扫了一遍 `refsim/batch/`，多出来的是 **`fntt_rtl_out.txt`**（**全 4096 行都不合规**，
+  iverilog `$fdisplay` 写的，见 B3 末尾那条例外）—— 当初写上面那句时它可能还没入库。
+  **别把这个数当常数引**（它随 `refsim/batch/` 的产出脚本走）。
+  对 `#PMUL TIME` 这条通路，**只差 `halfmul_b.txt` 一个文件**（`halfmul_a.txt` 是干净的），
+  详见 B7 末尾。
 
 ### B3 ✅ **已修（2026-10-06）** —— CRLF 缺陷（C 报的）
 
@@ -219,6 +225,32 @@
   但会动到 5 个测试脚本的公共写法，**先报给用户点头再动**。
 - **怎么验**：`python host/src/test_unpack.py > /dev/null; echo $?`（现在会 **1**，修好后应是 0）；
   与 `PYTHONIOENCODING=utf-8 python host/src/test_unpack.py > /dev/null; echo $?`（**0**）对照。
+
+### B7 ✅ **已办（2026-10-15，A 改的 host/src/）** —— 「装载序」整列没实现：pe1 上 `#PMUL NTT` / `#INTT` 稳定全错
+
+- **现象**（2026-10-15 真板子）：烧 pe1 位流，`board_run.py "#PMUL NTT 1" --check`
+  稳定报 **252 / 256 不同**（`#INTT 1` 更狠，**256 / 256**）。事务本身 `OK`、256 行收全、
+  多重集也**不**相等 —— 单看这些，很像 RTL 算错了。
+- **成因**：`build_data()` 对**所有**命令一律原样送文件，不重排。而 §5.3.4:372 那张表的
+  **「输入顺序」列**是按 **(运算, 折叠度)** 分档的：pe1 的 `#PMUL NTT` 两 bank 都要交织、
+  `#PMUL TIME` 的 B bank 要交织、`#INTT` **三档都要交织**。B1（`2f419fe`）补的是**读出**侧，
+  **装载侧从没进过这份清单** —— 这一列在代码里整个不存在。
+- **为什么藏得住**：`#NTT` 与 `#PMUL FULL` 的输入三档都要求自然序，正好都不用重排，
+  于是它们一直是绿的，把这一列的空缺盖住了。
+- **谁最容易写错**：`#INTT` 那格。**别按「向量文件一定是自然序」外推** ——
+  `intt_batch_in.txt` 存的是自然序，而那一格三档都要交织。（A 的第一版就是按 pe4/pe16
+  布局外推、填了恒等，上板一跑 256 个全错。）读法只有一条：**查表**（规格原话）。
+- **修法**：`unpack._LOAD_PERM` + `load_permutation(key, bank, build)`；`build_data()` 收
+  `build` 并按它重排每个 bank，调用点挪到折叠度决议**之后**（折叠度现在先于装载定下来）。
+  守着它的是 `test_unpack.py` 第 13 条（21 项检查）。
+- **怎么验**：`sh rtl/vivado/run_board_txn_report.sh`（默认 pe1）→
+  `rtl/vivado/reports/board_pe1_txn.txt` 里 `#NTT` / `#INTT` / `#PMUL NTT` / `#PMUL FULL`
+  各 **0 / 256**。
+- ⚠️ **遗留**：`#PMUL TIME 1` **仍不可验** —— 卡在 B2 那条（`halfmul_b.txt` 变长格式），
+  数据根本发不到板子。要收口得先定 B2 的 (a) / (b)。
+- ⚠️ **顺带查实**：10-04 那两份 `board_pe4/pe16_txn.txt` 的**产出脚本不在仓库里**
+  （`9f5584f` 只提交了报告本身；`board_run.py` 也没有写报告的选项）。H6 的旧证据
+  **用仓库里的东西复现不出来**。A 侧已补 `rtl/vivado/run_board_txn_report.sh`。
 
 ---
 

@@ -3,7 +3,7 @@
 运行
     PYTHONIOENCODING=utf-8 python host/src/test_unpack.py
 
-它在验 12 件事
+它在验 13 件事
     1. **两张表都是双射** —— 256 个下标互不重复、正好盖住 0..255。
     2. **两张表确实不同** —— FNTT 和 INTT 要是同一张，§5.3.4 那张表就是白写的。
     3. **代码里的表和 proto.md 对得上** —— 运行时去读 §5.3.4:370-374 那张表，
@@ -23,15 +23,20 @@
         这条是那个假绿陷阱的警钟。
     12. **折叠度分档** —— FNTT 的读出序随 `#RDY` 的 `<build>` 切（pe1 交织 / pe4、pe16
         自然序，§5.3.4:370），INTT / PWM2 三档同序；默认 1 = 加这个参数之前的全部行为。
+    13. **装载序分档**（2026-10-15 加） —— §5.3.4:372「输入顺序」那一列。**这一格原先
+        在代码里根本不存在**，于是 pe1 上 `#PMUL NTT 1` 稳定 252/256 全错：真板子实测，
+        板子算得对，是喂进去的 NTT 域布局不对。修法见 `unpack.load_permutation`。
 
 关于第 3 条（这是第 4 步报告之外**我自己加的**一条）
     报告里我只列了 10 条。动手时意识到：如果把两张表的数字**凭记忆抄**进代码，
     文档哪天改了，代码不会跟着动，而且**没有任何测试会报警**（跑的是代码，不是文档）。
     项目里已经有先例：`test_proto.py` 运行时去读 proto.md 的校验值表，
     `fake_board.py` 运行时去读 proto.md 的命令表。所以这里也用同一套办法。
-    ⚠️ 只读**输出顺序**那一列。**输入顺序**那一列**原先**有争议（见第 4 步报告）——
-    2026-10-06 已按 A 的订正单改写（按 (运算, 折叠度) 分档），但本步仍不碰它：
-    它管的是**发送**，不属于解包。
+    ⚠️ 上面那条只读**输出顺序**那一列，管解包。**输入顺序**那一列**原先**有争议
+    （见第 4 步报告）—— 2026-10-06 已按 A 的订正单改写（按 (运算, 折叠度) 分档）。
+    它管的是**发送**，不属于「解包」这个模块的职责，所以第 3 条仍不读它；
+    但**代码里必须有人管** —— 2026-10-15 就是没人管这一列，pe1 上 `#PMUL NTT 1`
+    才稳定 252/256 全错。现在由第 13 条 + `unpack.load_permutation` 管。
 
 ⚠️ 覆盖范围的实话
     · 这里验的是「顺序摆得对不对」，**不是**「板子算得对不对」。后者要真板子。
@@ -322,6 +327,69 @@ def main():
           % list(unpack.permutation("FNTT", 1)[:6]))
     print("  INTT / PWM2：三档同序（不看 build）")
     print("  不认识的 build → 响亮报错 ✓")
+
+    # ------------------------------------------------------------ 13
+    print("")
+    print("=== 13：装载序分档 —— 送进板子的数据也看 build（§5.3.4:372） ===")
+    # 依据 §5.3.4:372 那张表的**「输入顺序」列**。登记的是「要重排成什么样」，
+    # 基准是**向量文件自己存的顺序** —— 不是「文件一定是自然序」（`intt_batch_in.txt`
+    # 就是反例：它存自然序，而那一格三档都要交织）。
+    # 这一列 2026-10-15 之前**在代码里根本不存在** → pe1 上 `#PMUL NTT 1` 稳定
+    # 252/256 全错（真板子实测：板子算得对，是喂进去的 NTT 域布局不对）。
+    # 同一趟还量出 `#INTT 1` 也全错 —— 那一格三档都要交织，先前谁都没排。
+    ident = list(range(256))
+    fntt = list(unpack._perm_fntt())
+    # (key, 这条命令有几个 bank)：`#NTT` / `#INTT` 各一个，`#PMUL *` 是 A、B 两个。
+    LOADED = [ (("#NTT",), 1), (("#INTT",), 1), (("#PMUL", "NTT"), 2),
+               (("#PMUL", "TIME"), 2), (("#PMUL", "FULL"), 2) ]
+    # --- 结构：长度 256、双射 ---
+    for key, nbank in LOADED:
+        for b in (1, 4, 16):
+            for bank in range(nbank):
+                p = unpack.load_permutation(key, bank, b)
+                eq(len(p), 256, "%s pe%d bank%d 的装载序长度不对" % (key, b, bank))
+                eq(len(set(p)), 256, "%s pe%d bank%d 的装载序不是双射" % (key, b, bank))
+    # --- #INTT：**三档都要交织**。它是最容易写错的一格：文件存的是自然序，
+    #     而 §5.3.4:372 那一格三档都要求交织（10-04 记录原话 `[装载 interleave]`）。---
+    for b in (1, 4, 16):
+        eq(list(unpack.load_permutation(("#INTT",), 0, b)), fntt,
+           "#INTT 在 pe%d 的装载序不是交织 —— §5.3.4:372 那一格三档都要求交织，"
+           "而 intt_batch_in.txt 存的是自然序" % b)
+    # --- 除 #INTT 外，pe4 / pe16 全部恒等（那几个文件本来就是这两档的布局）---
+    for key in [("#NTT",), ("#PMUL", "NTT"), ("#PMUL", "TIME"), ("#PMUL", "FULL")]:
+        for b in (4, 16):
+            for bank in (0, 1):
+                eq(list(unpack.load_permutation(key, bank, b)), ident,
+                   "%s pe%d bank%d 的装载序不是恒等" % (key, b, bank))
+    # --- pe1：另有两处与文件布局不同 ---
+    eq(list(unpack.load_permutation(("#NTT",), 0, 1)), ident,
+       "pe1 的 #NTT 装载序不是恒等（§5.3.4:372：FNTT 输入三档都自然序）")
+    eq(list(unpack.load_permutation(("#PMUL", "FULL"), 0, 1)), ident,
+       "pe1 的 #PMUL FULL 装载序不是恒等（§5.3.4:372：全乘输入三档都自然序）")
+    eq(list(unpack.load_permutation(("#PMUL", "NTT"), 0, 1)), fntt,
+       "pe1 的 #PMUL NTT A bank 装载序不是交织 —— **这一格就是 252/256 全错的那个 bug**")
+    eq(list(unpack.load_permutation(("#PMUL", "NTT"), 1, 1)), fntt,
+       "pe1 的 #PMUL NTT B bank 装载序不是交织（§5.3.4:372：两 bank 都交织）")
+    eq(list(unpack.load_permutation(("#PMUL", "TIME"), 0, 1)), ident,
+       "pe1 的 #PMUL TIME A bank 该是自然序（§5.3.4:372）")
+    eq(list(unpack.load_permutation(("#PMUL", "TIME"), 1, 1)), fntt,
+       "pe1 的 #PMUL TIME B bank 装载序不是交织（§5.3.4:372）")
+    # --- 两列之间**唯一被规格写死**的关系：pe1 的 PWM2 装载序 == 读出序 ---
+    # §5.3.4:376 原话：「交织 = 把 m 的最低两位对调……**自逆**（装载与读出共用同一式）」
+    eq(list(unpack.load_permutation(("#PMUL", "NTT"), 0, 1)),
+       list(unpack.permutation("PWM2", 1)),
+       "pe1 的 PWM2 装载序与读出序不是同一张表 —— §5.3.4:376 说这两列共用同一式")
+    # --- 恒等兜底：没登记的运算别被悄悄拐跑 ---
+    eq(list(unpack.load_permutation(("#FOO",), 0, 1)), ident, "认不出的 key 没退回恒等")
+    eq(list(unpack.load_permutation(("#PMUL", "NTT"), 0, 4)), ident,
+       "pe4 的 #PMUL NTT 没退回恒等")
+    # --- 防呆：登记了 bank 数却问到界外，要**响亮报错**，不能静默给恒等 ---
+    raises(lambda: unpack.load_permutation(("#PMUL", "TIME"), 5, 1),
+           "装载序问到了没登记的 bank")
+    print("  #INTT：三档都交织（文件存的是自然序）")
+    print("  pe1：#PMUL NTT 两 bank 都交织 ／ #PMUL TIME 只 B bank 交织 ／ 其余恒等")
+    print("  pe4 / pe16：除 #INTT 外全部恒等")
+    print("  认不出的 key → 恒等兜底；问界外的 bank → 响亮报错 ✓")
 
     # ------------------------------------------------------------
     print("")

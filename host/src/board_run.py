@@ -29,7 +29,11 @@
 
 ⚠️ `--check` 解包按哪个折叠度 —— **开串口后会先吃一行 `#RDY` 自动认**（2026-10-07 起）
     `unpack.py` 里 FNTT 的**读出序**随折叠度分档（pe1 交织 / pe4、pe16 自然序，§5.3.4:370），
-    而折叠度是编译进位流的、命令里没有它。A 于 2026-10-07 把 `#RDY` 落进了 RTL
+    而折叠度是编译进位流的、命令里没有它。**装载序（送进去的数据怎么摆）也随它分档**
+    —— pe1 的 `#PMUL NTT` 两 bank 交织、`#PMUL TIME` 的 B bank 交织（§5.3.4:372），
+    与向量文件的 pe4/pe16 布局不同。所以折叠度**在送数据之前**就得定下来；两处都由
+    `unpack` 的两张表管（`load_permutation` / `permutation`），别在这里另写一份。
+    A 于 2026-10-07 把 `#RDY` 落进了 RTL
     （复位释放后板子自发一行），所以本脚本**开串口后先无条件收一行**：
         · 是 `#RDY`      -> 吃掉它，拿它的 `<build>` 当折叠度（`Host.handshake()`）
         · 不是 / 没收到  -> 原样放回 / 当作没有，退回 `--build` 或默认 pe1
@@ -84,11 +88,17 @@ def group_count(command):
     return n
 
 
-def build_data(command):
+def build_data(command, build=unpack.DEFAULT_BUILD):
     """按命令取要发的数据行。返回 `(数据行, 期望文件名)`；没有向量的命令给 `([], None)`。
 
     ⚠️ 数据行**必须和命令对得上**：`#NTT` 的向量喂给 `#INTT`，陪练会「一组都对不上」，
     真板子会算出一个看着像模像样的错结果。所以这一格不留余地，认不出来就炸。
+
+    ⚠️ `build` 管的是**装载序**（§5.3.4:372 的「输入顺序」列），**不是**解包那侧的
+       读出序 —— 两者是同一张表的两列，别互相套用。向量文件存的是 pe4 / pe16 的
+       布局，而 **pe1 的 `#PMUL NTT`（两 bank 交织）与 `#PMUL TIME`（B bank 交织）
+       跟文件布局不一样**（`unpack._LOAD_PERM`）。不按折叠度重排就是「板子算得对、
+       喂进去的布局错」，症状是稳定 252/256 全错 —— 2026-10-15 在真板子上坐实的。
     """
     key = vector_key(command)
     if key is None:
@@ -102,10 +112,16 @@ def build_data(command):
     group_count(command)
 
     data = []
-    for name in in_files:
+    for bank, name in enumerate(in_files):
         lines = vectors.read_vector(vectors.BATCH_DIR / name)
         groups = vectors.split_groups(lines, name)
-        data += groups[0]                      # n=1 -> 每组都是第 0 组
+        group = groups[0]                      # n=1 -> 每组都是第 0 组
+        perm = unpack.load_permutation(key, bank, build)
+        if len(group) != len(perm):
+            raise SystemExit(
+                "!! %s 一组 %d 行，装载序表却是 %d 项 —— 两者对不上。"
+                % (name, len(group), len(perm)))
+        data += [group[i] for i in perm]
     return data, exp_file
 
 
@@ -238,7 +254,9 @@ def main(argv):
                     choices=unpack.KNOWN_BUILDS,
                     help="板子烧的折叠度 PE_NUMBER（1/4/16）。"
                          "不给就靠开机那行 #RDY 自动认；#RDY 也没收到才退回 pe1。"
-                         "只有 FNTT 的读出序看它 —— 烧了 pe4/pe16 又认不出时，FNTT 会全错")
+                         "读出序与装载序都看它：读出序只有 FNTT 看（§5.3.4:370），"
+                         "装载序看 pe1 的 #PMUL NTT / #PMUL TIME（§5.3.4:372）。"
+                         "说错了是 256 个全错，不是 RTL 的 bug")
     ap.add_argument("--fake-build", type=int, default=unpack.DEFAULT_BUILD,
                     choices=unpack.KNOWN_BUILDS,
                     help="**只影响 --loopback**：让陪练自称烧的是这一档（默认 1）。"
@@ -298,22 +316,24 @@ def main(argv):
         lk.close()
         return rc
 
-    try:
-        data, _ = build_data(args.command)
-    except SystemExit as e:
-        print(e)
-        lk.close()
-        return 1
-
     # ---- 折叠度：人给的 > `#RDY` 认的 > 默认 ------------------------------
     # ⚠️ `--build` 的默认值是 **None**（不是 1），就是为了把「没说」和「说了 1」
     #    分开 —— 两者行为虽然一样，但「人明确说了 pe1」不该被 `#RDY` 盖掉。
+    # ⚠️ 这一段**必须排在 `build_data()` 前面**：折叠度不只决定解包怎么解
+    #    （读出序），也决定数据怎么送（装载序，§5.3.4:372 的「输入顺序」列）。
     if args.build is not None:
         build, build_src = args.build, "`--build` 显式给的"
     elif hst.build is not None:
         build, build_src = hst.build, "从开机行 `#RDY` 自动认出的"
     else:
         build, build_src = unpack.DEFAULT_BUILD, "没收到 `#RDY`，退回默认的"
+
+    try:
+        data, _ = build_data(args.command, build)
+    except SystemExit as e:
+        print(e)
+        lk.close()
+        return 1
 
     print("命令：%s   数据行：%d" % (args.command, len(data)))
     if args.loopback and args.check:
