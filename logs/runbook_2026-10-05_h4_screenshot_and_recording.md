@@ -186,9 +186,26 @@ C 2026-10-05 来信里说的又是**板级**那一组（"源文件 `board_pe*_ti
 
 ```tcl
 open_checkpoint C:/vivado_work/dcp/pe1_nc.dcp
-set p [get_timing_paths -from [get_pins {u_core/BTF_GEN_BLOCK[0].btfu/mm0/im0/P0/CLK}] -to [get_pins {u_core/BTF_GEN_BLOCK[0].btfu/w5r0_reg[3]/D}] -max_paths 1]
+set a {u_core/BTF_GEN_BLOCK[0].btfu/mm0/im0/P0/CLK}
+set b {u_core/BTF_GEN_BLOCK[0].btfu/w5r0_reg[3]/D}
+set p [get_timing_paths -from [get_pins $a] -to [get_pins $b] -max_paths 1]
 show_schematic [get_cells -of_objects [get_pins -of_objects $p]]
 ```
+
+> ⚠️ **两条 pin 名必须先各自成行，别把第 4 行写成一行长命令。**
+> **2026-10-15 实测踩到**：那一行 190+ 字符，粘进 Vivado 的 Tcl Console 时在换行处被咬断，
+> 括号配对错位 → `invalid command name "u_core/BTF_GEN_BLOCK[0].btfu/w5r0_reg[3]/D"`。
+> 命令**报错了**，可 `show_schematic` 拿到的是空集、**不报错**，屏幕上只剩 Vivado 默认的
+> Device 视图 —— 截下来是一张「核关键路径」的芯片版图，**看着完全正常**。
+> 拆成上面这样，每一行都短，怎么粘都不会断。
+
+> ✅ **截图前先自查这一行**（它把上面那个坑堵死）：
+>
+> ```tcl
+> llength [get_cells -of_objects [get_pins -of_objects $p]]
+> ```
+>
+> 应该回 **13**（板级）或 **11**（核）。**回 `0` 就是没找到路径 —— 别截，先查上一步。**
 
 > ⚠️ 核这两个名字**带方括号和下标的 `[0]`**，所以每个 `get_pins` 的参数都用 `{ }` 包起来
 > （板级那两个没有方括号，包不包都行）。**别把 `{}` 去掉** —— Tcl 会把 `[0]` 当成命令替换，
