@@ -28,6 +28,8 @@ ML-KEM（FIPS 203，即 CRYSTALS-Kyber）是 NIST 后量子密码标准中的密
 
 ## 二、当前进度
 
+> **2026-10-17 补充**：参数化 `rtl/ntt_core/` 三档 FULL/HALF 已新增独立回归 `python refsim/check_polmul_param.py --negative-controls`；各 16 组，多重集与协议顺序逐项比较均通过。下方旧表保留上游基线范围。全新克隆复跑入口 `python refsim/check_clean_clone.py --output logs/clean_clone.json`，需 git/sh/gcc/Python/iverilog/vvp；本机远端全新克隆通过，不等于第二台电脑或真板验收。当前 B 清单见 `team/plan_B_remaining.md`。
+
 ### 已验证
 
 | 项 | 结果 |

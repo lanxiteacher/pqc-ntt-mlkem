@@ -1,0 +1,69 @@
+A、C：
+
+B 本轮代码已推送：26eae6c（向量与协议全链），206f957（参数化 FULL/HALF、H5 与全新克隆工具）。随后文档和验收证据见本信所在提交。
+
+一、A 的装载修正已复核
+
+10-15 的 _LOAD_PERM 符合 proto §5.3.4。输入装载与输出解包是两张表，不能混用。
+新增独立转录物理排列的回放模式，三档五命令各 16 组全部通过；故意漏交织、错 build、损坏系数均失败。
+回放只验协议衔接，不拿它证明算术。
+
+二、PMUL TIME 的文件格式阻塞已修，尚需真板补证
+
+halfmul_b / halfmul_exp / fullmul_exp 已补零至三位、LF；逐项数值未变。
+halfmul_b 数值 SHA256（拼接 big-endian uint16）：
+a27065dc70e8e1a211bd03ce06313225975374d1258c7a825199aee359ca07aa
+两份 exp 相同的数值 SHA256：
+dbad380deff87098ff9b04ef5f28f06f1398bc309748aa88d608049b99d01518
+生成器也已修，重生成不会再次变长；历史 vref/转储未统一。
+
+请 A 拉取后：
+1. 查当前 COM 口、烧对应档位流，按已有板级说明确认跳线与复位。
+2. 复制现有 board_pe*_txn.txt 到另一个历史文件留底，不覆盖唯一旧证据。
+3. 在 Git Bash 使用当前入库入口（运行位置仓库根）：
+   PE=1 FORCE=1 sh rtl/vivado/run_board_txn_report.sh
+   对应位流烧好后 pe4 / pe16 同法替换 PE。
+4. 重点核 #PMUL TIME 1，并保存完整原始输出和实际日期；全过后再销 H6。
+
+B 本机没有板子/Vivado。本信不宣称新的上板结果：10-15 pe1 的 5/6 保留到新证据出现。
+
+三、三档完整乘法与 H5 已交付，C 可以取证
+
+新增：python refsim/check_polmul_param.py --negative-controls
+对象是 rtl/ntt_core 参数化核，不是把上游 pe1 的参数名改一下。
+三档 × FULL/HALF × 16组，共 24576 系数，多重集与 tau 顺序逐项比较均通过。
+C 参考程序本次重新编译、重新计算答案；输入非退化且 A/B 不同。
+错 B 装载仅 334/4096，改坏一项答案仅 4095/4096，缺少 CFG_PE_NUM 编译配置亦被拒绝。
+旧六个 refsim shell 脚本一处未改。
+
+H5 图：report/figures/refsim_wave_fntt_compare.png / .svg。
+源：refsim/pe1/fntt_wave_tb.v；入口 python refsim/run_wave_check.py --render-svg。
+图仅代表上游 pe1 FNTT 第0组，256/256，不能贴成三档 FULL/HALF 波形。
+旧 10-13 信与图片原先未跟踪，正式入库日期为本次 10-17，未伪造旧交付日期。
+
+四、复现证据与剩余工作
+
+从 Gitee 远端全新 clone 提交 206f9571a58a870926c4bbff9b2398763e4c0a32，18 项全过。
+原始输出完整放在 logs/verification_2026-10-17_B_clean_clone.json（含实际工具环境/被测提交）。
+包括社区 FIPS 203 兼容 KAT 1000/1000、原四条验证入口、陪练注错、八个 host 自测、
+新乘法回归、波形重建、UART RTL +fast；测试后跟踪文件无改动。
+用户无第二台电脑，本次是同一实体电脑，H10 的 B 换机验收仍待条件，不冒充完成。
+
+请 A/C 同步自己主责的 status/ 与报告现状；B 没动 status/、RTL 或研究原件。
+W5 GitHub 镜像仍须最终冻结提交和账号配合，本次没有对外发布/改变仓库可见性。
+
+五、给 C 的接口与划分材料
+
+实际结构：PC 上位机 → 115200-8N1 UART → 纯 PL 协议/装载状态机 → 参数化运算核。
+PC 做组装、校验、按 build 排列、存档与数值比较；PL 做 UART 收发、命令/数据校验、
+BRAM 装载、运算启动/等待/读回。上层用文本帧便于复现与排错，代价是串口吞吐受限。
+物理引脚/约束引用 rtl/H1_port_spec.md，帧/超时/输入输出排列引用 host/proto.md，
+不要从本信复制出第二套协议。当前 n=1，五计算命令均返回256行，PMUL虽收512行也不返回512行。
+没有 PS、AXI-Lite 或 FPGA 完整 KEM，不能把 PC+PL 验证链写成这些实现。
+KAT 为社区兼容考题，1000/1000 锚定 C 参考实现，不是 NIST 官方发布或整套 FPGA KEM 认证。
+
+当前任务入口：team/plan_B_remaining.md；当天实际 AI 协作记录：report/ai-log/2026-10-17_B.md。
+
+—— B，2026-10-17
+
+UART `+fast` 边界：跳过 T5 完整串行 NTT 数据事务；通过的15个比对点不能表述成 T5 已复跑。

@@ -238,6 +238,8 @@ RTL 的错先在 `refsim/` 里验干净 —— 这套验证台存在的意义就
 | 2 | **C** | **瓶颈归因表** —— PC 侧分三段计时：**计算核 µs / 串口搬运 ms / 软件参考实现 µs** | 一张表进 `metrics/` + `report/design/03` 正文；结论写成一句话「**瓶颈不在核，在接口**」 | **只要 PC + python** —— 串口那段用 B 的假串口陪练即可，真板子只做复核 |
 | 3 | **B** | **三档完整多项式乘法端到端回归** —— `refsim/` **新增一条入口脚本**（不动现有 6 个） | 三档全链判多重集 **4096/4096** | **只要 iverilog**，不等任何人 |
 
+> **2026-10-17 B 第 3 件已交付**：新增 `refsim/run_polmul_param_check.sh`，三档 FULL/HALF 均验证多重集和逐项序列，原六脚本未改。原始输出见 `logs/verification_2026-10-17_B_clean_clone.json` 的 `parameterized_polmul`。
+
 ### 第 1 件（A）的物理前提 —— 已查实
 
 - `sys_clk` 引脚是 **U18**，属性 `IS_CLK_CAPABLE = 1`、`PIN_FUNC = IO_L12P_T1_MRCC_34` —— 是 **MRCC**，可直接进 MMCM
