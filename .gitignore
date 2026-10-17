@@ -12,6 +12,7 @@ __pycache__/
 
 # ===== refsim 的临时文件 =====
 refsim/tmp_*.txt
+refsim/fntt_wave.vcd
 
 # ===== rtl/probes 的中间文件（每条命令重生成，不进仓库）=====
 rtl/probes/_work/

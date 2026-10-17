@@ -2,6 +2,9 @@
 
 这个目录回答一个问题：**`kyber-polmul-hw/pe1/` 里那份 NTT 硬件，算得对不对？**
 
+> **2026-10-17 扩展**：原有基线入口不变。新增参数化核三档 FULL/HALF 回归、
+> H5 波形复建及全新远端克隆验收，见本文末「新增验收入口」。下文原验证链仍指上游 pe1。
+
 "跑通了作者的 testbench" 回答不了这个问题。作者的 testbench 是拿
 **作者自己给的期望输出**去比 **作者自己的 RTL** —— 只能证明自洽，
 万一作者的期望值本身就错了（比如 twiddle 表排错、域约定选错），
@@ -355,3 +358,37 @@ R = 2¹⁶ mod q = **2285**，R⁻¹ = **169**。
   `../research/pqc-ntt_ml-kem_compendium.md`
 - 参考实现源码：`../research/kyber_ref/`
 - 原始 RTL（未改动）：`../research/ref_rtl/kyber-polmul-hw/pe1/`
+
+
+## 新增验收入口（2026-10-17，B）
+
+原有六个 shell 入口保持不变；以下验证参数化核和交付链路：
+
+```powershell
+$env:PYTHONIOENCODING='utf-8'
+python refsim/check_polmul_param.py --negative-controls
+python host/src/test_board_pipeline.py
+python refsim/run_wave_check.py
+```
+
+- 三档 FULL/HALF：实际例化 `rtl/ntt_core/KyberHPMNTT_top.v`，各跑 16 组。
+  先重新编译 C 参考工具并逐组复算期望，核对已有期望值，再对 RTL 输出同时判
+  **多重集 4096/4096**与 **INTT 的 tau 序逐项 4096/4096**。六轮共 24576 系数。
+  A/B 使用不同多项式；输入、输出未知值、缺行、重复行和 done 超时均失败。
+  阴性对照含 B 装载序拨错、篡改一个期望系数、遗漏 PE 配置。
+  构建和数据中间件全部在独立临时目录，不改动旧黄金向量或 `rtl/`。
+  Shell 等价入口：`sh refsim/run_polmul_param_check.sh --negative-controls`。
+- 上位机集成：已知向量回放模型，240 次事务，只证明协议与排列衔接；不证明 RTL。
+- 波形：复编译 `pe1/fntt_wave_tb.v`，重建忽略入库的 `fntt_wave.vcd`，在出图前逐拍核
+  对 256 拍，拒绝 X/Z。`--render-svg` 可再生成报告 SVG；PNG 是原 GTKWave 插图。
+  波形只展示基线 pe1 的 FNTT 第 0 组，不能替代 16 组回归。
+- 三份供上位机读取的变长向量已规范化，数值未变。审计工具：
+  `python refsim/normalize_host_vectors.py`；默认只读，`--apply` 才写文件。
+- 全新远端克隆（**同一台实体 PC**）：
+  `python refsim/check_clean_clone.py --output logs/verification_YYYY-MM-DD_B_clean_clone.json`。
+  要有 git/sh/gcc/Python/iverilog/vvp，输出完整日志、环境与提交号；临时 clone 保留。
+  依次跑 KAT、原四入口、注错、上位机自测、三档完整乘法、波形及 UART RTL fast。
+  此验收不等同于 H10 的另一台实体电脑验收；后者目前无设备，仍待补。
+
+覆盖更新：本文 §八中“refsim 只有 pe1”的旧描述仅适用于原入口；新增入口已覆盖参数化
+核三档 FULL/HALF，单运算三档证据仍来自 `rtl/probes/`。不扩展到完整 KEM 硬件。
