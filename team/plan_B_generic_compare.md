@@ -24,7 +24,7 @@ python refsim/compare_integer_results.py expected.json actual.json --report repo
 
 新增组件的离线检查：`python refsim/test_compare_integer_results.py`。这不调用 RTL、板卡或 PYNQ；原有验证入口不迁移、不重跑。
 
-## B 亲手做的任务（待完成，不能由 AI 代记）
+## B 亲手做的任务（已由用户截图确认）
 
 演示是一组人工构造的向量加法：A=[1,2,3,4]，B=[10,20,30,40]，期望=[11,22,33,44]，没有运行 FPGA。
 
@@ -38,6 +38,21 @@ python refsim/compare_integer_results.py expected.json actual.json --report repo
 ## 后续交接
 
 AI：已编写范围、比较器和自动化检查；实际结果见同日组件日志。
-B：人工改值与可读性反馈待完成。
+B：已提供前后两次执行截图并确认符合预期。首次第 4 个值 44→45，显示 matched=3、mismatched=1，准确指出位置；恢复后 matched=4、mismatched=0。未提供进一步的可读性修改建议。截图副本见 logs/verification_2026-10-17_B_manual_compare.png。
 A：PYNQ 镜像来源、启动与实际 Overlay 使用条件待确认。
 C：未来 skill/ 的负责人及材料整合尚未对齐，本轮未动其目录。
+
+## 后续离线准备（本轮已完成）
+
+1. 可复现的向量加法、前缀累加两种合成算法示例，以及错值、错序、缺值三个阴性用例：refsim/run_generic_compare_demo.py。
+2. 一键生成每例输入、答案、实际值、比较报告，以及 JSON/Markdown 总表；明确 source=synthetic_python、hardware_validated=false，不生成硬件性能。
+3. Notebook 模板 refsim/generic_compare_template.ipynb，默认只执行离线部分；提供接收已采集整数数组的接口，不伪造硬件调用。
+4. 复跑说明、输入约定与 PYNQ 接入前置条件：refsim/generic_compare_README.md。
+5. 原比较器六项测试、新增两项集成测试及五个演示用例已通过；Notebook 代码单元通过 Python 直接执行，未验证 Jupyter 界面或 PYNQ。输出见 logs/verification_2026-10-17_B_generic_followup.txt。
+
+## 有环境后才做的事（仍未完成）
+
+- 确认板卡兼容镜像、启动、PYNQ 版本、自有 Overlay 加载。
+- 根据实际接口提供适配层并验证寄存器或 DMA、缓存一致性、有限等待和资源释放。
+- 用真实硬件输出复跑比较，采集有来源的性能；如声称跨板可用需增加相应验证。
+- A/C 确认正式 Skill 选型与整合。当前材料仍在 B 主责 refsim/，不代表比赛加分已取得。

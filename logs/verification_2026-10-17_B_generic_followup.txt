@@ -1,0 +1,44 @@
+Offline follow-up only. No board/PYNQ/Jupyter UI/hardware timing validation.
+
+test_compare_integer_results.py
+test_cli_exit_codes_and_saved_report (__main__.ComparisonAcceptance.test_cli_exit_codes_and_saved_report) ... ok
+test_detail_limit_does_not_limit_comparison (__main__.ComparisonAcceptance.test_detail_limit_does_not_limit_comparison) ... ok
+test_exact_with_signed_and_large_values (__main__.ComparisonAcceptance.test_exact_with_signed_and_large_values) ... ok
+test_invalid_inputs_never_pass (__main__.ComparisonAcceptance.test_invalid_inputs_never_pass) ... ok
+test_missing_extra_and_empty_actual (__main__.ComparisonAcceptance.test_missing_extra_and_empty_actual) ... ok
+test_position_must_match_even_when_multiset_matches (__main__.ComparisonAcceptance.test_position_must_match_even_when_multiset_matches) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.061s
+
+OK
+
+test_generic_compare_demo.py
+test_notebook_code_cells_without_jupyter (__main__.DemoAcceptance.test_notebook_code_cells_without_jupyter) ... ok
+test_saved_cases_and_overwrite_protection (__main__.DemoAcceptance.test_saved_cases_and_overwrite_protection) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 3.092s
+
+OK
+
+vector_add_ok: expected=pass, observed=pass, accepted=True
+vector_add_bad_value: expected=mismatch, observed=mismatch, accepted=True
+prefix_sum_ok: expected=pass, observed=pass, accepted=True
+prefix_sum_bad_order: expected=mismatch, observed=mismatch, accepted=True
+prefix_sum_missing: expected=mismatch, observed=mismatch, accepted=True
+Synthetic checks: 5/5
+
+# Synthetic offline comparison demo
+
+No FPGA/PYNQ execution or hardware performance measurement.
+
+An expected mismatch is a successful negative control, not a correct algorithm output.
+
+| Case | Expected | Observed | Matched | Mismatched | Accepted |
+|---|---|---|---:|---:|---|
+| vector_add_ok | pass | pass | 5 | 0 | True |
+| vector_add_bad_value | mismatch | mismatch | 4 | 1 | True |
+| prefix_sum_ok | pass | pass | 7 | 0 | True |
+| prefix_sum_bad_order | mismatch | mismatch | 5 | 2 | True |
+| prefix_sum_missing | mismatch | mismatch | 6 | 1 | True |
