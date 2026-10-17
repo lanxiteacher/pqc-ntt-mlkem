@@ -109,3 +109,6 @@ Thumbs.db
 # 文件在 A 本机 assets/ 下，交付方式（网盘 / 现场拷贝）见 logs/project_state.md。
 # 别用 `git add -f` 硬加 —— 一旦进了历史就洗不掉，全组 clone 都要拖这个包。
 assets/2026-10-15_A_board_uart_five_transactions.mp4
+
+# ===== report 的构建产物（由 report/build_report.py 生成，不进仓库）=====
+report/build/
