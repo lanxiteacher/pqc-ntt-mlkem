@@ -1,0 +1,12 @@
+Offline comparator acceptance only; no RTL, board, or PYNQ execution.
+test_cli_exit_codes_and_saved_report (__main__.ComparisonAcceptance.test_cli_exit_codes_and_saved_report) ... ok
+test_detail_limit_does_not_limit_comparison (__main__.ComparisonAcceptance.test_detail_limit_does_not_limit_comparison) ... ok
+test_exact_with_signed_and_large_values (__main__.ComparisonAcceptance.test_exact_with_signed_and_large_values) ... ok
+test_invalid_inputs_never_pass (__main__.ComparisonAcceptance.test_invalid_inputs_never_pass) ... ok
+test_missing_extra_and_empty_actual (__main__.ComparisonAcceptance.test_missing_extra_and_empty_actual) ... ok
+test_position_must_match_even_when_multiset_matches (__main__.ComparisonAcceptance.test_position_must_match_even_when_multiset_matches) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.078s
+
+OK
