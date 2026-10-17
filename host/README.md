@@ -4,6 +4,10 @@
 
 通过串口把数据喂给板子、收回结果、自动和标准答案比对。
 
+**现状订正与新增回归（2026-10-17）**：见 [PROTOCOL_STATUS.md](PROTOCOL_STATUS.md)。
+无板子跑完整三档协议/顺序链路：`python host/src/test_board_pipeline.py`；
+这属于已知向量回放，不是 RTL 算术验证。
+
 ## 目录约定
 
 ```

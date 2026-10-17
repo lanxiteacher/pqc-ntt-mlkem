@@ -15,8 +15,8 @@
        物理序」，再喂给 `unpack`，必须**逐个数值**等于原文件。
        （FNTT / INTT / PWM2 三条走 `vectors.read_vector` 的**严格**读法。）
     8. **落盘合铁律** —— 读回**原始字节**：行尾只有 LF、没有 CR；每行 3 位小写 hex。
-    9. **「按数值比」不是空话** —— 拿真实的**变长**文件 `fullmul_exp.txt` 当证据：
-       我们写 3 位、它是变长，**文本逐字节必然不同**，而按数值比**必须相等**。
+    9. **「按数值比」不是空话** —— 用真实向量构造临时变长文件作证据：
+       我们写 3 位、临时副本不补零，文本不同而数值相等；正式文件保持规范。
     10. **防呆** —— 行数不对 / 形状不对 / 命令不认识 / 值越界，一律**响亮报错**，
         不静默、不猜、不跳过。
     11. **假绿的机理** —— 把「文件序」当成「板子回的物理序」喂进去，**必然全错**。
@@ -231,20 +231,23 @@ def main():
 
     # ------------------------------------------------------------ 9
     print("")
-    print("=== 9：拿真实的变长文件当证据 —— 文本必然不同，数值必须相等 ===")
+    print("=== 9：真实向量的临时变长副本 —— 文本不同，数值相等 ===")
     full = unpack.read_values(B / "fullmul_exp.txt")
     exp_full = full[:256]
     with tempfile.TemporaryDirectory() as td:
         p = Path(td) / "ours.txt"
         unpack.write_result(p, exp_full)
         ours = p.read_bytes().split(b"\n")[:256]
-        theirs = (B / "fullmul_exp.txt").read_bytes().split(b"\n")[:256]
+        legacy = Path(td) / "legacy.txt"
+        legacy.write_bytes(("\n".join(format(v, "x") for v in exp_full) + "\n").encode("ascii"))
+        theirs = legacy.read_bytes().split(b"\n")[:256]
+        eq(unpack.read_values(legacy), exp_full, "临时变长副本数值不一致")
         n_text = sum(1 for a, b in zip(ours, theirs) if a != b)
         check(n_text > 0, "两边文本竟然一模一样 —— 那就证明不了「按数值比」的必要性")
         n_bad, _ = unpack.compare_values(unpack.read_values(p), exp_full)
         eq(n_bad, 0, "按数值比竟然不相等")
         print("  文件 %s：前 256 行里，%d 行文本不同（它是变长的，我们写 3 位）"
-              % ("fullmul_exp.txt", n_text))
+              % ("临时 legacy.txt（fullmul 的数值）", n_text))
         print("  按**文本**逐字节比 → 会报「%d 行全不同」" % n_text)
         print("  按**数值**比       → 不同的个数 0（✓）")
     whole = unpack.read_values(B / "fullmul_exp.txt")

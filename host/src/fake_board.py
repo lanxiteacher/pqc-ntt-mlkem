@@ -357,7 +357,7 @@ class FakeBoard:
     板子该回的那一行 `#ERR 05`。这样这一层在真电脑、仿真 tb、单元测试里都同样能用。
     """
 
-    def __init__(self, batch_dir=None, rows=None, build=1, ver=1):
+    def __init__(self, batch_dir=None, rows=None, build=1, ver=1, physical_order=False):
         self.rows = rows if rows is not None else _load_rows()
         self.commands = [t for t, _ in self.rows]
         self.batch_dir = Path(batch_dir) if batch_dir else BATCH_DIR
@@ -365,6 +365,11 @@ class FakeBoard:
         # 让调用方能造一台「烧的是 pe4」的陪练，用来验「上位机从 #RDY 自动认折叠度」。
         self.build = build
         self.ver = ver
+        # Optional protocol-layout model; default remains the historical file replay.
+        # This is not arithmetic simulation and must never claim RTL correctness.
+        if physical_order and build not in (1, 4, 16):
+            raise ValueError("physical-order replay requires build 1, 4 or 16")
+        self.physical_order = physical_order
         self.reset()
 
     def boot_lines(self):
@@ -451,6 +456,17 @@ class FakeBoard:
         ]
         self.out_groups = split_groups(
             read_vector(self.batch_dir / out_name), out_name)
+
+        if self.physical_order:
+            # Independent transcription of proto.md §5.3.4 input column.
+            # Do not import unpack.load_permutation: that is the code being tested.
+            sigma = [4 * (i // 4) + (0, 2, 1, 3)[i % 4] for i in range(GROUP_LEN)]
+            for bank, groups in enumerate(self.in_groups):
+                interleaved = key == ("#INTT",) or (
+                    self.build == 1 and (key == ("#PMUL", "NTT") or
+                                        (key == ("#PMUL", "TIME") and bank == 1)))
+                if interleaved:
+                    self.in_groups[bank] = [[group[i] for i in sigma] for group in groups]
 
         group_counts = {len(g) for f in self.in_groups for g in f} | \
                        {len(g) for g in self.out_groups}
@@ -600,6 +616,11 @@ class FakeBoard:
         """数据行收齐 —— 回 `#BEGIN` + 结果 + `#DONE`，回到等命令行。"""
         self._match_group()
 
+        if self.physical_order and self.group is None:
+            # A replay cannot compute an unknown input. Stop instead of giving
+            # group zero's correct answer, which can hide broken input layouts.
+            raise ValueError("physical-order replay: no exact input vector matched")
+
         if self.group is not None:
             results = self.out_groups[self.group]
         else:
@@ -612,6 +633,18 @@ class FakeBoard:
                 "收到的数据**一组都对不上**（最接近的是第 %s 组，差 %d 行）—— "
                 "回传的是第 0 组的答案，**这一轮的结果不作数**。"
                 % (self.nearest, len(self.mismatches)))
+
+        if self.physical_order:
+            # Independent transcription of the output column of §5.3.4.
+            words = self.cmd_body.split()
+            if words[0] == "#NTT":
+                order = ([4 * (i // 4) + (0, 2, 1, 3)[i % 4] for i in range(GROUP_LEN)]
+                         if self.build == 1 else list(range(GROUP_LEN)))
+            elif words[:2] == ["#PMUL", "NTT"]:
+                order = [4 * (i // 4) + (0, 2, 1, 3)[i % 4] for i in range(GROUP_LEN)]
+            else:
+                order = [i // 2 + 128 * (i % 2) for i in range(GROUP_LEN)]
+            results = [results[i] for i in order]
 
         inner = echo_of(self.cmd_body)     # 例如 `PMUL TIME 1`（不带 #）
         count = len(results)

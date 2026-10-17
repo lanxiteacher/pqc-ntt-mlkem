@@ -204,10 +204,10 @@ def gen_polmul():
 
     wr("%s/fullmul_a.txt" % BATCH, fa)
     wr("%s/fullmul_b.txt" % BATCH, fb)
-    wr("%s/fullmul_exp.txt" % BATCH, fe)
+    wr("%s/fullmul_exp.txt" % BATCH, ["%03x" % hexval(x) for x in fe])
     wr("%s/halfmul_a.txt" % BATCH, ha)
-    wr("%s/halfmul_b.txt" % BATCH, hb)
-    wr("%s/halfmul_exp.txt" % BATCH, he)
+    wr("%s/halfmul_b.txt" % BATCH, ["%03x" % hexval(x) for x in hb])
+    wr("%s/halfmul_exp.txt" % BATCH, ["%03x" % hexval(x) for x in he])
     print("  ✅ 完整乘法向量 %d 组 × 2（FULL / HALF，参考工具已复现作者的 KYBER_DOUT.txt）" % NV)
 
 

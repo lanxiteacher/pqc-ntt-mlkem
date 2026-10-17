@@ -21,11 +21,11 @@
          「等 `#BEGIN`」。而 `#PING` 只回一条 `#OK`（§5.2:286）—— 实测塞进 `run()` 会在
          「等 #BEGIN」上白等 5 s、再重发 3 次才放弃。`probe()` 就是为这条路径加的。
 
-⚠️ `--check` 在 `--loopback` 下**必然全错**，那不是 bug
-    陪练 `fake_board.py` 回吐的是 `*_exp.txt` 的**文件序**，而真板子回的是**物理序**
-    （§5.3.4:378「板子按自己读出的物理顺序原样回传」）。`unpack()` 要的正是物理序 ——
-    所以拿陪练的输出解包，256 个系数会全错。这条是**已知**的（KNOWN_ISSUES B4 那个
-    假绿陷阱的反面）：陪练只用来验「脚本跑不跑得起来」，**数值对拍请在真板子上做**。
+陪练的两种模式（只验协议，不验硬件算术）
+    默认 --loopback 保留历史的文件序回放，不能据此判断物理序解包。
+    加 --physical-order 后独立按 §5.3.4 重排输入匹配和输出，允许 --check。
+    未识别的输入立即拒绝，不会拿第 0 组答案掩盖错误。
+    例：python host/src/board_run.py --loopback --physical-order --fake-build 4 --check "#INTT 1"
 
 ⚠️ `--check` 解包按哪个折叠度 —— **开串口后会先吃一行 `#RDY` 自动认**（2026-10-07 起）
     `unpack.py` 里 FNTT 的**读出序**随折叠度分档（pe1 交织 / pe4、pe16 自然序，§5.3.4:370），
@@ -245,6 +245,8 @@ def main(argv):
     ap.add_argument("command", nargs="?", help='命令正文，形如 "#NTT 1"')
     ap.add_argument("--list", action="store_true", help="只列本机串口，不跑事务")
     ap.add_argument("--loopback", action="store_true", help="拿陪练当对端，不碰硬件")
+    ap.add_argument("--physical-order", action="store_true",
+                    help="配合 --loopback，按 §5.3.4 装载/读出物理序回放已知向量；只验协议与顺序，不验 RTL 算术")
     ap.add_argument("--port", default=None,
                     help="显式指定串口号（不给就按设备名现找，见 link.find_port）")
     ap.add_argument("--baud", type=int, default=link.DEFAULT_BAUD, help="波特率")
@@ -264,6 +266,8 @@ def main(argv):
                          "这取决于烧进去的位流。")
     ap.add_argument("--verbose", action="store_true", help="把每次重试 / 容错实时打出来")
     args = ap.parse_args(argv)
+    if args.physical_order and not args.loopback:
+        ap.error("--physical-order 必须与 --loopback 一起使用")
 
     if args.list:
         return 0 if do_list() else 1
@@ -279,9 +283,9 @@ def main(argv):
     # ---- 开插座 ----------------------------------------------------------
     if args.loopback:
         board = None
-        if args.fake_build != unpack.DEFAULT_BUILD:
+        if args.fake_build != unpack.DEFAULT_BUILD or args.physical_order:
             import fake_board
-            board = fake_board.FakeBoard(build=args.fake_build)
+            board = fake_board.FakeBoard(build=args.fake_build, physical_order=args.physical_order)
         lk = link.open_link("loopback", board=board)
         where = "陪练（loopback）—— 不碰硬件"
     else:
@@ -337,8 +341,11 @@ def main(argv):
 
     print("命令：%s   数据行：%d" % (args.command, len(data)))
     if args.loopback and args.check:
-        print("⚠️ `--loopback` + `--check`：陪练回的是**文件序**，解包必然全错。")
-        print("   那不是 bug（KNOWN_ISSUES B4）—— 数值对拍要在真板子上做。")
+        if args.physical_order:
+            print("⚠️ 物理序陪练只回放已知答案：通过证明协议/排列衔接，不证明 RTL 算术正确。")
+        else:
+            print("⚠️ 默认陪练回文件序；它与真板物理序不同，不能用本次对拍判断 RTL。")
+            print("   测协议排列请加 --physical-order；测硬件算术请用 RTL 仿真或真板。")
 
     # ---- 跑一条事务 ------------------------------------------------------
     # `expect_rows`：五条带数据的命令，结果**恒为一组** = `GROUP_LEN` = 256 行

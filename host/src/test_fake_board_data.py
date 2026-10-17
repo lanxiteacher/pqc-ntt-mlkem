@@ -20,9 +20,8 @@
     第一次 `feed()` 会多吐一行。本文件每条用例都用 `fresh()` 开陪练，**先把它取走** ——
     那条路径专归 `test_host.py` 第 10 条（`Host.handshake()`）验。理由见 `fresh()`。
 
-⚠️ 覆盖范围：5 条命令里**只覆盖 3 条**。
-   `#PMUL TIME` / `#PMUL FULL` 被**外部问题**挡住 —— 向量文件没补零，见 BLOCKED。
-   本脚本装了一条**绊线**：向量一修好，它会主动报错，逼着把这两条接回来。
+覆盖范围（2026-10-17）：五条计算命令各跑 16 组，三份实际使用的向量已规范。
+本文件仍验默认文件序回放；三档物理序完整链路见 test_board_pipeline.py。
 
 标准答案从哪来
     · `#OK` / `#BEGIN` / `#DONE` 的校验值 —— proto.md:444-449 那六行（经 test_proto 验过）；
@@ -51,10 +50,8 @@ HEX_RE = re.compile(r"^[0-9a-fA-F]{3}$")
 #    按 §5.3.1:322「长度必须正好 3」它们不是合法的数据行。
 #    挡的不只是陪练：上位机拿 `*_exp.txt` 当对拍基准，一样会撞同一面墙。
 #    修它是**改动已冻结的 H2 黄金向量**，要通知 A / C，所以不在这里顺手做。
-BLOCKED = {
-    "#PMUL TIME 1": ["halfmul_a.txt", "halfmul_b.txt", "halfmul_exp.txt"],
-    "#PMUL FULL 1": ["fullmul_a.txt", "fullmul_b.txt", "fullmul_exp.txt"],
-}
+# 2026-10-17: the three active vectors are canonicalized and both paths run.
+BLOCKED = {}
 
 
 def lines_of(name):
@@ -371,6 +368,8 @@ def main():
     check(raised == len(still_undefined),
           "仍应 raise 的数量不对：%d/%d" % (raised, len(still_undefined)))
 
+    check(covered == len(plan), "五条计算命令必须全部执行，不能遗留跳过")
+
     # ---- 收尾 ----
     print("")
     if failures:
@@ -387,8 +386,6 @@ def main():
     print("")
     print("⚠️ 覆盖范围：%d 条命令覆盖 %d 条，未覆盖 %d 条（被向量文件挡住，见 2b）。"
           % (len(plan), covered, len(BLOCKED)))
-    print("   向量一修好，本脚本会**主动报错**提醒你把它们接回来 ——")
-    print("   这个跳过不会悄悄变成遗忘。")
     return 0
 
 
