@@ -207,31 +207,35 @@ GEN.push('### 主表：参数化版三档（`rtl/ntt_core/`，顶层边界）', 
 
 /* §8.3 的六项（+IOB），按模板的列走 */
 const c = (vals) => vals.join(' ｜ ');
-GEN.push('### §8.3 指标表（按《选题指导》的列）', '',
-    '| 指标名称 | 类别 | 数值（pe1 ｜ pe4 ｜ pe16） | 单位 | 测量条件 | 证据文件 |',
-    '|---|---|---|---|---|---|',
+GEN.push('### 指标汇总表（按《选题指南》§3.2.5.2 的七列）', '',
+    '| 指标名称 | 类别 | 数值（pe1 ｜ pe4 ｜ pe16） | 单位 | 测量条件 | 测试次数 / 时长 | 证据文件 |',
+    '|---|---|---|---|---|---|---|',
     `| NTT 内核吞吐（周期数） | 核心 | ${c(TIERS.map((t) => CYCLES[t].fntt))} | cycles | ` +
         `一次 NTT 全程（7 层）；顶层量 \`done\` 拍 − \`start\` − 3；**不含读出延迟**；与上游逐档相同 | ` +
+        `1 次探针实测；功能对拍另覆盖 16 组 × 3 档 | ` +
         `${h('rtl/probes/README.md')} §判据 2、${h('rtl/H1_port_spec.md')} §五 |`,
-    `| 端到端延迟 | 核心 | ~0.18–0.27 | s | 上板事务**墙钟**耗时（含 115200 bps 串口往返）；` +
-        `⚠️ **非正式**：A 的临时脚本测得、未入库，未走 ${h('host/')} 正式路径 | ` +
-        `${h('rtl/vivado/reports/board_pe4_txn.txt')} |`,
+    `| 端到端延迟 | 核心 | 0.18–0.27 | s | 上板事务**墙钟**耗时（含 115200 bps 串口往返）；` +
+        `2026-10-04 三档各 5 条事务；2026-10-15 pe1 复跑 5/6（\`#PMUL TIME\` 待新证据） | ` +
+        `3 档 × 5 条各 1 次；单次 0.18–0.27 s | ` +
+        `${h('rtl/vivado/run_board_txn_report.sh')}；${h('rtl/vivado/reports/board_pe1_txn.txt')} |`,
     `| KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | 社区维护的 FIPS 203 兼容 \`.rsp\`（ML-KEM-768），` +
         `kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 \`report/design/04_functional_correctness.md\` §4.4） | ` +
-        `${h('research/mlkem_kat/')} |`,
+        `1000 条（逐比特） | ${h('research/mlkem_kat/')} |`,
     `| LUT 占用 | 资源 | ${c(TIERS.map((t) => nc[t].lut.used))} | 个 | post-route；` +
         `顶层边界；占用率 ${c(TIERS.map((t) => nc[t].lut.pct + '%'))} | ` +
+        `1 份 post-route 报告（单次布线路程） | ` +
         `${TIERS.map((t) => h(`rtl/vivado/reports/${t}_nc_util.rpt`)).join('、')} |`,
     `| DSP 占用 | 资源 | ${c(TIERS.map((t) => nc[t].dsp.used))} | 个 | post-route；` +
-        `**严格等于蝶形数**（非退化佐证） | 同上 |`,
+        `**严格等于蝶形数**（非退化佐证） | 1 份 post-route 报告（单次布线路程） | 同上 |`,
     `| 最高频率 / WNS | 资源 | ${c(TIERS.map((t) => nc[t].fmax + ' MHz'))} | MHz | ` +
         `post-route；约束 \`create_clock -period 5\`（200 MHz，故意给紧），` +
         `Fmax = 1000 / (5 − WNS)；WNS ${c(TIERS.map((t) => nc[t].wns + ' ns'))} | ` +
+        `1 份 post-route 报告（单次布线路程） | ` +
         `${TIERS.map((t) => h(`rtl/vivado/reports/${t}_nc_timing.rpt`)).join('、')} |`,
     `| IOB 占用 | 资源 | ${c(TIERS.map((t) => nc[t].iob.used))} | 个 | post-route；` +
         `**三档都是常数 37**（12 控制 + 1 时钟 + 12 \`din\` + 12 \`dout\`），与折叠度无关 —— 这是判据 1；` +
         `占用率 ${c(TIERS.map((t) => nc[t].iob.pct + '%'))}，上游同边界是 37 / 109 / **397** | ` +
-        `${h('rtl/vivado/folding_comparison.md')} §9.2 |`, '');
+        `1 份 post-route 报告（单次布线路程） | ${h('rtl/vivado/folding_comparison.md')} §9.2 |`, '');
 
 GEN.push('### 功能正确性（B 侧验证台 + A 侧探针）', '',
     '| 验的是什么 | 判定 | 怎么判的 | 证据文件 |',
@@ -247,7 +251,10 @@ GEN.push('### 功能正确性（B 侧验证台 + A 侧探针）', '',
     '> 上游 pe1 两侧都有锚（定位比 + 多重集），参数化版的读出顺序另行在 `rtl/H1_port_spec.md` 里定。', '');
 
 /* ---- 写 CSV（长表，一行一个数） --------------------------------------- */
-const csvRows = [['指标', '类别', '档位', '数值', '单位', '测量条件', '证据文件']];
+/* 《选题指南》§3.2.5.2 的七列表头：
+   指标名称 ｜ 类别 ｜ 数值 ｜ 单位 ｜ 测量条件 ｜ 测试次数 / 时长 ｜ 证据文件
+   「档位」不是独立列，并进「测量条件」；「测试次数 / 时长」逐行写实测口径。 */
+const csvRows = [['指标名称', '类别', '数值', '单位', '测量条件', '测试次数 / 时长', '证据文件']];
 const COND = {
     lut: 'post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认',
     ff: 'post-route，顶层边界，同上',
@@ -259,27 +266,36 @@ const COND = {
     wns: 'post-route',
     cycles: '顶层实测 done 拍 − start − 3，不含读出延迟'
 };
+const TEST = {
+    resource: '1 份 post-route 报告（单次布线路程）',
+    cycles: '1 次探针实测；功能对拍另覆盖 16 组 × 3 档',
+    e2e: '3 档 × 5 条各 1 次；单次 0.18–0.27 s',
+    kat: '1000 条（逐比特）'
+};
 for (const t of TIERS) {
     const r = nc[t];
     const ev = `rtl/vivado/reports/${r.reportTag}_util.rpt`;
     const tev = `rtl/vivado/reports/${r.reportTag}_timing.rpt`;
-    csvRows.push(['LUT', '资源', t, r.lut.used, '个', COND.lut, ev]);
-    csvRows.push(['LUT 占用率', '资源', t, r.lut.pct, '%', COND.lut, ev]);
-    csvRows.push(['FF', '资源', t, r.ff.used, '个', COND.ff, ev]);
-    csvRows.push(['DSP', '资源', t, r.dsp.used, '个', COND.dsp, ev]);
-    csvRows.push(['DSP 占用率', '资源', t, r.dsp.pct, '%', COND.dsp, ev]);
-    csvRows.push(['BRAM tile', '资源', t, r.bramTile.used, 'tile', COND.bramTile, ev]);
-    csvRows.push(['RAMB18', '资源', t, r.ramb18.used, '个', COND.ramb18, ev]);
-    csvRows.push(['RAMB36', '资源', t, r.ramb36.used, '个', COND.ramb18, ev]);
-    csvRows.push(['IOB', '资源', t, r.iob.used, '个', COND.iob, ev]);
-    csvRows.push(['IOB 占用率', '资源', t, r.iob.pct, '%', COND.iob, ev]);
-    csvRows.push(['WNS', '资源', t, r.wns, 'ns', COND.wns, tev]);
-    csvRows.push(['WHS', '资源', t, r.whs, 'ns', COND.wns, tev]);
-    csvRows.push(['推算 Fmax', '资源', t, r.fmax, 'MHz', COND.fmax, tev]);
-    csvRows.push(['NTT 周期数', '核心', t, CYCLES[t].fntt, 'cycles', COND.cycles, 'rtl/probes/README.md']);
-    csvRows.push(['端到端延迟', '核心', t, '约0.18-0.27', 's', '上板事务墙钟耗时（含串口往返）；A 临时脚本测得、未入库', 'rtl/vivado/reports/board_pe4_txn.txt']);
+    const cond = (s) => `档位 ${t}；${s}`;
+    csvRows.push(['LUT', '资源', r.lut.used, '个', cond(COND.lut), TEST.resource, ev]);
+    csvRows.push(['LUT 占用率', '资源', r.lut.pct, '%', cond(COND.lut), TEST.resource, ev]);
+    csvRows.push(['FF', '资源', r.ff.used, '个', cond(COND.ff), TEST.resource, ev]);
+    csvRows.push(['DSP', '资源', r.dsp.used, '个', cond(COND.dsp), TEST.resource, ev]);
+    csvRows.push(['DSP 占用率', '资源', r.dsp.pct, '%', cond(COND.dsp), TEST.resource, ev]);
+    csvRows.push(['BRAM tile', '资源', r.bramTile.used, 'tile', cond(COND.bramTile), TEST.resource, ev]);
+    csvRows.push(['RAMB18', '资源', r.ramb18.used, '个', cond(COND.ramb18), TEST.resource, ev]);
+    csvRows.push(['RAMB36', '资源', r.ramb36.used, '个', cond(COND.ramb18), TEST.resource, ev]);
+    csvRows.push(['IOB', '资源', r.iob.used, '个', cond(COND.iob), TEST.resource, ev]);
+    csvRows.push(['IOB 占用率', '资源', r.iob.pct, '%', cond(COND.iob), TEST.resource, ev]);
+    csvRows.push(['WNS', '资源', r.wns, 'ns', cond(COND.wns), TEST.resource, tev]);
+    csvRows.push(['WHS', '资源', r.whs, 'ns', cond(COND.wns), TEST.resource, tev]);
+    csvRows.push(['推算 Fmax', '资源', r.fmax, 'MHz', cond(COND.fmax), TEST.resource, tev]);
+    csvRows.push(['NTT 周期数', '核心', CYCLES[t].fntt, 'cycles', cond(COND.cycles), TEST.cycles, 'rtl/probes/README.md']);
+    csvRows.push(['端到端延迟', '核心', '0.18-0.27', 's',
+        cond('上板事务墙钟耗时（含串口往返）；2026-10-04 三档各 5 条；2026-10-15 pe1 复跑 5/6（#PMUL TIME 待新证据）'),
+        TEST.e2e, 'rtl/vivado/run_board_txn_report.sh；rtl/vivado/reports/board_pe1_txn.txt']);
 }
-csvRows.push(['KAT 通过率', '核心', '—', '1000/1000', '%', '社区维护的 FIPS 203 兼容 .rsp', 'research/mlkem_kat/']);
+csvRows.push(['KAT 通过率', '核心', '1000/1000', '%', '三档通用；社区维护的 FIPS 203 兼容 .rsp', TEST.kat, 'research/mlkem_kat/']);
 
 const csv = csvRows.map((r) => r.join(',')).join('\n') + '\n';
 

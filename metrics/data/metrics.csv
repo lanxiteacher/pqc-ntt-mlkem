@@ -1,47 +1,47 @@
-指标,类别,档位,数值,单位,测量条件,证据文件
-LUT,资源,pe1,727,个,post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,rtl/vivado/reports/pe1_nc_util.rpt
-LUT 占用率,资源,pe1,1.37,%,post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,rtl/vivado/reports/pe1_nc_util.rpt
-FF,资源,pe1,388,个,post-route，顶层边界，同上,rtl/vivado/reports/pe1_nc_util.rpt
-DSP,资源,pe1,1,个,post-route，顶层边界，同上,rtl/vivado/reports/pe1_nc_util.rpt
-DSP 占用率,资源,pe1,0.45,%,post-route，顶层边界，同上,rtl/vivado/reports/pe1_nc_util.rpt
-BRAM tile,资源,pe1,2.5,tile,post-route，顶层边界，同上,rtl/vivado/reports/pe1_nc_util.rpt
-RAMB18,资源,pe1,5,个,post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,rtl/vivado/reports/pe1_nc_util.rpt
-RAMB36,资源,pe1,0,个,post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,rtl/vivado/reports/pe1_nc_util.rpt
-IOB,资源,pe1,37,个,post-route，顶层边界，同上,rtl/vivado/reports/pe1_nc_util.rpt
-IOB 占用率,资源,pe1,29.60,%,post-route，顶层边界，同上,rtl/vivado/reports/pe1_nc_util.rpt
-WNS,资源,pe1,-0.936,ns,post-route,rtl/vivado/reports/pe1_nc_timing.rpt
-WHS,资源,pe1,0.072,ns,post-route,rtl/vivado/reports/pe1_nc_timing.rpt
-推算 Fmax,资源,pe1,168,MHz,post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,rtl/vivado/reports/pe1_nc_timing.rpt
-NTT 周期数,核心,pe1,904,cycles,顶层实测 done 拍 − start − 3，不含读出延迟,rtl/probes/README.md
-端到端延迟,核心,pe1,约0.18-0.27,s,上板事务墙钟耗时（含串口往返）；A 临时脚本测得、未入库,rtl/vivado/reports/board_pe4_txn.txt
-LUT,资源,pe4,2000,个,post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,rtl/vivado/reports/pe4_nc_util.rpt
-LUT 占用率,资源,pe4,3.76,%,post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,rtl/vivado/reports/pe4_nc_util.rpt
-FF,资源,pe4,880,个,post-route，顶层边界，同上,rtl/vivado/reports/pe4_nc_util.rpt
-DSP,资源,pe4,4,个,post-route，顶层边界，同上,rtl/vivado/reports/pe4_nc_util.rpt
-DSP 占用率,资源,pe4,1.82,%,post-route，顶层边界，同上,rtl/vivado/reports/pe4_nc_util.rpt
-BRAM tile,资源,pe4,9,tile,post-route，顶层边界，同上,rtl/vivado/reports/pe4_nc_util.rpt
-RAMB18,资源,pe4,18,个,post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,rtl/vivado/reports/pe4_nc_util.rpt
-RAMB36,资源,pe4,0,个,post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,rtl/vivado/reports/pe4_nc_util.rpt
-IOB,资源,pe4,37,个,post-route，顶层边界，同上,rtl/vivado/reports/pe4_nc_util.rpt
-IOB 占用率,资源,pe4,29.60,%,post-route，顶层边界，同上,rtl/vivado/reports/pe4_nc_util.rpt
-WNS,资源,pe4,-1.260,ns,post-route,rtl/vivado/reports/pe4_nc_timing.rpt
-WHS,资源,pe4,0.066,ns,post-route,rtl/vivado/reports/pe4_nc_timing.rpt
-推算 Fmax,资源,pe4,160,MHz,post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,rtl/vivado/reports/pe4_nc_timing.rpt
-NTT 周期数,核心,pe4,232,cycles,顶层实测 done 拍 − start − 3，不含读出延迟,rtl/probes/README.md
-端到端延迟,核心,pe4,约0.18-0.27,s,上板事务墙钟耗时（含串口往返）；A 临时脚本测得、未入库,rtl/vivado/reports/board_pe4_txn.txt
-LUT,资源,pe16,8922,个,post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,rtl/vivado/reports/pe16_nc_util.rpt
-LUT 占用率,资源,pe16,16.77,%,post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,rtl/vivado/reports/pe16_nc_util.rpt
-FF,资源,pe16,2933,个,post-route，顶层边界，同上,rtl/vivado/reports/pe16_nc_util.rpt
-DSP,资源,pe16,16,个,post-route，顶层边界，同上,rtl/vivado/reports/pe16_nc_util.rpt
-DSP 占用率,资源,pe16,7.27,%,post-route，顶层边界，同上,rtl/vivado/reports/pe16_nc_util.rpt
-BRAM tile,资源,pe16,34.5,tile,post-route，顶层边界，同上,rtl/vivado/reports/pe16_nc_util.rpt
-RAMB18,资源,pe16,65,个,post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,rtl/vivado/reports/pe16_nc_util.rpt
-RAMB36,资源,pe16,2,个,post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,rtl/vivado/reports/pe16_nc_util.rpt
-IOB,资源,pe16,37,个,post-route，顶层边界，同上,rtl/vivado/reports/pe16_nc_util.rpt
-IOB 占用率,资源,pe16,29.60,%,post-route，顶层边界，同上,rtl/vivado/reports/pe16_nc_util.rpt
-WNS,资源,pe16,-1.507,ns,post-route,rtl/vivado/reports/pe16_nc_timing.rpt
-WHS,资源,pe16,0.077,ns,post-route,rtl/vivado/reports/pe16_nc_timing.rpt
-推算 Fmax,资源,pe16,154,MHz,post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,rtl/vivado/reports/pe16_nc_timing.rpt
-NTT 周期数,核心,pe16,69,cycles,顶层实测 done 拍 − start − 3，不含读出延迟,rtl/probes/README.md
-端到端延迟,核心,pe16,约0.18-0.27,s,上板事务墙钟耗时（含串口往返）；A 临时脚本测得、未入库,rtl/vivado/reports/board_pe4_txn.txt
-KAT 通过率,核心,—,1000/1000,%,社区维护的 FIPS 203 兼容 .rsp,research/mlkem_kat/
+指标名称,类别,数值,单位,测量条件,测试次数 / 时长,证据文件
+LUT,资源,727,个,档位 pe1；post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_util.rpt
+LUT 占用率,资源,1.37,%,档位 pe1；post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_util.rpt
+FF,资源,388,个,档位 pe1；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_util.rpt
+DSP,资源,1,个,档位 pe1；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_util.rpt
+DSP 占用率,资源,0.45,%,档位 pe1；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_util.rpt
+BRAM tile,资源,2.5,tile,档位 pe1；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_util.rpt
+RAMB18,资源,5,个,档位 pe1；post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_util.rpt
+RAMB36,资源,0,个,档位 pe1；post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_util.rpt
+IOB,资源,37,个,档位 pe1；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_util.rpt
+IOB 占用率,资源,29.60,%,档位 pe1；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_util.rpt
+WNS,资源,-0.936,ns,档位 pe1；post-route,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_timing.rpt
+WHS,资源,0.072,ns,档位 pe1；post-route,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_timing.rpt
+推算 Fmax,资源,168,MHz,档位 pe1；post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_timing.rpt
+NTT 周期数,核心,904,cycles,档位 pe1；顶层实测 done 拍 − start − 3，不含读出延迟,1 次探针实测；功能对拍另覆盖 16 组 × 3 档,rtl/probes/README.md
+端到端延迟,核心,0.18-0.27,s,档位 pe1；上板事务墙钟耗时（含串口往返）；2026-10-04 三档各 5 条；2026-10-15 pe1 复跑 5/6（#PMUL TIME 待新证据）,3 档 × 5 条各 1 次；单次 0.18–0.27 s,rtl/vivado/run_board_txn_report.sh；rtl/vivado/reports/board_pe1_txn.txt
+LUT,资源,2000,个,档位 pe4；post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
+LUT 占用率,资源,3.76,%,档位 pe4；post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
+FF,资源,880,个,档位 pe4；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
+DSP,资源,4,个,档位 pe4；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
+DSP 占用率,资源,1.82,%,档位 pe4；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
+BRAM tile,资源,9,tile,档位 pe4；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
+RAMB18,资源,18,个,档位 pe4；post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
+RAMB36,资源,0,个,档位 pe4；post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
+IOB,资源,37,个,档位 pe4；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
+IOB 占用率,资源,29.60,%,档位 pe4；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
+WNS,资源,-1.260,ns,档位 pe4；post-route,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_timing.rpt
+WHS,资源,0.066,ns,档位 pe4；post-route,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_timing.rpt
+推算 Fmax,资源,160,MHz,档位 pe4；post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_timing.rpt
+NTT 周期数,核心,232,cycles,档位 pe4；顶层实测 done 拍 − start − 3，不含读出延迟,1 次探针实测；功能对拍另覆盖 16 组 × 3 档,rtl/probes/README.md
+端到端延迟,核心,0.18-0.27,s,档位 pe4；上板事务墙钟耗时（含串口往返）；2026-10-04 三档各 5 条；2026-10-15 pe1 复跑 5/6（#PMUL TIME 待新证据）,3 档 × 5 条各 1 次；单次 0.18–0.27 s,rtl/vivado/run_board_txn_report.sh；rtl/vivado/reports/board_pe1_txn.txt
+LUT,资源,8922,个,档位 pe16；post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
+LUT 占用率,资源,16.77,%,档位 pe16；post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
+FF,资源,2933,个,档位 pe16；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
+DSP,资源,16,个,档位 pe16；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
+DSP 占用率,资源,7.27,%,档位 pe16；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
+BRAM tile,资源,34.5,tile,档位 pe16；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
+RAMB18,资源,65,个,档位 pe16；post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
+RAMB36,资源,2,个,档位 pe16；post-route，顶层边界，同上（RAMB18 个数比 tile 直观）,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
+IOB,资源,37,个,档位 pe16；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
+IOB 占用率,资源,29.60,%,档位 pe16；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
+WNS,资源,-1.507,ns,档位 pe16；post-route,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_timing.rpt
+WHS,资源,0.077,ns,档位 pe16；post-route,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_timing.rpt
+推算 Fmax,资源,154,MHz,档位 pe16；post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_timing.rpt
+NTT 周期数,核心,69,cycles,档位 pe16；顶层实测 done 拍 − start − 3，不含读出延迟,1 次探针实测；功能对拍另覆盖 16 组 × 3 档,rtl/probes/README.md
+端到端延迟,核心,0.18-0.27,s,档位 pe16；上板事务墙钟耗时（含串口往返）；2026-10-04 三档各 5 条；2026-10-15 pe1 复跑 5/6（#PMUL TIME 待新证据）,3 档 × 5 条各 1 次；单次 0.18–0.27 s,rtl/vivado/run_board_txn_report.sh；rtl/vivado/reports/board_pe1_txn.txt
+KAT 通过率,核心,1000/1000,%,三档通用；社区维护的 FIPS 203 兼容 .rsp,1000 条（逐比特）,research/mlkem_kat/
