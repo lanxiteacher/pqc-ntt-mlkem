@@ -3,9 +3,12 @@
 `ifndef CFG_PE_NUM
 `define CFG_PE_NUM 0
 `endif
+`ifndef CFG_NV
+`define CFG_NV 103
+`endif
 module strengthening_timing_tb;
 localparam PE = `CFG_PE_NUM;
-localparam NV = 103; // 100 random, then zero / q-1 / alternating
+localparam NV = `CFG_NV; // default: 100 random, then zero / q-1 / alternating
 reg clk=0;
 always #5 clk=~clk;
 reg reset, load_a_f, read_a, start_fntt;

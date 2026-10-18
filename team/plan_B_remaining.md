@@ -9,9 +9,11 @@
 
 ## 出彩组合（2026-10-18 A 定，先于总结类）
 
-2026-10-18 B 进展：第 1 项无板部分已完成，入口 `refsim/accept_kem_trace.py`，说明 `refsim/kem_trace_README.md`。一次正常 KEM-768 的正向 poly_ntt 为 keygen/encaps/decaps=6/3/6，共 15 次；KAT、原版/插桩一致性、独立构建 C 复核、确定性及负向检查通过；三档上位机陪练 45 次通过。真板/RTL 回放未做；用户手动验收已截图确认（logs/verification_2026-10-18_B_kem_manual.png）。该进展不销“送板逐位比对”条目；后续变异与周期任务结果见本节最新进展。
+2026-10-18 B 进展：第 1 项无板部分已完成，入口 `refsim/accept_kem_trace.py`，说明 `refsim/kem_trace_README.md`。一次正常 KEM-768 的正向 poly_ntt 为 keygen/encaps/decaps=6/3/6，共 15 次；KAT、原版/插桩一致性、独立构建 C 复核、确定性及负向检查通过；三档上位机陪练 45 次通过。当时真板/RTL 回放未做，后续RTL进展见下文；用户手动验收已截图确认（logs/verification_2026-10-18_B_kem_manual.png）。该进展不销“送板逐位比对”条目；后续变异与周期任务结果见本节最新进展。
 
 2026-10-18 最新进展：C 的 292e369 七条修订已由 B 复核闭环。新增变异/周期工具由 AI 整套验收通过：17/17 变异被捕获；三档各 100 随机 + 3 边界输入的周期、C 输出及有效地址序列通过。原始闲置写地址存在首次/后续差异，边界见 `refsim/strengthening_README.md`；不是侧信道安全证明。证据与交接见 `team/handoff_2026-10-18_B_strengthening.md`。用户已截图完成新增工具的统一手动验收；真实 trace 送板、第二台实体电脑 H10 仍未完成。
+
+2026-10-18 后续：本机新增 trace 三档实际 RTL 已通过45次/11520系数，不再只有陪练。Host批量/逐行480事务一致；送板入口及9项模拟检查通过；原有Host九脚本通过。固定trace已入库，A可直接用 `refsim/run_kem_board.py`，操作见 `team/handoff_2026-10-18_B_trace_delivery.md`。本轮统一离线入口 `refsim/accept_trace_delivery.py` 的用户人工验收待执行。真实送板及第二台电脑H10仍未完成。
 
 1. **P1 ML-KEM transcript replay** —— 一次 ML-KEM-768 的 keygen / encaps / decaps，把每次
    `poly_ntt` 的输入输出 trace 出来，逐条送板比对；判据：全部 NTT 逐位一致；产出 JSON +

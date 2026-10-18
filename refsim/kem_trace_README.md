@@ -68,8 +68,8 @@ python refsim/kem_trace_replay.py ../B_trace_new/trace.json --output ../B_trace_
 python refsim/kem_trace_replay.py ../B_trace_new/trace.json --port COM实际号 --build 4 --output ../B_trace_new/serial_pe4
 ```
 
-此命令只是调用示例，COM实际号需替换为现场值。若收到 RDY 与显式档位不一致立即拒绝；未收到 RDY 时依靠已核实的显式档位。serial 模式的代码路径没有在本轮真板验证；失败会返回错误，不会产生成功 replay.json，因此失败时要保留终端输出。沿用原 SerialLink 的写入/flush 无显式超时限制，不能保证 USB 故障时有限退出。
+此命令只是调用示例，COM实际号需替换为现场值。若收到 RDY 与显式档位不一致立即拒绝；未收到 RDY 时依靠已核实的显式档位。serial 模式尚无本 trace 的实体板卡结果。后续已补失败检查点：合法输入创建新输出目录后，成功/失败均保存 replay.json，逐次保留事务现场。直接使用本低层命令仍沿用 SerialLink 的无显式写入/flush 超时限制；A 推荐使用 `run_kem_board.py` 的独立子进程总超时入口，见 `trace_delivery_README.md`。
 
-真板回放应各档分别运行并保留位流来源/频率、串口、当前提交、完整终端输出和 JSON。波特率默认 115200；--baud 参数不是 921600 已验证证明。不能用默认陪练或 TAG 证明硬件频率。当前还没有本 trace 的三档真板/RTL 回放结果；不能将此工作标为 A 计划中“全部 NTT 送板比对”已完成。
+真板回放应各档分别运行并保留位流来源/频率、串口、当前提交、完整终端输出和 JSON。波特率默认 115200；--baud 参数不是 921600 已验证证明。不能用默认陪练或 TAG 证明硬件频率。后续新增 `kem_trace_rtl.py` 已补三档实际 RTL 回放，证据见 `trace_delivery_README.md`；本 trace 的真板回放仍待执行，不能将此工作标为 A 计划中“全部 NTT 送板比对”已完成。
 
 本工具只用于公开测试向量，trace 含算法内部多项式，不应用于采集真实业务密钥或生产随机性。
