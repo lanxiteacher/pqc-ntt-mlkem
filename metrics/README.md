@@ -75,6 +75,7 @@ python metrics/bottleneck.py      # 瓶颈归因（PC 侧三段计时）→ 生�
 | DSP 占用 | 资源 | 1 ｜ 4 ｜ 16 | 个 | post-route；**严格等于蝶形数**（非退化佐证） | 1 份 post-route 报告（单次布线路程） | 同上 |
 | 最高频率 / WNS | 资源 | 168 MHz ｜ 160 MHz ｜ 154 MHz | MHz | post-route；约束 `create_clock -period 5`（200 MHz，故意给紧），Fmax = 1000 / (5 − WNS)；WNS -0.936 ns ｜ -1.260 ns ｜ -1.507 ns | 1 份 post-route 报告（单次布线路程） | `rtl/vivado/reports/pe1_nc_timing.rpt`、`rtl/vivado/reports/pe4_nc_timing.rpt`、`rtl/vivado/reports/pe16_nc_timing.rpt` |
 | 板上跑通的最高频率（MMCM 提频） | 资源 | 80.0 ｜ 75.0 ｜ 62.5 | MHz | 三档 MMCM 位流按该频率生成并上真板；**不是频率扫描得到的芯片极限**；50 MHz 基线的 20 ns 约束 WNS **不能反推 Fmax**（见报告 §3.13.3） | 3 档 × 6 条命令各 1 次（2026-10-18，均 6/6） | `rtl/vivado/reports/board_pe1_f80_txn.txt`、`rtl/vivado/reports/board_pe4_f75_txn.txt`、`rtl/vivado/reports/board_pe16_f62.5_txn.txt` |
+| 功耗（估算） | 资源 | 0.130 ｜ 0.170 ｜ 0.335（50 MHz）；0.257 ｜ 0.300 ｜ 0.440（提频） | W | Vivado `report_power` 于**布线后** DCP，**vectorless 估算**（无 SAIF、Confidence Medium、25 °C、只算片内 PL）；动态/静态拆分与 MMCM 占比见报告 §3.10.5 | 6 版位流各 1 次 | `rtl/vivado/reports/power_pe{1,4,16}_{50,80,75,62}mhz.rpt`；`rtl/vivado/power_estimate.md` |
 | IOB 占用 | 资源 | 37 ｜ 37 ｜ 37 | 个 | post-route；**三档都是常数 37**（12 控制 + 1 时钟 + 12 `din` + 12 `dout`），与折叠度无关 —— 这是判据 1；占用率 29.60% ｜ 29.60% ｜ 29.60%，上游同边界是 37 / 109 / **397** | 1 份 post-route 报告（单次布线路程） | `rtl/vivado/folding_comparison.md` §9.2 |
 
 ### 功能正确性（B 侧验证台 + A 侧探针）
@@ -208,7 +209,7 @@ Fmax 是**反推**出来的：`T_min ≈ 目标周期 − WNS`，`Fmax = 1000 / 
 | ~~**提频后三档 WNS / 资源**~~ | ✅ **2026-10-18 已填** —— 资源几乎不变（LUT 差 +9～+23，FF 差 ±7；MMCM/BUFG 不占 LUT）。数据与做法见 `rtl/vivado/board_freq_sweep.md`、报告 `report/design/03` §3.10.2 | 已做，`sh rtl/vivado/run_board_freq_sweep.sh` |
 | ~~**PC 侧分段耗时（瓶颈归因）**~~ | ✅ **2026-10-16 已填**（10-17 重跑刷新）—— 见上面「瓶颈归因（PC 侧三段计时）」。三段：计算核 **18.08 µs**（904 拍 ÷ 50 MHz）/ 串口搬运 **184.4 ms** / 软件参考实现 **约 4.0 µs**（本机 gcc -O2，10-18 重跑 4.05；10-17 3.92；10-16 那次 3.36，同机不同次有波动）。结论「**瓶颈不在核，在接口**」 | 已做，`python metrics/bottleneck.py` |
 | ~~**端到端延迟（ms）**~~ | ✅ **2026-10-18 已用当前驱动重跑**：三档 × 六条命令各 **6/6**（50 MHz 与提频版都跑），`#PMUL TIME 1` 收口；原始输出 `reports/board_pe{1,4,16}_txn.txt` 与 `..._f{80,75,62.5}_txn.txt`。⚠️ 旧「0.18–0.27 s」是 10-04 临时脚本的墙钟值，新报告只留逐项对拍 | 已做 |
-| **功耗** | 没做 | Vivado 功耗报告或实测 |
+| ~~**功耗**~~ | ✅ **2026-10-18 已做估算** —— 50 MHz 三档 **0.130 / 0.170 / 0.335 W**；提频版 0.257 / 0.300 / 0.440 W。⚠️ **vectorless 估算**（无 SAIF、Confidence Medium、只算片内 PL），**不是实测**；动态/静态拆分见报告 §3.10.5 | 已做，`sh rtl/vivado/run_board_power.sh`；实测需改硬件（板上无分流电阻） |
 | **多 PE 并行版** | 只做了「折叠」（一个核跑多拍），没做「并行多个核」 | 新设计，不是重跑 |
 
 > 端到端延迟那一项，**记得把链路本身算进去**：115200 bps 的串口传 256 个 12 位系数

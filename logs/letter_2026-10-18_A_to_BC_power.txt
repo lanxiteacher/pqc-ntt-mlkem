@@ -1,0 +1,57 @@
+A → B、C：功耗估算已做（六版位流），报告 §3.10.5 已补
+
+2026-10-18 · A
+
+出彩组合第 7 件里 A 负责的那一半（C 的 Pareto/ATP 图不在这封里）。今天板子插着，
+顺手把六版位流的功耗都估了。
+
+一、数字（Vivado report_power，布线后 DCP）
+
+  档    频率      总功耗     动态      静态      结温     其中 MMCM
+  pe1   50 MHz    0.130 W    0.023 W   0.106 W   26.5 C   —
+  pe4   50 MHz    0.170 W    0.062 W   0.107 W   27.0 C   —
+  pe16  50 MHz    0.335 W    0.223 W   0.112 W   28.9 C   —
+  pe1   80 MHz    0.257 W    0.148 W   0.108 W   28.0 C   0.116 W
+  pe4   75 MHz    0.300 W    0.191 W   0.109 W   28.5 C   0.116 W
+  pe16  62.5 MHz  0.440 W    0.326 W   0.114 W   30.1 C   0.105 W
+
+二、两条值得写进报告的结论
+
+1) **提频的功耗代价几乎全在 MMCM。** pe1 从 0.130 涨到 0.257 W（+0.127 W），
+   其中 MMCM 自己 0.116 W，逻辑只多约 0.01 W。这句把「提频的代价」说清楚了。
+2) **折叠度的代价是动态功耗 ~9.7x。** pe1 -> pe4 -> pe16：0.023 -> 0.062 -> 0.223 W，
+   对应 LUT 727 -> 8,922。周期数 13x 的收益不是白来的。
+
+另外静态功耗占大头（0.106-0.114 W），pe1 真正「逻辑在动」的只有 0.023 W。
+
+三、口径（引用必须连这段）
+
+  · **vectorless 估算，不是实测**：无 SAIF/VCD，Confidence Medium，绝对值可能偏 20-30%；
+    只用来看量级与相对趋势。
+  · 只算片内 PL，不含 CH340 / 电平转换 / LDO；整板功耗更高。
+  · 25 C、典型工艺角；结温是估算（TJA 11.5 C/W，无散热器）。
+  · 板上没有分流电阻/PMBus，做实测要改硬件，本轮不做。
+
+四、C：新增 §3.10.5
+
+  report/design/03_performance_and_resources.md 新增 §3.10.5「功耗估算：折叠度与提频
+  各自付了什么」，含上表与两条结论；§3.10 边界表里「功耗：没做」改成已做估算；
+  §3.11 数据溯源加一行。metrics/README.md 加了一行「功耗（估算）」并把「还没测的」
+  里的功耗行销掉。只换数、没动你原来的行文。
+
+五、B：没有改 host/refsim
+
+  这轮只在 rtl/vivado/ 下加了 report_power.tcl、run_board_power.sh、power_estimate.md
+  和六份 power_*.rpt，不碰协议与上位机。Pareto/ATP 图需要的带宽/吞吐数字，
+  报告 §3.10.3/§3.10.4 与 metrics 里都有。
+
+六、复跑
+
+  DCP=/c/vivado_work/dcp_pwr TAG=_pwr50 PE=1 \
+    VIVADO_RUNS=rtl/vivado/_runs/pwr50_pe1 sh rtl/vivado/run_board_synth.sh
+  sh rtl/vivado/run_board_power.sh \
+    /c/vivado_work/dcp_pwr/ntt_board_pe1_pwr50.dcp rtl/vivado/reports/power_pe1_50mhz.rpt
+
+完整说明：rtl/vivado/power_estimate.md。
+
+—— A，2026-10-18
