@@ -144,8 +144,16 @@ T_min ≈ 目标周期 − WNS          Fmax = 1000 / T_min
    （都是 −1.260 ns）。两条日志是各自独立 grep 出来的 —— 因为瓶颈都在同一个蝶形里，
    外壳比它短，谁都不是关键路径。
 
-> 关键路径截图（H4 要的）从 `pe{1,4,16}_nc_timing.rpt` 的 `-max_paths 10` 里出，
-> 直接截 3.7 这张表对应的那一段即可。
+![核的关键路径（pe1）：DSP48E1 输出 → w5r0 寄存器，slack −0.936 ns](../../assets/2026-10-15_A_critical_path_core_pe1.png)
+
+**这张图是什么**：上表第一行的现场版（Vivado 2020.2 时序报告截图，A 2026-10-15 截）。
+源 `u_core/BTF_GEN_BLOCK[0].btfu/mm0/im0/P0/CLK`（DSP48E1）→
+`u_core/BTF_GEN_BLOCK[0].btfu/w5r0_reg[3]/D`，slack **−0.936 ns**、9 级逻辑、5.836 ns、
+路径上 11 个 cell；与 `../../rtl/vivado/reports/pe1_nc_timing.rpt` 第一条
+`Slack (VIOLATED)` 逐格核对过。
+
+> ⚠️ **负 slack 是预期的，不是故障**：核的约束是**故意收紧的 5 ns**，用来从 WNS 反推最高频率；
+> 报告正文 §3.3 就是这么取值的。别把它当成「时序没收敛」处理。
 
 ---
 
@@ -470,6 +478,13 @@ IOB 恒为 **4** —— 时钟 + 复位 + 串口两线，与折叠度无关；�
 单跳最贵的是 `u_fsm/r_echo_len_reg[0]_0[0]`，扇出 **495**、**一跳 1.503 ns** ——
 比任何一个 LUT 都慢一个数量级（平摊下来：一个 LUT **0.154 ns**、一跳走线 **0.868 ns**，**5.6 倍**）。
 「板级瓶颈是布线」在板级的具体形态就是它。
+
+![板级关键路径（pe1）：line_len 寄存器 → r_echo 使能，slack +7.339 ns](../../assets/2026-10-15_A_critical_path_board_pe1.png)
+
+**这张图是什么**：上表 pe1 那一行的现场版（Vivado 2020.2 时序报告截图，A 2026-10-15 截）。
+源 `u_line/line_len_reg[0]/C` → `u_fsm/r_echo_reg[361]/CE`，slack **+7.339 ns**、
+11 级逻辑、12.488 ns、路径上 13 个 cell；与
+`../../rtl/vivado/reports/board_pe1_timing.rpt` 第一条 `Slack (MET)` 逐格核对过。
 
 ### 3.13.5 引脚落位
 

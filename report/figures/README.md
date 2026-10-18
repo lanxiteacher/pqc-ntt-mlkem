@@ -1,6 +1,6 @@
 # report/figures —— 报告配图
 
-**主责：C** ｜ 状态：🔄 **3 张矢量图 + 3 张演示页截图（浅色报告版，2026-10-02）**
+**主责：C** ｜ 状态：🔄 **4 张 SVG + 3 张演示页截图（浅色报告版，10-02）+ 2 张关键路径截图（A 10-15 交付，存 `assets/`）**
 
 > 放**报告正文里要用的图**。素材原图（截图、录屏）在 `../../assets/`，
 > 不要在这里重复存一份 —— 这里只放**排版好的、要进报告的**那一版。
@@ -17,6 +17,9 @@
 | `demo_ntt_layer3.png` | `design/05_reproducibility.md` §5.4 | 演示页（**浅色报告版**）：正变换走到第 3 层，右侧显示选中系数的蝶形算式与配对 |
 | `demo_compare_pass.png` | `design/05_reproducibility.md` §5.4 | 演示页对拍页：RTL 落盘输出 vs 黄金向量，**4096/4096 全中**，全场无红格 |
 | `demo_compare_negctrl.png` | `design/04_functional_correctness.md` §4.7 | 演示页阴性对照：改坏一条期望值 → 网格里**恰好 1 个红格** |
+| `refsim_wave_fntt_compare.svg` / `.png` | `design/04_functional_correctness.md` §4.4 末 | 上游 pe1 FNTT 第 0 组：期望值与 RTL 输出**逐拍**对照，256/256；**只代表这一组** |
+| `../../assets/2026-10-15_A_critical_path_core_pe1.png` | `design/03_performance_and_resources.md` §3.7 | 核的关键路径（DSP48E1 → `w5r0`），slack −0.936 ns（约束故意收紧到 5 ns） |
+| `../../assets/2026-10-15_A_critical_path_board_pe1.png` | `design/03_performance_and_resources.md` §3.13.4 | 板级关键路径（`line_len` → `r_echo` 使能），slack +7.339 ns |
 
 **这 3 张是截图，不是矢量图**（页面是交互式的，只能截）。生成方式：
 `node demo/gen_shots.mjs` —— 无头 Edge 驱动，源页在 `../../demo/`。
@@ -54,10 +57,10 @@ node report/figures/gen_figures.mjs      # → report/figures/folding_sweep.svg
 
 | 图 | 要什么 | 谁 / 什么时候 |
 |---|---|---|
-| **关键路径截图** | **两组各一张（pe1）**：① **核** —— `pe{1,4,16}_nc_timing.rpt` 的 `-max_paths 10` 段（对应 `design/03` §3.7）；② **板级** —— `board_pe{1,4,16}_timing.rpt`（对应 §3.13.4）。⚠️ 两个流程是**非工程模式**，跑完**不留 `.xpr` / `.dcp`**，GUI 里没有设计可打开 —— 2026-10-05 已给两者加可选 `DCP=` 产出 checkpoint（见 `../../logs/runbook_2026-10-05_h4_screenshot_and_recording.md`），此后可截 | 需要 Vivado —— **C 本机做不了**，A 截（两组各 pe1 一张；三档路径结构相同，要全截各多跑一次） |
+| ~~**关键路径截图**~~ | ✅ **2026-10-15 A 已交付两组各一张（pe1）**：`assets/2026-10-15_A_critical_path_core_pe1.png`（核，§3.7）与 `..._board_pe1.png`（板级，§3.13.4）；与 `pe1_nc_timing.rpt` / `board_pe1_timing.rpt` 第一条逐格核过。⚠️ 三档路径结构相同，只截了 pe1 | A（已完成）；C 10-18 已嵌入正文 |
 | ~~**架构框图**（矢量版）~~ | ✅ **已成** `architecture.svg`（10-01） | C（已完成；`design/02` §2.2 已引用） |
 | ~~**演示页截图**~~ | ✅ **原图 4 张在 `../../assets/`（深色）**；**报告版 3 张浅色截图已进本目录**（`demo_*.png`，10-02）。浅底版由 `?theme=light` + `clip` 裁到「标题 + 网格」生成 | C（**已完成**） |
-| **波形截图（已交付 10-17）** | `refsim_wave_fntt_compare.png`（GTKWave 原图）、`refsim_wave_fntt_compare.svg`（报告版）；上游 pe1 FNTT 第 0 组，256/256 | B；`python refsim/run_wave_check.py --render-svg` 可从源重建 VCD 与 SVG；不代表三档全链波形 |
+| ~~**波形截图**~~ | ✅ **2026-10-17 B 已交付、10-18 C 已嵌入 §4.4 末**：`refsim_wave_fntt_compare.png`（GTKWave 原图）、`.svg`（报告版）；上游 pe1 FNTT 第 0 组，256/256 | B；`python refsim/run_wave_check.py --render-svg` 可从源重建 VCD 与 SVG；不代表三档全链波形 |
 
 ---
 
