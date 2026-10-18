@@ -135,6 +135,9 @@ cd <仓库根>
 sh rtl/vivado/run_board_freq_sweep.sh          # 三档，约 30 分钟
 ```
 
+2026-10-18 复跑验证：pe1@80 用同一命令重跑一次，`WNS / WHS / 端点计数` 与首轮
+**逐位相同**（+0.698 / +0.064 / 11295），三份报告被同值覆盖 —— 这套流程可复现。
+
 判据（脚本与报告里都能查）：
 
 - 每份 `reports/board_pe<N>_f<MHz>_timing.rpt` 的 `Design Timing Summary` 第一行
