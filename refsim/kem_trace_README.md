@@ -13,7 +13,7 @@ python refsim/accept_kem_trace.py --output ../B_kem_manual_01
 
 预计数秒至几十秒，命令内部每个子进程有 120 秒上限。目录必须不存在，重跑时更换后缀，不删除已有证据。四个阶段均 PASS，最后输出“software trace acceptance complete; board replay NOT performed”。失败返回 2，只有所有步骤完成才会生成 acceptance.json。失败目录可能含已完成阶段的中间结果，不能把单独某阶段 summary.json 当整套通过证明。
 
-用户只需运行这一条，不需逐条调用内部脚本。人工验收待用户实际执行后再记录；AI 已完成的执行不代替本人操作。
+用户只需运行这一条，不需逐条调用内部脚本。2026-10-18 用户已实际执行并截图确认四阶段通过，截图见 `../logs/verification_2026-10-18_B_kem_manual.png`；AI 执行记录与用户手动验收分别保留。这仍不包含真板回放。
 
 ## 输入来源与实际调用数
 

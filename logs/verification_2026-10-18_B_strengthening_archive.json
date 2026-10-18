@@ -1,0 +1,12 @@
+{
+  "archive": "verification_2026-10-18_B_strengthening.zip",
+  "sha256": "980259c1acdc3f477296934a46f813d36afec6516b33f4db7cf455a8b998b261",
+  "files": 610,
+  "bytes": 2828191,
+  "zip_integrity_verified": true,
+  "guard_checks": {
+    "timeout_rejected_and_partial_logs_retained": true,
+    "single_bad_expected_coefficient_rejected_4095_of_4096": true,
+    "existing_output_rejected_without_modification": true
+  }
+}
