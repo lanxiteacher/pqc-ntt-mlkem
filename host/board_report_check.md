@@ -41,3 +41,5 @@ python host/src/check_board_reports.py ../B_report_practice_01/missing_section.t
 ```
 
 预期最后一条 #PMUL FULL 1 为“未见执行段”，整份为“证据不完整”。它与旧 5/6 日志中的明确失败不同。B 亲手运行和反馈待完成。
+
+2026-10-18 后续：用户提供两次执行截图，实际结果与上述预期一致；本项人工验收已完成。截图见 ../logs/verification_2026-10-18_B_manual_report_check.png。

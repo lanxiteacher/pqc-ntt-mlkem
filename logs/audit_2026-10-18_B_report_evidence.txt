@@ -1,0 +1,37 @@
+Read-only evidence audit; source commit 3bfad71; no RTL/board execution.
+Clean clone tested commit: 206f9571a58a870926c4bbff9b2398763e4c0a32
+Same-PC scope: fresh remote clone on the SAME physical PC; not H10 second-PC acceptance
+Steps: 18; passed: True; nonzero exits: 0
+parameterized_polmul
+fullmul: fresh C oracle agrees with 4096 frozen coefficients; A/B unique=2355/2355
+FULL pe1: multiset 4096/4096; ordered(tau) 4096/4096
+FULL pe4: multiset 4096/4096; ordered(tau) 4096/4096
+FULL pe16: multiset 4096/4096; ordered(tau) 4096/4096
+NEGATIVE wrong B load: multiset 334/4096, rejected
+halfmul: fresh C oracle agrees with 4096 frozen coefficients; A/B unique=2355/2374
+HALF pe1: multiset 4096/4096; ordered(tau) 4096/4096
+HALF pe4: multiset 4096/4096; ordered(tau) 4096/4096
+HALF pe16: multiset 4096/4096; ordered(tau) 4096/4096
+NEGATIVE one corrupted expected coefficient: 4095/4096, rejected
+NEGATIVE missing PE: nonzero fatal, rejected
+PASS: 6 RTL runs, 24576 coefficients, fresh C oracle; no Vivado/board required.
+
+fntt_wave
+读出窗口   : 13150000 .. 15740000 ps  (2590 ns)
+节拍数     : 256  （逐拍核对 dout == exp_now，全部相同）
+放大窗口   : 13130000 .. 13330000 ps  (200 ns，16 拍)
+VCD info: dumpfile fntt_wave.vcd opened for output.
+波形测试台: done 在 902 个流水线周期后拉高
+
+★ 波形覆盖的这一组：256/256 全中
+C:\Users\lenovo\AppData\Local\Temp\pqc_clean_clone_e0jrs6os\repo\refsim\pe1\fntt_wave_tb.v:149: $finish called at 15940000 (1ps)
+
+PASS: rebuilt FNTT VCD; 256/256 known-value beats matched. Scope: baseline pe1, one group.
+
+fullmul: length=4096/4096, unique=2355/2355, equal positions (zero-based)=[990, 3490], identical groups=0
+halfmul: length=4096/4096, unique=2355/2374, equal positions (zero-based)=[], identical groups=0
+fullmul_exp: min=0, max=3328, unique=2357
+halfmul_exp: min=0, max=3328, unique=2357
+SHA256 report/design/04_functional_correctness.md: 5400c855645f9aa61bf2043a70cd70c6a2c2a2e92b2baaf06c4b797735869650
+SHA256 refsim/check_polmul_param.py: da56c21261996409b2d56a328647a5a18d0ea1fac0301429b848e919ae0b6403
+SHA256 refsim/polmul_param_tb.v: 4ba6cd9297a8fe62409f4ddb4c53792226a1c5fc85e43cfe0ca91a60964ed4c4
