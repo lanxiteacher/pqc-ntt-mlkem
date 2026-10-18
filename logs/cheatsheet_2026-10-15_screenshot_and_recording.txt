@@ -1,107 +1,75 @@
-关键路径截图 + 上板串口录屏 · 操作单
+上板串口录屏 · 操作单
 2026-10-15 · A
-（详细说明见 logs/runbook_2026-10-05_h4_screenshot_and_recording.md）
+（详细说明见 logs/runbook_2026-10-05_h4_screenshot_and_recording.md §二）
 
-本单装的是两件不相干的活
-  §一 = 截 2 张 png（关键路径图）
-  §二 = 录 1 段 mp4（上板串口跑五条命令）
-  合在一份里只因「都得人在机器前」+「同一天做」，不是一件事的两个说法。
+终端：Git Bash
+  export 是 bash 语法，cmd 里要写成 set。
 
-用哪个终端（两节不一样，不是笔误）
-  §一 截图 → cmd        要跑 vivado.bat + cd /d，Vivado 一律从仓库外、用 cmd 起
-  §二 录屏 → Git Bash   export 是 bash 语法，cmd 里要写成 set
-
-当前状态（2026-10-15 夜实测）
-  §一 已完成 —— 两张 png 已在 assets/，逐格核对通过，不用再做
-  §二 待做   —— 板上烧的是 pe1 那版、通着电（#PING 回 COM10 有回应），不用重烧
-  今天只剩 §二
-
-
-==================================================
-§一  关键路径截图（存 2 张 png）
-==================================================
-
-【板级】
-1. 开 cmd（不是 Git Bash）：
-     cd /d C:\vivado_work
-     E:\xilinx\Vivado\2020.2\bin\vivado.bat
-
-2. 底部 Tcl Console 里敲这 3 行：
-     open_checkpoint C:/vivado_work/dcp/ntt_board_pe1.dcp
-     set p [get_timing_paths -from [get_pins u_line/line_len_reg[0]/C] -to [get_pins u_fsm/r_echo_reg[361]/CE] -max_paths 1]
-     show_schematic [get_cells -of_objects [get_pins -of_objects $p]]
-
-3. 截图前自查（Tcl Console 敲）：
-     llength [get_cells -of_objects [get_pins -of_objects $p]]
-   要回 13。回 0 就是没找到路径 —— 别截。
-
-4. 截 Schematic 窗口（别缩放），存：
-     assets\2026-10-15_A_critical_path_board_pe1.png
-
-【核】
-5. Tcl Console 里敲这 5 行（每条 pin 名各自成行，别并成一行）：
-     open_checkpoint C:/vivado_work/dcp/pe1_nc.dcp
-     set a {u_core/BTF_GEN_BLOCK[0].btfu/mm0/im0/P0/CLK}
-     set b {u_core/BTF_GEN_BLOCK[0].btfu/w5r0_reg[3]/D}
-     set p [get_timing_paths -from [get_pins $a] -to [get_pins $b] -max_paths 1]
-     show_schematic [get_cells -of_objects [get_pins -of_objects $p]]
-
-6. 自查：llength [get_cells -of_objects [get_pins -of_objects $p]]
-   要回 11。
-
-7. 截 Schematic 窗口，存：
-     assets\2026-10-15_A_critical_path_core_pe1.png
-
-【注意】
-  - 核那两个 pin 名外层的 { } 不能去掉。
-  - 核的 slack 显示 -0.936 / VIOLATED 是对的，别改、别当故障。
-  - 截出来的必须是一条由方块和连线组成的路径图。若是芯片版图（大片深蓝格子），
-    说明上一步没找到路径，回第 3 / 6 步自查。
-
-
-==================================================
-§二  上板串口录屏（存 1 个 mp4）
-==================================================
+当前状态
+  ⚠️ 2026-10-18 更新：仓库已从 C:\Users\l'x\Desktop\FPGA 移到 E:\FPGA；
+     10-15 录屏时板子通着电、烧的是 pe1 那版，10-18 板子已拔。
+     重录前先重烧位流（sh rtl/vivado/run_board_prog.sh），并现查串口号。
 
 【准备】
 1. 手机横屏架好，画面同时框住「笔记本屏幕 + 板子（电源灯亮着）」。
    不要用 Win+G —— 只录屏幕，拍不到板子。
 
-2. 单独开一个 Git Bash 窗口，敲：
-     cd "C:/Users/l'x/Desktop/FPGA"
+2. 前面跑废的那一轮不要录进去 —— 重新开拍。
+
+3. 开 Git Bash：Win 键 → 打字 git bash → 回车。
+   提示符末尾是 $ 才对（末尾是 > 的是 cmd / PowerShell，开错了）。
+
+4. 第一行手打，别粘：
+     cd /e/FPGA
+
+   ⚠️ 粘贴会踩坑：终端会在行首塞一个粘贴标记 ^[[200~，bash 把它和 cd 连成
+   一个不存在的命令名，报
+     bash: $'\E[200~cd': command not found
+   cd 根本没执行，人还站在家目录 —— 后面五条会全部报
+     can't open file "E:\FPGA\host\src\board_run.py"
+   一条都跑不到板子，而报错长得像「脚本丢了」。
+
+5. 核一下站对地方了（两条都要对，不对就别往下走）：
+     pwd                        → /e/FPGA
+     ls host/src/board_run.py   → host/src/board_run.py
+
+6. 再敲一行：
      export PYTHONIOENCODING=utf-8
+   敲完没有任何输出、直接跳回提示符 —— 这是对的，export 本来就不打印东西。
 
 【开拍，一条一条敲，每条等它跑完再敲下一条】
-3. powershell -NoProfile -Command "[System.IO.Ports.SerialPort]::GetPortNames()"
 
-4. python host/src/board_run.py "#PING"
+7. powershell -NoProfile -Command "[System.IO.Ports.SerialPort]::GetPortNames()"
 
-5. python host/src/board_run.py "#NTT 1"       --check --build 1
+8. python host/src/board_run.py "#PING"
 
-6. python host/src/board_run.py "#INTT 1"      --check --build 1
+9. python host/src/board_run.py "#NTT 1"       --check --build 1
 
-7. python host/src/board_run.py "#PMUL NTT 1"  --check --build 1
+10. python host/src/board_run.py "#INTT 1"      --check --build 1
 
-8. python host/src/board_run.py "#PMUL FULL 1" --check --build 1
+11. python host/src/board_run.py "#PMUL NTT 1"  --check --build 1
 
-【画面里要看到】
-  - 串口号 + 115200-8N1
+12. python host/src/board_run.py "#PMUL FULL 1" --check --build 1
+
+【每条要按这个顺序出现在屏幕上】
+  - 插座：真串口（115200-8N1），口号以第 7 步为准，不写死
   - 每条发出去的帧
   - 256 行收全
   - 0 / 256 不同
   - 耗时 0.18～0.27 秒
-  - 板子本身
+  - （全程）板子本身，电源灯亮着
 
 【注意】
   - 不要录 #PMUL TIME 1。
-  - 「开机行：没收到 #RDY」是正常的，别停下来。
+  - 「开机行：没收到 #RDY」是正常的，脚本自己就带着这句解释，别停下来。
+  - 哪条又冒出 ^[[200~，按 Ctrl+C 清掉重敲。
 
 【存】
-9. 停录，存：
-     assets\2026-10-15_A_board_uart_five_transactions.mp4
+13. 停录，存：
+      assets/2026-10-15_A_board_uart_five_transactions.mp4
 
 
 ==================================================
-§三  做完
+做完
 ==================================================
 mp4 落盘后说一声 —— W3 收口、看板同步、转告 C 我来办。
