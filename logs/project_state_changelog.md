@@ -220,3 +220,15 @@
 - **进度页已重生成**：`status/status.json` 的 tracks / milestones / todos / gantt 按 10-18 现状更新（B/C 加强项转 done，新增 11 条 todo、7 条里程碑、5 根甘特条状态/文案），`status/index.html` 由 `node status/gen_status.mjs` 重出。
 - **分工与顺序**：`team/roles_and_duties.md` §九、`logs/project_state.md` §二 F、`logs/letter_2026-10-18_A_to_BC_plan.txt`、`team/plan_B_remaining.md` 顶部、`team/guide_C.md` 顶部。
 - **边界**：不新增 RTL 功能（完整 ML-KEM / AXI/PS / radix-4 / PYNQ 回头 / 2/8 折叠档都不做）；估算值不写成实测值；板级未跑不写「已上板验证」。
+
+## 2026-10-18 · A 收工：板级 6/6、提频上板、921600、功耗估算、全量回归
+
+- **板级收口**：当前驱动在真板上跑三档 × 六条命令，pe1 / pe4 / pe16 各 **6/6**（含 10-15 卡住的 `#PMUL TIME 1`），每条 `--check` 0/256 不同；10-15 的 5/6 与 10-04 的两份报告都留底。
+- **提频上板**：MMCM 版 **80 / 75 / 62.5 MHz** 三档位流各 **6/6**；WNS +0.698 / +0.754 / +1.720、失败端点 0；100 MHz 实测不收敛（MMCM 时钟路径多约 0.4 ns），位流已隔离为 `ntt_board_TIMING_VIOLATED.bit`。
+- **921600 演示**：线上 **184 → 23 ms（8.0×）**、0 误码；事务墙钟 0.250 → 0.079 s（3.2×）。差值约 55 ms 是 CH340 的 USB latency timer（`#PING` 往返在两种波特率下都是 0.031 s，与波特率无关）——**接口瓶颈已从波特率推到 USB 定时器**。
+- **功耗估算**：六版位流（50 MHz + 提频各三档）`report_power`：50 MHz **0.130 / 0.170 / 0.335 W**，提频 **0.257 / 0.300 / 0.440 W**；提频 +0.127 W 里 **MMCM 占 0.116 W**，逻辑只多约 0.01 W。vectorless 估算（无 SAIF、Confidence Medium、只算片内 PL）。
+- **全量回归**：refsim 四条各 16/16（rc=0）；板级冒烟台 pe1 / pe4 / pe16 各 **521 个比对点、0 失败**。
+- **证据**：`rtl/vivado/{board_freq_sweep,high_baud_demo,power_estimate}.md`；`reports/` 下的 `board_pe*_txn.txt` / `power_pe*.rpt`；`logs/verification_2026-10-18_A_*`；`report/ai-log/2026-10-18_A.md`。
+- **边界**：8× 指线上时间、3.2× 指事务墙钟；功耗是估算不是实测；「上板跑通」= 按该频率烧进去、六条命令功能全对，不是频率扫描得到的芯片极限。
+- **A 侧剩余**：只余每日 `ai-log` 与配合 B/C（replay、变异测试、GUI、冻结后复跑）；出彩组合里 A 的六项全部收口。
+
