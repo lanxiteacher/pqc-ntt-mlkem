@@ -13,7 +13,7 @@
 |---|---|
 | 芯片 | **XC7Z020CLG400-2**（Vivado 必须选 `xc7z020clg400-2`，别套 Zybo/PYNQ-Z1 的 -1） |
 | 片上资源 | BRAM ≈ **4.9 Mb ≈ 0.6 MB**（最卡）、220 DSP、53,200 LUT |
-| 串口 | 板载 CH340C → 设备名 `USB-SERIAL CH340`；⚠️ **COM 口号会变**（Windows 按 USB 口分配，见过 COM10/COM9），用前现查；底板 **P5 跳线**切 PS/PL（**PL 档 = 3–5、4–6 短接**） |
+| 串口 | 板载 CH340C → 设备名 `USB-SERIAL CH340`；⚠️ **COM 口号会变**（Windows 按 USB 口分配，见过 COM10/COM9），用前现查；底板 **P5 跳线**切 PS/PL（**PL 档 = 3–5、4–6 短接**）<br>⚠️ **每次往返固定多约 31 ms** —— CH340 的 USB latency timer（约 15.5 ms × 2 段，**与波特率无关**；2026-10-18 实测 `#PING` 在 115200 与 921600 下都是 0.031 s）。提波特率只省线上时间，省不掉这 31 ms —— 详见 `rtl/vivado/high_baud_demo.md` |
 | 时钟 | PL 侧 **50 MHz 单端**（U18） |
 | 下载 | **无板载 USB-JTAG，需外接下载器** —— ✅ 已在手且**已实测可用**（正点原子 Xilinx 下载器，FTDI **FT232H**，插底板**右侧 14-Pin JTAG 座**）。`USB_UART` 与 `USB_SLAVE` 两个口都**不能**下载程序；烧录时**启动模式拨码拨到 JTAG 档（两位都 ON）** |
 | 资料 | 官方 46 个**纯 PL** 例程（含 `19_uart_loopback`）、500+ 页开发指南 |
