@@ -171,6 +171,24 @@ for (const t of TIERS) {
     }
 }
 
+/* 板级提频频率：rtl/vivado/board_freq_sweep.md §一 表。解析而不是手抄，
+ * 读不到就响亮报错 —— 和资源表同一个原则。 */
+const BOARD_DOC = path.join(REPO, 'rtl', 'vivado', 'board_freq_sweep.md');
+const BOARD_FREQ = {};
+{
+    const txt = fs.existsSync(BOARD_DOC) ? fs.readFileSync(BOARD_DOC, 'utf8') : '';
+    for (const m of txt.matchAll(/^\|\s*(pe(?:1|4|16))\s*\|[^|\n]*\|\s*\*\*([\d.]+) MHz\*\*/gm)) {
+        BOARD_FREQ[m[1]] = Number(m[2]);
+    }
+    for (const t of TIERS) {
+        if (!Number.isFinite(BOARD_FREQ[t])) {
+            fail(`board_freq_sweep.md 里读不到 ${t} 的提频目标`);
+        }
+    }
+}
+const boardTag = (t) => 'f' + (Number.isInteger(BOARD_FREQ[t])
+    ? BOARD_FREQ[t].toFixed(0) : String(BOARD_FREQ[t]));
+
 /* Vivado 报告里的 DDR / FF 总量，用来算占用率的稳定性 */
 const LUT_TOTAL = Number(nc.pe1.lut.total);
 const DEVICE_NOTE = 'xc7z020clg400-2（板上器件），53,200 LUT / 106,400 FF / 220 DSP / ' +
@@ -215,9 +233,9 @@ GEN.push('### 指标汇总表（按《选题指南》§3.2.5.2 的七列）', ''
         `1 次探针实测；功能对拍另覆盖 16 组 × 3 档 | ` +
         `${h('rtl/probes/README.md')} §判据 2、${h('rtl/H1_port_spec.md')} §五 |`,
     `| 端到端延迟 | 核心 | 0.18–0.27 | s | 上板事务**墙钟**耗时（含 115200 bps 串口往返）；` +
-        `2026-10-04 三档各 5 条事务；2026-10-15 pe1 复跑 5/6（\`#PMUL TIME\` 待新证据） | ` +
-        `3 档 × 5 条各 1 次；单次 0.18–0.27 s | ` +
-        `${h('rtl/vivado/run_board_txn_report.sh')}；${h('rtl/vivado/reports/board_pe1_txn.txt')} |`,
+        `0.18–0.27 s 是 **2026-10-04** 三档各 5 条的历史值；**2026-10-18 当前驱动三档各 6/6** ` +
+        `只留逐项对拍、**未记墙钟秒数** | 3 档 × 5 条各 1 次（10-04）；3 档 × 6 条各 1 次（10-18，对拍） | ` +
+        `${h('rtl/vivado/run_board_txn_report.sh')}；${h('rtl/vivado/reports/board_pe{1,4,16}_txn.txt')} |`,
     `| KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | 社区维护的 FIPS 203 兼容 \`.rsp\`（ML-KEM-768），` +
         `kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 \`report/design/04_functional_correctness.md\` §4.4） | ` +
         `1000 条（逐比特） | ${h('research/mlkem_kat/')} |`,
@@ -232,6 +250,11 @@ GEN.push('### 指标汇总表（按《选题指南》§3.2.5.2 的七列）', ''
         `Fmax = 1000 / (5 − WNS)；WNS ${c(TIERS.map((t) => nc[t].wns + ' ns'))} | ` +
         `1 份 post-route 报告（单次布线路程） | ` +
         `${TIERS.map((t) => h(`rtl/vivado/reports/${t}_nc_timing.rpt`)).join('、')} |`,
+    `| 板上跑通的最高频率（MMCM 提频） | 资源 | ${c(TIERS.map((t) => BOARD_FREQ[t].toFixed(1)))} | MHz | ` +
+        `三档 MMCM 位流按该频率生成并上真板；**不是频率扫描得到的芯片极限**；` +
+        `50 MHz 基线的 20 ns 约束 WNS **不能反推 Fmax**（见报告 §3.13.3） | ` +
+        `3 档 × 6 条命令各 1 次（2026-10-18，均 6/6） | ` +
+        `${TIERS.map((t) => h(`rtl/vivado/reports/board_${t}_${boardTag(t)}_txn.txt`)).join('、')} |`,
     `| IOB 占用 | 资源 | ${c(TIERS.map((t) => nc[t].iob.used))} | 个 | post-route；` +
         `**三档都是常数 37**（12 控制 + 1 时钟 + 12 \`din\` + 12 \`dout\`），与折叠度无关 —— 这是判据 1；` +
         `占用率 ${c(TIERS.map((t) => nc[t].iob.pct + '%'))}，上游同边界是 37 / 109 / **397** | ` +
@@ -269,7 +292,7 @@ const COND = {
 const TEST = {
     resource: '1 份 post-route 报告（单次布线路程）',
     cycles: '1 次探针实测；功能对拍另覆盖 16 组 × 3 档',
-    e2e: '3 档 × 5 条各 1 次；单次 0.18–0.27 s',
+    e2e: '3 档 × 5 条各 1 次（10-04 墙钟，单次 0.18–0.27 s）；3 档 × 6 条各 1 次（10-18 对拍）',
     kat: '1000 条（逐比特）'
 };
 for (const t of TIERS) {
@@ -292,8 +315,12 @@ for (const t of TIERS) {
     csvRows.push(['推算 Fmax', '资源', r.fmax, 'MHz', cond(COND.fmax), TEST.resource, tev]);
     csvRows.push(['NTT 周期数', '核心', CYCLES[t].fntt, 'cycles', cond(COND.cycles), TEST.cycles, 'rtl/probes/README.md']);
     csvRows.push(['端到端延迟', '核心', '0.18-0.27', 's',
-        cond('上板事务墙钟耗时（含串口往返）；2026-10-04 三档各 5 条；2026-10-15 pe1 复跑 5/6（#PMUL TIME 待新证据）'),
+        cond('上板事务墙钟耗时（含串口往返）；0.18–0.27 s 是 2026-10-04 三档各 5 条的历史值；2026-10-18 当前驱动三档各 6/6 只留逐项对拍、未记墙钟秒数'),
         TEST.e2e, 'rtl/vivado/run_board_txn_report.sh；rtl/vivado/reports/board_pe1_txn.txt']);
+    csvRows.push(['板上跑通最高频率（MMCM 提频）', '资源', BOARD_FREQ[t], 'MHz',
+        cond('MMCM 提频位流上真板；不是频率扫描的芯片极限；50 MHz 基线 WNS 不能反推 Fmax'),
+        '3 档 × 6 条命令各 1 次（2026-10-18，均 6/6）',
+        `rtl/vivado/reports/board_${t}_${boardTag(t)}_txn.txt`]);
 }
 csvRows.push(['KAT 通过率', '核心', '1000/1000', '%', '三档通用；社区维护的 FIPS 203 兼容 .rsp', TEST.kat, 'research/mlkem_kat/']);
 

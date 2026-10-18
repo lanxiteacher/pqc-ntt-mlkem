@@ -13,7 +13,8 @@ WNS,资源,-0.936,ns,档位 pe1；post-route,1 份 post-route 报告（单次布
 WHS,资源,0.072,ns,档位 pe1；post-route,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_timing.rpt
 推算 Fmax,资源,168,MHz,档位 pe1；post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe1_nc_timing.rpt
 NTT 周期数,核心,904,cycles,档位 pe1；顶层实测 done 拍 − start − 3，不含读出延迟,1 次探针实测；功能对拍另覆盖 16 组 × 3 档,rtl/probes/README.md
-端到端延迟,核心,0.18-0.27,s,档位 pe1；上板事务墙钟耗时（含串口往返）；2026-10-04 三档各 5 条；2026-10-15 pe1 复跑 5/6（#PMUL TIME 待新证据）,3 档 × 5 条各 1 次；单次 0.18–0.27 s,rtl/vivado/run_board_txn_report.sh；rtl/vivado/reports/board_pe1_txn.txt
+端到端延迟,核心,0.18-0.27,s,档位 pe1；上板事务墙钟耗时（含串口往返）；0.18–0.27 s 是 2026-10-04 三档各 5 条的历史值；2026-10-18 当前驱动三档各 6/6 只留逐项对拍、未记墙钟秒数,3 档 × 5 条各 1 次（10-04 墙钟，单次 0.18–0.27 s）；3 档 × 6 条各 1 次（10-18 对拍）,rtl/vivado/run_board_txn_report.sh；rtl/vivado/reports/board_pe1_txn.txt
+板上跑通最高频率（MMCM 提频）,资源,80,MHz,档位 pe1；MMCM 提频位流上真板；不是频率扫描的芯片极限；50 MHz 基线 WNS 不能反推 Fmax,3 档 × 6 条命令各 1 次（2026-10-18，均 6/6）,rtl/vivado/reports/board_pe1_f80_txn.txt
 LUT,资源,2000,个,档位 pe4；post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
 LUT 占用率,资源,3.76,%,档位 pe4；post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
 FF,资源,880,个,档位 pe4；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_util.rpt
@@ -28,7 +29,8 @@ WNS,资源,-1.260,ns,档位 pe4；post-route,1 份 post-route 报告（单次布
 WHS,资源,0.066,ns,档位 pe4；post-route,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_timing.rpt
 推算 Fmax,资源,160,MHz,档位 pe4；post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe4_nc_timing.rpt
 NTT 周期数,核心,232,cycles,档位 pe4；顶层实测 done 拍 − start − 3，不含读出延迟,1 次探针实测；功能对拍另覆盖 16 组 × 3 档,rtl/probes/README.md
-端到端延迟,核心,0.18-0.27,s,档位 pe4；上板事务墙钟耗时（含串口往返）；2026-10-04 三档各 5 条；2026-10-15 pe1 复跑 5/6（#PMUL TIME 待新证据）,3 档 × 5 条各 1 次；单次 0.18–0.27 s,rtl/vivado/run_board_txn_report.sh；rtl/vivado/reports/board_pe1_txn.txt
+端到端延迟,核心,0.18-0.27,s,档位 pe4；上板事务墙钟耗时（含串口往返）；0.18–0.27 s 是 2026-10-04 三档各 5 条的历史值；2026-10-18 当前驱动三档各 6/6 只留逐项对拍、未记墙钟秒数,3 档 × 5 条各 1 次（10-04 墙钟，单次 0.18–0.27 s）；3 档 × 6 条各 1 次（10-18 对拍）,rtl/vivado/run_board_txn_report.sh；rtl/vivado/reports/board_pe1_txn.txt
+板上跑通最高频率（MMCM 提频）,资源,75,MHz,档位 pe4；MMCM 提频位流上真板；不是频率扫描的芯片极限；50 MHz 基线 WNS 不能反推 Fmax,3 档 × 6 条命令各 1 次（2026-10-18，均 6/6）,rtl/vivado/reports/board_pe4_f75_txn.txt
 LUT,资源,8922,个,档位 pe16；post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
 LUT 占用率,资源,16.77,%,档位 pe16；post-route，顶层边界，Vivado ML Standard 2020.2 非工程模式，综合选项默认,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
 FF,资源,2933,个,档位 pe16；post-route，顶层边界，同上,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_util.rpt
@@ -43,5 +45,6 @@ WNS,资源,-1.507,ns,档位 pe16；post-route,1 份 post-route 报告（单次�
 WHS,资源,0.077,ns,档位 pe16；post-route,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_timing.rpt
 推算 Fmax,资源,154,MHz,档位 pe16；post-route；Fmax = 1000 / (5 − WNS)，约束 create_clock -period 5,1 份 post-route 报告（单次布线路程）,rtl/vivado/reports/pe16_nc_timing.rpt
 NTT 周期数,核心,69,cycles,档位 pe16；顶层实测 done 拍 − start − 3，不含读出延迟,1 次探针实测；功能对拍另覆盖 16 组 × 3 档,rtl/probes/README.md
-端到端延迟,核心,0.18-0.27,s,档位 pe16；上板事务墙钟耗时（含串口往返）；2026-10-04 三档各 5 条；2026-10-15 pe1 复跑 5/6（#PMUL TIME 待新证据）,3 档 × 5 条各 1 次；单次 0.18–0.27 s,rtl/vivado/run_board_txn_report.sh；rtl/vivado/reports/board_pe1_txn.txt
+端到端延迟,核心,0.18-0.27,s,档位 pe16；上板事务墙钟耗时（含串口往返）；0.18–0.27 s 是 2026-10-04 三档各 5 条的历史值；2026-10-18 当前驱动三档各 6/6 只留逐项对拍、未记墙钟秒数,3 档 × 5 条各 1 次（10-04 墙钟，单次 0.18–0.27 s）；3 档 × 6 条各 1 次（10-18 对拍）,rtl/vivado/run_board_txn_report.sh；rtl/vivado/reports/board_pe1_txn.txt
+板上跑通最高频率（MMCM 提频）,资源,62.5,MHz,档位 pe16；MMCM 提频位流上真板；不是频率扫描的芯片极限；50 MHz 基线 WNS 不能反推 Fmax,3 档 × 6 条命令各 1 次（2026-10-18，均 6/6）,rtl/vivado/reports/board_pe16_f62.5_txn.txt
 KAT 通过率,核心,1000/1000,%,三档通用；社区维护的 FIPS 203 兼容 .rsp,1000 条（逐比特）,research/mlkem_kat/

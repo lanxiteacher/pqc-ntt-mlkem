@@ -77,10 +77,11 @@ COMMANDS = [
     ("#PMUL FULL",    "#PMUL FULL 1"),
 ]
 
-# 上板实测墙钟（§3.13.6，`board_pe{1,4,16}_txn.txt`）。
+# 上板实测墙钟（§3.13.6，10-04 那一版的历史值）。
 # 用来复核模型 —— 模型值与它对照，差多少写进表里。
-# (`#PMUL TIME` 那格仍**没有有效实测**：2026-10-15 pe1 复跑被旧向量文件卡住；
-#  文件格式已由 B 于 2026-10-17 修复，待 A 用新证据复跑。)
+# (`#PMUL TIME` 那格仍**没有墙钟值**：10-15 pe1 复跑被旧向量文件卡住；
+#  文件格式已由 B 于 2026-10-17 修复，10-18 三档各 6/6 已通过，
+#  但新报告只留逐项对拍、不记墙钟秒数，所以这一格仍为空。)`
 BOARD_WALL = {
     "#NTT":       {"pe1": 0.181, "pe4": 0.181, "pe16": 0.181},
     "#INTT":      {"pe1": 0.180, "pe4": 0.181, "pe16": 0.181},
@@ -337,11 +338,16 @@ def main():
             continue
         wall = BOARD_WALL.get(cmd.split(" 1")[0])
         measured = wall["pe1"] if wall else None
-        diff = ("%+.1f%%" % (100 * (r["serial_secs"] - measured) / measured)) if measured else "未测"
+        if measured:
+            shown = "%.3f s" % measured
+            diff = "%+.1f%%" % (100 * (r["serial_secs"] - measured) / measured)
+        elif cmd.startswith("#PMUL TIME"):
+            shown, diff = "✅ 6/6（10-18，无墙钟）", "—"
+        else:
+            shown, diff = "—", "未测"
         G.append("| `%s` | %d | %d / %d | %d B | %s | %s | %s |"
                  % (cmd, r["rows_in"], r["tx"], r["rx"], r["wire"],
-                    fmt_s(r["serial_secs"]),
-                    ("%.3f s" % measured) if measured else "—", diff))
+                    fmt_s(r["serial_secs"]), shown, diff))
     G.append("")
     G.append("> ⚠️ 模型是「字节数 × 10 bit ÷ 波特率」，**不含** USB 缓冲 / CH340 转发 / 板子换向"
              "这些电气层开销，也不含实测那个读数的计时边界（A 的临时脚本怎么掐表不定）。")
@@ -350,9 +356,9 @@ def main():
     G.append("")
     G.append("> ✅ **2026-10-17 更新**：B 已修正 `halfmul_b` / `halfmul_exp` / `fullmul_exp` 的"
              "变长格式（补零至 3 位、LF），本表五条命令现已全部能走陪练。")
-    G.append("> `#PMUL TIME` 那一列仍为空，原因是**上板**还没有有效实测：2026-10-15 pe1 复跑"
-             "被旧向量文件卡住，新文件已就绪、待 A 复跑；它与串口模型无关。"
-             "`#PMUL FULL` 在板子上不需要期望文件，2026-10-04 已实测 0.270 s。")
+    G.append("> `#PMUL TIME` 那一格没有墙钟值：2026-10-18 三档各 **6/6** 已通过，"
+             "但新报告只留逐项对拍、**不记墙钟秒数**；10-04 那一版没有 TIME 的有效测量。"
+             "它与串口模型无关。`#PMUL FULL` 在板子上不需要期望文件，2026-10-04 已实测 0.270 s。")
     G.append("")
 
     G.append("### 口径与机器（引这两个数时必须连它们一起写）")

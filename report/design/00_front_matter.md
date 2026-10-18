@@ -161,6 +161,6 @@
 | **IOB** | Input/Output Block | 输入/输出块 | 芯片引脚资源；**上游 16 蝶形要 397 个、本器件只有 125 个**，是本设计的动机 |
 | **WNS** | Worst Negative Slack | 最差负裕量 | 时序收敛指标：正=有裕量，负=违例 |
 | **WHS** | Worst Hold Slack | 最差保持裕量 | 同上，针对保持时间 |
-| **Fmax** | Maximum Frequency | 最高时钟频率 | 由 WNS 反推（见 §3.6） |
+| **Fmax** | Maximum Frequency | 最高时钟频率 | 由核的 **5 ns 收紧约束**下 post-route WNS 反推（见 §3.6）；板级 20 ns 约束的 WNS **不能**反推 |
 | **UART** | Universal Asynchronous Receiver/Transmitter | 通用异步收发器 | 即「串口」；本作品 PC↔板子的通路 |
-| **MMCM / PLL** | Mixed-Mode Clock Manager / Phase-Locked Loop | 混合模式时钟管理器 / 锁相环 | Vivado 里做倍频的时钟资源。板载 50 MHz 晶振直给 `sys_clk`，**本设计首版未例化**；器件内实有 **4 MMCM / 4 PLL**（见 §3.10.1 的 2026-10-15 改判） |
+| **MMCM / PLL** | Mixed-Mode Clock Manager / Phase-Locked Loop | 混合模式时钟管理器 / 锁相环 | Vivado 里做倍频的时钟资源。板载 50 MHz 晶振直给 `sys_clk`，**首版未例化**；10-18 提频版已例化（80 / 75 / 62.5 MHz，§3.10.2）。器件内实有 **4 MMCM / 4 PLL**（见 §3.10.1 的 2026-10-15 改判） |
