@@ -1,0 +1,83 @@
+Existing log audit only. Base 419cb37. No board access or coefficient recomputation.
+
+COMMAND: host/src/test_board_reports.py
+Expected exit=0, observed exit=0
+test_cli_exit_codes_output_and_no_overwrite (__main__.BoardReportAcceptance.test_cli_exit_codes_output_and_no_overwrite) ... ok
+test_duplicates_conflicts_and_wrong_build (__main__.BoardReportAcceptance.test_duplicates_conflicts_and_wrong_build) ... ok
+test_historical_failure_and_legacy_format (__main__.BoardReportAcceptance.test_historical_failure_and_legacy_format) ... ok
+test_missing_and_truncated_sections (__main__.BoardReportAcceptance.test_missing_and_truncated_sections) ... ok
+test_six_current_board_reports (__main__.BoardReportAcceptance.test_six_current_board_reports) ... ok
+test_success_markers_alone_never_pass (__main__.BoardReportAcceptance.test_success_markers_alone_never_pass) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.026s
+
+OK
+
+COMMAND: host/src/check_board_reports.py rtl/vivado/reports/board_pe1_txn.txt rtl/vivado/reports/board_pe4_txn.txt rtl/vivado/reports/board_pe16_txn.txt rtl/vivado/reports/board_pe1_f80_txn.txt rtl/vivado/reports/board_pe4_f75_txn.txt rtl/vivado/reports/board_pe16_f62.5_txn.txt --output C:\Users\lenovo\Desktop\FPGA\B_report_practice_01\current_reports
+Expected exit=0, observed exit=0
+board_pe1_txn.txt: 通过
+  #PING: 通过
+  #NTT 1: 通过
+  #INTT 1: 通过
+  #PMUL NTT 1: 通过
+  #PMUL TIME 1: 通过
+  #PMUL FULL 1: 通过
+board_pe4_txn.txt: 通过
+  #PING: 通过
+  #NTT 1: 通过
+  #INTT 1: 通过
+  #PMUL NTT 1: 通过
+  #PMUL TIME 1: 通过
+  #PMUL FULL 1: 通过
+board_pe16_txn.txt: 通过
+  #PING: 通过
+  #NTT 1: 通过
+  #INTT 1: 通过
+  #PMUL NTT 1: 通过
+  #PMUL TIME 1: 通过
+  #PMUL FULL 1: 通过
+board_pe1_f80_txn.txt: 通过
+  #PING: 通过
+  #NTT 1: 通过
+  #INTT 1: 通过
+  #PMUL NTT 1: 通过
+  #PMUL TIME 1: 通过
+  #PMUL FULL 1: 通过
+board_pe4_f75_txn.txt: 通过
+  #PING: 通过
+  #NTT 1: 通过
+  #INTT 1: 通过
+  #PMUL NTT 1: 通过
+  #PMUL TIME 1: 通过
+  #PMUL FULL 1: 通过
+board_pe16_f62.5_txn.txt: 通过
+  #PING: 通过
+  #NTT 1: 通过
+  #INTT 1: 通过
+  #PMUL NTT 1: 通过
+  #PMUL TIME 1: 通过
+  #PMUL FULL 1: 通过
+
+COMMAND: host/src/check_board_reports.py rtl/vivado/reports/board_pe1_txn_2026-10-15_5of6.txt
+Expected exit=1, observed exit=1
+board_pe1_txn_2026-10-15_5of6.txt: 失败
+  #PING: 通过
+  #NTT 1: 通过
+  #INTT 1: 通过
+  #PMUL NTT 1: 通过
+  #PMUL TIME 1: 失败 (执行段记录失败退出、事务失败或非零差异；不一定是硬件算术故障)
+  #PMUL FULL 1: 通过
+  注意：生成参数缺失、重复或与报告档位不一致
+
+COMMAND: host/src/check_board_reports.py C:\Users\lenovo\Desktop\FPGA\B_report_practice_01\missing_section.txt
+Expected exit=2, observed exit=2
+missing_section.txt: 证据不完整
+  #PING: 通过
+  #NTT 1: 通过
+  #INTT 1: 通过
+  #PMUL NTT 1: 通过
+  #PMUL TIME 1: 通过
+  #PMUL FULL 1: 未见执行段 (日志中没有本命令执行段；不能断言从未执行)
+  注意：汇总命令缺失、重复或不完整
+  注意：汇总总数缺失或与各条标记不一致
