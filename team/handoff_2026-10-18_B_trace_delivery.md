@@ -4,7 +4,7 @@
 
 B 已按用户授权完成四项无板工作：前轮变异/周期用户手动验收归档、ML-KEM trace 三档实际 RTL 回放、Host 批量发送分支验证、真实送板入口和失败留证机制。
 
-统一离线验收入口：`python refsim/accept_trace_delivery.py --output ../B_trace_delivery_manual_01`，需要 Python/gcc/iverilog/vvp，无需板卡或 Vivado。AI 完整运行通过，新入口的用户手动验收仍待本人执行。
+统一离线验收入口：`python refsim/accept_trace_delivery.py --output ../B_trace_delivery_manual_01`，需要 Python/gcc/iverilog/vvp，无需板卡或 Vivado。AI 完整运行通过；用户随后实际执行并截图确认四阶段PASS，本机 acceptance.json 同步核读通过，证据见 `logs/verification_2026-10-18_B_kem_delivery_manual.*`。
 
 | 项目 | 结果 | 边界 |
 |---|---|---|
