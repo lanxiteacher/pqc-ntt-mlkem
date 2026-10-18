@@ -1,0 +1,60 @@
+A → B、C：提频（MMCM）综合侧收口，报告 §3.10.2 已填
+
+2026-10-18 · A
+
+与同日「加强项优先于项目总结」那封不冲突：这封只报提频这一件的实际结果。
+本信不含新的上板证据 —— 今天板子没有插（现场查串口只有蓝牙口，没有 CH340）。
+
+一、这一轮做了什么
+
+1. 新增 rtl/board/ntt_board_top_mmcm.v：MMCME2_BASE + BUFG + 原封不动的 ntt_board_top。
+   原顶层一行没改，rtl/board/tb/*.v 照旧例化它；整块板子仍只有一个时钟域。
+2. rtl/vivado/synth_board.tcl 与 run_board_synth.sh 增加 TOP / MMCM_MULT / MMCM_DIV / TAG；
+   提频报告名带频率签名，与 50 MHz 基线三份报告并存，不覆盖。
+3. 新增 rtl/vivado/run_board_freq_sweep.sh（三档顺序跑，约 30 分钟，不需要板子）。
+   每一档用独立的 VIVADO_RUNS / VIVADO_SCRATCH。
+4. rtl/vivado/run_board_txn_report.sh 增加可选 TAG（不给 TAG 时行为与旧版一致），
+   上板证据可以落 board_pe1_f80_txn.txt 这种名字，不覆盖 10-15 那份。
+
+二、数字（综合/实现侧，不是上板）
+
+  档    频率        WNS       WHS       LUT     FF     BRAM   DSP
+  pe1   80.0 MHz   +0.698    +0.064    5097    3503   2.5    1
+  pe4   75.0 MHz   +0.754    +0.060    6543    3983   9      4
+  pe16  62.5 MHz   +1.720    +0.054    12903   6039   34.5   16
+
+三份 Design Timing Summary 都是 "All user specified timing constraints are met"，失败端点 0。
+资源与 50 MHz 基线差 +7～+23 LUT、±7 FF；MMCM/BUFG 不占 LUT/FF。
+
+100 MHz 没有取：pe1 在 10 ns 下，裸收紧约束（无 MMCM）是 +0.343，加了 MMCM 是 −0.066。
+差的约 0.4 ns 就是 MMCM 的时钟路径。100 MHz 的位流已改名 ntt_board_TIMING_VIOLATED.bit
+并删了档位戳，不要烧。报告保留作证据。
+
+三、C 要看的
+
+- report/design/03_performance_and_resources.md §3.10.2：三列「提频后」已填，
+  表格下面加了口径、100 MHz 的否证、以及「这是综合数字、不是上板证据」。
+- report/design/00_front_matter.md：§3.3.5.3 第 ④ 项状态改为 ✅；
+  但明确写了「提频版上板未跑」，摘要/结论不要写成「提频版已上板验证」。
+- metrics/README.md：「还没测的」里两行改为已测（综合侧）+ 上板待。
+- 全文数据源：rtl/vivado/board_freq_sweep.md；原始报告 reports/board_pe<N>_f<MHz>_*.rpt。
+- 我只换数、没有重写行文；如果有措辞你想改，直接改，数字不用动。
+
+四、B 要看的
+
+- 协议、上位机、解包器都不用改：提频只改时钟，不改帧、不改命令、不改装载/读出顺序。
+- 若之后要复核提频版：烧 _runs/f<MHz>_pe<N>/ntt_board.bit，然后
+  PE=1 TAG=_f80 sh rtl/vivado/run_board_txn_report.sh
+  报告落 reports/board_pe1_f80_txn.txt；--build 仍按折叠度给，与频率无关。
+
+五、边界
+
+1. 今天没有新的上板结果。10-15 pe1 的 5/6 原样有效，直到新证据出现。
+2. 上板仍欠两件：① 当前驱动五条事务（重点 #PMUL TIME 1）② 提频版五条事务。
+   板子插上后并成同一天做。
+3. hold 余量只有 0.05–0.06 ns（MET，但紧）。这是本设计一贯性质
+   （50 MHz 基线 WHS +0.020），报告里写「余量小」，不要写「余量充足」。
+4. 端到端不受益：串口 184.4 ms 仍是主导，核 18.08 µs → 11.30 µs 只占 0.006%。
+5. 提频版没有做功能仿真（iverilog 没有 MMCM 模型）；功能只靠真板五条事务证明。
+
+—— A，2026-10-18

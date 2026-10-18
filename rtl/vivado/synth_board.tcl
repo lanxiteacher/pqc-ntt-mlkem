@@ -32,7 +32,25 @@ set period  [lindex $argv 5]   ;# 可选：覆盖 XDC 里的周期，默认不�
 set pe      [lindex $argv 6]   ;# 可选：折叠度 1/4/16，默认 1
 set dcpfile [lindex $argv 7]   ;# 可选：布线后 checkpoint 的输出路径（空 = 不写）
 
-set TOP ntt_board_top
+# ---- 顶层选择 ---------------------------------------------------------------
+# 默认 ntt_board_top（基线，50 MHz）。提频版走 ntt_board_top_mmcm，由环境变量选：
+#   TOP=ntt_board_top_mmcm MMCM_MULT=20 MMCM_DIV=16 TAG=_f62.5
+# ⚠️ 用环境变量而不是再加位置参数：本脚本的位置参数已经排到第 8 个（dcp），
+#    再往后加会逼着所有调用方（run_board_synth.sh / run_folding_sweep.sh）一起改。
+if {[info exists ::env(TOP)] && $::env(TOP) ne ""} {
+    set TOP $::env(TOP)
+} else {
+    set TOP ntt_board_top
+}
+set MMCM_MULT 20
+set MMCM_DIV  16
+if {[info exists ::env(MMCM_MULT)] && $::env(MMCM_MULT) ne ""} { set MMCM_MULT $::env(MMCM_MULT) }
+if {[info exists ::env(MMCM_DIV)]  && $::env(MMCM_DIV)  ne ""} { set MMCM_DIV  $::env(MMCM_DIV)  }
+set TAG ""
+if {[info exists ::env(TAG)]} { set TAG $::env(TAG) }
+
+# 频率签名：写进报告名前缀，三档 × 多频率的产物不许互相覆盖。
+# 2026-10-04 已经踩过一次：pe4 那轮把已提交的 pe1 报告覆盖了。
 
 # 折叠度守卫：只认 1 / 4 / 16。给错值必须**在这里**拦住 ——
 #   核自己的 `initial` 守卫（KyberHPMNTT_top.v:103）是仿真用的，综合不看；
@@ -74,7 +92,14 @@ read_verilog $srcs
 # 拿错 bitstream 上板的症状是「数值全错」，很像 RTL 挂了，其实是档位不对。
 # ⚠️ 板级 wrapper 的 READ_LAT 是 `2*PE_NUMBER+3`（ntt_board_top.v），
 #    跟着这里一起变，不用另外传。
-synth_design -top $TOP -part $part -generic PE_NUMBER=$pe
+# 提频版多两个 MMCM 参数；基线顶层没有这两个参数，一起传会报「generic 不存在」，
+# 所以按顶层名分开传 —— 不是图省事，是 Vivado 对未知 generic 的处理是 ERROR。
+if {[string match "*mmcm*" $TOP]} {
+    synth_design -top $TOP -part $part -generic PE_NUMBER=$pe \
+                 -generic MMCM_MULT=$MMCM_MULT -generic MMCM_DIV=$MMCM_DIV
+} else {
+    synth_design -top $TOP -part $part -generic PE_NUMBER=$pe
+}
 
 # ---- 约束 ------------------------------------------------------------------
 set xdc [file join $brddir ntt_board.xdc]
@@ -104,7 +129,7 @@ file mkdir $repdir
 # 报告名一律带折叠度前缀 —— 三档的数字本来就不同（pe1 LUT 5074 / pe4 6529），
 # 同名会把已提交的上一次结果覆盖掉。2026-10-04 实际发生过一次：
 # pe4 那轮一启动就 rm 掉了仓库里已提交的 pe1 三份报告。
-set reppfx "board_pe$pe"
+set reppfx "board_pe$pe$TAG"
 set rep_ok 1
 if {[catch {report_utilization -file "$repdir/${reppfx}_util.rpt"} err]} {
     puts "  !! report_utilization failed: $err"
@@ -145,12 +170,30 @@ if {[catch {
 } err]} {
     puts "RESULT board WNS_WORST_ANY_NS QUERY_FAILED -- $err"
 }
+# ⚠️ 2026-10-18 改：不再写死 `-group sys_clk`。
+#    提频版（ntt_board_top_mmcm）里逻辑全跑在 MMCM 的输出时钟上，时钟名由 Vivado
+#    自动推导（一般就是 MMCM 输出网络的网名），不再叫 sys_clk。写死会让提频版
+#    这一行永远报 NO_PATH —— 而 NO_PATH 看着像「没有路径」，不像「查错了名字」。
+#    改成：逐个时钟组取最坏，回到基线（只有一个时钟）时结果与旧版完全一致。
 if {[catch {
-    set tpc [get_timing_paths -delay_type max -max_paths 1 -nworst 1 -group sys_clk]
-    if {[llength $tpc]} {
-        puts "RESULT board WNS_CLOCK_NS [get_property SLACK $tpc]"
-    } else {
+    set worst ""
+    set worstclk ""
+    foreach c [get_clocks -quiet *] {
+        set nm [get_property NAME $c]
+        set tpc [get_timing_paths -delay_type max -max_paths 1 -nworst 1 -group $nm -quiet]
+        if {[llength $tpc]} {
+            set s [get_property SLACK $tpc]
+            if {$worst eq "" || $s < $worst} {
+                set worst $s
+                set worstclk $nm
+            }
+        }
+    }
+    if {$worst eq ""} {
         puts "RESULT board WNS_CLOCK_NS NO_PATH"
+    } else {
+        puts "RESULT board WNS_CLOCK_NS $worst"
+        puts "RESULT board WNS_CLOCK_NAME $worstclk"
     }
 } err]} {
     puts "RESULT board WNS_CLOCK_NS QUERY_FAILED -- $err"

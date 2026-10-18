@@ -6,8 +6,11 @@
 #   PE=4 sh rtl/vivado/run_board_txn_report.sh         # 换折叠度（1 / 4 / 16）
 #   PORT=COM10 sh rtl/vivado/run_board_txn_report.sh   # 不给就按设备名现找
 #   FORCE=1 sh rtl/vivado/run_board_txn_report.sh      # 允许覆盖同名报告
+#   TAG=_f80 sh rtl/vivado/run_board_txn_report.sh     # 提频版：报告名带频率签名
 #
-# 产出：rtl/vivado/reports/board_pe<PE>_txn.txt
+# 产出：rtl/vivado/reports/board_pe<PE><TAG>_txn.txt
+#       ⚠️ TAG 是 2026-10-18 加的：提频版（80/75/62.5 MHz）与 50 MHz 基线要能
+#          **同时留下证据**，不能互相覆盖。不给 TAG 时与旧行为完全一致。
 #
 # 为什么要有它（2026-10-15 加）
 #   10-04 那两份 `board_pe4/pe16_txn.txt` 是用一个**没进仓库**的本地脚本跑的 ——
@@ -49,7 +52,8 @@ case "$PE" in
     *) echo "  ❌ 折叠度非法：PE='$PE' —— 只支持 1 / 4 / 16" >&2; exit 1 ;;
 esac
 
-REPORT="$HERE/reports/board_pe${PE}_txn.txt"
+TAG="${TAG:-}"
+REPORT="$HERE/reports/board_pe${PE}${TAG}_txn.txt"
 if [ -e "$REPORT" ] && [ "${FORCE:-0}" != "1" ]; then
     echo "  ⚠️ 报告已存在，不覆盖："
     echo "     $REPORT"
@@ -76,7 +80,7 @@ EOF
 {
     echo "=== 真板子：探活 + 五条计算事务 ==="
     echo "   折叠度：pe$PE（board_run.py 的 --build 显式给）"
-    echo "   生成方式：sh rtl/vivado/run_board_txn_report.sh    （PE=$PE）"
+    echo "   生成方式：sh rtl/vivado/run_board_txn_report.sh    （PE=$PE TAG=$TAG）"
     echo "   命令入口：host/src/board_run.py —— 判据全在它的 --check 里，本脚本只搬运"
     echo ""
 } > "$TMP/body.txt"

@@ -33,7 +33,13 @@
 #     PERIOD=<ns>           不给就用 XDC 里的 20 ns。给了则本次运行覆盖它。
 #     VIVADO_RUNS=<目录>    中间产物放哪，默认 rtl/vivado/_runs/
 #     TRIES=<次数>          综合失败重试次数，默认 5，理由见下
-#     DCP=<目录>            给了才写布线后的 checkpoint：<目录>/ntt_board_pe<N>.dcp
+#     TOP=<模块名>          默认 ntt_board_top（基线）。提频版传 ntt_board_top_mmcm。
+#     MMCM_MULT / MMCM_DIV  仅提频版用：clk_core = 50 MHz × MULT / DIV。
+#                           例：62.5 MHz → 20/16；75 MHz → 24/16；80 MHz → 24/15。
+#     TAG=<后缀>           拼进报告名（board_pe<N><TAG>_*.rpt）与 checkpoint 名。
+#                           提频产物必须能跟 50 MHz 基线**并存**，所以一定要给。
+#                           例：TAG=_f62.5 → board_pe1_f62.5_timing.rpt
+#     DCP=<目录>            给了才写布线后的 checkpoint：<目录>/ntt_board_pe<N><TAG>.dcp
 #                           用途是「在 GUI 里打开设计、点开关键路径、截 Schematic」——
 #                           非工程模式默认什么都不留，没有它就截不了图（03 §3.12 第 3 条）。
 #                           不给就不写（上游对照那几轮不需要）。建议指到**仓库外**，如
@@ -80,6 +86,10 @@ PE="${PE:-1}"
 PERIOD="${PERIOD:-}"
 TRIES="${TRIES:-5}"
 DCP="${DCP:-}"
+TOP="${TOP:-ntt_board_top}"
+MMCM_MULT="${MMCM_MULT:-20}"
+MMCM_DIV="${MMCM_DIV:-16}"
+TAG="${TAG:-}"
 
 # 折叠度守卫放在**脚本**这一层，不只放在 Tcl 里 —— 给错值时宁可一行都不跑，
 # 也别等 Vivado 起了 30 秒才在日志深处报错。
@@ -91,10 +101,33 @@ case "$PE" in
     1|4|16) ;;
     *) echo "  ❌ 折叠度非法：PE='$PE' —— 只支持 1 / 4 / 16" >&2; exit 1 ;;
 esac
+
+# 顶层只认两个。拼错时宁可一行不跑，也别让 Vivado 起 30 秒后报「module not found」。
+case "$TOP" in
+    ntt_board_top) ;;
+    ntt_board_top_mmcm)
+        # 提频版的参数守卫：VCO 必须落在 7 系列 -2 的 600–1440 MHz 内，否则 MMCM 配置
+        # 在综合时就会报「VCO 越界」，而那句话藏在几千行日志里。这里先拦。
+        VCO=$((50000000 * MMCM_MULT / 1000000))
+        if [ "$VCO" -lt 600 ] || [ "$VCO" -gt 1440 ]; then
+            echo "  ❌ MMCM_MULT=$MMCM_MULT → VCO=${VCO}MHz，超出 600–1440 MHz" >&2
+            exit 1
+        fi
+        if [ -n "$PERIOD" ]; then
+            echo "  ❌ 提频版不能用 PERIOD= 覆盖周期：核心时钟由 MMCM_MULT/DIV 决定。" >&2
+            echo "     要改频率请改 MMCM_MULT / MMCM_DIV（见文件头）。" >&2
+            exit 1
+        fi
+        ;;
+    *)  echo "  ❌ 不认识的顶层：TOP='$TOP'（只有 ntt_board_top / ntt_board_top_mmcm）" >&2
+        exit 1 ;;
+esac
+# synth_board.tcl 通过环境变量读这四个（见该文件「顶层选择」一节）。
+export TOP MMCM_MULT MMCM_DIV TAG
 REPDIR="$HERE/reports"
 # 报告一律带折叠度前缀：三档的数字不同，同名会互相覆盖（见文件头）。
 # 与 `run_folding_sweep.sh` 的 pe<N>_*.rpt 是同一套思路。
-REPNAME="board_pe$PE"
+REPNAME="board_pe$PE$TAG"
 RUNDIR="${VIVADO_RUNS:-$HERE/_runs}"
 SRCDIR="$RTLDIR/rtl/ntt_core"
 BRDDIR="$RTLDIR/rtl/board"
@@ -131,14 +164,21 @@ vpath() {
 # 名字带折叠度（理由见文件头）；DCP 为空则整段不写，一个字都不多占。
 DCPFILE=""
 if [ -n "$DCP" ]; then
-    DCPFILE="$(vpath "$DCP")/ntt_board_pe$PE.dcp"
+    DCPFILE="$(vpath "$DCP")/ntt_board_pe$PE$TAG.dcp"
 fi
 
 echo "== 板级：综合 → 实现 → bitstream =="
 echo "   器件   $PART"
-echo "   顶层   ntt_board_top (PE_NUMBER=$PE)"
+echo "   顶层   $TOP (PE_NUMBER=$PE)"
+if [ "$TOP" != "ntt_board_top" ]; then
+    echo "   时钟   50 MHz × $MMCM_MULT / $MMCM_DIV = $((50000000 * MMCM_MULT / MMCM_DIV / 1000)) kHz"
+fi
 echo "   读出   READ_LAT = 2*$PE+3 = $((2 * PE + 3)) 拍（由折叠度派生）"
-echo "   周期   ${PERIOD:-XDC 里的 20 ns}"
+if [ "$TOP" = "ntt_board_top" ]; then
+    echo "   周期   ${PERIOD:-XDC 里的 20 ns}"
+else
+    echo "   周期   输入 20 ns（XDC）；核心时钟由 MMCM 产生，不再由 PERIOD 覆盖"
+fi
 echo "   启动目录 $SCRATCH   （仓库路径含撇号，必须从仓库外启动）"
 if [ -n "$DCPFILE" ]; then
     echo "   checkpoint $DCPFILE"
