@@ -272,11 +272,13 @@ PC → 串口 → 板级 wrapper（协议状态机 + 行组装）→ NTT 核 →
 逐组逐位都不同），上表三档 5/5 × 256/256 全过。
 ⚠️ **上表是 2026-10-04 那一版的结果**（pe4 / pe16 的原始日志已入库；**pe1 那一版的原始串口日志当时未入库**，
 驱动脚本写在仓库外，数字见 `../../logs/project_state.md` §一）。
-⚠️ **2026-10-15 pe1 复跑是 5/6**（报告 `../../rtl/vivado/reports/board_pe1_txn.txt`）：
-`#PING` / `#NTT 1` / `#INTT 1` / `#PMUL NTT 1` / `#PMUL FULL 1` 各 0/256，
-**唯一一条 ❌ 是 `#PMUL TIME 1`** —— 卡在上位机读 `halfmul_b.txt` 的变长格式，
-**数据根本没发到板子**（`../../host/KNOWN_ISSUES.md` B2），不是核算错。
-B 已于 10-17 修好向量与生成器，**新证据尚未产生**；在此之前 `#PMUL TIME` 的真板结论按 10-04 记。
+✅ **2026-10-18 复跑：三档各 6/6**（报告 `../../rtl/vivado/reports/board_pe{1,4,16}_txn.txt`）：
+`#PING` / `#NTT 1` / `#INTT 1` / `#PMUL NTT 1` / `#PMUL TIME 1` / `#PMUL FULL 1`
+每条 `--check` 都是 **0/256 不同**。10-15 那次的 `#PMUL TIME 1` ❌ 是上位机读
+`halfmul_b.txt` 的变长格式（`../../host/KNOWN_ISSUES.md` B2），**不是核算错**；
+B 于 10-17 补零修好向量与生成器后，三档全过。旧 5/6 报告留底
+`board_pe1_txn_2026-10-15_5of6.txt`。
+⚠️ **提频版同样做了**：pe1 80 / pe4 75 / pe16 62.5 MHz 各 6/6（`..._f{80,75,62.5}_txn.txt`）。
 ⚠️ 三档读出顺序不统一（FNTT 读数路：pe1 = 交织，pe4/pe16 = 自然序）—— 见 §4.9，与功能结论无关。
 
 ---
