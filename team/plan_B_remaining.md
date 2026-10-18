@@ -9,7 +9,7 @@
 
 ## 出彩组合（2026-10-18 A 定，先于总结类）
 
-2026-10-18 B 进展：第 1 项无板部分已完成，入口 `refsim/accept_kem_trace.py`，说明 `refsim/kem_trace_README.md`。一次正常 KEM-768 的正向 poly_ntt 为 keygen/encaps/decaps=6/3/6，共 15 次；KAT、原版/插桩一致性、独立构建 C 复核、确定性及负向检查通过；三档上位机陪练 45 次通过。真板/RTL 回放未做，用户统一手动验收待执行。该进展不销“送板逐位比对”条目，变异与常数时间任务尚未开始。
+2026-10-18 B 进展：第 1 项无板部分已完成，入口 `refsim/accept_kem_trace.py`，说明 `refsim/kem_trace_README.md`。一次正常 KEM-768 的正向 poly_ntt 为 keygen/encaps/decaps=6/3/6，共 15 次；KAT、原版/插桩一致性、独立构建 C 复核、确定性及负向检查通过；三档上位机陪练 45 次通过。真板/RTL 回放未做；用户手动验收已截图确认（logs/verification_2026-10-18_B_kem_manual.png）。该进展不销“送板逐位比对”条目，变异与常数时间任务尚未开始。
 
 1. **P1 ML-KEM transcript replay** —— 一次 ML-KEM-768 的 keygen / encaps / decaps，把每次
    `poly_ntt` 的输入输出 trace 出来，逐条送板比对；判据：全部 NTT 逐位一致；产出 JSON +
