@@ -26,7 +26,9 @@ python metrics/bottleneck.py      # 瓶颈归因（PC 侧三段计时）→ 生�
 - **核的推算 Fmax**：168 / 160 / 154 MHz（5 ns 故意收紧约束反推，**不是板上实测**）；
 - **板上真实跑通的频率**：50 MHz 基线（20 ns 约束，WNS +7.339 / +6.547 / +4.789 ns，
   **不能反推 Fmax**）；MMCM 提频版 **80 / 75 / 62.5 MHz**（三档位流各 6/6，10-18）。
-端到端延迟是**串口链路墙钟值**（0.18–0.27 s），不是核的延迟。
+端到端延迟是**串口链路墙钟值**，不是核的延迟：115200 下 **0.250–0.328 s**、921600 下
+**0.079–0.094 s**（2026-10-18 实测）；线上搬运时间是 184→23 ms（8.0×），墙钟只 3.2×，
+差值卡在 CH340 的 USB latency timer（`#PING` 往返两种波特率都是 0.031 s）。
 
 **2. 数字随报告走，不随手写。**
 下面两张主表的每一格都能在 `rtl/vivado/reports/` 里找到出处。
@@ -69,13 +71,13 @@ python metrics/bottleneck.py      # 瓶颈归因（PC 侧三段计时）→ 生�
 | 指标名称 | 类别 | 数值（pe1 ｜ pe4 ｜ pe16） | 单位 | 测量条件 | 测试次数 / 时长 | 证据文件 |
 |---|---|---|---|---|---|---|
 | NTT 内核吞吐（周期数） | 核心 | 904 ｜ 232 ｜ 69 | cycles | 一次 NTT 全程（7 层）；顶层量 `done` 拍 − `start` − 3；**不含读出延迟**；与上游逐档相同 | 1 次探针实测；功能对拍另覆盖 16 组 × 3 档 | `rtl/probes/README.md` §判据 2、`rtl/H1_port_spec.md` §五 |
-| 端到端延迟 | 核心 | 0.079–0.094（921600）｜ 0.250–0.328（115200） | s | 上板事务**墙钟**耗时，只包 `hst.run()`（不含 Python 启动）。2026-10-18 实测：115200 下 `#NTT` 0.250 s / `#PMUL` 0.328 s；**921600 下 0.079 / 0.094 s**，六条命令 6/6、0 误码。⚠️ **线上搬运时间是 184→23 ms（8.0×）**，墙钟只 3.2× —— 差值约 55 ms 是 CH340 的 USB latency timer（`#PING` 往返两种波特率都是 0.031 s）。0.18–0.27 s 是 **2026-10-04** 三档各 5 条的历史值，**方法不同，别混引** | 各 1 次（6 条命令 × 2 个位流） | `rtl/vivado/high_baud_demo.md`；`reports/board_pe1_b921600_txn.txt`、`..._f80_b921600_txn.txt` |
+| 端到端延迟 | 核心 | 0.079–0.094（921600）｜ 0.250–0.328（115200） | s | 上板事务**墙钟**耗时，只包 `hst.run()`（不含 Python 启动）。2026-10-18 实测：115200 下 `#NTT` 0.250 s / `#PMUL` 0.328 s；**921600 下 0.079 / 0.094 s**，六条命令 6/6、0 误码。⚠️ **线上搬运时间是 184→23 ms（8.0×）**，墙钟只 3.2× —— 差值约 55 ms 是 CH340 的 USB latency timer（`#PING` 往返两种波特率都是 0.031 s）。0.18–0.27 s 是 **2026-10-04** 的历史值，方法不同，别混引 | 各 1 次（6 条命令 × 2 个位流） | `rtl/vivado/high_baud_demo.md`；`rtl/vivado/reports/board_pe1_b921600_txn.txt`、`rtl/vivado/reports/board_pe1_f80_b921600_txn.txt` |
 | KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | 社区维护的 FIPS 203 兼容 `.rsp`（ML-KEM-768），kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 `report/design/04_functional_correctness.md` §4.4） | 1000 条（逐比特） | `research/mlkem_kat/` |
 | LUT 占用 | 资源 | 727 ｜ 2000 ｜ 8922 | 个 | post-route；顶层边界；占用率 1.37% ｜ 3.76% ｜ 16.77% | 1 份 post-route 报告（单次布线路程） | `rtl/vivado/reports/pe1_nc_util.rpt`、`rtl/vivado/reports/pe4_nc_util.rpt`、`rtl/vivado/reports/pe16_nc_util.rpt` |
 | DSP 占用 | 资源 | 1 ｜ 4 ｜ 16 | 个 | post-route；**严格等于蝶形数**（非退化佐证） | 1 份 post-route 报告（单次布线路程） | 同上 |
 | 最高频率 / WNS | 资源 | 168 MHz ｜ 160 MHz ｜ 154 MHz | MHz | post-route；约束 `create_clock -period 5`（200 MHz，故意给紧），Fmax = 1000 / (5 − WNS)；WNS -0.936 ns ｜ -1.260 ns ｜ -1.507 ns | 1 份 post-route 报告（单次布线路程） | `rtl/vivado/reports/pe1_nc_timing.rpt`、`rtl/vivado/reports/pe4_nc_timing.rpt`、`rtl/vivado/reports/pe16_nc_timing.rpt` |
 | 板上跑通的最高频率（MMCM 提频） | 资源 | 80.0 ｜ 75.0 ｜ 62.5 | MHz | 三档 MMCM 位流按该频率生成并上真板；**不是频率扫描得到的芯片极限**；50 MHz 基线的 20 ns 约束 WNS **不能反推 Fmax**（见报告 §3.13.3） | 3 档 × 6 条命令各 1 次（2026-10-18，均 6/6） | `rtl/vivado/reports/board_pe1_f80_txn.txt`、`rtl/vivado/reports/board_pe4_f75_txn.txt`、`rtl/vivado/reports/board_pe16_f62.5_txn.txt` |
-| 功耗（估算） | 资源 | 0.130 ｜ 0.170 ｜ 0.335（50 MHz）；0.257 ｜ 0.300 ｜ 0.440（提频） | W | Vivado `report_power` 于**布线后** DCP，**vectorless 估算**（无 SAIF、Confidence Medium、25 °C、只算片内 PL）；动态/静态拆分与 MMCM 占比见报告 §3.10.5 | 6 版位流各 1 次 | `rtl/vivado/reports/power_pe{1,4,16}_{50,80,75,62}mhz.rpt`；`rtl/vivado/power_estimate.md` |
+| 功耗（估算） | 资源 | 0.130 / 0.257 ｜ 0.170 / 0.300 ｜ 0.335 / 0.440 | W | Vivado `report_power` 于**布线后** DCP，**vectorless 估算**（无 SAIF、Confidence Medium、25 °C、只算片内 PL）；每档两值 = **50 MHz 基线 / 该档提频版**；动态/静态拆分与 MMCM 占比见报告 §3.10.5 | 6 版位流各 1 次 | `rtl/vivado/power_estimate.md`；`rtl/vivado/reports/power_pe1_50mhz.rpt` 等 6 份 |
 | IOB 占用 | 资源 | 37 ｜ 37 ｜ 37 | 个 | post-route；**三档都是常数 37**（12 控制 + 1 时钟 + 12 `din` + 12 `dout`），与折叠度无关 —— 这是判据 1；占用率 29.60% ｜ 29.60% ｜ 29.60%，上游同边界是 37 / 109 / **397** | 1 份 post-route 报告（单次布线路程） | `rtl/vivado/folding_comparison.md` §9.2 |
 
 ### 功能正确性（B 侧验证台 + A 侧探针）

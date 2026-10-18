@@ -189,6 +189,23 @@ const BOARD_FREQ = {};
 const boardTag = (t) => 'f' + (Number.isInteger(BOARD_FREQ[t])
     ? BOARD_FREQ[t].toFixed(0) : String(BOARD_FREQ[t]));
 
+/* 功耗估算：rtl/vivado/power_estimate.md §一 表。同样解析而不是手抄。
+ * 每档两个值：50 MHz 基线 / 该档提频目标。读不到就报错。 */
+const POWER_DOC = path.join(REPO, 'rtl', 'vivado', 'power_estimate.md');
+const POWER = {};
+{
+    const txt = fs.existsSync(POWER_DOC) ? fs.readFileSync(POWER_DOC, 'utf8') : '';
+    for (const m of txt.matchAll(/^\|\s*(pe(?:1|4|16))\s*\|\s*([\d.]+) MHz\s*\|\s*\*\*([\d.]+) W\*\*/gm)) {
+        POWER[m[1]] = POWER[m[1]] || {};
+        POWER[m[1]][m[2]] = m[3];
+    }
+    for (const t of TIERS) {
+        if (!POWER[t] || !POWER[t]['50'] || !POWER[t][String(BOARD_FREQ[t])]) {
+            fail(`power_estimate.md 里读不到 ${t} 的 50 MHz 或提频功耗`);
+        }
+    }
+}
+
 /* Vivado 报告里的 DDR / FF 总量，用来算占用率的稳定性 */
 const LUT_TOTAL = Number(nc.pe1.lut.total);
 const DEVICE_NOTE = 'xc7z020clg400-2（板上器件），53,200 LUT / 106,400 FF / 220 DSP / ' +
@@ -232,10 +249,13 @@ GEN.push('### 指标汇总表（按《选题指南》§3.2.5.2 的七列）', ''
         `一次 NTT 全程（7 层）；顶层量 \`done\` 拍 − \`start\` − 3；**不含读出延迟**；与上游逐档相同 | ` +
         `1 次探针实测；功能对拍另覆盖 16 组 × 3 档 | ` +
         `${h('rtl/probes/README.md')} §判据 2、${h('rtl/H1_port_spec.md')} §五 |`,
-    `| 端到端延迟 | 核心 | 0.18–0.27 | s | 上板事务**墙钟**耗时（含 115200 bps 串口往返）；` +
-        `0.18–0.27 s 是 **2026-10-04** 三档各 5 条的历史值；**2026-10-18 当前驱动三档各 6/6** ` +
-        `只留逐项对拍、**未记墙钟秒数** | 3 档 × 5 条各 1 次（10-04）；3 档 × 6 条各 1 次（10-18，对拍） | ` +
-        `${h('rtl/vivado/run_board_txn_report.sh')}；${h('rtl/vivado/reports/board_pe{1,4,16}_txn.txt')} |`,
+    `| 端到端延迟 | 核心 | 0.079–0.094（921600）｜ 0.250–0.328（115200） | s | ` +
+        `上板事务**墙钟**耗时，只包 \`hst.run()\`（不含 Python 启动）。2026-10-18 实测：` +
+        `115200 下 \`#NTT\` 0.250 s / \`#PMUL\` 0.328 s；**921600 下 0.079 / 0.094 s**，六条命令 6/6、0 误码。` +
+        `⚠️ **线上搬运时间是 184→23 ms（8.0×）**，墙钟只 3.2× —— 差值约 55 ms 是 CH340 的 USB latency timer` +
+        `（\`#PING\` 往返两种波特率都是 0.031 s）。0.18–0.27 s 是 **2026-10-04** 的历史值，方法不同，别混引 | ` +
+        `各 1 次（6 条命令 × 2 个位流） | ${h('rtl/vivado/high_baud_demo.md')}；` +
+        `${h('rtl/vivado/reports/board_pe1_b921600_txn.txt')}、${h('rtl/vivado/reports/board_pe1_f80_b921600_txn.txt')} |`,
     `| KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | 社区维护的 FIPS 203 兼容 \`.rsp\`（ML-KEM-768），` +
         `kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 \`report/design/04_functional_correctness.md\` §4.4） | ` +
         `1000 条（逐比特） | ${h('research/mlkem_kat/')} |`,
@@ -255,6 +275,10 @@ GEN.push('### 指标汇总表（按《选题指南》§3.2.5.2 的七列）', ''
         `50 MHz 基线的 20 ns 约束 WNS **不能反推 Fmax**（见报告 §3.13.3） | ` +
         `3 档 × 6 条命令各 1 次（2026-10-18，均 6/6） | ` +
         `${TIERS.map((t) => h(`rtl/vivado/reports/board_${t}_${boardTag(t)}_txn.txt`)).join('、')} |`,
+    `| 功耗（估算） | 资源 | ${c(TIERS.map((t) => POWER[t]['50'] + ' / ' + POWER[t][String(BOARD_FREQ[t])]))} | W | ` +
+        `Vivado \`report_power\` 于**布线后** DCP，**vectorless 估算**（无 SAIF、Confidence Medium、25 °C、只算片内 PL）；` +
+        `每档两值 = **50 MHz 基线 / 该档提频版**；动态/静态拆分与 MMCM 占比见报告 §3.10.5 | 6 版位流各 1 次 | ` +
+        `${h('rtl/vivado/power_estimate.md')}；${h('rtl/vivado/reports/power_pe1_50mhz.rpt')} 等 6 份 |`,
     `| IOB 占用 | 资源 | ${c(TIERS.map((t) => nc[t].iob.used))} | 个 | post-route；` +
         `**三档都是常数 37**（12 控制 + 1 时钟 + 12 \`din\` + 12 \`dout\`），与折叠度无关 —— 这是判据 1；` +
         `占用率 ${c(TIERS.map((t) => nc[t].iob.pct + '%'))}，上游同边界是 37 / 109 / **397** | ` +
