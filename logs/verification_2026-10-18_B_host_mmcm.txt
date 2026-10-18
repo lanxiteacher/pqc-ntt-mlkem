@@ -1,0 +1,139 @@
+Host compatibility audit for MMCM; base bbdb35f; offline only.
+
+test_host.py
+=== 1：顺利路径 ===
+  #NTT 1：OK（试了 1 次，卡在「完成」）
+
+=== 2：超时 → 发 #ABORT → 整条重发（规则二）===
+  #NTT 1：OK（试了 2 次，卡在「完成」）
+
+=== 3：重试有上限 —— 恰好重发 3 次后放弃（规则二第 3 条）===
+  #NTT 1：FAILED（试了 4 次，卡在「等 #OK（T_OK=1 s）」）  重发 3 次仍然失败（最后卡在「等 #OK（T_OK=1 s）」）
+  日志：
+    · 第 1 次尝试在「等 #OK（T_OK=1 s）」超时。
+    · 已读掉 `#OK ABORT*4d`，链路恢复，可以重发。
+    · 第 2 次重发：#NTT 1
+    · 第 2 次尝试在「等 #OK（T_OK=1 s）」超时。
+    · 已读掉 `#OK ABORT*4d`，链路恢复，可以重发。
+    · 第 3 次重发：#NTT 1
+    · 第 3 次尝试在「等 #OK（T_OK=1 s）」超时。
+    · 已读掉 `#OK ABORT*4d`，链路恢复，可以重发。
+    · 第 4 次重发：#NTT 1
+    · 第 4 次尝试在「等 #OK（T_OK=1 s）」超时。
+    · 已读掉 `#OK ABORT*4d`，链路恢复，可以重发。
+    · 重发 3 次仍然失败（最后卡在「等 #OK（T_OK=1 s）」）
+
+=== 4：链路真的死了 —— 一次尝试就停整轮，不卡死 ===
+  #NTT 1：STOP（试了 1 次，卡在「等 #OK（T_OK=1 s）」）  发了 #ABORT 之后在 T_OK=1 s 内等不到任何应答 —— 链路状态不可知，停整轮。
+
+=== 5：收到 #ERR 不重发（规则三）===
+  注入的假回帧：'#ERR 02 2 domain-word-not-TIME-NTT*56\n'
+  #NTT 1：FAILED（试了 1 次，卡在「等 #OK（T_OK=1 s）」）  #ERR 02 2 domain-word-not-TIME-NTT*56
+
+=== 6：回显对不上就停整轮（规则四）===
+  发的是 #NTT 1，注入的回帧是：'#OK INTT 1*11\n'
+  #NTT 1：STOP（试了 1 次，卡在「等 #OK（T_OK=1 s）」）  回显对不上：发的是 '#NTT 1'，它回的是 '#OK INTT 1*11' —— 错位（§5.5:527）
+
+  6b：回帧校验值是错的 —— 也该停整轮
+  #NTT 1：STOP（试了 1 次，卡在「等 #OK（T_OK=1 s）」）  回帧校验对不上：'#OK NTT 1*f0' —— 算出来是 58，它写的是 f0
+
+  6c：结果行里混进一个 # 开头的行 —— 也算错位（§5.5:543）
+
+=== 7：规则五 —— 不做静默恢复 ===
+  重试/超时相关日志 12 条（4 次尝试至少该有 3+3 条）
+    · 第 1 次尝试在「等 #OK（T_OK=1 s）」超时。
+    · 已读掉 `#OK ABORT*4d`，链路恢复，可以重发。
+    · 第 2 次重发：#NTT 1
+    · 第 2 次尝试在「等 #OK（T_OK=1 s）」超时。
+
+=== 8：发出去的字节严格合规 ===
+  命令行：b'#NTT 1*7c\n'  校验 7c
+  数据行：256 行，前 3 行 ['044', '437', '4d0']
+  检查：全是 3 位小写 hex + LF，且一个校验符都没有
+
+=== 9：probe() —— 不带数据的命令（#PING / #ABORT）走单独一条路 ===
+  为什么要有这条路：probe 塞进 run() 会在「等 #BEGIN」白等 5 s、再重发 3 次
+  #PING：OK（试了 1 次，卡在「完成」）
+  #FOO 1：FAILED（试了 1 次，卡在「等 #OK（T_OK=1 s）」）  #ERR 01 0*57
+
+=== 10：开串口后先吃掉开机那行 #RDY（Host.handshake）===
+  10a 新位流吃掉 + 记下 build=4 ✓ ｜ 10b 旧位流无 #RDY ✓
+  10c 非 #RDY 原样放回（不吞）✓ ｜ 10d 校验错的不认 ✓ ｜ 10e 字段数不对的不认 ✓
+
+=== 11：#PMUL「发 512 行、只回 256 行」—— 收几行听板子的，不听自己的 ===
+  #PMUL NTT 1：OK（试了 1 次，卡在「完成」）
+  11b 伪造 `#DONE NTT 1 100`（#BEGIN 说的是 256）→ STOP ✓
+  11c 给对的 expect_rows（256）→ 照常 OK ✓
+  11d 给错的 expect_rows（512，板子报 256）→ STOP，且两个数都写进陈述 ✓
+
+97 项检查通过。
+
+⚠️ 记住：这里用的是陪练，不是真板子。真时序抖动测不到。
+
+test_link.py
+=== 1 / 2 / 5：来回搬字节、缓冲不多不少、行能分两次塞 ===
+  发出去：'#PING*33\n'
+  收回来：b'#OK PING*17\n'
+  该是　：b'#OK PING*17\n'
+
+=== 3 / 4：超时不吞半行、discard 报出扔了什么（直接验行缓冲）===
+  （read_line 就是这层缓冲外面的薄壳，行为由它决定）
+
+=== 6：插座不认识协议（解析 link.py 的代码，跳过注释和 docstring）===
+  查了 14 个协议词 + 那一个星号分隔符
+  结果：代码干净，插座不认识协议
+  顺带：从代码里挑出 326 个字符串/标识符参与检查
+
+=== 7：没装 pyserial 时报人话；默认插座是 loopback ===
+  !! 本机装了 pyserial —— 上面那条「没装时报人话」**这次没验**。
+     要验它得在没装的环境里跑。别把这一行读成「验过了」。
+  open_link() 默认给出：LoopbackLink
+
+=== 8：按设备名找口号（纯函数，喂名字进去，不碰硬件）===
+  为什么能在这验：match_port 不 import pyserial、不碰硬件。
+  为什么必须验：它是 README 那句「不要写死数字」的落点 ——
+  猜错口号不是报错，是**把数据发到别人的设备上**，所以宁可炸也不能猜。
+  !! 本机装了 pyserial —— 8f 那条「没装时报人话」**这次没验**。
+
+=== 9：SerialLink 的**真身** —— 借 loop:// 假串口跑（只在装了 pyserial 时）===
+  SerialLink 真身：开 / 写 / 读整行 / 超时 / discard / 关 —— 全部真跑过 ✓
+  ⚠️ loop:// **验不到**：波特率与真实时序、USB 驱动延迟与丢字节、
+     CH340 硬件流控、以及「真板子能不能打开串口号」这一步。
+     任何「够不够快 / 会不会超时 / 板子在不在」的结论，必须上真板子。
+
+36 项检查通过。
+
+⚠️ 记住覆盖范围：SerialLink 的真身借 loop:// 跑过了（第 9 条），但那是**进程内**
+   假串口 —— **电气层（波特率/时序、USB 丢字节、CH340 流控、能不能开真口号）
+   一行没验**。详见本文件 docstring 末尾「覆盖范围的实话」。
+   另：本文件的项数是**环境相关**的 —— 装了 pyserial 跑第 9 条、不跑第 7/8f 的
+   「没装时报人话」分支（少 4 项），没装则反过来。上面这个数别当固定值引。
+
+test_board_pipeline.py
+pe1 #NTT 1: 16/16 transactions, 4096/4096 coefficients
+pe1 #INTT 1: 16/16 transactions, 4096/4096 coefficients
+pe1 #PMUL NTT 1: 16/16 transactions, 4096/4096 coefficients
+pe1 #PMUL TIME 1: 16/16 transactions, 4096/4096 coefficients
+pe1 #PMUL FULL 1: 16/16 transactions, 4096/4096 coefficients
+pe4 #NTT 1: 16/16 transactions, 4096/4096 coefficients
+pe4 #INTT 1: 16/16 transactions, 4096/4096 coefficients
+pe4 #PMUL NTT 1: 16/16 transactions, 4096/4096 coefficients
+pe4 #PMUL TIME 1: 16/16 transactions, 4096/4096 coefficients
+pe4 #PMUL FULL 1: 16/16 transactions, 4096/4096 coefficients
+pe16 #NTT 1: 16/16 transactions, 4096/4096 coefficients
+pe16 #INTT 1: 16/16 transactions, 4096/4096 coefficients
+pe16 #PMUL NTT 1: 16/16 transactions, 4096/4096 coefficients
+pe16 #PMUL TIME 1: 16/16 transactions, 4096/4096 coefficients
+pe16 #PMUL FULL 1: 16/16 transactions, 4096/4096 coefficients
+PASS: 240 transactions, 61440 coefficients; 15 CLI checks; damaged-data / missing-shuffle / wrong-build controls rejected
+Scope: known-vector replay only; no RTL or electrical timing proof.
+
+UART integer divider arithmetic (not hardware measurement):
+
+50000000 Hz: divider=434, actual_baud=115207.373, error=0.006400%
+
+80000000 Hz: divider=694, actual_baud=115273.775, error=0.064041%
+
+75000000 Hz: divider=651, actual_baud=115207.373, error=0.006400%
+
+62500000 Hz: divider=542, actual_baud=115313.653, error=0.098657%
