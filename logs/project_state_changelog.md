@@ -205,3 +205,10 @@
 - 清理入口待办：三档乘法已完成；失效协议引用改节号/关键词（A 10-07已同意），补结果行数列（A 10-08已同意），保持既有正文行位置；H7/注错/向量状态回填。后续八个 host 自测输出另存 `verification_2026-10-17_B_protocol_docs.txt`。
 - 当前未完成：A真板PMUL TIME补跑及三档当前驱动复核；B第二台实体电脑H10（用户当前无第二台，仅同机clone完成）；W5冻结镜像/开源交付。入口 `team/plan_B_remaining.md`，技术交接 `letter_2026-10-17_B_to_AC.txt`。
 - 今日AI日志 `report/ai-log/2026-10-17_B.md`；没有新真板记录、没有补造历史日志、没有公共发布。
+
+## 2026-10-18 · 方向调整：加强项优先于项目总结
+
+- **A 定**：`收尾加做` 三件（§E / `team/roles_and_duties.md` §八）是加强项，**排在项目总结类工作之前**。B、C 手上还有加强项时先做加强项；提交包组装、承诺书与模板、报告排版/PDF 收口、skill 整理、镜像打包、答辩演练一律往后放。报告正文缺的章节、验证证据不算总结类，照常做。
+- **起因**：10-15 只发了「新增一件」的分配，没有把「排在总结之前」写成判据；10-18 补成一句可判先后的规则，落 `logs/project_state.md` §二 顶部与 §E、`team/roles_and_duties.md` §八、`team/plan_B_remaining.md` 顶部、`team/guide_C.md` 顶部，并发 `logs/letter_2026-10-18_A_to_BC_priority.txt`。
+- **现状核对**：B 的三档完整乘法 10-17 已交付（`refsim/run_polmul_param_check.sh` + `refsim/check_polmul_param.py --negative-controls`）、C 的瓶颈归因表 10-16 已交付（`metrics/bottleneck.py` / `data/bottleneck.csv` / `report/design/03` §3.10.3），**不重做**；A 的上板提频仍在做（`rtl/board/ntt_board_top_mmcm.v`）。§E 里 C 那件的 `- [ ]` 是过期状态，本次改为「已办结」注记。
+- **边界**：「项目总结」指把已有成果装进提交件的那一类；报告正文、验证证据不在此列，照常做。
