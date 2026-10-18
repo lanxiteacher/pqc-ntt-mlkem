@@ -49,6 +49,11 @@ if {[info exists ::env(MMCM_DIV)]  && $::env(MMCM_DIV)  ne ""} { set MMCM_DIV  $
 set TAG ""
 if {[info exists ::env(TAG)]} { set TAG $::env(TAG) }
 
+# 波特率：默认 115200。两个顶层都有 UART_BPS 参数，所以两条综合分支都要传。
+# ⚠️ 它是**编译期参数**：换波特率 = 重出位流，板上不会自己变。
+set UART_BPS 115200
+if {[info exists ::env(UART_BPS)] && $::env(UART_BPS) ne ""} { set UART_BPS $::env(UART_BPS) }
+
 # 频率签名：写进报告名前缀，三档 × 多频率的产物不许互相覆盖。
 # 2026-10-04 已经踩过一次：pe4 那轮把已提交的 pe1 报告覆盖了。
 
@@ -96,9 +101,11 @@ read_verilog $srcs
 # 所以按顶层名分开传 —— 不是图省事，是 Vivado 对未知 generic 的处理是 ERROR。
 if {[string match "*mmcm*" $TOP]} {
     synth_design -top $TOP -part $part -generic PE_NUMBER=$pe \
-                 -generic MMCM_MULT=$MMCM_MULT -generic MMCM_DIV=$MMCM_DIV
+                 -generic MMCM_MULT=$MMCM_MULT -generic MMCM_DIV=$MMCM_DIV \
+                 -generic UART_BPS=$UART_BPS
 } else {
-    synth_design -top $TOP -part $part -generic PE_NUMBER=$pe
+    synth_design -top $TOP -part $part -generic PE_NUMBER=$pe \
+                 -generic UART_BPS=$UART_BPS
 }
 
 # ---- 约束 ------------------------------------------------------------------

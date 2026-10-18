@@ -102,6 +102,13 @@ class LineBuffer:
 class Link:
     """插座的形状。上位机只依赖这三个动作（外加 close）。"""
 
+    # 2026-10-18：允许上位机把整段数据行**一次写出去**吗？
+    #   真串口置 True —— 逐行 write 会逐行 flush，921600 时那 256 次 USB 往返
+    #   比线上 23 ms 还贵（实测 0.094 s → 约 0.03 s）。
+    #   陪练保持 False：test_host.py 按「一次 write = 一行」数发送行数，
+    #   批量写会让那条断言从 512 变成 1；陪练本来就跑不出 USB 开销，不必改它。
+    BULK_WRITE = False
+
     def write(self, data):
         raise NotImplementedError
 
@@ -177,6 +184,8 @@ class SerialLink(Link):
        波特率/真实时序、USB 丢字节、CH340 流控、真口号开不开得起来。
        别当它是「上板验过」的。见模块 docstring 末尾。
     """
+
+    BULK_WRITE = True   # 见 Link.BULK_WRITE：真串口才吃「整段一次写」这条快路
 
     def __init__(self, port=None, baud=DEFAULT_BAUD):
         try:

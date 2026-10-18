@@ -49,6 +49,7 @@
 
 import argparse
 import sys
+import time
 
 import host
 import link
@@ -352,7 +353,12 @@ def main(argv):
     # （§4.2 每组 256 个系数；RTL 侧 `OUT_LINES` 也是写死的 256）。
     # 传它是为了让 host 手里有一道**独立**核对 —— 见 `host.py` 的 `Transaction.expect`。
     # ⚠️ 别在这里写 `256` 字面量：`GROUP_LEN` 是「一组多少行」的**唯一**出处。
+    # ⚠️ 计时口径：**只包这一条事务**（发命令 → 收齐最后一行），不含 Python 启动、
+    #    不含打开串口。2026-10-18 加它是为了 921600 演示模式能给出可复现的
+    #    「184 ms → 23 ms」数字；进程外 Measure-Command 会把启动的 0.4 s 也算进去。
+    t0 = time.monotonic()
     txn = hst.run(args.command, data, expect_rows=vectors.GROUP_LEN)
+    txn_s = time.monotonic() - t0
 
     print("")
     print("收到 %d 行结果：%s" % (len(txn.rows), "、".join(txn.rows[:3]) or "(无)"))
@@ -364,6 +370,8 @@ def main(argv):
             print("    - %s" % ln)
     print("")
     print(txn.summary())
+    print("")
+    print("事务耗时：%.3f s（发命令 → 收齐最后一行；含重试，不含 Python 启动）" % txn_s)
 
     rc = 0
     if txn.outcome != host.RESULT_OK:

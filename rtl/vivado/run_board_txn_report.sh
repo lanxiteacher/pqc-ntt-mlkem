@@ -7,6 +7,7 @@
 #   PORT=COM10 sh rtl/vivado/run_board_txn_report.sh   # 不给就按设备名现找
 #   FORCE=1 sh rtl/vivado/run_board_txn_report.sh      # 允许覆盖同名报告
 #   TAG=_f80 sh rtl/vivado/run_board_txn_report.sh     # 提频版：报告名带频率签名
+#   BAUD=921600 sh rtl/vivado/run_board_txn_report.sh  # 高速演示：必须与位流的 UART_BPS 一致
 #
 # 产出：rtl/vivado/reports/board_pe<PE><TAG>_txn.txt
 #       ⚠️ TAG 是 2026-10-18 加的：提频版（80/75/62.5 MHz）与 50 MHz 基线要能
@@ -63,6 +64,10 @@ fi
 
 PORTARG=""
 if [ -n "${PORT:-}" ]; then PORTARG="--port $PORT"; fi
+# ⚠️ 波特率必须与**位流里**的 UART_BPS 一致。给错不会报错，只会收到乱码 ——
+#    所以下面报告头里把它写出来，复跑的人一眼能对上。
+BAUD="${BAUD:-115200}"
+BAUDARG="--baud $BAUD"
 
 TMP=$(mktemp -d) || exit 1
 trap 'rm -rf "$TMP"' EXIT
@@ -80,7 +85,7 @@ EOF
 {
     echo "=== 真板子：探活 + 五条计算事务 ==="
     echo "   折叠度：pe$PE（board_run.py 的 --build 显式给）"
-    echo "   生成方式：sh rtl/vivado/run_board_txn_report.sh    （PE=$PE TAG=$TAG）"
+    echo "   生成方式：sh rtl/vivado/run_board_txn_report.sh    （PE=$PE TAG=$TAG BAUD=$BAUD）"
     echo "   命令入口：host/src/board_run.py —— 判据全在它的 --check 里，本脚本只搬运"
     echo ""
 } > "$TMP/body.txt"
@@ -95,9 +100,9 @@ while IFS='|' read -r cmd label; do
     # ⚠️ 先落原始输出再取码：写成 `python … | tr` 的话，`$?` 拿到的是 `tr` 的码。
     rc=0
     if [ "$cmd" = "#PING" ]; then
-        python host/src/board_run.py "$cmd" $PORTARG > "$TMP/raw$i.txt" 2>&1 || rc=$?
+        python host/src/board_run.py "$cmd" $PORTARG $BAUDARG > "$TMP/raw$i.txt" 2>&1 || rc=$?
     else
-        python host/src/board_run.py "$cmd" --check --build "$PE" $PORTARG \
+        python host/src/board_run.py "$cmd" --check --build "$PE" $PORTARG $BAUDARG \
             > "$TMP/raw$i.txt" 2>&1 || rc=$?
     fi
     tr -d '\r' < "$TMP/raw$i.txt" > "$TMP/o$i.txt"

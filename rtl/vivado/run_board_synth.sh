@@ -39,6 +39,9 @@
 #     TAG=<后缀>           拼进报告名（board_pe<N><TAG>_*.rpt）与 checkpoint 名。
 #                           提频产物必须能跟 50 MHz 基线**并存**，所以一定要给。
 #                           例：TAG=_f62.5 → board_pe1_f62.5_timing.rpt
+#     UART_BPS=<波特率>     默认 115200；921600 演示模式用（2026-10-18）。
+#                           ⚠️ 编译期参数：PC 端 --baud 必须与它一致，否则收到的是乱码。
+#                           分频 = 时钟 / 波特率 取整，80 MHz / 921600 = 86（+0.94%）。
 #     DCP=<目录>            给了才写布线后的 checkpoint：<目录>/ntt_board_pe<N><TAG>.dcp
 #                           用途是「在 GUI 里打开设计、点开关键路径、截 Schematic」——
 #                           非工程模式默认什么都不留，没有它就截不了图（03 §3.12 第 3 条）。
@@ -90,6 +93,7 @@ TOP="${TOP:-ntt_board_top}"
 MMCM_MULT="${MMCM_MULT:-20}"
 MMCM_DIV="${MMCM_DIV:-16}"
 TAG="${TAG:-}"
+UART_BPS="${UART_BPS:-115200}"
 
 # 折叠度守卫放在**脚本**这一层，不只放在 Tcl 里 —— 给错值时宁可一行都不跑，
 # 也别等 Vivado 起了 30 秒才在日志深处报错。
@@ -123,7 +127,7 @@ case "$TOP" in
         exit 1 ;;
 esac
 # synth_board.tcl 通过环境变量读这四个（见该文件「顶层选择」一节）。
-export TOP MMCM_MULT MMCM_DIV TAG
+export TOP MMCM_MULT MMCM_DIV TAG UART_BPS
 REPDIR="$HERE/reports"
 # 报告一律带折叠度前缀：三档的数字不同，同名会互相覆盖（见文件头）。
 # 与 `run_folding_sweep.sh` 的 pe<N>_*.rpt 是同一套思路。
@@ -174,6 +178,7 @@ if [ "$TOP" != "ntt_board_top" ]; then
     echo "   时钟   50 MHz × $MMCM_MULT / $MMCM_DIV = $((50000000 * MMCM_MULT / MMCM_DIV / 1000)) kHz"
 fi
 echo "   读出   READ_LAT = 2*$PE+3 = $((2 * PE + 3)) 拍（由折叠度派生）"
+echo "   串口   UART_BPS=$UART_BPS（分频 = 时钟 / 波特率，整数取整）"
 if [ "$TOP" = "ntt_board_top" ]; then
     echo "   周期   ${PERIOD:-XDC 里的 20 ns}"
 else

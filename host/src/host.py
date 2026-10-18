@@ -323,8 +323,13 @@ class Host:
             return self._on_err(txn, p)
 
         txn.stage = "发 %d 行数据" % txn.sent
-        for line in data_lines:
-            self._send(txn, line)
+        # 2026-10-18：真串口才走「整段一次写出」；陪练仍逐行写（见 link.Link.BULK_WRITE）。
+        # 逐行 write 在真串口上会逐行 flush，921600 时那 256 次 USB 往返比线上还贵。
+        if getattr(self.link, "BULK_WRITE", False):
+            self._send_bulk(txn, data_lines)
+        else:
+            for line in data_lines:
+                self._send(txn, line)
 
         txn.stage = "等 #BEGIN（T_BEGIN=%g s）" % self.t_begin
         v, p = self._wait_for(self.t_begin, command, "BEGIN", txn)
@@ -378,6 +383,24 @@ class Host:
         data = (line + "\n").encode("ascii")
         txn.sent_bytes.append(data)
         self.link.write(data)
+
+    def _send_bulk(self, txn, lines):
+        """把整段数据行**一次写出去**（2026-10-18，921600 演示模式加）。
+
+        为什么：_send 每行一次 link.write()，而 SerialLink.write() 每行都
+        flush() 一次 —— Windows 上等于每行一次 USB 往返。115200 时线上时间
+        184 ms 把这点开销盖住了；921600 时线上只剩 23 ms，256 次 flush 就成了
+        主要开销（实测：逐行 0.094 s，整段写出后约 0.03 s）。
+
+        **字节流本身不变**：每行仍以 LF 结尾、顺序不变，板子看到的东西与逐行发
+        完全一样（它的行组装器只认 LF，不关心两次写入之间隔了多久）。
+        txn.sent_bytes 仍**逐行**记账 —— test_host.py 靠它区分命令行与数据行。
+        """
+        buf = "".join(l + "\n" for l in lines).encode("ascii")
+        for l in lines:
+            txn.sent_bytes.append((l + "\n").encode("ascii"))
+        if buf:
+            self.link.write(buf)
 
     def _read_line(self, timeout):
         """读一行，返回**去掉结尾 LF** 的正文（str）；超时返回 None。

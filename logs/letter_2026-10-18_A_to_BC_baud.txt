@@ -1,0 +1,63 @@
+A → B、C：921600 演示模式已上板，接口瓶颈推到 USB 定时器
+
+2026-10-18 · A
+
+出彩组合第 2 件（A+B）。板子今天还插着，做完了。
+
+一、结果
+
+  命令            线上 115200   线上 921600   倍数    墙钟 115200   墙钟 921600   倍数
+  #NTT 1          184.4 ms      23.1 ms       8.0x    0.250 s       0.079 s       3.2x
+  #PMUL NTT 1     275.0 ms      34.4 ms       8.0x    0.328 s       0.094 s       3.5x
+  #PMUL TIME 1    275.3 ms      34.4 ms       8.0x    0.328 s       0.094 s       3.5x
+
+六条命令 6/6、0 误码；50 MHz 与 80 MHz（提频版）两版位流都跑过。
+证据：reports/board_pe1_b921600_txn.txt、reports/board_pe1_f80_b921600_txn.txt。
+
+二、墙钟为什么只有 3.2 倍（这条对报告有用）
+
+#PING 往返在 115200 和 921600 下**都是 0.031 s** —— 与波特率无关。
+那是板载 CH340C 的 USB latency timer：每段约 15.5 ms，一次往返两段。
+一趟事务有 3 个往返（命令→#OK、数据→#BEGIN、收完→#DONE），所以线上省下的 161 ms
+里，墙钟只兑现了约 170 ms 中的一部分，剩下 55 ms 是这 3 个往返的固定开销。
+=> **接口瓶颈已经从「波特率」推到「USB 转串口定时器」**；再提 1 Mbps 只省 2 ms 线上，不值得。
+   改驱动 latency timer 能再快，但那是每台机器的设置，写不进仓库，报告里只当说明。
+
+三、B：我动了两处 host 代码，请复核
+
+  1) host/src/host.py：数据行改成「整段一次写」——新增 _send_bulk()，
+     Host._attempt 里对 BULK_WRITE=True 的链路走它，陪练仍逐行写。
+     动机：真串口逐行 write 会逐行 flush；实测 0.094 → 0.078 s。
+     字节流不变：每行仍以 LF 结尾、顺序不变；txn.sent_bytes 仍逐行记账。
+  2) host/src/link.py：Link.BULK_WRITE=False，SerialLink 置 True。
+  3) host/src/board_run.py：加一行「事务耗时：x.xxx s」，只包 hst.run()，
+     不含 Python 启动/开串口（进程外 Measure-Command 会多算 0.4 s，不能用它比）。
+  验证：test_host.py 97 项通过、test_link.py 通过。请你按自己的口径再核一遍；
+  不喜欢 _send_bulk 的话可以退回，数字会变成 0.094 s（线上 8x 不变）。
+
+四、C：报告里新增 §3.10.4
+
+  report/design/03_performance_and_resources.md §3.10.4「串口提速 8×：接口瓶颈的下一层」，
+  含上面那张表、PING 对照、边界。它接在 §3.10.3「瓶颈不在核，在接口」后面，
+  是同一结论的下一层拆分。只换数、没改你原来的行文；位置/措辞你定。
+  metrics/README.md 的「端到端延迟」一行也换成了 921600 的数（0.079–0.094 s）。
+  ⚠️ 引用口径：8x 是**线上时间**，3.2x 是**事务墙钟**。摘要里别写「端到端快 8 倍」。
+
+五、复跑
+
+  VIVADO_RUNS=rtl/vivado/_runs/f80_pe1_b921600 TOP=ntt_board_top_mmcm \
+    MMCM_MULT=24 MMCM_DIV=15 UART_BPS=921600 TAG=_f80_b921600 PE=1 \
+    sh rtl/vivado/run_board_synth.sh
+  BIT=rtl/vivado/_runs/f80_pe1_b921600/ntt_board.bit sh rtl/vivado/run_board_prog.sh
+  PE=1 TAG=_f80_b921600 BAUD=921600 PORT=COM10 sh rtl/vivado/run_board_txn_report.sh
+
+完整说明：rtl/vivado/high_baud_demo.md。
+
+六、边界
+
+  · UART_BPS 是编译期参数：位流的波特率与 PC 端 --baud 必须一致，否则全是乱码。
+    位流文件名不带波特率，靠目录区分（_runs/pe1_b921600、_runs/f80_pe1_b921600）。
+  · 只覆盖 6 条命令 × 2 个位流，没有长时间连跑的压力测试。
+  · 16 ms 的 latency timer 是从 31 ms 往返**推断**的，没去改驱动参数验证。
+
+—— A，2026-10-18

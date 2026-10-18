@@ -69,7 +69,7 @@ python metrics/bottleneck.py      # 瓶颈归因（PC 侧三段计时）→ 生�
 | 指标名称 | 类别 | 数值（pe1 ｜ pe4 ｜ pe16） | 单位 | 测量条件 | 测试次数 / 时长 | 证据文件 |
 |---|---|---|---|---|---|---|
 | NTT 内核吞吐（周期数） | 核心 | 904 ｜ 232 ｜ 69 | cycles | 一次 NTT 全程（7 层）；顶层量 `done` 拍 − `start` − 3；**不含读出延迟**；与上游逐档相同 | 1 次探针实测；功能对拍另覆盖 16 组 × 3 档 | `rtl/probes/README.md` §判据 2、`rtl/H1_port_spec.md` §五 |
-| 端到端延迟 | 核心 | 0.18–0.27 | s | 上板事务**墙钟**耗时（含 115200 bps 串口往返）；0.18–0.27 s 是 **2026-10-04** 三档各 5 条的历史值；**2026-10-18 当前驱动三档各 6/6** 只留逐项对拍、**未记墙钟秒数** | 3 档 × 5 条各 1 次（10-04）；3 档 × 6 条各 1 次（10-18，对拍） | `rtl/vivado/run_board_txn_report.sh`；`rtl/vivado/reports/board_pe{1,4,16}_txn.txt` |
+| 端到端延迟 | 核心 | 0.079–0.094（921600）｜ 0.250–0.328（115200） | s | 上板事务**墙钟**耗时，只包 `hst.run()`（不含 Python 启动）。2026-10-18 实测：115200 下 `#NTT` 0.250 s / `#PMUL` 0.328 s；**921600 下 0.079 / 0.094 s**，六条命令 6/6、0 误码。⚠️ **线上搬运时间是 184→23 ms（8.0×）**，墙钟只 3.2× —— 差值约 55 ms 是 CH340 的 USB latency timer（`#PING` 往返两种波特率都是 0.031 s）。0.18–0.27 s 是 **2026-10-04** 三档各 5 条的历史值，**方法不同，别混引** | 各 1 次（6 条命令 × 2 个位流） | `rtl/vivado/high_baud_demo.md`；`reports/board_pe1_b921600_txn.txt`、`..._f80_b921600_txn.txt` |
 | KAT 通过率 | 核心 | 1000 / 1000 = **100** | % | 社区维护的 FIPS 203 兼容 `.rsp`（ML-KEM-768），kat_verify.c 四项独立复算、逐比特（**不是 NIST 官方 KAT**，见 `report/design/04_functional_correctness.md` §4.4） | 1000 条（逐比特） | `research/mlkem_kat/` |
 | LUT 占用 | 资源 | 727 ｜ 2000 ｜ 8922 | 个 | post-route；顶层边界；占用率 1.37% ｜ 3.76% ｜ 16.77% | 1 份 post-route 报告（单次布线路程） | `rtl/vivado/reports/pe1_nc_util.rpt`、`rtl/vivado/reports/pe4_nc_util.rpt`、`rtl/vivado/reports/pe16_nc_util.rpt` |
 | DSP 占用 | 资源 | 1 ｜ 4 ｜ 16 | 个 | post-route；**严格等于蝶形数**（非退化佐证） | 1 份 post-route 报告（单次布线路程） | 同上 |
