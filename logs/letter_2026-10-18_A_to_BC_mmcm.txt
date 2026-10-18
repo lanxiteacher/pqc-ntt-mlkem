@@ -24,7 +24,7 @@ A → B、C：提频（MMCM）综合侧收口，报告 §3.10.2 已填
   pe16  62.5 MHz   +1.720    +0.054    12903   6039   34.5   16
 
 三份 Design Timing Summary 都是 "All user specified timing constraints are met"，失败端点 0。
-资源与 50 MHz 基线差 +7～+23 LUT、±7 FF；MMCM/BUFG 不占 LUT/FF。
+资源与 50 MHz 基线差 +9～+23 LUT、±7 FF；MMCM/BUFG 不占 LUT/FF。
 
 100 MHz 没有取：pe1 在 10 ns 下，裸收紧约束（无 MMCM）是 +0.343，加了 MMCM 是 −0.066。
 差的约 0.4 ns 就是 MMCM 的时钟路径。100 MHz 的位流已改名 ntt_board_TIMING_VIOLATED.bit
