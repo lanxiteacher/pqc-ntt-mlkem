@@ -53,6 +53,7 @@
 | `check_nondegenerate.sh` | 「全中」结论的可信度存疑时 | `sh check_nondegenerate.sh <文件或目录> [...]` | 判据（不同值 ≥ 30%、最常见 ≤ 2%）是**经验阈值**，非普适 | 10-05 实测：`ntt_batch_in` 4096 行 → **2355 个不同值（57.5%）、最常见值 0.17%**；intt / pwm2 均 2374（58.0%）、0.15% |
 | `check_reproducible.sh` | 判定「别人能不能跑通」时 | `sh check_reproducible.sh [--from-remote]` | 默认从**本地** clone **查不出「没 push」** → 判可复现须加 `--from-remote` | 起源于真实事故（两条脚本依赖 3 个被 `.gitignore` 挡住的 `.exe`，本机看不出来）。10-05 `--from-remote` **首次真绿**（通过 4／跳过 0／失败 0，退 0）；同轮逼出 `run_intt_pwm2_check.sh` 把入库文件写成 CRLF（**10-06 已修**：`cp`→`tr`；10-07 复跑确认工作区干净、4/4 过） |
 | `refsim/` 四条入口（**不复制**） | 验「RTL 算得对不对」（而非「作者 testbench 跑没跑通」） | `cd refsim && sh run_{fntt,intt_pwm2,polmul}_check.sh` / `run_ntt_layers.sh` | 需 gcc + iverilog + python3；覆盖**止于一次多项式乘法** | 四条链各 **16 组 × 256/256** 全过；10-05 在**非作者**机器上、全新 clone 逐条真跑通 |
+| `refsim/compare_integer_results.py`（**不复制**） | 任意算法/板卡产出的**一维整数**与黄金参考按位置比对 | `python refsim/compare_integer_results.py expected.json actual.json --report report.json` | 不做模约减/排序/容差/补零；不产生硬件结果；**未在 PYNQ 上验证** | 10-17 B：5 个合成用例 + 6 项单元 + 2 项集成测试通过；手工把第 4 个值 44→45，报告准确给出 `matched=3 / mismatched=1`（`../../logs/verification_2026-10-17_B_manual_compare.png`）。10-18 C 本机复跑 6 项单元测试：**全过（exit 0）** |
 
 > 「从哪些失败中总结」：前三条分别来自——`diff` 假失败（格式坑）、
 > 「全零向量上也能全中」（无区分度）、「本机能跑但产物没入库」。

@@ -1,7 +1,7 @@
 # skill —— 技能包
 
 **主责：C** ｜ 状态：✅ **四项齐了（2026-09-29）**：`checklists/` 34 条、`prompts/` 4 条、
-`scripts/` 3 个零依赖校验脚本、`templates/` 3 个骨架
+`scripts/` 3 个零依赖校验脚本、`templates/` 4 个骨架
 ｜ ✅ **§3.3.5.2 四件套逐项补齐（2026-10-06）**：每类每一项写明「适用场景 / 使用方法 /
 失效条件 / 已验证的效果」，**效果一列写实测**（见 §3.3.5.2 的四件套）
 ｜ 对应评分项：**大模型协作与技能包（15 分）**
@@ -99,10 +99,12 @@ skill/
 | [`templates/vivado_nonproject.tcl`](templates/vivado_nonproject.tcl) | 非工程模式「量数字」脚本（含两个环境雷区） |
 | [`templates/batch_testbench.v`](templates/batch_testbench.v) | 批量对拍 testbench 骨架（有界等待 / 好定位的报错 / 顺序注释） |
 | [`templates/run_checks.sh`](templates/run_checks.sh) | 一键验证脚本骨架（相对路径 / 工具预检 / 逐项报） |
+| [`templates/pynq_golden_compare.py`](templates/pynq_golden_compare.py) | PYNQ 输出 → 一维整数 JSON → 独立黄金参考比对（**骨架，未上过 PYNQ**） |
 
-⚠️ 后两个是**骨架**，`TODO` 处要填。**2026-10-06 更新**：本机 10-05 已装 iverilog
-（`C:\iverilog\bin`，**不在 PATH**，先 `export`），两个骨架已做**编译 / 语法检查**
+⚠️ 后三个是**骨架**，`TODO` 处要填。**2026-10-06 更新**：本机 10-05 已装 iverilog
+（`C:\iverilog\bin`，**不在 PATH**，先 `export`），前两个骨架已做**编译 / 语法检查**
 （结论见 `templates/README.md`），但**端到端仍需补 DUT 后自验**。
+PYNQ 骨架 10-18 只过 `py_compile` 与 `--help`，**从未在 PYNQ 上运行**。
 
 ---
 
@@ -120,7 +122,7 @@ skill/
 | 提示词工作流 | 4 条 | [`prompts/README.md`](prompts/README.md) §每项的四件套 —— 每条提示词文件内另有 `适用范围` / `怎么用` / `失效条件` / `本项目的实例`（即「从哪总结」） |
 | 踩坑清单 | 5 份 / 34 条 | [`checklists/README.md`](checklists/README.md) §每项的四件套 —— 每条坑按 `现象→原因→怎么修→怎么预防 + 怎么发现的 + 谁扛` 写 |
 | 校验脚本 | 3 个（+ `refsim/` 四条入口） | [`scripts/README.md`](scripts/README.md) §每项的四件套 |
-| 工程骨架模板 | 3 个 | [`templates/README.md`](templates/README.md) §每项的四件套 |
+| 工程骨架模板 | 4 个 | [`templates/README.md`](templates/README.md) §每项的四件套 |
 
 ⚠️ 「**已验证的效果**」一列**写实测**（脚本跑出的数、本机编译结果），不写「设计如此」——
 空口的效果不算证据（见 `checklists/verification.md` 第 6 条「一个永远通过的测试没有价值」）。
@@ -156,6 +158,31 @@ skill/
 - B 的 2026-10-17 记录是**同一台实体电脑**上的全新 clone，**不是第二台电脑**；
   H10 要求的「换一台电脑」仍待条件，**没有冒充完成**。
 - 上位机自测的项数是**环境相关**的（装没装 `pyserial` 会改变个别分支），不要当固定值引。
+
+---
+
+## 通用 PYNQ Skill（候选，2026-10-18；**未取得加分**）
+
+《选题指南》§3.3.5.2 末段与 §3.3.2 各写了一次「**通用 PYNQ Skill 单独加分**」：
+Skill 须**面向 PYNQ 框架**且**不与本队题目绑定**（换题目、换板卡仍可用）。
+
+**现状与本项目的取舍**：主实现是**纯 PL + UART**，没有 PS、没有 Overlay、没有 PYNQ 镜像
+（理由见 `../report/design/01_background_and_related_work.md` §1.6）。因此我们不把
+「做到 PYNQ 加分」当成既成事实。已经落地的只有两块**与题目/板卡解绑**的候选材料：
+
+| 材料 | 是什么 | 边界 |
+|---|---|---|
+| [`templates/pynq_golden_compare.py`](templates/pynq_golden_compare.py) | PYNQ Overlay → 一维整数 JSON 的适配骨架 | **从未在 PYNQ 上执行**；`py_compile` 与 `--help` 通过 |
+| [`../refsim/compare_integer_results.py`](../refsim/compare_integer_results.py)（B 维护，**不复制**） | 按位置精确比较的独立黄金参考比对器 + JSON 报告 | 不调硬件、不做归一化；5 个合成用例 + 6 项单元 + 2 项集成测试通过（C 10-18 本机复跑 6 项单元全过） |
+
+两条合起来，正好对应 §3.3.2 举的第三个例子「**黄金参考比对……的工具**」。
+**但它现在还缺 PYNQ 侧的真实运行证据**，所以：
+
+- 报告与答辩里**只能写「候选材料」**，不能写「已获得 PYNQ 单独加分」；
+- 要改这个结论，最低证据是：在 PYNQ 镜像上跑通**一次正确样例 + 一次故意改错的样例**，
+  原始输出入库，并记录镜像版本与 bit/hwh 来源；
+- 在此之前，这两块材料的价值计入「**大模型协作与技能包 15 分**」的可复用性，
+  **不计入** PYNQ 单独加分。
 
 ---
 

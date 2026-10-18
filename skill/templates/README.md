@@ -12,11 +12,13 @@
 | [`vivado_nonproject.tcl`](vivado_nonproject.tcl) | 非工程模式：综合→优化→布局→布线，出资源与时序报告 | 改参数即可跑 |
 | [`batch_testbench.v`](batch_testbench.v) | 批量对拍 testbench 骨架（16 组向量循环） | **有 TODO 占位，需填** |
 | [`run_checks.sh`](run_checks.sh) | 一键验证脚本骨架（相对路径定位 + 工具预检 + 汇总） | **有 TODO 占位，需填** |
+| [`pynq_golden_compare.py`](pynq_golden_compare.py) | PYNQ Overlay → 一维整数 JSON → 交给独立黄金参考比对 | **有 TODO 占位，需填；从未上过 PYNQ** |
 
-> ⚠️ 后两个是**骨架**，`TODO` 处要换成你自己设计的端口与命令。
+> ⚠️ 后三个是**骨架**，`TODO` 处要换成你自己设计的端口与命令。
 > **2026-10-06 更新**：此前写「本仓库所在的机器上没有 iverilog、未编译验证过」——
 > 工具链 10-05 已装（`C:\iverilog\bin`，**不在 PATH**，用前先 `export`），
-> 两个骨架已做**编译 / 语法检查**，结论见下表「已验证的效果」。
+> 前两个骨架已做**编译 / 语法检查**；PYNQ 骨架 10-18 只过 `py_compile` 与 `--help`。
+> 结论见下表「已验证的效果」。
 > 仍需注意：`batch_testbench.v` 的端口与顺序**要你填**，套用时先用最小例跑通再往上加。
 
 ---
@@ -31,14 +33,15 @@
 | `vivado_nonproject.tcl` | 只想**量数字**（选型 / 对比 / 优化前后），**不建工程、不出 bitstream** | `vivado -mode batch -source vivado_nonproject.tcl`（**从仓库外目录启动**） | 要出 bitstream / 上板时不适用 | 本项目 `rtl/vivado/` 下**全部 tcl 都是非工程模式**（`grep create_project` 零命中），三档资源与时序数字走的就是这套流程；`place` / `route` 分开 `catch`，器件装不下时**仍留综合后报告** |
 | `batch_testbench.v` | 批量对拍（多组向量循环） | 填 `<尖括号>` 与 TODO 后 `iverilog -g2012 -o x.vvp x.v <设计源码>`、再 `vvp x.vvp` | 骨架**需使用者填 DUT**；接口**无数据有效选通**时不能断续灌 | 10-06 本机 iverilog **12.0**、`-g2012` **编译通过（exit 0）**；端到端对拍需补 DUT 后自验 |
 | `run_checks.sh` | 「别人 clone 下来第一条要跑的」 | 填 TODO 后 `sh run_checks.sh` | 用 `command -v` 预检会被 PATH 占位符骗（脚本已改**真跑**预检） | 10-06 `sh -n` 语法检查**通过（exit 0）** |
+| `pynq_golden_compare.py` | 在 PYNQ 上把**任意** Overlay 的输出取成一维整数，交给与题目/板卡无关的黄金参考比对 | 填 `collect_actual()`，`python pynq_golden_compare.py --bitfile x.bit --out actual.json`，再跑 `refsim/compare_integer_results.py` | **未在 PYNQ 镜像/板卡上执行过**；只做正确性搬运，不做模约减/排序/位宽转换；不是性能工具 | 10-18 `python -m py_compile` **通过**、`--help` **exit 0**；**没有** Overlay / HWH / 真硬件证据 |
 
-> 「从哪些失败中总结」：三个模板都来自本项目 `rtl/vivado/` 与 `refsim/` 的真实踩坑
+> 「从哪些失败中总结」：前三个模板来自本项目 `rtl/vivado/` 与 `refsim/` 的真实踩坑
 > （路径撇号崩综合引擎、综合子进程间歇性读不到文件、无界 `while` 挂死、
 > 「作者自带期望值」证明不了什么）—— 逐条见 `../checklists/` 与各文件头注释。
 
 ---
 
-## 三个模板各解决什么
+## 四个模板各解决什么
 
 ### `vivado_nonproject.tcl` —— 「量数字」而不是「上板」
 
@@ -79,17 +82,34 @@
   看不到后面还有哪些也失败了。逐个跑、逐个报，最后统一给结论
 - 汇总行写死格式（`SUMMARY ALL_PASS`），既好 grep 又好扫一眼
 
+### `pynq_golden_compare.py` —— 通用，但**没有上过 PYNQ**
+
+这是「通用 PYNQ Skill 单独加分」（《选题指南》§3.3.5.2 末段 / §3.3.2）的**候选**，
+不是已取得的加分。它只做一件事：**把任意 Overlay 的输出搬成一维整数 JSON**，
+判定交给 `../../refsim/compare_integer_results.py`（B 写的独立比对器，按位置精确比较）。
+
+三条设计约束，抄的时候别丢：
+
+- **本文件不实现比对**。两边各写一套「相等」，迟早会在模约减、排序、容差上分叉。
+- **不做任何静默归一化**。模域转换、位宽符号、输出顺序都由适配层显式处理并单独验证。
+- **不产生性能数字**。这里量的是正确性；墙钟时间不能当 IP 指标。
+
+⚠️ **已做与未做**：10-18 只做了 `python -m py_compile` 与 `--help`（exit 0）。
+**没有** PYNQ 镜像、Overlay、HWH、真板卡运行记录。因此按现状**不能宣称**
+「通用 PYNQ Skill」加分；要改这个结论，唯一的路是在 PYNQ 环境上跑通一次
+正确样例 + 一次故意改错的样例，并把原始输出入库。
+
 ---
 
 ## 抄这些模板时最容易抄漏的一条
 
-三个模板都建立在一个共同习惯上：**把「踩过的坑」写进注释，而不是写进聊天记录。**
+四个模板都建立在一个共同习惯上：**把「踩过的坑」写进注释，而不是写进聊天记录。**
 
 判断标准很简单 —— **删掉这条注释，下一个用的人会不会再踩一次？**
 会，就写上；不会，就别写（注释不是日记）。
 
 本项目里这条习惯的产物就是 `../checklists/` 那五份清单，
-以及这三个模板文件头里那些「⚠️ 一开始直接传整串 `PE_NUMBER=4`，
+以及前三个模板文件头里那些「⚠️ 一开始直接传整串 `PE_NUMBER=4`，
 Vivado 在 `=` 处切开了参数，报出来的错是『位选 [-1:0] 与声明不匹配』
 这种看着像 RTL 写错了的错」的具体记录。
 
