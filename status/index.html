@@ -197,19 +197,19 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   <div>
     <h1>FPGA 创新设计竞赛 · 项目进度</h1>
     <p class="sub">后量子密码 ML-KEM 的 NTT / INTT / 点乘 FPGA 加速核 ｜ 3.3 自主选题（初级组）｜ 纯 PL 实现</p>
-    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-18 15:28 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 5 处未提交</p>
+    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-18 15:37 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 18 处未提交</p>
   </div>
   <button class="btn" id="theme" type="button">切换明暗</button>
 </header>
 
 <section class="hero">
-  <div class="hero-num"><span class="n">48</span><span class="u">% 已交付</span></div>
+  <div class="hero-num"><span class="n">57</span><span class="u">% 已交付</span></div>
   <div class="hero-side">
-    <div class="hero-l">周计划 <b>10/21</b> 条已交付 · 另有 <b>3</b> 条进行中（含则 61.9%）</div>
-    <div class="meter" title="已交付 10 条 · 进行中 3 条 · 共 21 条周计划（分母＝下面甘特图上的条数，不是里程碑数）">
-      <div class="meter-fill" style="width:47.6%"></div><div class="meter-do" style="left:calc(47.6% + 2px);width:calc(14.3% - 2px)"></div>
+    <div class="hero-l">周计划 <b>12/21</b> 条已交付 · 另有 <b>3</b> 条进行中（含则 71.4%）</div>
+    <div class="meter" title="已交付 12 条 · 进行中 3 条 · 共 21 条周计划（分母＝下面甘特图上的条数，不是里程碑数）">
+      <div class="meter-fill" style="width:57.1%"></div><div class="meter-do" style="left:calc(57.1% + 2px);width:calc(14.3% - 2px)"></div>
     </div>
-    <div class="hero-2">按日历应到 <b>64.6%</b>（第 31/48 天：2026-09-18 → 2026-11-04）｜已交付落后日历 17 个点，差额在 3 条进行中</div>
+    <div class="hero-2">按日历应到 <b>64.6%</b>（第 31/48 天：2026-09-18 → 2026-11-04）｜已交付落后日历 7.5 个点，差额在 3 条进行中</div>
     <div class="meter-cap">距 <strong>2026-11-04</strong> 作品提交（官方 18:00 截止）还有 <b>17</b> 天 · 决赛（11/20–11/22，南京江北新区）（2026-11-20）</div>
   </div>
   <div class="fresh"><span class="dot" style="background:var(--good)"></span>✓ 入口记录停在 10-17 · 已 1 天没更新</div>
@@ -231,10 +231,10 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   <div class="gbody">
     <div class="gbg" aria-hidden="true"><div class="gline" style="left:10.417%"></div><div class="gline" style="left:25.000%"></div><div class="gline" style="left:39.583%"></div><div class="gline" style="left:54.167%"></div><div class="gline" style="left:68.750%"></div><div class="gline" style="left:83.333%"></div><div class="gband" style="left:10.417%;width:14.583%"></div><div class="gband key" style="left:39.583%;width:14.583%"></div><div class="gband" style="left:54.167%;width:14.583%"></div><div class="gband" style="left:68.750%;width:14.583%"></div></div>
     <div class="gnowlay" aria-hidden="true"><div class="gnow" style="left:62.500%"></div></div>
-    <div class="grow ghand"><div class="glab">交接点</div><div class="gtrack"><div class="ghchip done" style="left:10.417%;width:14.583%" title="H1 A→B 端口说明 · H3 串口协议冻结 v1.0 · H7 C→A、B 演示页数据格式">H1 H3 H7</div><div class="ghchip key done" style="left:39.583%;width:14.583%" title="H4 A→C 资源数据 · H6 上位机接真板子 —— ⚠️ **2026-10-15 订正：H6 原定 10-13 交付、拖到 10-15 才做**（10-08 定的 10-09 / 10-11 两天都过了）。✅ **现已办结**：当天跑完全部六条命令 **5/6 PASS**（`rtl/vivado/reports/board_pe1_txn.txt`），途中修掉 `board_run.py` 少「装载序」一列的缺陷（`KNOWN_ISSUES.md` B7）；H4 资源数据两批此前已交。⚠️ 唯一那条 ❌（`#PMUL TIME 1`）卡在向量文件格式、属 B 的决定，不影响本交接点">H4 · H6</div><div class="ghchip" style="left:54.167%;width:14.583%" title="⚠️ **2026-10-15：这三条仍没见动作**（A 当天确实有提交，但两个都在 **W3** 那趟 —— `host/src/` 装载序与 `rtl/vivado/` 上板报告，**都不是 H8 要的技术初稿**；B 自 10-08 起零提交）—— H5 B→C 验证数据 · H8 A、B→C 技术初稿 · H10 换机从零 clone（**只剩 B 一道** —— C 那一道 10-05 已办结）">H5 · H8 · H10</div><div class="ghchip" style="left:68.750%;width:14.583%" title="冻结：报告定稿、视频定稿、提交包组装 + 提交演练">提交包</div></div></div>
+    <div class="grow ghand"><div class="glab">交接点</div><div class="gtrack"><div class="ghchip done" style="left:10.417%;width:14.583%" title="H1 A→B 端口说明 · H3 串口协议冻结 v1.0 · H7 C→A、B 演示页数据格式">H1 H3 H7</div><div class="ghchip key done" style="left:39.583%;width:14.583%" title="H4 A→C 资源数据 · H6 上位机接真板子 —— ⚠️ **2026-10-15 订正：H6 原定 10-13 交付、拖到 10-15 才做**（10-08 定的 10-09 / 10-11 两天都过了）。✅ **现已办结**：当天跑完全部六条命令 **5/6 PASS**（`rtl/vivado/reports/board_pe1_txn.txt`），途中修掉 `board_run.py` 少「装载序」一列的缺陷（`KNOWN_ISSUES.md` B7）；H4 资源数据两批此前已交。⚠️ 唯一那条 ❌（`#PMUL TIME 1`）卡在向量文件格式、属 B 的决定，不影响本交接点">H4 · H6</div><div class="ghchip" style="left:54.167%;width:14.583%" title="H5 已交（10-17）；H8 随报告正文推进；H10 仍等第二台电脑">H5 · H8 · H10</div><div class="ghchip" style="left:68.750%;width:14.583%" title="冻结：报告定稿、视频定稿、提交包组装 + 提交演练">提交包</div></div></div>
     <div class="gsec">
       <div class="glab"><span class="swatch" style="--c:var(--s1)"></span>A · 硬件与上板</div>
-      <div class="gact">最后提交 10-18 · 近 7 天 17 次 · 累计 137 次</div>
+      <div class="gact">最后提交 10-18 · 近 7 天 19 次 · 累计 139 次</div>
     </div><div class="grow">
         <div class="glab"><span class="glab-t" title="装 Vivado、跑通验证台（满屏全绿）、读懂 butterfly.v 与 addressgenerator.v">装 Vivado · 验证台跑通</span></div>
         <div class="gtrack"><div class="gbar st-done"
@@ -256,8 +256,8 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
           style="--hc:var(--s1);left:39.583%;width:14.583%"
           title="**2026-10-15 更新：板子这趟做了一半。** ✅ `#RDY` 落进 proto_fsm + 冒烟台补 S0（10-07）、三档位流重出（10-07）、H6 代码侧复核（10-08，B 的 `671a91b`）；**10-15 当天插板跑完全部六条命令，H6 办结 —— 5/6 PASS**（`rtl/vivado/reports/board_pe1_txn.txt`），途中还查出并修掉 `board_run.py` 少「装载序」一列的缺陷（`KNOWN_ISSUES.md` B7，改前 `#PMUL NTT 1` 在 pe1 上 252/256 错）。✅ **②③ 当晚一并办结** —— 录屏 `assets/2026-10-15_A_board_uart_five_transactions.mp4`（112 MB，超过 Gitee 单文件上限，**不进仓库**）＋ 两张关键路径截图 `assets/2026-10-15_A_critical_path_board_pe1.png` / `..._core_pe1.png`。**W3 收口，本格无欠账。**⚠️ 另：唯一那条 ❌（`#PMUL TIME 1`）卡在向量文件格式，是 B 的决定，**不算本格的欠账** ｜ 出处 rtl/vivado/reports/board_pe1_txn.txt；host/KNOWN_ISSUES.md B7"><i></i></div></div>
       </div><div class="grow">
-        <div class="glab"><span class="glab-t" title="✅ **2026-10-15：本周 A 已有提交**（`0accf29` 改 `host/src/` 装载序 + `KNOWN_ISSUES.md`；`807a882` 改 `rtl/vivado/` 上板报告与产出脚本 + `logs/`）。① 板子这趟（**W3 那根的欠账，本格只写「做完它」，不重复记账**）：✅ H6 那部分 10-15 已办结，本格只剩**补录素材**（段 5 / 段 6）+ 核对旁白数字 ② 最后一次全量回归（refsim 四条脚本 + 板级冒烟台三档，结果存进 logs/）③ ✅ **不等板子那件已于 10-15 办完**：给 C 贴《指南》原文（**四处**，见 `logs/guideline_excerpts_2026-10-15.md`）④ ★ **新增（2026-10-15）· 上板提频** —— 例化 MMCM 提 50 MHz，三档重综合取新 WNS，五笔事务重跑，出「优化前 vs 优化后」对比表。物理可行已查实（**U18 是 MRCC**、`IS_CLK_CAPABLE=1`；xc7z020 有 4 MMCM / 4 PLL / 32 BUFG），§3.10.1 那条「板上无 MMCM/PLL」是错的，见 `report/design/03` 改判">板子收口 · 回归 · 提频</span></div>
-        <div class="gtrack"><div class="gbar st-todo"
+        <div class="glab"><span class="glab-t" title="✅ **2026-10-15：本周 A 已有提交**（`0accf29` 改 `host/src/` 装载序 + `KNOWN_ISSUES.md`；`807a882` 改 `rtl/vivado/` 上板报告与产出脚本 + `logs/`）。① 板子这趟（**W3 那根的欠账，本格只写「做完它」，不重复记账**）：✅ H6 那部分 10-15 已办结，本格只剩**补录素材**（段 5 / 段 6）+ 核对旁白数字 ② 最后一次全量回归（refsim 四条脚本 + 板级冒烟台三档，结果存进 logs/）③ ✅ **不等板子那件已于 10-15 办完**：给 C 贴《指南》原文（**四处**，见 `logs/guideline_excerpts_2026-10-15.md`）④ ★ **新增（2026-10-15）· 上板提频** —— 例化 MMCM 提 50 MHz，三档重综合取新 WNS，五笔事务重跑，出「优化前 vs 优化后」对比表。物理可行已查实（**U18 是 MRCC**、`IS_CLK_CAPABLE=1`；xc7z020 有 4 MMCM / 4 PLL / 32 BUFG），§3.10.1 那条「板上无 MMCM/PLL」是错的，见 `report/design/03` 改判">板级收口 · 921600 · 提频</span></div>
+        <div class="gtrack"><div class="gbar st-doing"
           style="--hc:var(--s1);left:54.167%;width:14.583%"
           title="✅ **2026-10-15：本周 A 已有提交**（`0accf29` 改 `host/src/` 装载序 + `KNOWN_ISSUES.md`；`807a882` 改 `rtl/vivado/` 上板报告与产出脚本 + `logs/`）。① 板子这趟（**W3 那根的欠账，本格只写「做完它」，不重复记账**）：✅ H6 那部分 10-15 已办结，本格只剩**补录素材**（段 5 / 段 6）+ 核对旁白数字 ② 最后一次全量回归（refsim 四条脚本 + 板级冒烟台三档，结果存进 logs/）③ ✅ **不等板子那件已于 10-15 办完**：给 C 贴《指南》原文（**四处**，见 `logs/guideline_excerpts_2026-10-15.md`）④ ★ **新增（2026-10-15）· 上板提频** —— 例化 MMCM 提 50 MHz，三档重综合取新 WNS，五笔事务重跑，出「优化前 vs 优化后」对比表。物理可行已查实（**U18 是 MRCC**、`IS_CLK_CAPABLE=1`；xc7z020 有 4 MMCM / 4 PLL / 32 BUFG），§3.10.1 那条「板上无 MMCM/PLL」是错的，见 `report/design/03` 改判 ｜ 出处 logs/schedule_plain.md §三 W4；logs/letter_2026-10-15_A_to_B.txt"><i></i></div></div>
       </div><div class="grow">
@@ -289,13 +289,13 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
           style="--hc:var(--s2);left:25.000%;width:14.583%"
           title="host/src/ 14 个 .py / 4289 行入库，7 个自测 559 项全绿；`#RDY` 三字段口径闭（10-06） ｜ 出处 host/src/test_*.py；host/proto.md §5.2"><i></i></div></div>
       </div><div class="grow">
-        <div class="glab"><span class="glab-t" title="上位机第一次接真板子 —— 10-07 夜已跑通 `#NTT 1`；`txn.count` 修复 10-08 已闭（A 逐条复核）。⚠️ **2026-10-15：只剩真板子上的 `#PMUL NTT 1` 验收一条，它在 A 那趟板子里、不在 B 侧 —— B 侧无欠账；所以那枚 ⚠ 挂在 A 的 W3 那根上，不在这根**。另：`#RDY` 解包器已接上、README「目录对照说明」10-07 已补">H6 上真板子联调</span><span class="tkey">关键</span></div>
-        <div class="gtrack"><div class="ghalo" style="left:39.583%;width:14.583%"></div><div class="gbar st-doing"
+        <div class="glab"><span class="glab-t" title="上位机第一次接真板子 —— 10-07 夜已跑通 `#NTT 1`；`txn.count` 修复 10-08 已闭（A 逐条复核）。⚠️ **2026-10-15：只剩真板子上的 `#PMUL NTT 1` 验收一条，它在 A 那趟板子里、不在 B 侧 —— B 侧无欠账；所以那枚 ⚠ 挂在 A 的 W3 那根上，不在这根**。另：`#RDY` 解包器已接上、README「目录对照说明」10-07 已补">H6 联调（已办结）</span><span class="tkey">关键</span></div>
+        <div class="gtrack"><div class="ghalo" style="left:39.583%;width:14.583%"></div><div class="gbar st-done"
           style="--hc:var(--s2);left:39.583%;width:14.583%"
           title="上位机第一次接真板子 —— 10-07 夜已跑通 `#NTT 1`；`txn.count` 修复 10-08 已闭（A 逐条复核）。⚠️ **2026-10-15：只剩真板子上的 `#PMUL NTT 1` 验收一条，它在 A 那趟板子里、不在 B 侧 —— B 侧无欠账；所以那枚 ⚠ 挂在 A 的 W3 那根上，不在这根**。另：`#RDY` 解包器已接上、README「目录对照说明」10-07 已补 ｜ 出处 host/KNOWN_ISSUES.md C2；logs/schedule_plain.md §三 W3"><i></i></div></div>
       </div><div class="grow">
-        <div class="glab"><span class="glab-t" title="⚠️ **2026-10-15：本周 B 无提交，这条没开工。** 换一台电脑、从零 clone、按 README 走一遍，跑通截图存档；同时交 C 完整验证数据（H5）">H10 换台电脑从零 clone</span></div>
-        <div class="gtrack"><div class="gbar st-todo"
+        <div class="glab"><span class="glab-t" title="⚠️ **2026-10-15：本周 B 无提交，这条没开工。** 换一台电脑、从零 clone、按 README 走一遍，跑通截图存档；同时交 C 完整验证数据（H5）">出彩组合 · H10 仍等机</span></div>
+        <div class="gtrack"><div class="gbar st-doing"
           style="--hc:var(--s2);left:54.167%;width:14.583%"
           title="⚠️ **2026-10-15：本周 B 无提交，这条没开工。** 换一台电脑、从零 clone、按 README 走一遍，跑通截图存档；同时交 C 完整验证数据（H5） ｜ 出处 logs/schedule_plain.md §三 W4"><i></i></div></div>
       </div><div class="grow">
@@ -327,12 +327,12 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
           style="--hc:var(--s3);left:25.000%;width:14.583%"
           title="报告五章初稿 + 封面摘要骨架、skill/ 四子目录、metrics/ 指标表、demo/ 三页、figures 三张 ｜ 出处 report/README.md §三"><i></i></div></div>
       </div><div class="grow">
-        <div class="glab"><span class="glab-t" title="报告三处缺口 —— ① 上板真实 Fmax **依赖 A 那趟板子**（已逾期）② 端到端延迟 ③ Vivado 2020.2 口径；`skill/` 四类逐项过四问**仍未做**。✅ 装 gcc/iverilog/python3 跑 **H10 独立复现** 已于 10-05 办结（`--from-remote` 通过 4 ／ 失败 0）">报告补缺口 · H10 已办结</span></div>
-        <div class="gtrack"><div class="gbar st-doing"
+        <div class="glab"><span class="glab-t" title="报告三处缺口 —— ① 上板真实 Fmax **依赖 A 那趟板子**（已逾期）② 端到端延迟 ③ Vivado 2020.2 口径；`skill/` 四类逐项过四问**仍未做**。✅ 装 gcc/iverilog/python3 跑 **H10 独立复现** 已于 10-05 办结（`--from-remote` 通过 4 ／ 失败 0）">报告补缺口（已办结）</span></div>
+        <div class="gtrack"><div class="gbar st-done"
           style="--hc:var(--s3);left:39.583%;width:14.583%"
           title="报告三处缺口 —— ① 上板真实 Fmax **依赖 A 那趟板子**（已逾期）② 端到端延迟 ③ Vivado 2020.2 口径；`skill/` 四类逐项过四问**仍未做**。✅ 装 gcc/iverilog/python3 跑 **H10 独立复现** 已于 10-05 办结（`--from-remote` 通过 4 ／ 失败 0） ｜ 出处 report/README.md §三；report/ai-log/2026-10-05_C.md"><i></i></div></div>
       </div><div class="grow">
-        <div class="glab"><span class="glab-t" title="**2026-10-15：已提前开工** —— 缩略语表、参考文献书目补全（缺口 20 余处 → 3 处）、附录逐日索引、PYNQ 取舍、配图与引用链体检、分段录制流水单 + 录制前体检全绿。⚠️ **卡在 A 的三件输入上**（《指南》三处原文 / 板子素材段 5/6 / 视频两个待定）。报告主体成文、排版、配图（用 A 的 H4 + B 的 H5）；剪演示视频（5–10 分钟）">报告成文 · 剪视频</span><span class="twarn" title="三件只有 A 能给、C 已经在三封信里要过（`logs/letter_2026-10-09_C_to_A.txt` §二 → `letter_2026-10-11_C_to_A.txt` 提醒 → `letter_2026-10-14_C_to_A.txt` §二/§三/§四）：✅ **① 已于 2026-10-15 交付** —— 《选题指南》四处原文逐字抄进 `logs/guideline_excerpts_2026-10-15.md`（§3.3.5.3 七项 / §3.2.5 提交内容全章 / §3.3.5.1 五项 / §3.3.5.2 技能包），随 `letter_2026-10-15_A_to_C.txt` 交 C。⚠️ **顺带订正一条错信息**：原文先写「§3.2.5（决定报告最终交 PDF / Word / 仓库 Markdown）」—— **《指南》全文没有一处规定报告的文件格式**（28 页抽文本后逐词搜 `PDF`/`Word`/`Markdown`/`docx`/`文件格式`/`排版`/`页数`/`字数` 各 0 处命中），那一问是**在等一个不存在的答案**。② **板子素材已于 2026-10-15 当晚全部交付** —— ✅ H6 收口原始输出（`rtl/vivado/reports/board_pe1_txn.txt`，5/6 PASS；产出脚本 `rtl/vivado/run_board_txn_report.sh` 已补进仓库）＋ ✅ 上板串口录屏（`assets/2026-10-15_A_board_uart_five_transactions.mp4`，**112 MB，不进仓库**，见 `.gitignore`）＋ ✅ 两组关键路径截图（`assets/2026-10-15_A_critical_path_board_pe1.png`、`..._core_pe1.png`）③ **视频两个待定仍未定**（要 A 与 C 一起拿主意）—— 旁白用真人配音还是 TTS、B-roll 用什么。⚠️ 命名缺口已给判断：「失败分析」在《指南》共 2 处（§3.2.5.4 管我们、§3.1.5.4 属另一赛道），**本赛道 §3.3.5.3 七项里没有这个词** ⇒ 是**并集不是硬缺**，建议标题带上「（失败分析）」">⚠</span></div>
+        <div class="glab"><span class="glab-t" title="**2026-10-15：已提前开工** —— 缩略语表、参考文献书目补全（缺口 20 余处 → 3 处）、附录逐日索引、PYNQ 取舍、配图与引用链体检、分段录制流水单 + 录制前体检全绿。⚠️ **卡在 A 的三件输入上**（《指南》三处原文 / 板子素材段 5/6 / 视频两个待定）。报告主体成文、排版、配图（用 A 的 H4 + B 的 H5）；剪演示视频（5–10 分钟）">GUI · Pareto · 证据地图</span><span class="twarn" title="三件只有 A 能给、C 已经在三封信里要过（`logs/letter_2026-10-09_C_to_A.txt` §二 → `letter_2026-10-11_C_to_A.txt` 提醒 → `letter_2026-10-14_C_to_A.txt` §二/§三/§四）：✅ **① 已于 2026-10-15 交付** —— 《选题指南》四处原文逐字抄进 `logs/guideline_excerpts_2026-10-15.md`（§3.3.5.3 七项 / §3.2.5 提交内容全章 / §3.3.5.1 五项 / §3.3.5.2 技能包），随 `letter_2026-10-15_A_to_C.txt` 交 C。⚠️ **顺带订正一条错信息**：原文先写「§3.2.5（决定报告最终交 PDF / Word / 仓库 Markdown）」—— **《指南》全文没有一处规定报告的文件格式**（28 页抽文本后逐词搜 `PDF`/`Word`/`Markdown`/`docx`/`文件格式`/`排版`/`页数`/`字数` 各 0 处命中），那一问是**在等一个不存在的答案**。② **板子素材已于 2026-10-15 当晚全部交付** —— ✅ H6 收口原始输出（`rtl/vivado/reports/board_pe1_txn.txt`，5/6 PASS；产出脚本 `rtl/vivado/run_board_txn_report.sh` 已补进仓库）＋ ✅ 上板串口录屏（`assets/2026-10-15_A_board_uart_five_transactions.mp4`，**112 MB，不进仓库**，见 `.gitignore`）＋ ✅ 两组关键路径截图（`assets/2026-10-15_A_critical_path_board_pe1.png`、`..._core_pe1.png`）③ **视频两个待定仍未定**（要 A 与 C 一起拿主意）—— 旁白用真人配音还是 TTS、B-roll 用什么。⚠️ 命名缺口已给判断：「失败分析」在《指南》共 2 处（§3.2.5.4 管我们、§3.1.5.4 属另一赛道），**本赛道 §3.3.5.3 七项里没有这个词** ⇒ 是**并集不是硬缺**，建议标题带上「（失败分析）」">⚠</span></div>
         <div class="gtrack"><div class="gbar st-doing is-blocked"
           style="--hc:var(--s3);left:54.167%;width:14.583%"
           title="**2026-10-15：已提前开工** —— 缩略语表、参考文献书目补全（缺口 20 余处 → 3 处）、附录逐日索引、PYNQ 取舍、配图与引用链体检、分段录制流水单 + 录制前体检全绿。⚠️ **卡在 A 的三件输入上**（《指南》三处原文 / 板子素材段 5/6 / 视频两个待定）。报告主体成文、排版、配图（用 A 的 H4 + B 的 H5）；剪演示视频（5–10 分钟） ｜ 出处 logs/schedule_plain.md §三 W4 ｜ 卡在这：A→C 三件只有 A 能给、C 已经在三封信里要过（`logs/letter_2026-10-09_C_to_A.txt` §二 → `letter_2026-10-11_C_to_A.txt` 提醒 → `letter_2026-10-14_C_to_A.txt` §二/§三/§四）：✅ **① 已于 2026-10-15 交付** —— 《选题指南》四处原文逐字抄进 `logs/guideline_excerpts_2026-10-15.md`（§3.3.5.3 七项 / §3.2.5 提交内容全章 / §3.3.5.1 五项 / §3.3.5.2 技能包），随 `letter_2026-10-15_A_to_C.txt` 交 C。⚠️ **顺带订正一条错信息**：原文先写「§3.2.5（决定报告最终交 PDF / Word / 仓库 Markdown）」—— **《指南》全文没有一处规定报告的文件格式**（28 页抽文本后逐词搜 `PDF`/`Word`/`Markdown`/`docx`/`文件格式`/`排版`/`页数`/`字数` 各 0 处命中），那一问是**在等一个不存在的答案**。② **板子素材已于 2026-10-15 当晚全部交付** —— ✅ H6 收口原始输出（`rtl/vivado/reports/board_pe1_txn.txt`，5/6 PASS；产出脚本 `rtl/vivado/run_board_txn_report.sh` 已补进仓库）＋ ✅ 上板串口录屏（`assets/2026-10-15_A_board_uart_five_transactions.mp4`，**112 MB，不进仓库**，见 `.gitignore`）＋ ✅ 两组关键路径截图（`assets/2026-10-15_A_critical_path_board_pe1.png`、`..._core_pe1.png`）③ **视频两个待定仍未定**（要 A 与 C 一起拿主意）—— 旁白用真人配音还是 TTS、B-roll 用什么。⚠️ 命名缺口已给判断：「失败分析」在《指南》共 2 处（§3.2.5.4 管我们、§3.1.5.4 属另一赛道），**本赛道 §3.3.5.3 七项里没有这个词** ⇒ 是**并集不是硬缺**，建议标题带上「（失败分析）」"><i></i></div></div>
@@ -354,32 +354,32 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
 <div class="nows"><article class="now" style="--c: var(--s1)">
       <div class="now-h"><span class="swatch" aria-hidden="true"></span>A · 硬件与上板</div>
       <div class="now-b">
-        <span class="k">现在</span><span class="v">✅ **2026-10-15 现状：W3 收口 —— H6 pe1 验收 5/6 PASS，录屏与两组关键路径截图当晚交付，板子已拔（位流掉电即失，下次要重烧）。** A 也重新在 `rtl/` 上有提交了（`0accf29` 改 `host/src/` + `KNOWN_ISSUES.md`，`807a882` 改 `rtl/vivado/` + `logs/`；此前 10-08～10-15 确实零 rtl/ 提交，`fc6d115` 只改 `status/`）。⚠️ **当天上板重跑查出一个真缺陷，根因不在 RTL**：`host/src/board_run.py` 少了 §5.3.4 那张表的**「输入顺序」列**（B1 只补了读出侧），改之前 pe1 上 `#PMUL NTT 1` 稳定 **252/256 错**、`#INTT 1` **256/256 错**；补上装载序后即 0/256。已修并提交，登记在 `host/KNOWN_ISSUES.md` **B7**。⚠️ 顺带查实 **10-04 那两份 `board_pe4/pe16_txn.txt` 的产出脚本从未入库**（H6 旧证据复现不出来）—— A 已补 `rtl/vivado/run_board_txn_report.sh`。 板级通路三档全通：pe1 / pe4 / pe16 各 5 条计算事务全 256/256（真串口 USB-SERIAL CH340，口号现查）。途中修掉 proto_fsm 一个写死的 bank 切换常数 —— 它只在 pe1 上恰好对，pe4 上是 2/5、pe16 上连 #NTT 都挂；改成随折叠度派生后三档全过。10-07 把协议里最后一条开口 `#RDY &lt;ver&gt; &lt;build&gt; &lt;errs&gt;` 落进 RTL：复位释放后板子自发一行，&lt;build&gt; 就是折叠度 —— 解掉「电脑端不知道板子里烧的是哪一档、因而不知道该用哪张读出序表」这个缺口。⚠️ 三档只覆盖 1/4/16：核的数据通路是「每档一份」不是公式，pe2/pe8 有 FATAL 守卫拦</span>
-        <span class="k">下一步</span><span class="v">**2026-10-18：提频（MMCM）综合侧完成 —— 80 / 75 / 62.5 MHz，WNS +0.698 / +0.754 / +1.720，报告 §3.10.2 三列已填；上板两件（当前驱动 + 提频版各五条事务）仍待板子。** ✅ **2026-10-15：板子这趟全结 —— ①②③ 一趟办完。** ① **H6 办结（5/6 PASS，报告 `rtl/vivado/reports/board_pe1_txn.txt`）**：`#PING` / `#NTT 1` / `#INTT 1` / `#PMUL NTT 1` / `#PMUL FULL 1` 各 **0/256**。⚠️ **只剩 `#PMUL TIME 1` 一条 ❌，卡在 `halfmul_b.txt` 的变长格式**（`KNOWN_ISSUES.md` B2 —— B 主动没动的那批冻结向量，**须单独议**），**不是板子的事**，已写信要 B 拍板 (a)/(b)。✅ **② 上板串口录屏（C 的段 5）与 ③ 两组关键路径截图（段 6 + 报告章节三配图）当晚一并办结** —— 一趟做完，全部落 `assets/`（全英文名）。⚠️ **mp4 112 MB 不进仓库**（Gitee 单文件上限 100 MB），已在 `.gitignore` 挡掉，交付方式待 W5 定。**这一段不再卡 C。**②③ 的素材按 `assets/README.md` 命名丢 `assets/`（全英文），关键路径数据已在 `rtl/vivado/critical_paths.md`（`pe{1,4,16}_nc_timing.rpt` 的 `-max_paths 10` 段）。✅ **前置都已解除** —— 录屏要的 `report/design/03` 数值 10-08 已由 A 代改到位；陪练 `--loopback` 绿、`--fake-build 4` 认档、`--list` 认串口、B 的 7 个自测本机 rc 全 0 ⇒ 当天只剩电气层一个未知数，**10-15 实跑证明电气层通了**（串口 COM10 / 115200-8N1，探活与四条计算事务全中）。✅ **「不等板子、开着 PDF 就能做完」那件已于 10-15 办完** —— C 从 10-09 起催了三次（10-09 / 10-11 / 10-14 三封信）的《选题指南》原文，已逐字抄进 `logs/guideline_excerpts_2026-10-15.md` 随信交 C（**四处**，比要的多一处：多抄了 §3.3.5.2 技能包，因为那里藏着「**通用 PYNQ Skill 单独加分**」这个我们目前 0 分的口子）。⚠️ 顺带核出**两个结论**：① 报告章节目录现在可以定死了 —— §3.3.5.3 第 ③ 项「**软硬件划分依据与接口设计**」**整章缺** ② 「§3.2.5 决定报告交 PDF/Word/Markdown」**是错的**，全文不规定格式。另：ai-log 仍停在 4 篇（10-04 / 10-05 / 10-07 / 10-08），10-09～10-15 七天空档。★★ **新增（2026-10-15 A 定）· 第 1 项「上板提频」** —— 例化 MMCM 把 50 MHz 提上去，三档各自重综合/实现/布线取新 WNS，五笔计算事务重跑，出一张「优化前 vs 优化后」对比表。**物理可行性已查实**：`sys_clk` 引脚 U18 是 **MRCC**（`IS_CLK_CAPABLE=1`、`PIN_FUNC=IO_L12P_T1_MRCC_34`），xc7z020 器件内有 **4×MMCME2_ADV / 4×PLLE2_ADV / 32×BUFGCTRL** —— 器件是 Vivado 查的，不是文档抄的。⚠️ **改判**：`report/design/03` §3.10.1 理由 1「板上没有 MMCM/PLL」**不成立**（MMCM 是 PL 内部原语、不是板上元件，拿「我们 RTL 里没例化」推不出「芯片里没有」），该处已改判，同句还在 `metrics/README.md` 两处。⚠️ 这条**要板子** —— 与「板子这趟」并成同一天做，是 A 目前在 W4 唯一的新增项</span>
+        <span class="k">现在</span><span class="v">✅ **2026-10-18 现状：板级收口（当前驱动）已完成** —— pe1 / pe4 / pe16 各 **6/6**（含 `#PMUL TIME 1`），旧 5/6 报告已留底；**提频版五条事务待跑**。提频实现侧 80 / 75 / 62.5 MHz、WNS +0.698 / +0.754 / +1.720、失败端点 0，报告 §3.10.2 已填。</span>
+        <span class="k">下一步</span><span class="v">① 提频版五条事务（80/75/62.5 MHz 各一档，旧报告留底）；② 921600 演示模式（184→23 ms）；③ 功耗估算；④ 与 C 统一核 Fmax 168/160/154 vs 板级实测 80/75/62.5；⑤ 每天补 ai-log。</span>
       </div>
-      <div class="now-p" title="logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2">范围 rtl/ ｜ 综合 ｜ 板子（本机） · 来源 logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2 · 核对 2026-10-15</div>
+      <div class="now-p" title="logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2">范围 rtl/ ｜ 综合 ｜ 板子（本机） · 来源 logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2 · 核对 2026-10-18</div>
     </article><article class="now" style="--c: var(--s2)">
       <div class="now-h"><span class="swatch" aria-hidden="true"></span>B · 验证台与上位机</div>
       <div class="now-b">
-        <span class="k">现在</span><span class="v">⚠️ **2026-10-15 现状：B 自 10-08 起零提交**（10-09～10-15 共 **11** 个提交：C 7 个、A 4 个、B 0 个 —— A 那 4 个里 2 个只改 `status/` 看板重核，2 个是 10-15 的 H6 上板与装载序修复，见 A 那格）。 上位机已成形：host/src/ **14 个 .py / 4289 行**入库，7 个自测 559 项全绿。**真板子已首次接上** —— 10-07 夜 A 用 B 的 `board_run.py` 在真板子上跑通 `#NTT 1` 256/256。10-06 闭了 `#RDY` 的 &lt;build&gt; 口径（`proto.md` §5.2：写折叠度 1/4/16，三档校验和 *7c / *79 / *4a），B 的 `1df5625` 已接住这一行。**B 侧无欠账** —— `host.py` 的 `txn.count` 一数三用 10-08 已拆成 `sent`/`recv`（509 → 554 行），A 已逐条复核</span>
-        <span class="k">下一步</span><span class="v">⚠️ 本行原第 ① 条（改 `host.py` 的 `txn.count`）**2026-10-08 已闭**，已于 10-15 从本行移出。**W4（本周 10/14–10/20）B 真正剩的**：① ★ **H10 换一台电脑、从零 clone、按 README 走一遍**，跑通截图存档、跑不通修到跑通 ② 交 C 完整验证数据（H5，含非退化统计）③ W2 那三种错误注入（§5.5）并回报 —— **这条从 10-03 挂到现在** ④ 同步 `proto.md` §七 两处过期陈述（A 已于 10-07 回信说明口径）⑤ ai-log 仍只有 1 篇（10-06），保持一天一篇。⚠️ 真板子上的 `#PMUL NTT 1` 验收**不在 B 侧** —— 它是 A 那趟板子的最后一条（见「卡点」）。★★ **新增（2026-10-15 A 定）· 第 3 项「三档完整多项式乘法端到端回归」** —— `refsim/` 里**新增一条入口脚本**（不动现有 6 个），把「完整多项式乘法端到端」从**只有 pe1** 扩到**三档**，判多重集 **4096/4096**。缺在哪（事实）：`refsim/run_polmul_check.sh:39-41` 的 `SRC` 写死 `pe1/*.v`；两个 testbench（`fullmul_batch_tb.v` / `halfmul_batch_tb.v`）是**位置式例化**上游写死的 `KyberHPM1PE`，里面那个 `parameter PE_NUMBER = 1` **不起作用**。⭐ 现成写法直接抄：`rtl/probes/ntt_func_tb.v:183` 已有参数化例化 `KyberHPMNTT_top #(.PE_NUMBER(PE_NUMBER))` + `-DCFG_PE_NUM=` 传参 + 缺参 FATAL。**这条不等任何人**（只要 iverilog）</span>
+        <span class="k">现在</span><span class="v">✅ **2026-10-17 现状：三档完整多项式乘法回归已交付** —— `refsim/run_polmul_param_check.sh` + `check_polmul_param.py --negative-controls`，三档 FULL/HALF 每轮 4096 项、多重集与逐项序列均过；H5 波形、有效向量补零、协议文档、本机全新 clone 18/18 均已交。B 侧加强项已清。</span>
+        <span class="k">下一步</span><span class="v">① **P1 ML-KEM transcript replay**（一次 KEM-768 全部 NTT 送板逐位比对，1–2 天）；② **P1 变异测试 15–20 个**（1–2 天）；③ **P2 常数时间证据**（100 组随机输入周期恒定，0.5 天）；④ 配合 A 的 921600 host 侧；⑤ H10 仍等第二台电脑，W5 镜像/提交检查按「总结类」后置。</span>
       </div>
-      <div class="now-p" title="host/proto.md §5.2；logs/project_state.md §一「还差」">范围 refsim/ ｜ host/ · 来源 host/proto.md §5.2；logs/project_state.md §一「还差」 · 核对 2026-10-15</div>
+      <div class="now-p" title="host/proto.md §5.2；logs/project_state.md §一「还差」">范围 refsim/ ｜ host/ · 来源 host/proto.md §5.2；logs/project_state.md §一「还差」 · 核对 2026-10-18</div>
     </article><article class="now" style="--c: var(--s3)">
       <div class="now-h"><span class="swatch" aria-hidden="true"></span>C · 报告与演示</div>
       <div class="now-b">
-        <span class="k">现在</span><span class="v">✅ **2026-10-15 现状：C 仍是推实物最多的人，但当天 A 也动起来了** —— 10-09～10-15 共 **11** 个提交：**C 7 个**、A 4 个（其中 2 个是 10-15 的 H6 上板与装载序修复）、B 0 个。 W4（报告成文 + 视频剪辑）**已提前开工**：10-09 缩略语表 + 参考文献草稿（并给 A 要《指南》原文）；10-10 参考文献整表按公开检索补全书目信息（缺口 20 余处 → 3 处）；10-11 补「为什么不做 PYNQ」的取舍（正文原本只声明「纯 PL」、没写这个取舍）；10-12 清「本机没有 Python」类过期陈述 + 附录逐日索引补回 11 行；10-13 建视频标题卡 `demo/title.html` + 旁白逐段回报告核数（核出段 3 一处画面描述与 `compare.html` 不符）；10-14 备视频 —— 分段录制流水单 + **录制前体检全绿**（`refsim/run_fntt_check.sh` 16/16、`check_reproducible.sh --from-remote` 通过 4 ／ 跳过 0 ／ 失败 0、五个生成器重跑 `git status` 干净、无头 Edge 四张全正确渲染）；10-15 报告配图 + 引用链机械体检，修 3 处实缺陷。**本程没动任何别人的目录**。此前基础仍在：报告五章初稿 + 封面摘要骨架、`skill/` 四个子目录、`metrics/` 指标表、`demo/` 三页、`report/figures/`、`assets/` 四张截图。ai-log：**共 21 篇 = C 16 / A 4 / B 1**</span>
-        <span class="k">下一步</span><span class="v">C 自己的活还剩：① 报告三处缺口 —— 其中「上板真实最高频率」**要靠 A 那趟板子**（板级 WNS 不能反推 Fmax），另两处（端到端延迟正式测量 §3.10、正文写明 Vivado 是 2020.2 口径）不依赖别人 ② `skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」（§3.3.5.2）③ 演示页截图选版式进正文（深色主题不适合黑白打印）④ 剪演示视频（5–10 分钟），旁白里每个数字都要能指到 .rpt 或脚本输出。⏳ **原「三件卡在 A 上」现只剩两件**（详见「卡点」）：✅ 三处《指南》原文**已于 10-15 交付**（`logs/guideline_excerpts_2026-10-15.md`）；**板子素材段 5/6** 与**视频两个待定**（真人配音 / B-roll，要 A 与 C 一起拿主意）仍未解。★★ **新增（2026-10-15 A 定）· 第 2 项「瓶颈归因表」** —— 在 **PC 侧**分三段计时：**计算核 µs / 串口搬运 ms / 软件参考实现 µs**，落一张归因表，结论写成一句话：「**瓶颈不在核，在接口**」。**这条只要 PC + python，不碰板子**（串口搬运那段用 B 的假串口陪练即可测，真板子那趟只是复核）。落点：`metrics/` 出数据 + `report/design/03` 进正文。⭐ 为什么这条值钱：评分里「**性能与资源优化效果 20 分**」和「**优化过程，含优化前后的性能与资源对比表**」（§3.3.5.3 第④项）都要这个；现在报告里只有核的周期数，**没有一句话说清端到端是谁在拖后腿**</span>
+        <span class="k">现在</span><span class="v">✅ **2026-10-18 现状：瓶颈归因表（10-16）、报告 ③/⑥ 章（10-17）、metrics 七列（10-17）、H5 波形与三档回归进正文（10-18）、PDF 构建链 70 页（10-18）均已完成**；通用 PYNQ Skill 候选已落，但明确**不宣称加分**。C 侧加强项已清。</span>
+        <span class="k">下一步</span><span class="v">① **P0 证据地图 + 口径统一**（每条评分项 → 文件/命令/结果；核 Fmax vs 板级实测）；② **P1 现场演示 GUI + 一键脚本**（输入 → 逐层动画 → 对拍 → 计时/资源，带阴性对照）；③ **P2 Pareto/ATP/roofline**（三档 × 实测频率，一图一表）；④ 视频/页码/提交包按「总结类」后置到 10/25–27。</span>
       </div>
-      <div class="now-p" title="report/README.md §三；team/todo_C.md §二">范围 report/ ｜ demo/ ｜ docs/ ｜ skill/ ｜ metrics/ ｜ assets/ · 来源 report/README.md §三；team/todo_C.md §二 · 核对 2026-10-15</div>
+      <div class="now-p" title="report/README.md §三；team/todo_C.md §二">范围 report/ ｜ demo/ ｜ docs/ ｜ skill/ ｜ metrics/ ｜ assets/ · 来源 report/README.md §三；team/todo_C.md §二 · 核对 2026-10-18</div>
     </article></div>
 
 <h2>数字一览<span class="h2n">每块底部都写着来源</span></h2>
-<div class="tiles"><div class="tile" title="自动 · status.json · 核对日期 2026-10-15">
+<div class="tiles"><div class="tile" title="自动 · status.json · 核对日期 2026-10-18">
     <div class="tile-l">关键路径里程碑</div>
-    <div class="tile-v">14/22</div>
+    <div class="tile-v">18/30</div>
     <div class="tile-n">已完成 / 全部，逐条清单在这一块下面</div>
-    <div class="tile-p">自动 · status.json · 2026-10-15</div>
+    <div class="tile-p">自动 · status.json · 2026-10-18</div>
   </div><div class="tile" title="人写 · refsim/README.md；logs/project_state.md §一 · 核对日期 2026-09-29">
     <div class="tile-l">验证覆盖</div>
     <div class="tile-v">4096/4096</div>
@@ -397,13 +397,13 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="tile-p">人写 · rtl/vivado/folding_comparison.md §九 · 2026-09-29</div>
   </div><div class="tile" title="自动 · git log">
     <div class="tile-l">三人提交</div>
-    <div class="tile-v">234</div>
-    <div class="tile-n">A 137 · B 37 · C 60</div>
+    <div class="tile-v">236</div>
+    <div class="tile-n">A 139 · B 37 · C 60</div>
     <div class="tile-p">自动 · git log</div>
   </div></div>
 <p class="hint">仓库规模（自动 · git ls-files，跳过草稿与数据目录）：NTT 核（参数化版） 4,381 行 · 验证探针 2,905 行 · 综合脚本与报告 2,811 行 · 上位机（B） 4,709 行 · 验证台（B） 5,834 行 · 报告正文（C） 2,488 行 · 演示页（C） 1,955 行 · 技能包（C） 3,090 行 · 指标表（C） 989 行</p>
 
-<h2>里程碑逐条<span class="h2n">上面那块「关键路径里程碑 14/22」的展开 · 分母就是下表行数</span></h2>
+<h2>里程碑逐条<span class="h2n">上面那块「关键路径里程碑 18/30」的展开 · 分母就是下表行数</span></h2>
 <div class="tw"><table>
   <thead><tr><th>日期</th><th>是什么</th><th>谁</th><th>状态</th><th>出处</th></tr></thead>
   <tbody><tr class="st-done">
@@ -490,11 +490,11 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>B+C</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
       <td class="c-src" title="logs/schedule_plain.md §四 H10；report/ai-log/2026-10-05_C.md">logs/schedule_plain.md §四 H10；report/ai-log/2026-10-05_C.md</td>
-    </tr><tr class="st-todo">
+    </tr><tr class="st-done">
       <td class="c-num">2026-10-20</td>
-      <td>H5：B 交 C 完整验证数据（含非退化统计）</td>
+      <td>H5：B 交 C 完整验证数据（含非退化统计）—— 2026-10-17 已交付</td>
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="logs/schedule_plain.md §四 H5">logs/schedule_plain.md §四 H5</td>
     </tr><tr class="st-todo">
       <td class="c-num">2026-10-20</td>
@@ -514,17 +514,17 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
       <td class="c-state"><span class="ico">▶</span>进行中</td>
       <td class="c-src" title="rtl/vivado/board_freq_sweep.md；report/design/03 §3.10.2">rtl/vivado/board_freq_sweep.md；report/design/03 §3.10.2</td>
-    </tr><tr class="st-todo">
+    </tr><tr class="st-done">
       <td class="c-num">2026-10-20</td>
       <td>★ 新增（2026-10-15 定）：瓶颈归因表 —— PC 侧分段计时（核 µs / 串口 ms / 软件参考 µs），结论「瓶颈不在核，在接口」</td>
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="status/status.json tracks[C].next；metrics/">status/status.json tracks[C].next；metrics/</td>
-    </tr><tr class="st-todo">
+    </tr><tr class="st-done">
       <td class="c-num">2026-10-20</td>
       <td>★ 新增（2026-10-15 定）：三档完整多项式乘法端到端回归 —— `refsim/` 新增入口脚本，三档全链 4096/4096</td>
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="status/status.json tracks[B].next；refsim/run_polmul_check.sh">status/status.json tracks[B].next；refsim/run_polmul_check.sh</td>
     </tr><tr class="st-todo">
       <td class="c-num">2026-10-27</td>
@@ -538,6 +538,54 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>全员</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
       <td class="c-src" title="大赛通知原文（2026-10-04 核）：作品提交 2026-11-04 18:00；决赛 2026-11-20～11-22 南京江北新区">大赛通知原文（2026-10-04 核）：作品提交 2026-11-04 18:00；决赛 2026-11-20～11-22 南京江北新区</td>
+    </tr><tr class="st-todo">
+      <td class="c-num">2026-10-21</td>
+      <td>★ 出彩组合：证据地图 + 口径统一（C+A）</td>
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>C+A</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr class="st-todo">
+      <td class="c-num">2026-10-22</td>
+      <td>★ 出彩组合：ML-KEM transcript replay（B）</td>
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr class="st-todo">
+      <td class="c-num">2026-10-22</td>
+      <td>★ 出彩组合：921600 接口优化（A+B）</td>
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A+B</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr class="st-todo">
+      <td class="c-num">2026-10-24</td>
+      <td>★ 出彩组合：现场演示 GUI（C）</td>
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr class="st-todo">
+      <td class="c-num">2026-10-24</td>
+      <td>★ 出彩组合：变异测试 + 常数时间（B）</td>
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr class="st-todo">
+      <td class="c-num">2026-10-24</td>
+      <td>★ 出彩组合：Pareto/ATP/roofline（C）</td>
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr class="st-todo">
+      <td class="c-num">2026-10-24</td>
+      <td>★ 出彩组合：功耗估算（A）</td>
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr class="st-done">
+      <td class="c-num">2026-10-18</td>
+      <td>板级当前驱动三档 6/6：pe1 / pe4 / pe16 各五条计算事务（含 `#PMUL TIME 1`）全过；旧 5/6 报告留底</td>
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
+      <td class="c-src" title="rtl/vivado/reports/board_pe{1,4,16}_txn.txt">rtl/vivado/reports/board_pe{1,4,16}_txn.txt</td>
     </tr></tbody>
 </table></div>
 <p class="hint">⚠️ 与顶部「已交付 x%」<b>不同口径，两个数不要相加</b> —— 那个的分母是甘特图上的周计划条数，这个的分母是里程碑条数。</p>
@@ -547,7 +595,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <div class="blk-who"><span class="who">A</span><span class="arrow">欠</span><span class="who">C</span></div>
       <div class="blk-what">三件只有 A 能给、C 已经在三封信里要过（`logs/letter_2026-10-09_C_to_A.txt` §二 → `letter_2026-10-11_C_to_A.txt` 提醒 → `letter_2026-10-14_C_to_A.txt` §二/§三/§四）：✅ **① 已于 2026-10-15 交付** —— 《选题指南》四处原文逐字抄进 `logs/guideline_excerpts_2026-10-15.md`（§3.3.5.3 七项 / §3.2.5 提交内容全章 / §3.3.5.1 五项 / §3.3.5.2 技能包），随 `letter_2026-10-15_A_to_C.txt` 交 C。⚠️ **顺带订正一条错信息**：原文先写「§3.2.5（决定报告最终交 PDF / Word / 仓库 Markdown）」—— **《指南》全文没有一处规定报告的文件格式**（28 页抽文本后逐词搜 `PDF`/`Word`/`Markdown`/`docx`/`文件格式`/`排版`/`页数`/`字数` 各 0 处命中），那一问是**在等一个不存在的答案**。② **板子素材已于 2026-10-15 当晚全部交付** —— ✅ H6 收口原始输出（`rtl/vivado/reports/board_pe1_txn.txt`，5/6 PASS；产出脚本 `rtl/vivado/run_board_txn_report.sh` 已补进仓库）＋ ✅ 上板串口录屏（`assets/2026-10-15_A_board_uart_five_transactions.mp4`，**112 MB，不进仓库**，见 `.gitignore`）＋ ✅ 两组关键路径截图（`assets/2026-10-15_A_critical_path_board_pe1.png`、`..._core_pe1.png`）③ **视频两个待定仍未定**（要 A 与 C 一起拿主意）—— 旁白用真人配音还是 TTS、B-roll 用什么。⚠️ 命名缺口已给判断：「失败分析」在《指南》共 2 处（§3.2.5.4 管我们、§3.1.5.4 属另一赛道），**本赛道 §3.3.5.3 七项里没有这个词** ⇒ 是**并集不是硬缺**，建议标题带上「（失败分析）」</div>
       <div class="blk-imp"><span class="k">影响</span>**① 已于 10-15 解除** —— 七项到手，`report/` 的章节目录现在可以定死了（逐项对照表在抄件第一节；结论是第 ③ 项「软硬件划分依据与接口设计」**整章缺**、第 ④ 项缺「优化前后对比表」那格、第 ⑥ 项只有索引）。**② 已于 10-15 当晚解除** —— C 的视频段 5/6 与报告章节三配图的素材都到手了。**③** 不定下来，录制时间排不了。⚠️ ①② 都办完了；**这条现在只剩 ③**</div>
-      <div class="blk-p" title="logs/letter_2026-10-15_A_to_C.txt；logs/guideline_excerpts_2026-10-15.md">出处 logs/letter_2026-10-15_A_to_C.txt；logs/guideline_excerpts_2026-10-15.md · 核对 2026-10-15</div>
+      <div class="blk-p" title="logs/letter_2026-10-15_A_to_C.txt；logs/guideline_excerpts_2026-10-15.md">出处 logs/letter_2026-10-15_A_to_C.txt；logs/guideline_excerpts_2026-10-15.md · 核对 2026-10-18</div>
     </article></div>
 
 <h2>待办<span class="h2n">只列下一步，完整清单在 logs/ 与 team/</span></h2>
@@ -576,7 +624,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td class="c-src" title="logs/schedule_plain.md §四 H6">logs/schedule_plain.md §四 H6</td>
     </tr><tr data-owner="A" class="st-doing">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
-      <td>★ 写自己的 `report/ai-log/` —— §3.3.3.1 是「须」提交大模型协作记录，压 15 分那档。已有 4 篇（10-04 / 10-05 / 10-07 / 10-08）—— ⚠️ **2026-10-15：10-09～10-15 七天空档**，保持一天一篇</td>
+      <td>★ 写自己的 `report/ai-log/` —— §3.3.3.1 是「须」提交大模型协作记录，压 15 分那档。已有 5 篇（10-04 / 10-05 / 10-07 / 10-08 / 10-18）；10-09～10-17 仍空，保持一天一篇</td>
       <td class="c-state"><span class="ico">▶</span>进行中</td>
       <td class="c-src" title="report/ai-log/；logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条">report/ai-log/；logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条</td>
     </tr><tr data-owner="A" class="st-todo">
@@ -651,7 +699,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td class="c-src" title="README.md:130">README.md:130</td>
     </tr><tr data-owner="B" class="st-doing">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
-      <td>★ 写自己的 `report/ai-log/` —— 与 A 那条同因，压 15 分那档。已有 1 篇（10-06）—— ⚠️ **2026-10-15：仍是 1 篇**，保持一天一篇</td>
+      <td>★ 写自己的 `report/ai-log/` —— 与 A 那条同因，压 15 分那档。已有 2 篇（10-06 / 10-17）；保持一天一篇</td>
       <td class="c-state"><span class="ico">▶</span>进行中</td>
       <td class="c-src" title="report/ai-log/；logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条">report/ai-log/；logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 4 条</td>
     </tr><tr data-owner="B" class="st-todo">
@@ -659,50 +707,50 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td>⚠️ 2026-10-15：本周未动。★ H10 换一台电脑、从零 clone、按 README 走一遍，跑通截图存档，跑不通修到跑通</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
       <td class="c-src" title="logs/schedule_plain.md §三 W4">logs/schedule_plain.md §三 W4</td>
-    </tr><tr data-owner="B" class="st-todo">
+    </tr><tr data-owner="B" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
-      <td>⚠️ 2026-10-15：本周未动。交 C 完整验证数据（H5，含「数据够不够五花八门」的非退化统计）</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td>✅ 2026-10-17 已交付 H5：FNTT 波形图 + 三档 FULL/HALF 回归（24,576 系数），C 已进 §4.4 / §4.6</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="logs/schedule_plain.md §四 H5">logs/schedule_plain.md §四 H5</td>
     </tr><tr data-owner="B" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
       <td>⚠️ 2026-10-15：仍挂着（自 10-03 起）。W2 内跑完 §5.5 三种错误注入并回报</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
       <td class="c-src" title="team/todo_AB.md §二·2">team/todo_AB.md §二·2</td>
-    </tr><tr data-owner="B" class="st-blocked">
+    </tr><tr data-owner="B" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
       <td>#PMUL TIME / #PMUL FULL 的**协议侧（假串口）**端到端 —— 被 refsim/batch/ 下的**变长**文件挡。**10-04 判定不改**（改它 = 动已冻结的 H2 黄金向量），报告里写清边界。⚠️ **真板子那一侧**：10-04 `board_pe{4,16}_txn.txt` 已各 256/256（别把这句读成「没跑过」）。⚠️ **2026-10-15 重新上板后，pe1 上 `#PMUL TIME 1` 成了 H6 唯一一条 ❌** —— 同一个成因：`halfmul_b.txt` 4096 行里 **308 行**不是 3 位十六进制（第 20 行是 `27`），`vectors.read_vector` 直接拒收，**数据根本发不到板子**。⚠️ 顺带订正计数：A 拿 `read_vector` 的判据全扫 `refsim/batch/`，变长文件是 **24 个**不是 23（多的是 `fntt_rtl_out.txt`）—— 别把 23 当常数引</td>
-      <td class="c-state"><span class="ico">⚠</span>卡住</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="host/proto.md §九(d) 第 2/3 条；host/KNOWN_ISSUES.md B2/B7；rtl/vivado/reports/board_pe1_txn.txt">host/proto.md §九(d) 第 2/3 条；host/KNOWN_ISSUES.md B2/B7；rtl/vivado/reports/board_pe1_txn.txt</td>
-    </tr><tr data-owner="B" class="st-todo">
+    </tr><tr data-owner="B" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
-      <td>★ **新增（2026-10-15）· 要 B 拍板：`halfmul_b.txt` 走 (a) 还是 (b)** —— `proto.md:393` 给的两条出路：(a) 对拍按**数值**比、(b) 冻结前用 `%03x` 重生成。⚠️ **它现在卡着 H6 的最后一条**（pe1 上 `#PMUL TIME 1` 发不出数据，见上一条）。选 (b) 的话还要定：一次把 24 个都收口，还是先只收 `halfmul_b.txt`（`halfmul_a.txt` 是干净的）把五条补满。原始请求与证据见 A 的信第三节</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td>✅ 2026-10-17 B 已补齐三个有效向量的格式（26eae6c，逐项数值未改）；`#PMUL TIME 1` 的真板复跑归 A</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="logs/letter_2026-10-15_A_to_B_load_order.txt 第三节；host/proto.md:389-393">logs/letter_2026-10-15_A_to_B_load_order.txt 第三节；host/proto.md:389-393</td>
-    </tr><tr data-owner="B" class="st-todo">
+    </tr><tr data-owner="B" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
       <td>⚠️ 2026-10-15：本周未动。同步 proto.md §七 两处过期陈述（A 已于 10-07 回信说明口径）</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="logs/letter_2026-10-07_A_to_B.txt">logs/letter_2026-10-07_A_to_B.txt</td>
-    </tr><tr data-owner="B" class="st-todo">
+    </tr><tr data-owner="B" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
-      <td>★ **新增（2026-10-15）· 第 3 项：三档完整多项式乘法端到端回归** —— `refsim/` **新增一条入口脚本**（不动现有 6 个），把「完整多项式乘法」从只有 pe1 扩到三档，判多重集 4096/4096。事实：`run_polmul_check.sh:39-41` 的 `SRC` 写死 `pe1/*.v`；两个 testbench 是位置式例化上游写死的 `KyberHPM1PE`，其中 `parameter PE_NUMBER = 1` **不起作用**。⭐ 抄 `rtl/probes/ntt_func_tb.v:183`（参数化例化 + `-DCFG_PE_NUM=` + 缺参 FATAL）。**不等任何人**</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td>✅ 2026-10-17 已交付：`refsim/run_polmul_param_check.sh` + `check_polmul_param.py --negative-controls`，三档 FULL/HALF 4096/4096</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="status/status.json tracks[B].next；refsim/run_polmul_check.sh:39">status/status.json tracks[B].next；refsim/run_polmul_check.sh:39</td>
     </tr><tr data-owner="C" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
       <td>✅ **装工具链 + H10 独立复现，10-05 当天一起办结** —— `gcc` 16.2.0 / `python` 3.12.10 / `iverilog` 12.0（winget），四条 `refsim/` 入口脚本全过、`check_reproducible.sh --from-remote` **通过 4 ／ 跳过 0 ／ 失败 0、退 0**（本项目首次真绿），改名后又复验一遍。⚠️ 本行原写「H10 独立复现的唯一前提」并标 `todo` —— **10-05 装机后即失效，10-08 才收掉**，见 `logs/project_state_changelog.md` 2026-10-08（之六）</td>
       <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="report/ai-log/2026-10-05_C.md 第三段；report/design/05_reproducibility.md §5.6">report/ai-log/2026-10-05_C.md 第三段；report/design/05_reproducibility.md §5.6</td>
-    </tr><tr data-owner="C" class="st-todo">
+    </tr><tr data-owner="C" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
-      <td>★ 报告三处缺口：① 上板真实最高频率（板级 WNS 不能反推 Fmax）—— ⚠️ **要靠 A 那趟板子，已逾期** ② 端到端延迟正式测量（§3.10）③ 正文写明 Vivado 是 2020.2</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td>✅ 报告三处缺口已清：A 10-18 给出提频实测（80/75/62.5 MHz），瓶颈归因表 10-16 已进 §3.10.3，Vivado 2020.2 口径已在 §3.15；核 Fmax 与板级实测的口径统一转入 10-18 新待办</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="report/README.md §三；report/design/03_performance_and_resources.md §3.10">report/README.md §三；report/design/03_performance_and_resources.md §3.10</td>
-    </tr><tr data-owner="C" class="st-todo">
+    </tr><tr data-owner="C" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
-      <td>⚠️ 2026-10-15：仍未做。`skill/` 四类逐项过「适用范围 / 使用方法 / 失效条件 / 已验证效果」（§3.3.5.2）</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td>✅ `skill/` 四类四件套已补齐（10-06 起）；10-18 的 PYNQ 候选明确不宣称加分</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 2 条">logs/letter_2026-10-04_A_to_BC_guideline.txt 第三节第 2 条</td>
     </tr><tr data-owner="C" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
@@ -719,16 +767,71 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td>✅ **报告成文的结构性输入 —— 2026-10-15 交付**：《选题指南》四处原文逐字抄在 `logs/guideline_excerpts_2026-10-15.md`（§3.3.5.3 七项 / §3.2.5 提交内容全章 / §3.3.5.1 五项 / §3.3.5.2 技能包），随 `letter_2026-10-15_A_to_C.txt` 交 C。⚠️ **附带两个结论**：① 章节目录现在可以定死 —— 逐项对照表在抄件第一节（第 ③ 项「软硬件划分依据与接口设计」**整章缺**）② 原以为「§3.2.5 决定报告交 PDF/Word/Markdown」**是错的**，《指南》全文不规定报告格式（逐词搜 8 个关键词各 0 命中），那一问在等一个不存在的答案</td>
       <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="logs/letter_2026-10-15_A_to_C.txt；logs/guideline_excerpts_2026-10-15.md">logs/letter_2026-10-15_A_to_C.txt；logs/guideline_excerpts_2026-10-15.md</td>
-    </tr><tr data-owner="C" class="st-todo">
+    </tr><tr data-owner="C" class="st-done">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
-      <td>★ **新增（2026-10-15）· 第 2 项：瓶颈归因表** —— PC 侧分三段计时（计算核 µs / 串口搬运 ms / 软件参考实现 µs），落一张归因表进 `metrics/` + `report/design/03` 正文，结论一句话「**瓶颈不在核，在接口**」。**只要 PC + python，不碰板子**（串口段用 B 的假串口陪练即可，真板子只复核）。⭐ 直接压「性能与资源优化效果 20 分」与 §3.3.5.3 第④项「优化前后的性能与资源对比表」—— 现报告只有核的周期数，没有端到端归因</td>
-      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td>✅ 2026-10-16 已交付：`metrics/bottleneck.py` + `data/bottleneck.csv` + 报告 §3.10.3，结论「瓶颈不在核，在接口」</td>
+      <td class="c-state"><span class="ico">✓</span>已完成</td>
       <td class="c-src" title="status/status.json tracks[C].next；metrics/">status/status.json tracks[C].next；metrics/</td>
+    </tr><tr data-owner="C" class="st-doing">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
+      <td>通用 PYNQ Skill 候选已落（`skill/templates/pynq_golden_compare.py`），**不宣称加分**；要加分需 PYNQ 环境一正一负两个样例的原始输出</td>
+      <td class="c-state"><span class="ico">▶</span>进行中</td>
+      <td class="c-src" title="选题指南.pdf 页 17/24（§3.3.2 与 §3.3.5.2 原文）">选题指南.pdf 页 17/24（§3.3.2 与 §3.3.5.2 原文）</td>
+    </tr><tr data-owner="A" class="st-doing">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
+      <td>★ 2026-10-18 出彩组合 · P0 板级收口：pe1 / pe4 / pe16 当前驱动已各 6/6（含 `#PMUL TIME 1`）；提频版五条待跑；旧报告已留底</td>
+      <td class="c-state"><span class="ico">▶</span>进行中</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr data-owner="A" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
+      <td>★ 2026-10-18 出彩组合 · P1 921600 演示模式：`UART_BPS` + host `--baud`，目标 184→23 ms（8×）</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr data-owner="A" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
+      <td>★ 2026-10-18 出彩组合 · P2 功耗估算：Vivado `report_power`（标注估算，不写成实测）</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr data-owner="A" class="st-doing">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
+      <td>★ 2026-10-18 出彩组合 · P0 与 C 统一口径：核 Fmax 168/160/154 vs 板级实测 80/75/62.5，报告/QA/metrics/视频四处一致</td>
+      <td class="c-state"><span class="ico">▶</span>进行中</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr data-owner="B" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
+      <td>★ 2026-10-18 出彩组合 · P1 ML-KEM transcript replay：一次 KEM-768 的全部 NTT 送板逐位比对</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr data-owner="B" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
+      <td>★ 2026-10-18 出彩组合 · P1 变异测试：15–20 个 RTL 变异体，全部被现有测试捕获</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr data-owner="B" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s2)"></span>B</td>
+      <td>★ 2026-10-18 出彩组合 · P2 常数时间证据：100 组随机输入周期恒定（904/232/69）</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr data-owner="C" class="st-doing">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
+      <td>★ 2026-10-18 出彩组合 · P0 证据地图 + 口径统一（每条评分项 → 文件/命令/结果）</td>
+      <td class="c-state"><span class="ico">▶</span>进行中</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
     </tr><tr data-owner="C" class="st-todo">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
-      <td>★★ **新增（2026-10-15）· 评分缺口：《指南》两处写明「通用 PYNQ Skill 单独加分」，本项目零分** —— §3.3.2 与 §3.3.5.2 各写一次；§3.3.2 还给了 4 个例子，其中两个（「黄金参考比对、性能与资源数据自动采集并生成报告的工具」「从接口契约自动生成主机侧调用代码或测试骨架的脚本」）**我们已经有非 PYNQ 版**：`refsim/` 的 KAT 锚定比对链 + `check_reproducible.sh`，和 `host/` 的协议驱动自测。待定：是否抽一层与题目解绑的通用封装进 `skill/`（换题换板仍可用才算数）</td>
+      <td>★ 2026-10-18 出彩组合 · P1 现场演示 GUI + 一键脚本（输入 → 逐层动画 → 对拍 → 计时/资源，带阴性对照）</td>
       <td class="c-state"><span class="ico">○</span>待办</td>
-      <td class="c-src" title="选题指南.pdf 页 17/24（§3.3.2 与 §3.3.5.2 原文）">选题指南.pdf 页 17/24（§3.3.2 与 §3.3.5.2 原文）</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr data-owner="C" class="st-todo">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s3)"></span>C</td>
+      <td>★ 2026-10-18 出彩组合 · P2 Pareto/ATP/roofline（三档 × 实测频率，一图一表）</td>
+      <td class="c-state"><span class="ico">○</span>待办</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §三">logs/letter_2026-10-18_A_to_BC_plan.txt §三</td>
+    </tr><tr data-owner="A+B+C" class="st-doing">
+      <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A+B+C</td>
+      <td>★ 2026-10-18 出彩组合 · 10/24 前完成七件；10/25–27 冻结报告/视频，不再加新功能</td>
+      <td class="c-state"><span class="ico">▶</span>进行中</td>
+      <td class="c-src" title="logs/letter_2026-10-18_A_to_BC_plan.txt §四">logs/letter_2026-10-18_A_to_BC_plan.txt §四</td>
     </tr></tbody>
 </table></div>
 

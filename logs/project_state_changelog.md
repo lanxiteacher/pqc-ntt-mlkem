@@ -212,3 +212,11 @@
 - **起因**：10-15 只发了「新增一件」的分配，没有把「排在总结之前」写成判据；10-18 补成一句可判先后的规则，落 `logs/project_state.md` §二 顶部与 §E、`team/roles_and_duties.md` §八、`team/plan_B_remaining.md` 顶部、`team/guide_C.md` 顶部，并发 `logs/letter_2026-10-18_A_to_BC_priority.txt`。
 - **现状核对**：B 的三档完整乘法 10-17 已交付（`refsim/run_polmul_param_check.sh` + `refsim/check_polmul_param.py --negative-controls`）、C 的瓶颈归因表 10-16 已交付（`metrics/bottleneck.py` / `data/bottleneck.csv` / `report/design/03` §3.10.3），**不重做**；A 的上板提频仍在做（`rtl/board/ntt_board_top_mmcm.v`）。§E 里 C 那件的 `- [ ]` 是过期状态，本次改为「已办结」注记。
 - **边界**：「项目总结」指把已有成果装进提交件的那一类；报告正文、验证证据不在此列，照常做。
+
+## 2026-10-18 · 出彩组合启动（进度核对 + 任务分配）
+
+- **三件收尾加做已收口**：B 的三档完整乘法 10-17 交付、C 的瓶颈归因表 10-16 交付；A 的提频实现侧 10-18 完成（80 / 75 / 62.5 MHz，WNS +0.698 / +0.754 / +1.720，失败端点 0），只剩上板五条事务。
+- **七件「出彩组合」**：① A 板级收口（当前驱动 + 提频版各五条，重点 `#PMUL TIME 1`）② A+B 921600 演示模式（184 → 23 ms）③ B ML-KEM transcript replay ④ B 变异测试 + 常数时间 ⑤ C 现场演示 GUI + 一键脚本 ⑥ C+A 证据地图 + 口径统一 ⑦ C+A Pareto/ATP/roofline + 功耗估算。**10/24 收口、10/25–27 冻结**；视频 / 页码 / 提交包 / W5 镜像 / skill 整理后置。
+- **进度页已重生成**：`status/status.json` 的 tracks / milestones / todos / gantt 按 10-18 现状更新（B/C 加强项转 done，新增 11 条 todo、7 条里程碑、5 根甘特条状态/文案），`status/index.html` 由 `node status/gen_status.mjs` 重出。
+- **分工与顺序**：`team/roles_and_duties.md` §九、`logs/project_state.md` §二 F、`logs/letter_2026-10-18_A_to_BC_plan.txt`、`team/plan_B_remaining.md` 顶部、`team/guide_C.md` 顶部。
+- **边界**：不新增 RTL 功能（完整 ML-KEM / AXI/PS / radix-4 / PYNQ 回头 / 2/8 折叠档都不做）；估算值不写成实测值；板级未跑不写「已上板验证」。
