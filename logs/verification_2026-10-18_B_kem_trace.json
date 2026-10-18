@@ -1,0 +1,77 @@
+{
+  "status": "pass",
+  "extraction": {
+    "status": "pass",
+    "source": "public community FIPS203-compatible KAT, not NIST official",
+    "kat_count": 0,
+    "kat_sha256": "6ecab47c229a80b85afd8e9b1b76e604317b2505ac35382b0e288116e1ba860a",
+    "phase_counts": {
+      "keygen": 6,
+      "encaps": 3,
+      "decaps": 6
+    },
+    "total_ntt_calls": 15,
+    "total_coefficients": 3840,
+    "kem_kat_matched": true,
+    "instrumentation_unchanged": true,
+    "deterministic": true,
+    "standalone_c_oracle_matched": true,
+    "reference_files_unchanged": true,
+    "negative_controls_rejected": [
+      "missing_call",
+      "duplicate_id",
+      "corrupt_coefficient"
+    ],
+    "hardware_validated": false,
+    "compiler": "gcc.EXE (GCC) 16.2.0",
+    "reference_sha256": {
+      "cbd.c": "95b6893fd3bf909e57c2522bef413dfdb5c9c677cc1b8c7a246001c64264a238",
+      "cbd.h": "4c7bebcb19ac24916d906689a50c9e264f99fbc7786793b34d50fd08303c0e76",
+      "fips202.c": "5df8461d9dc938d6a2960d72b0d331adbfa9beed4116f9d295eef6af238632ee",
+      "fips202.h": "5d93d468f18ecd9efbeb896a28a075e18ed2ff05c79621d75527f9f3f03a0ab4",
+      "indcpa.c": "7707ba3c80d96862bd6261e55ce633a113156a86e0c524e040226e98a6f4f834",
+      "indcpa.h": "8cfb9453f7277a211b9f22e472b0e70d6d7895fd78a14125e14193f76727e475",
+      "kem.c": "f73a1329290bd7b722949c9a06a4a578c1962a4ae72d9c825f1fa47e8b7e1138",
+      "kem.h": "aa35466376918265ba4cd201ea61e9c738f9da591812ea205821fee11e101c3c",
+      "ntt.c": "aeeee3cf363ce87b0617693cee82bed181f1bda5ad90cd355e97a5306bbf65d1",
+      "ntt.h": "7897ff95c99aa512a1e29b5414da61966756279e7df0e163c5488e83f426ddb0",
+      "params.h": "97175f8cc035ea7f9e487b8145fe97ba490893bae96d9d46658b73c6f7d21601",
+      "poly.c": "4679701512b13f3ff92514531e5abaafa6dcb7544ba6b4025f9dea9c19d14678",
+      "poly.h": "b59c092caf9ea78b3764c59b1eb7364e51dd1e0a51f5642ab137041400b37c16",
+      "polyvec.c": "bc5d7c07cce321ed81eeff65f44c7f2f95d89ba5fb71a257935a4c73bded6702",
+      "polyvec.h": "650e12181c2459f12fe613bc5241442e4f2742378ef919cbb06083376e6e7ed3",
+      "randombytes.c": "ed473cffe6d90145187fac3a14634182e6744bce579c146d77733e48bd0ba438",
+      "randombytes.h": "5ece412ed498abfd892ecec23480910b76cb8ea1b605da10adc5584ede79f048",
+      "reduce.c": "5cdb0497f5eaaab41709a35719596435c661a21620e9b42e8cb9deb44bfc510a",
+      "reduce.h": "f8a6066958bbf0e0c1937ca8af659e022ab42ea21aeb69e189e2d4ed171be4dd",
+      "symmetric-shake.c": "91be00d2a7da7ccb6ab758fef838d200f54154169d3835214c94d3d83ca22ee2",
+      "symmetric.h": "4b59936d9012ce29ca5326759581053560a91b4d68138cbf62759185a2b41b5c",
+      "verify.c": "63c206d0a97170ed9956df61369e00a17dcb23a1500687c6463ab1dc07b07986",
+      "verify.h": "da62699f86b6e8190bb773bb6c78e74f6dfd6b4ccd8e878261e8d7a02338c483"
+    }
+  },
+  "offline_replay": {
+    "transactions": 45,
+    "coefficients": 11520,
+    "source": "synthetic_known_answer_replay",
+    "hardware_validated": false
+  },
+  "additional_negative_controls": [
+    "missing_value",
+    "boolean_value",
+    "wrong_phase",
+    "overwrite_existing_output",
+    "replay_incomplete_trace"
+  ],
+  "trace_sha256": "e107dc71361070d4fc7267852ec180ddaf8f68625838712a167dbfec9abfd59f",
+  "manual_acceptance": "pending user execution",
+  "hardware_replay": "not executed",
+  "rtl_replay": "not executed",
+  "implementation_sha256": {
+    "kem_trace.py": "87aba8a8d4f872d7c020a3ee0361443609b300dca5e82dbd8cc99edda17e9be4",
+    "kem_trace_driver.c": "6e1520379520feef5fd85ba3a3075135e9679a6d76189ea83e0e7ef6de144789",
+    "kem_trace_replay.py": "7077b9b19471c704e1edb49c2b79d3a40374d9a7d75dfb447169fe3ce8bb1dc7",
+    "accept_kem_trace.py": "0b4de01588679f22fc4eff840b5173f5193975369915e5eac859e22bbf79d28e"
+  },
+  "automated_execution_only": true
+}
