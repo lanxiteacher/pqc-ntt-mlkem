@@ -1,6 +1,6 @@
 === 真板子：探活 + 五条计算事务 ===
    折叠度：pe1（board_run.py 的 --build 显式给）
-   生成方式：sh rtl/vivado/run_board_txn_report.sh    （PE=1）
+   生成方式：sh rtl/vivado/run_board_txn_report.sh    （PE=1 TAG=）
    命令入口：host/src/board_run.py —— 判据全在它的 --check 里，本脚本只搬运
 
 --- #PING（探活 · 不带数据，只等一条回帧）---
@@ -65,9 +65,17 @@
 --- #PMUL TIME 1（点乘 · A 时域、B 在 NTT 域）---
     插座：真串口 COM10（115200-8N1）
     开机行：没收到 `#RDY`（旧位流，或它在串口打开前就发完了 —— §5.2 说它是「尽力而为」的一行，这不是故障）
-    !! C:\Users\l'x\Desktop\FPGA\refsim\batch\halfmul_b.txt 第 20 行不是 3 位十六进制：'27'
-       向量文件坏了。别改这个文件来迁就代码 —— 先查是谁生成的它。
-    → ❌ FAIL（rc=1）
+    命令：#PMUL TIME 1   数据行：512
+    
+    收到 256 行结果：429、7e4、1ee
+        …（还有 253 行没打出来）
+    
+    #PMUL TIME 1：OK（试了 1 次，卡在「完成」）
+    
+    --check：按 **pe1** 口径解包（`--build` 显式给的；板上烧的是别的折叠度时，FNTT 会全错，见 B1）
+      INTT：256 个系数里 **0** 个不同。
+      结论：全部对得上。
+    → ✅ PASS
 
 --- #PMUL FULL 1（点乘 · A/B 都在时域）---
     插座：真串口 COM10（115200-8N1）
@@ -91,6 +99,6 @@
    #NTT 1             ✅ PASS
    #INTT 1            ✅ PASS
    #PMUL NTT 1        ✅ PASS
-   #PMUL TIME 1       ❌ FAIL（rc=1）
+   #PMUL TIME 1       ✅ PASS
    #PMUL FULL 1       ✅ PASS
-   5 / 6 条全中
+   6 / 6 条全中
