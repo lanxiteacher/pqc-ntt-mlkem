@@ -221,6 +221,12 @@ cd .. && sh skill/scripts/check_reproducible.sh --from-remote  # 段 7：通过 
   188.0–1,923.9 MB/s 与 0.0115 MB/s（§3.10.6 / `metrics/data/pareto.csv`）、
   184→23 ms（8.0×）与墙钟 3.2×（`high_baud_demo.md` §一）、
   功耗 0.13/0.17/0.34 W 与 MMCM 0.116 W（`power_estimate.md` §一，**估算**）。
+- ✅ **录制前体检 v2**（2026-10-19，GUI 加入后重做）—— ① `run_fntt_check.sh` **16/16**；
+  ② `check_reproducible.sh --from-remote` **通过 4／跳过 0／失败 0**、工作区干净；
+  ③ 六个生成器（`gen_layers` / `gen_compare` / `gen_gui_data` / `gen_metrics` /
+  `gen_pareto` / `gen_figures`）重跑后 `git status` **干净**；
+  ④ GUI 五张截图由无头 Edge 重生成，阴性对照红格数断言 **1/1**。
+  旧四页自 10-13 未改，10-14 的渲染结论仍有效。
 - ✅ **成文后旁白已逐段回报告核一遍**（2026-10-13）——段 0–4 / 7 / 8 的每个数字与画面描述都回源头核过
   （出处：`../report/design/03` §3.1/§3.7/§3.13.4/§3.13.6、`02` §2.1–2.2、`../refsim/README.md`、`../docs/related-work.md`）。
   **核出一处画面描述与实物不符**：原段 3 写「左边是 RTL 输出、右边是黄金向量」——
