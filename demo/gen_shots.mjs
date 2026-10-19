@@ -51,22 +51,48 @@ if (!EDGE) {
  * next  : 点几次「下一步」
  * cell  : 再点第几个格子（-1 = 不点）
  * btn   : 再点哪个按钮的 id（null = 不点）
+ * js    : 可选，按顺序执行的 JS 表达式（GUI 切幕/翻层等 next/cell/btn 表达不了的操作）
  * clip  : 可选，CSS 选择器 —— 截到「从左上角到该元素右下角」的一块
  *         （报告版用它裁掉右面板与底部空白，否则整页又瘦又长）
- * expectBad : 可选，截图前断言 #grid 里红格（.cell.bad）的个数。
+ * expectBad : 可选，截图前断言网格里红格（.cell.bad）的个数。
  *         对拍页用它 —— 红格数**数出来**，不从图上目视（缩小后会看错）
+ * badSel    : 可选，红格选择器，默认 '#grid .cell.bad'（GUI 用 '#cGrid .cell.bad'）
  *
  * 命名两边不同（各自的 README 定的，别统一）：
  *   assets  = YYYY-MM-DD_<谁>_<一句话>.png     （素材时间线）
  *   figures = 英文小写 + 下划线                 （进报告的那一版）
  * -------------------------------------------------------------------- */
 const DATE = '2026-10-01';
+/* 可选参数：只截文件名包含该串的那几张，例如 `node demo/gen_shots.mjs gui`
+   （重截旧图会改动已归档的 PNG 字节，没必要就别碰）。 */
+const ONLY = process.argv[2] || '';
 const SHOTS = [
   /* —— 原图（深色）→ assets/ —— */
   { out: 'assets',  theme: 'dark',  file: `${DATE}_C_demo_fntt_layer3_highlight.png`,        page: 'index.html',   next: 3, cell: 0,  btn: null },
   { out: 'assets',  theme: 'dark',  file: `${DATE}_C_demo_intt_layer4_highlight.png`,        page: 'intt.html',    next: 4, cell: 0,  btn: null },
   { out: 'assets',  theme: 'dark',  file: `${DATE}_C_demo_match_4096_all_pass.png`,            page: 'compare.html', next: 0, cell: -1, btn: null },
   { out: 'assets',  theme: 'dark',  file: `${DATE}_C_demo_negative_control_1_mismatch.png`, page: 'compare.html', next: 0, cell: -1, btn: 'mNeg' },
+
+  /* —— 现场演示 GUI 四幕（2026-10-19，出彩组合 #5）→ assets/ —— */
+  { out: 'assets',  theme: 'dark',  file: '2026-10-19_C_gui_act1_input.png',   page: 'gui.html', next: 0, cell: -1, btn: null },
+  { out: 'assets',  theme: 'dark',  file: '2026-10-19_C_gui_act2_layer4.png',  page: 'gui.html', next: 0, cell: -1, btn: null,
+    js: [
+      `document.querySelector('#tabs button[data-go="2"]').click()`,
+      `document.getElementById('aNext').click()`,
+      `document.getElementById('aNext').click()`,
+      `document.getElementById('aNext').click()`
+    ] },
+  { out: 'assets',  theme: 'dark',  file: '2026-10-19_C_gui_act3_match_all_pass.png', page: 'gui.html', next: 0, cell: -1, btn: null,
+    js: [`document.querySelector('#tabs button[data-go="3"]').click()`],
+    badSel: '#cGrid .cell.bad', expectBad: 0 },
+  { out: 'assets',  theme: 'dark',  file: '2026-10-19_C_gui_act3_negative_control.png', page: 'gui.html', next: 0, cell: -1, btn: null,
+    js: [
+      `document.querySelector('#tabs button[data-go="3"]').click()`,
+      `document.getElementById('cNeg').click()`
+    ],
+    badSel: '#cGrid .cell.bad', expectBad: 1 },
+  { out: 'assets',  theme: 'dark',  file: '2026-10-19_C_gui_act4_timing_resources.png', page: 'gui.html', next: 0, cell: -1, btn: null,
+    js: [`document.querySelector('#tabs button[data-go="4"]').click()`] },
 
   /* —— 报告版（浅色）→ report/figures/ —— */
   /* NTT 那张不裁：每层**所有**格子都会变（每个蝶形改两个输出），
@@ -149,12 +175,13 @@ async function main() {
     });
 
     for (const shot of SHOTS) {
+      if (ONLY && !shot.file.includes(ONLY)) continue;
       const url = pathToFileURL(join(HERE, shot.page)).href +
                   (shot.theme === 'light' ? '?theme=light' : '');
       await cdp.send('Page.navigate', { url });
       await sleep(900);            // 页面脚本立刻建 DOM，稍等即可
 
-      const clicks = [];
+      const clicks = [...(shot.js || [])];
       for (let i = 0; i < shot.next; i++) clicks.push("document.getElementById('next').click();");
       if (shot.cell >= 0) clicks.push(`document.querySelectorAll('#grid .cell')[${shot.cell}].click();`);
       if (shot.btn) clicks.push(`document.getElementById('${shot.btn}').click();`);
@@ -166,7 +193,7 @@ async function main() {
       const params = { format: 'png', captureBeyondViewport: true };
       if (shot.expectBad !== undefined) {
         const r = await cdp.send('Runtime.evaluate', {
-          expression: `document.querySelectorAll('#grid .cell.bad').length`,
+          expression: `document.querySelectorAll(${JSON.stringify(shot.badSel || '#grid .cell.bad')}).length`,
           returnByValue: true
         });
         const got = r.result.value;

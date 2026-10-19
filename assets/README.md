@@ -1,6 +1,7 @@
 # assets —— 截图 / 录屏 / 波形素材归档
 
-**主责：C**（维护者）｜ 状态：🔄 **演示页 4 张已成（2026-10-01）**；A、B 的截图/录屏仍待丢进来
+**主责：C**（维护者）｜ 状态：🔄 **演示页 4 张（10-01）+ GUI 5 张（10-19）+ A 的关键路径截图 2 张（10-15）已入库**；
+A 的上板录屏 112 MB 因超出仓库单文件上限**不入库**（文件在 A 处，剪辑前索取）；B 的 `refsim/` 波形截图仍可选
 
 全组的截图、录屏、波形图，统一命名、统一目录。
 **素材来源是 A、B**，你是收口的人。
@@ -64,27 +65,37 @@ A、B 忙起来最容易忘 —— **忘了 C 就去要**。
 | `2026-10-01_C_demo_intt_layer4_highlight.png` | 逆变换同上（GS/DIF 蝶形，方向与正变换镜像） |
 | `2026-10-01_C_demo_match_4096_all_pass.png` | 对拍页：RTL 落盘输出 vs 黄金向量，**4096/4096 全中**，全场无红格 |
 | `2026-10-01_C_demo_negative_control_1_mismatch.png` | 同一页点「改坏一条期望值」→ 网格里**正好 1 个红格**，说明这个测试有牙齿 |
+| `2026-10-19_C_gui_act1_input.png` | 现场演示 GUI 第①幕：KAT 向量输入 + 256 格预览 + 页面自检徽标（32/32 组） |
+| `2026-10-19_C_gui_act2_layer4.png` | 第②幕：自动走到第 4 层，整排数字变化 + 当前蝶形算式 |
+| `2026-10-19_C_gui_act3_match_all_pass.png` | 第③幕：单组 **256/256** 逐值一致，右侧列出四类运算的判定与证据 |
+| `2026-10-19_C_gui_act3_negative_control.png` | 第③幕点「阴性对照」→ **正好 1 个红格**（脚本按红格数断言，不靠目视） |
+| `2026-10-19_C_gui_act4_timing_resources.png` | 第④幕：三档周期/延迟/资源/Fmax 卡片 + 两张图 + 两句口径 |
+| `2026-10-15_A_critical_path_board_pe1.png` | 板级关键路径（协议状态机，布线占比约八成） |
+| `2026-10-15_A_critical_path_core_pe1.png` | 核内关键路径（蝶形，布线占比约七成） |
 
 **怎么重新截**（本机没有 GUI 可手动截，走无头 Edge）：
 
 ```bash
-node demo/gen_shots.mjs
+node demo/gen_shots.mjs          # 全部（会重写已归档的旧 PNG）
+node demo/gen_shots.mjs gui      # 只截文件名含 gui 的 5 张（推荐，不动旧素材）
 ```
 
 ⚠️ 页面数据是生成物。**改过 `demo/` 之后先重跑数据生成器，再截图**，
 否则截到的是旧图：
 
 ```bash
-node demo/gen_layers.mjs && node demo/gen_compare.mjs && node demo/gen_shots.mjs
+node demo/gen_layers.mjs && node demo/gen_compare.mjs && node demo/gen_gui_data.mjs && node demo/gen_shots.mjs
 ```
 
-> 这 4 张是**原图**（深色主题）。⚠️ 深底不适合黑白打印 —— **报告用的浅底版已另做**：
+> 上面 **2026-10-01 那 4 张**是**原图**（深色主题）。⚠️ 深底不适合黑白打印 —— **报告用的浅底版已另做**：
 > `../report/figures/demo_ntt_layer3.png` / `demo_compare_pass.png` / `demo_compare_negctrl.png`
 > （同一个脚本加 `?theme=light` + 裁切生成，见 `../report/figures/README.md` §一）。
 > 惯例：**原始件留在这里，报告那一版放 `report/figures/`，两边都留**（见下「规矩」第 4 条）。
 
-⬜ **A、B 的素材仍空** —— Vivado 资源/时序报告截图、上板串口录屏、`refsim/` 对拍波形。
-这些只能由 A、B 提供（本机没有 Vivado、没有板子），**C 主动去要**（H9）。
+**A 的素材（10-15 已交）**：关键路径两组截图已在上表；上板串口录屏
+`2026-10-15_A_board_uart_five_transactions.mp4` **112 MB，被 `.gitignore` 挡住，不进仓库** ——
+原始文件在 A 处，剪视频前向 A 索取（交付方式待 W5 定）。
+**B 的素材**：`refsim/` 对拍波形截图仍可选（段 4 不用它也能讲清楚）。
 
 ---
 

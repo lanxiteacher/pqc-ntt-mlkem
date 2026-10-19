@@ -202,7 +202,8 @@ demo/index.html?theme=light
 | `../report/figures/` | 浅色 | `demo_*.png`（英文小写下划线） | 进报告的那一版（`figures/README.md` 的口径） |
 
 ```bash
-node demo/gen_shots.mjs
+node demo/gen_shots.mjs          # 全部
+node demo/gen_shots.mjs gui      # 只截文件名含 gui 的（2026-10-19 新增的 GUI 五张）
 ```
 
 ⚠️ 只截「初始状态」不需要这套 —— `msedge --headless --screenshot` 就够了。
@@ -211,27 +212,33 @@ node demo/gen_shots.mjs
 脚本里 `SHOTS` 表决定截哪几张。每条可带这些字段：
 
 - `page` / `next`（点几次下一步）/ `cell`（点第几个格子，-1 = 不点）/ `btn`（点哪个按钮 id）
+- `js`（可选）：按顺序执行的 JS 表达式 —— GUI 切幕 / 翻层等上面表达不了的操作
 - `theme`：`dark` 或 `light`；`out`：`assets` 或 `figures`
 - `clip`（可选）：CSS 选择器，只截「从左上到该元素右下」的一块 ——
   **报告版用它**，否则对拍页整页又瘦又长（2880×3614）
-- `expectBad`（可选）：截图前断言 `#grid` 里红格数，不符就退非零。
-  **对拍页用**：pass 断言 0、negctrl 断言 1 —— 红格数**数出来**，不靠目视
+- `expectBad` / `badSel`（可选）：截图前断言网格里红格数，不符就退非零。
+  **对拍页用**：pass 断言 0、negctrl 断言 1 —— 红格数**数出来**，不靠目视；
+  `badSel` 默认 `#grid .cell.bad`，GUI 用 `#cGrid .cell.bad`
 
 `EDGE=<路径>` 可覆盖自动查找。
 
 ## 还没做
 
 - ✅ ~~现场演示 GUI + 一键脚本~~ —— **2026-10-19 已成**（`gui.html` + `run_gui.cmd`）
-- ⬜ GUI / 演示页全流程截图与录屏尚未归档到 `../assets/`（视频阶段再做）
+- ✅ ~~GUI 截图归档~~ —— **2026-10-19 已成**：`../assets/2026-10-19_C_gui_act{1,2,3_match,3_negative,4}_*.png`
+  五张（`gen_shots.mjs gui` 生成，阴性对照红格数经脚本断言）
+- ⬜ **完整演示录屏**（不是截图）尚未录 —— 视频阶段做
 - ✅ ~~报告用的静态配图~~ —— **浅底版已成**：`../report/figures/demo_ntt_layer3.png` /
   `demo_compare_pass.png` / `demo_compare_negctrl.png`（`?theme=light` + `clip`，
   由本脚本生成）；折叠度 ↔ 周期数曲线在 `../report/figures/folding_sweep.svg`
 - ⬜ INTT 的逐值对拍（等 B 的落盘文件）
 - 🔄 演示视频旁白脚本 —— `video_script.md`：**分镜表已成（段 0–8）**；
-  **旁白段 0–4 / 7 / 8 已成文**（B-roll 不依赖别人，可先录），**段 5 / 6 待 A 的录屏/截图**；
+  **旁白九段全部成文**（段 5 / 6 于 10-19 按 A 已交的录屏/截图补成句）；
   已成文部分 **2026-10-13 已逐段回报告核过数字**（核出段 3 一处画面描述与 `compare.html` 不符、已改）；
   **2026-10-14 补 §四「分段录制流水单」**（段→打开什么/按什么/去向），并做录制前体检 ——
-  两终端链全绿 + 五个生成器 diff 干净 + 四张页面渲染正确；**又核出段 1「自动走一遍」与实物不符**（页面无自动播放，要手点 7 次），已改分镜表
+  两终端链全绿 + 五个生成器 diff 干净 + 四张页面渲染正确；**又核出段 1「自动走一遍」与实物不符**（旧页面无自动播放，要手点 7 次），已改分镜表；
+  **2026-10-19 更新**：段 1/3/6 的主路线改走 `gui.html` 四幕；段 5/6 素材状态改成实况；
+  补 921600 与功耗两条红线；新补旁白的数字已回 `board_pe*_txn.txt` / `design/03` §3.10.6 / `high_baud_demo.md` / `power_estimate.md` 核过
 
 ## 相关
 
