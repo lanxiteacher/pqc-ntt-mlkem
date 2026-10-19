@@ -28,8 +28,11 @@
 > ✅ **2026-10-19 实况：C 的三件已全部做完。**
 > ① 证据地图：`docs/evidence_map.md`；② GUI：`demo/gui.html` + `demo/run_gui.cmd`；
 > ③ Pareto/ATP/roofline：`metrics/gen_pareto.mjs` + `report/figures/pareto_atp_roofline.svg`
-> → 报告 §3.10.6；草稿 PDF 已重建为 75 页。下一步回到 10/25–27 的「项目总结」类
-> （视频 / 页码 / 提交包），不再新增功能。
+> → 报告 §3.10.6；草稿 PDF 已重建为 75 页。
+> **同日提前推进视频准备**：`demo/video_script.md` 九段旁白全部成文、段 1/3/6 改走 GUI，
+> 五张 GUI 截图已归档 `assets/`；**正式录屏仍未开始**，卡两件：定真人配音、
+> 向 A 取 112 MB 上板录屏原始文件。10/25–27 继续「项目总结」类（视频 / 页码 / 提交包），
+> 不再新增功能。
 
 ---
 
