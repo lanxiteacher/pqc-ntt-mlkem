@@ -15,7 +15,7 @@
 | **创新性** | **30** | `../docs/related-work.md`、`../report/design/01_background_and_related_work.md` §1.3–§1.5、`../report/design/02_design_and_innovation.md` | 一套参数化 RTL 出 1/4/16 三档；对外 12 位接口使引脚恒为 37（上游 16 蝶形要 397，本器件仅 125） | §二.1 |
 | **性能与资源** | **20** | `../metrics/README.md`、`../rtl/vivado/reports/` | 核：LUT 727 / 2,000 / 8,922，周期 904 / 232 / 69；推算 Fmax 168 / 160 / 154 MHz；板级提频 80 / 75 / 62.5 MHz | §二.2 |
 | **功能正确性** | **20** | `../refsim/`、`../rtl/probes/`、`../rtl/vivado/reports/board_*_txn.txt` | KAT 1000/1000；四条通路各 4096/4096；三档各六条命令 6/6 | §二.3 |
-| **大模型协作与技能包** | **15** | `../report/ai-log/`、`../report/design/06_appendix.md`、`../skill/` | 逐日日志 27 份（10-18 时点）；附录摘 6 条自我纠错；技能包 4 条提示词 / 34 条坑 / 3 个校验脚本 / 3 个模板 | §二.4 |
+| **大模型协作与技能包** | **15** | `../report/ai-log/`、`../report/design/06_appendix.md`、`../skill/` | 逐日日志 28 份（10-19 时点）；附录摘 6 条自我纠错；技能包 4 条提示词 / 34 条坑 / 3 个校验脚本 / 3 个模板 | §二.4 |
 | **文档与可复现** | **15** | `../README.md`、`../report/design/05_reproducibility.md`、`../skill/scripts/check_reproducible.sh` | 非作者（C）远端全新 clone 跑出「通过 4 / 跳过 0 / 失败 0」；B 另在干净 clone 跑 18/18 | §二.5 |
 
 > 《选题指南》§3.3.5.3 七项正文的映射另见 `../report/design/00_front_matter.md` §三；
@@ -45,6 +45,7 @@
 | 板级提频（MMCM） | `../rtl/vivado/reports/board_pe*_f*_{util,timing,io}.rpt`、`../rtl/vivado/board_freq_sweep.md` | `sh rtl/vivado/run_board_freq_sweep.sh` | **80 / 75 / 62.5 MHz**；新 WNS **+0.698 / +0.754 / +1.720 ns**；资源几乎不变 | 是「按该频率烧进去可用」，**不是芯片极限**；100 MHz pe1 WNS −0.066 未采用；hold 余量 0.05–0.06 ns 很紧 |
 | 端到端瓶颈归因 | `../metrics/data/bottleneck.csv`、`../report/design/03_performance_and_resources.md` §3.10.3 | `python metrics/bottleneck.py` | 核 **18.08 µs**（904 拍 ÷ 50 MHz）；串口 **184.4 ms**；核占 0.0098% | 串口段是模型值（真实字节 × 10 bit ÷ 115200）；软件参考实现随机器变 |
 | 指标汇总七列表 | `../metrics/data/metrics.csv`、`../metrics/README.md` | 同上两个生成器 | 资源 / 频率 / 周期 / 瓶颈归因 | 生成块不手改 |
+| Pareto / ATP / roofline | `../metrics/data/pareto.csv`、`../report/figures/pareto_atp_roofline.svg` | `node metrics/gen_pareto.mjs`；`node report/figures/gen_figures.mjs` | **ATP 最低 pe4（0.706× pe1）**；三档均在 Pareto 前沿；核需 188.0 / 686.6 / 1,923.9 MB/s，115200 只给 0.0115 MB/s（差 16,316–167,006×） | `@核 Fmax` 是工具推算、`@板上提频` 是实测频率；**功耗为估算**；带宽按每趟 2124 B 复算 |
 
 ### 2.3 功能正确性（20 分）
 
@@ -64,8 +65,8 @@
 
 | 主张 | 证据文件 | 复跑 / 核对命令 | 结果 | 边界 |
 |---|---|---|---|---|
-| 逐日 AI 协作日志 | `../report/ai-log/*.md` | `git ls-files 'report/ai-log/*.md'`（再数行数） | **27 个文件**（2026-10-18 时点） | 每天在变；附录索引行数必须等于文件数 |
-| 附录索引与自我纠错摘编 | `../report/design/06_appendix.md` §A.1 / §A.2 | 对文件计数、逐条回原日志 | 索引 27 行 = 27 个文件；摘 **6 条**轨迹 | B 的 09-29～10-05 **有意不补** |
+| 逐日 AI 协作日志 | `../report/ai-log/*.md` | `git ls-files 'report/ai-log/*.md'`（再数行数） | **28 个文件**（2026-10-19 时点） | 每天在变；附录索引行数必须等于文件数 |
+| 附录索引与自我纠错摘编 | `../report/design/06_appendix.md` §A.1 / §A.2 | 对文件计数、逐条回原日志 | 索引 28 行 = 28 个文件；摘 **6 条**轨迹 | B 的 09-29～10-05 **有意不补** |
 | 技能包 | `../skill/README.md` | 看各子目录的四件套表 | `prompts/` 4 条、`checklists/` 5 份 34 条、`scripts/` 3 个（+ `refsim/` 四条入口）、`templates/` 3 个 | PYNQ 模板只过语法检查，**不宣称加分** |
 | 非作者独立复现咬出缺陷（CRLF 回写） | `../skill/`、`../report/ai-log/` | 回原日志 | 见附录 §A.2 | 结论只到「发现并修复」，不外推 |
 
@@ -78,6 +79,7 @@
 | 非作者全新 clone | `../report/design/05_reproducibility.md` §5.6 | 同上 | C（非代码作者）从远端 clone 独立跑通 | 同一人、另一台机器上的首次；H10 的「第二台电脑」另计 |
 | 同一 PC 干净 clone 18 项 | `../logs/verification_2026-10-17_B_clean_clone.json` | 读 JSON `scope` | 18 项全过 | **不算 H10 换机** |
 | 报告构建 | `../report/build_report.py` | `python report/build_report.py` | Markdown → HTML → PDF；产物在 `report/build/`（不入库） | 页码/页眉在 W5 加 |
+| 现场演示 GUI + 一键脚本 | `../demo/gui.html`、`../demo/run_gui.cmd` | 双击 `run_gui.cmd`；或 `node demo/gen_gui_data.mjs` 重生成数据 | 四幕（输入 / 逐层 / 对拍 / 计时资源）；页面自检 32/32 组；对拍 256/256；阴性对照 255/256（1 个红格） | **无板回放**：板上数据来自已提交的 `board_*_txn.txt`，不是现场采集；自动演示约 3 分钟 |
 
 ---
 
@@ -102,9 +104,9 @@
 | 2 | 921600 演示模式 | A+B | 184 → 23 ms，0 误码 | 10/22 | ⬜ |
 | 3 | ML-KEM transcript replay | B | 全部 NTT 逐位一致 | 10/22 | ⬜ |
 | 4 | 变异测试 + 常数时间 | B | 变异体全捕获；周期恒 904/232/69 | 10/24 | ⬜ |
-| 5 | 现场演示 GUI + 一键脚本 | C | 双击可跑；无板回放；3 分钟 | 10/24 | ⬜ |
-| 6 | 证据地图 + 口径统一 | C+A | 报告/QA/metrics/视频四处一致 | 10/21 | 🔄 本文件 |
-| 7 | Pareto / ATP / roofline + 功耗估算 | C+A | 一图一表；功耗标估算 | 10/24 | ⬜ |
+| 5 | 现场演示 GUI + 一键脚本 | C | 双击可跑；无板回放；3 分钟 | 10/24 | ✅ 10-19（`demo/gui.html` + `run_gui.cmd`；无头 Edge 实测） |
+| 6 | 证据地图 + 口径统一 | C+A | 报告/QA/metrics/视频四处一致 | 10/21 | ✅ 10-19（本文件；报告已重建 75 页） |
+| 7 | Pareto / ATP / roofline + 功耗估算 | C+A | 一图一表；功耗标估算 | 10/24 | ✅ 10-19（C：`metrics/gen_pareto.mjs` + 三面板图；A：功耗 10-18） |
 
 > 边界：完整 ML-KEM RTL、AXI/PS、radix-4、PYNQ、2/8 折叠档**都不做**，
 > 理由见 `../logs/letter_2026-10-18_A_to_BC_plan.txt` §四。

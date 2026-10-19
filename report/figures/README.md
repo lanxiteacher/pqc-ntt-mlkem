@@ -1,6 +1,6 @@
 # report/figures —— 报告配图
 
-**主责：C** ｜ 状态：🔄 **4 张 SVG + 3 张演示页截图（浅色报告版，10-02）+ 2 张关键路径截图（A 10-15 交付，存 `assets/`）**
+**主责：C** ｜ 状态：🔄 **5 张 SVG（10-19 加 Pareto/ATP/roofline）+ 3 张演示页截图（浅色报告版，10-02）+ 2 张关键路径截图（A 10-15 交付，存 `assets/`）**
 
 > 放**报告正文里要用的图**。素材原图（截图、录屏）在 `../../assets/`，
 > 不要在这里重复存一份 —— 这里只放**排版好的、要进报告的**那一版。
@@ -12,6 +12,7 @@
 | 文件 | 用在哪 | 画的是什么 |
 |---|---|---|
 | `folding_sweep.svg` | `design/03_performance_and_resources.md` §3.3 | 折叠度三档（1 / 4 / 16 蝶形）的 **NTT 周期数 / LUT 占用 / 推算 Fmax** 三个面板 |
+| `pareto_atp_roofline.svg` | `design/03_performance_and_resources.md` §3.10.6 | 三面板：**Pareto**（LUT vs 吞吐，气泡 = 功耗估算）、**ATP = LUT×周期**、**roofline**（串口带宽屋顶 vs 核计算屋顶）。数据来自 `metrics/data/pareto.csv` |
 | `verify_chain.svg` | `design/04_functional_correctness.md` §4.3 | 验证链：FIPS 203 KAT → C 参考实现 → 作者期望输出 → RTL 对拍，四个入口脚本与结果标在链上 |
 | `architecture.svg` | `design/02_design_and_innovation.md` §2.2 | 架构三层：`KyberHPMNTT_top` 的对外端口 / 核外的序列化-反序列化 / 核内的宽接口。实线 = 数据，虚线 = 控制 |
 | `demo_ntt_layer3.png` | `design/05_reproducibility.md` §5.4 | 演示页（**浅色报告版**）：正变换走到第 3 层，右侧显示选中系数的蝶形算式与配对 |
@@ -34,7 +35,8 @@
 **重新生成**：
 
 ```bash
-node report/figures/gen_figures.mjs      # → report/figures/folding_sweep.svg
+node metrics/gen_pareto.mjs              # → metrics/data/pareto.csv（Pareto 图的原料）
+node report/figures/gen_figures.mjs      # → folding_sweep.svg + pareto_atp_roofline.svg
 ```
 
 ⚠️ **参数化版本重测后（W5）要重跑这一步** —— 先跑 `node metrics/gen_metrics.mjs` 更新 CSV，

@@ -47,6 +47,7 @@
   };
 
   const NAV = [
+    { key: 'gui',     href: 'gui.html',     label: '现场演示' },
     { key: 'ntt',     href: 'index.html',   label: '正变换 NTT' },
     { key: 'intt',    href: 'intt.html',    label: '逆变换 INTT' },
     { key: 'compare', href: 'compare.html', label: '对拍结果' }

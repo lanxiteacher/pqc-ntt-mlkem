@@ -191,9 +191,9 @@
 | 2 | A+B | 921600 演示模式：`UART_BPS` + host `--baud` | ✅ **10-18 已做**：线上 **184 → 23 ms（8.0×）**、0 误码；⚠️ 事务墙钟 0.250 → 0.079 s（3.2×），差值是 CH340 的 31 ms USB 往返（`#PING` 两种波特率都是 0.031 s）。证据 `rtl/vivado/high_baud_demo.md` + `reports/board_pe1_b921600_txn.txt` | 已完成 |
 | 3 | B | ML-KEM transcript replay：✅ B 无板链已完成，C/陪练及三档实际RTL45次/11520系数通过；固定trace、批量路径测试及送板工具已交付。⏳ 真板15次/档待A执行，见 `team/handoff_2026-10-18_B_trace_delivery.md` | 全部NTT送板逐位一致；JSON + 报告 §4.x（本机结果不代替送板） | 10/22 |
 | 4 | B | 变异测试 + 固定周期：✅ **10-18 AI 自动验收通过**，17/17 被捕获；三档各 100 随机 + 3 边界输入，C 输出及有效地址一致。首次闲置写地址差异已注明；非完整侧信道证明。用户手动验收已截图确认 | 904/232/69；证据与范围见 `team/handoff_2026-10-18_B_strengthening.md` | 自动完成 |
-| 5 | C | 现场演示 GUI + 一键脚本 | 双击可跑；无板回放；3 分钟 | 10/24 |
-| 6 | C+A | 证据地图 + 口径统一：核 Fmax 168/160/154 与板级实测 80/75/62.5 分两行。<br>✅ **C 侧 10-18 已完成**：`docs/evidence_map.md` + 报告/QA/metrics/视频四处改齐（73 页 PDF 已重建）。✅ **A 侧 10-18 已复核**：抽查 01/02/03、metrics、docs —— 两行口径一致；顺手修了一处旧句「板上跑不到 154 MHz」→「板级未以 154 MHz 运行，提频实跑 62.5」 | 报告/QA/metrics/视频四处一致 | 10/21 |
-| 7 | C+A | Pareto/ATP/roofline + 功耗估算（A 做 `report_power`，标估算） | ✅ **A 侧 10-18 已完成**：六版位流功耗估算 —— 50 MHz 三档 **0.130 / 0.170 / 0.335 W**，提频版 0.257 / 0.300 / 0.440 W；**提频的 +0.127 W 里 0.116 W 是 MMCM**。证据 `rtl/vivado/power_estimate.md` + 报告 §3.10.5。⏳ C 侧 Pareto/ATP 图待做 | 10/24 |
+| 5 | C | 现场演示 GUI + 一键脚本 | ✅ **10-19 已做**：`demo/gui.html`（四幕：输入 / 逐层 / 对拍 / 计时资源）+ `demo/run_gui.cmd`；无板回放 + `?auto=1` 自动演示；无头 Edge 实测自检 32/32、对拍 256/256、阴性对照 1 个红格 | 已完成 |
+| 6 | C+A | 证据地图 + 口径统一：核 Fmax 168/160/154 与板级实测 80/75/62.5 分两行。<br>✅ **C 侧 10-18 已完成**：`docs/evidence_map.md` + 报告/QA/metrics/视频四处改齐（10-19 加 §3.10.6 后重建为 75 页 PDF）。✅ **A 侧 10-18 已复核**：抽查 01/02/03、metrics、docs —— 两行口径一致；顺手修了一处旧句「板上跑不到 154 MHz」→「板级未以 154 MHz 运行，提频实跑 62.5」 | 报告/QA/metrics/视频四处一致 | 10/21 |
+| 7 | C+A | Pareto/ATP/roofline + 功耗估算（A 做 `report_power`，标估算） | ✅ **A 侧 10-18 已完成**：六版位流功耗估算 —— 50 MHz 三档 **0.130 / 0.170 / 0.335 W**，提频版 0.257 / 0.300 / 0.440 W；**提频的 +0.127 W 里 0.116 W 是 MMCM**。证据 `rtl/vivado/power_estimate.md` + 报告 §3.10.5。<br>✅ **C 侧 10-19 已完成**：`metrics/gen_pareto.mjs` → `data/pareto.csv`；三面板图 `report/figures/pareto_atp_roofline.svg` 进报告 §3.10.6。结论：**ATP 最低 pe4（0.706× pe1）**；核需 188.0 / 686.6 / 1,923.9 MB/s，115200 只给 0.0115 MB/s（差 16,316–167,006×） | 已完成 |
 
 **顺序**：P0 10/19–20（A 921600 综合、B trace 钩子、C 证据地图）→ P1 10/21–23（A 上板、B replay+变异、C GUI）→ P2 10/24（B 常数时间、C Pareto、A 功耗）→ Freeze 10/25–27。
 **不做**：完整 ML-KEM RTL / AXI/PS / radix-4 / PYNQ 回头 / 2/8 折叠档。

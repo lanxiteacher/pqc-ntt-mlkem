@@ -24,6 +24,12 @@
 > 168/160/154 与板级实测 80/75/62.5 分两行；② **P1 现场演示 GUI + 一键脚本**（10/24）；
 > ③ **P2 Pareto/ATP/roofline**（10/24）。视频 / 页码 / 提交包等 **10/25–27** 再做；
 > skill 整理继续后置。明细见 `logs/letter_2026-10-18_A_to_BC_plan.txt`。
+>
+> ✅ **2026-10-19 实况：C 的三件已全部做完。**
+> ① 证据地图：`docs/evidence_map.md`；② GUI：`demo/gui.html` + `demo/run_gui.cmd`；
+> ③ Pareto/ATP/roofline：`metrics/gen_pareto.mjs` + `report/figures/pareto_atp_roofline.svg`
+> → 报告 §3.10.6；草稿 PDF 已重建为 75 页。下一步回到 10/25–27 的「项目总结」类
+> （视频 / 页码 / 提交包），不再新增功能。
 
 ---
 

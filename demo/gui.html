@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>现场演示 —— ML-KEM NTT/INTT FPGA 加速核</title>
+</head>
+<body>
+<script src="data/vectors.js"></script>
+<script src="data/compare.js"></script>
+<script src="data/gui.js"></script>
+<script src="ntt-view.js"></script>
+<script>
+/* ===========================================================================
+ * gui.html —— 现场演示（出彩组合 #5）
+ *
+ * 四幕：① 输入 → ② 逐层动画 → ③ 对拍（含阴性对照）→ ④ 计时 / 资源
+ * - 双击即可打开（数据都写成 .js，file:// 下不受 CORS 限制）
+ * - 没有开发板时按「回放模式」展示 2026-10-18 已提交的板上报告
+ * - 「自动演示」约 3 分钟走完全部四幕；也支持手动逐层点
+ *
+ * 数据来源：
+ *   data/vectors.js  ← demo/gen_layers.mjs（C 自己的逐层复算，末级对 KAT）
+ *   data/compare.js  ← demo/gen_compare.mjs（RTL 落盘 vs 黄金向量）
+ *   data/gui.js      ← demo/gen_gui_data.mjs（metrics / 板级报告解析）
+ * =========================================================================== */
+(function () {
+  'use strict';
+
+  const V = window.NTT_DATA, C = window.COMPARE_DATA, G = window.GUI_DATA;
+  if (!V || !C || !G) {
+    document.body.innerHTML = '<p style="padding:20px">读不到演示数据 —— 先在仓库根目录跑：' +
+      '<br><code>node demo/gen_layers.mjs</code>' +
+      '<br><code>node demo/gen_compare.mjs</code>' +
+      '<br><code>node demo/gen_gui_data.mjs</code></p>';
+    return;
+  }
+  NttView.css();
+
+  const extra = document.createElement('style');
+  extra.textContent = `
+    main.gui-main { display:block; padding:16px 20px 8px; max-width:1460px; }
+    .tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+    .tabs button { font-size:13px; padding:7px 14px; }
+    .tabs button.on { border-color:var(--accent); color:var(--accent); }
+    .statusbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+                 padding:10px 20px; border-bottom:1px solid var(--line); font-size:12px; }
+    .badge { border:1px solid var(--line); border-radius:999px; padding:3px 10px; color:var(--dim); }
+    .badge.warn { color:var(--hot); border-color:var(--hot); }
+    .badge.ok { color:var(--ok-fg); border-color:var(--ok); }
+    .grow { flex:1; }
+    .narr { margin:0 20px 10px; padding:10px 14px; border:1px solid var(--accent);
+            border-radius:6px; background:var(--panel); font-size:14px; }
+    .narr b { color:var(--accent); }
+    section.act { display:none; }
+    section.act.on { display:block; }
+    .row { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
+    .col { flex:1 1 420px; min-width:340px; }
+    .col2 { flex:1 1 380px; min-width:320px; }
+    textarea { width:100%; min-height:110px; background:var(--panel); color:var(--fg);
+               border:1px solid var(--line); border-radius:5px; padding:8px 10px;
+               font:12px/1.5 "Consolas","Cascadia Mono","Courier New",monospace; resize:vertical; }
+    .hint { color:var(--dim); font-size:12px; margin-top:6px; min-height:18px; }
+    .hint.err { color:var(--err-fg); }
+    .hint.ok { color:var(--ok-fg); }
+    .grid256 { display:grid; grid-template-columns:repeat(16,minmax(26px,1fr)); gap:2px;
+               max-width:780px; }
+    .grid256 .cell { height:25px; font-size:11px; padding:0 1px; }
+    .minigrid { display:grid; grid-template-columns:repeat(16,minmax(18px,1fr)); gap:1px;
+                max-width:620px; margin-top:8px; }
+    .minigrid .cell { height:19px; font-size:9px; color:var(--dim); }
+    .statline { display:flex; gap:18px; flex-wrap:wrap; font-size:13px; margin-bottom:8px; }
+    .statline b { color:var(--fg); }
+    .statline span { color:var(--dim); }
+    .cards { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 14px; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:6px;
+            padding:9px 14px; min-width:128px; }
+    .card .k { color:var(--dim); font-size:12px; }
+    .card .v { font-size:19px; line-height:1.3; }
+    .card .s { color:var(--dim); font-size:11px; }
+    .card.hl { border-color:var(--accent); }
+    .chart { background:var(--panel); border:1px solid var(--line); border-radius:6px;
+             padding:8px 12px; overflow-x:auto; }
+    .chart h3 { margin:2px 0 6px; font-size:13px; color:var(--accent); font-weight:600; }
+    .chart svg { display:block; max-width:100%; height:auto; }
+    table.t { width:100%; border-collapse:collapse; font-size:12px; }
+    table.t th { text-align:left; color:var(--dim); font-weight:600; padding:3px 6px 3px 0;
+                 border-bottom:1px solid var(--line); }
+    table.t td { padding:3px 6px 3px 0; color:var(--fg); vertical-align:top; }
+    table.t td.d { color:var(--dim); }
+    .panelbox { background:var(--panel); border:1px solid var(--line); border-radius:6px;
+                padding:10px 14px; margin-bottom:12px; }
+    .panelbox h2 { margin:0 0 8px; font-size:13px; color:var(--accent); font-weight:600; }
+    .okfg { color:var(--ok-fg); }
+    .errfg { color:var(--err-fg); }
+    .cell.bad { background:var(--bad-bg); color:var(--bad-fg); border-color:var(--bad-line);
+                font-weight:700; }
+    .cell.okc { color:var(--ok-fg); }
+    .cell.pick { outline:2px solid var(--accent); outline-offset:-2px; }
+    .speed { font-size:13px; }
+    .bar button.on { border-color:var(--accent); color:var(--accent); }
+    .footer-note { color:var(--dim); font-size:12px; padding:4px 20px 26px; }
+    code { color:var(--code); }
+  `;
+  document.head.appendChild(extra);
+
+  /* ---- 与生成器逐行一致的 16 位算术 -------------------------------- */
+  const Q = 3329, QINV = -3327, F_INV = 1441;
+  const i16 = (x) => (x << 16) >> 16;
+  function montgomeryReduce(a) {
+    let t = i16(i16(a) * QINV);
+    t = i16((a - t * Q) >> 16);
+    return t;
+  }
+  function barrettReduce(a) {
+    const v = 20159;
+    let t = i16((Math.imul(v, a) + (1 << 25)) >> 26);
+    t = i16(t * Q);
+    return i16(a - t);
+  }
+  const fqmul = (a, b) => montgomeryReduce(Math.imul(a, b));
+  const canon = (v) => ((v % Q) + Q) % Q;
+  const N = V.meta.n;
+  const Z = V.zetas;
+
+  function runNttLayers(input) {
+    const r = Int32Array.from(input, (v) => i16(v & 0x0fff));
+    const snaps = [Array.from(r, canon)];
+    const steps = [];
+    let k = 1;
+    for (let len = 128; len >= 2; len >>= 1) {
+      const zetaFrom = k;
+      let groups = 0;
+      for (let start = 0; start < N; start += 2 * len) {
+        const zeta = Z[k++];
+        groups++;
+        for (let j = start; j < start + len; j++) {
+          const t = fqmul(zeta, r[j + len]);
+          r[j + len] = i16(r[j] - t);
+          r[j] = i16(r[j] + t);
+        }
+      }
+      steps.push({ kind: 'layer', len, groups, zetaFrom, zetaTo: k - 1 });
+      snaps.push(Array.from(r, canon));
+    }
+    return { snaps, steps };
+  }
+
+  function runInttLayers(input) {
+    const r = Int32Array.from(input, (v) => i16(v & 0x0fff));
+    const snaps = [Array.from(r, canon)];
+    const steps = [];
+    let k = 127;
+    for (let len = 2; len <= 128; len <<= 1) {
+      const zetaFrom = k;
+      let groups = 0;
+      for (let start = 0; start < N; start += 2 * len) {
+        const zeta = Z[k--];
+        groups++;
+        for (let j = start; j < start + len; j++) {
+          const t = r[j];
+          r[j] = barrettReduce(i16(t + r[j + len]));
+          r[j + len] = i16(r[j + len] - t);
+          r[j + len] = fqmul(zeta, r[j + len]);
+        }
+      }
+      steps.push({ kind: 'layer', len, groups, zetaFrom, zetaTo: k + 1 });
+      snaps.push(Array.from(r, canon));
+    }
+    for (let j = 0; j < N; j++) r[j] = fqmul(r[j], F_INV);
+    steps.push({ kind: 'scale', f: F_INV });
+    snaps.push(Array.from(r, canon));
+    return { snaps, steps };
+  }
+
+  const compute = (input, dir) => (dir === 'ntt' ? runNttLayers(input) : runInttLayers(input));
+
+  /* ---- 页面自检：正/逆各 16 组，末级必须等于 KAT ---------------------- */
+  const selfCheck = (() => {
+    let okCnt = 0, total = 0;
+    for (const dir of ['ntt', 'intt']) {
+      for (const vec of V.dirs[dir].vectors) {
+        total++;
+        const out = compute(vec.input, dir).snaps.slice(-1)[0];
+        if (out.every((x, i) => x === vec.expected[i])) okCnt++;
+      }
+    }
+    return { okCnt, total, values: total * N };
+  })();
+
+  /* ---- 状态 ------------------------------------------------------------ */
+  const S = {
+    act: 1,
+    dir: 'ntt',
+    src: 'kat',
+    vec: 0,
+    input: V.dirs.ntt.vectors[0].input.slice(),
+    snaps: null,
+    steps: null,
+    step: 0,
+    sel: null,
+    playTimer: null,
+    cmp: { mode: 'real', vec: 0, pick: null },
+    tier: 'pe1',
+    auto: null,
+    autoTimers: []
+  };
+
+  const DIR_LABEL = { ntt: '正变换 NTT', intt: '逆变换 INTT' };
+  const hex3 = (v) => v.toString(16).padStart(3, '0');
+
+  /* ---- 页面骨架 -------------------------------------------------------- */
+  document.title = '现场演示 —— ML-KEM NTT/INTT FPGA 加速核';
+  document.body.innerHTML = `
+    <header>
+      <h1>现场演示 —— 从 256 个数到一块 FPGA 加速核</h1>
+      <div class="sub">
+        ML-KEM 的 NTT / INTT / 点乘 ｜ 参数化折叠度 pe1 / pe4 / pe16 ｜
+        q = ${V.meta.q}，N = ${N}
+      </div>
+    </header>
+    <nav>${NttView.nav('gui')}</nav>
+    <div class="statusbar">
+      <span class="badge warn" title="${G.meta.boardNote}">无板 · 回放模式</span>
+      <span class="badge ${selfCheck.okCnt === selfCheck.total ? 'ok' : 'warn'}" id="selfCheckBadge"></span>
+      <span class="grow"></span>
+      <button id="btnAuto">▶ 自动演示（约 3 分钟）</button>
+      <button id="btnStop" disabled>■ 停止</button>
+    </div>
+    <div class="narr" id="narr" hidden></div>
+    <main class="gui-main">
+      <div class="tabs" id="tabs">
+        <button data-go="1" class="on">① 输入</button>
+        <button data-go="2">② 逐层动画</button>
+        <button data-go="3">③ 对拍</button>
+        <button data-go="4">④ 计时 / 资源</button>
+      </div>
+
+      <!-- ================= 第一幕：输入 ================= -->
+      <section class="act on" data-act="1">
+        <div class="row">
+          <div class="col">
+            <div class="bar">
+              <label class="speed">方向
+                <select id="dirSel">
+                  <option value="ntt">正变换 NTT</option>
+                  <option value="intt">逆变换 INTT</option>
+                </select>
+              </label>
+              <label class="speed">来源
+                <select id="srcSel">
+                  <option value="kat">KAT 向量（16 组）</option>
+                  <option value="custom">自定义 / 随机</option>
+                </select>
+              </label>
+              <select id="vecSel"></select>
+            </div>
+            <textarea id="ta" spellcheck="false"></textarea>
+            <div class="bar" style="margin-top:8px">
+              <button id="btnRand">随机输入</button>
+              <button id="btnLoadKat">载入所选 KAT</button>
+              <button id="btnStart">开始逐层演示 →</button>
+            </div>
+            <div class="hint" id="inputMsg"></div>
+          </div>
+          <div class="col2">
+            <div class="panelbox">
+              <h2>这一份输入</h2>
+              <div class="statline" id="inputStats"></div>
+              <div class="minigrid" id="inputGrid"></div>
+            </div>
+            <div class="panelbox">
+              <h2>口径（说给评委听的版本）</h2>
+              <div class="legend">
+                输入是 256 个模 <code>q = 3329</code> 的系数。NTT 把它重排成
+                「点值表示」；FPGA 上一共 7 层，每层做 128 次蝶形。
+                <b>每一层都会在右边的格子里看到数字变化。</b><br><br>
+                演示页不连开发板时，展示的是 <b>2026-10-18 已提交的真板报告</b>
+                （三档各 6 条命令 6/6），以及 C 用参考实现逐层复算的中间值 ——
+                末级必须与黄金向量逐值一致，页面加载时已自检。
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 第二幕：逐层动画 ================= -->
+      <section class="act" data-act="2">
+        <div class="bar">
+          <button id="aPrev">← 上一层</button>
+          <button id="aNext">下一层 →</button>
+          <button id="aPlay">自动走完</button>
+          <label class="speed">速度
+            <select id="aSpeed">
+              <option value="1400">快</option>
+              <option value="2200" selected>中</option>
+              <option value="3200">慢</option>
+            </select>
+          </label>
+          <button id="aReset">重置</button>
+          <span class="stage" id="aStage"></span>
+        </div>
+        <div class="row">
+          <div class="col">
+            <div class="grid256" id="aGrid"></div>
+            <div style="height:8px"></div>
+            <div class="legend" id="aLegend"></div>
+          </div>
+          <div class="col2">
+            <div class="panelbox"><h2>这一步在干什么</h2><dl class="kv" id="aInfo"></dl></div>
+            <div class="panelbox"><h2>选一个数看它的蝶形</h2><table class="t" id="aBf"></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 第三幕：对拍 ================= -->
+      <section class="act" data-act="3">
+        <div class="bar">
+          <select id="cVec"></select>
+          <button id="cReal" class="on">实测</button>
+          <button id="cNeg">阴性对照：改坏一条期望值</button>
+          <button id="cFromAnim">用刚才的向量</button>
+          <span class="stage" id="cStage"></span>
+        </div>
+        <div class="row">
+          <div class="col">
+            <div class="grid256" id="cGrid"></div>
+            <div style="height:8px"></div>
+            <div class="legend" id="cNote"></div>
+          </div>
+          <div class="col2">
+            <div class="panelbox"><h2>点一个系数</h2><table class="t" id="cCell"></table></div>
+            <div class="panelbox"><h2>各项运算的判定</h2><table class="t" id="cOps"></table>
+              <div class="legend" id="cOpsNote" style="margin-top:6px"></div></div>
+            <div class="panelbox"><h2>非退化统计（「全中」必须配这个才作数）</h2>
+              <table class="t" id="cDegen"></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 第四幕：计时 / 资源 ================= -->
+      <section class="act" data-act="4">
+        <div class="bar" id="tierBtns"></div>
+        <div class="cards" id="tierCards"></div>
+        <div class="row">
+          <div class="col">
+            <div class="chart"><h3>一次 NTT 的内核周期数（越小越快）</h3><div id="chartCycles"></div></div>
+            <div style="height:12px"></div>
+            <div class="chart"><h3>端到端时间花在哪：核 vs 串口线 vs USB（pe1，115200-8N1）</h3>
+              <div id="chartLatency"></div></div>
+          </div>
+          <div class="col2">
+            <div class="panelbox"><h2>三档放在一起看</h2><table class="t" id="tierTable"></table></div>
+            <div class="panelbox"><h2>一句话结论</h2><div class="legend">
+              <b>核快了 13.1×，端到端只快 3.2×</b> —— 因为 256 行数据要走串口：
+              核本身只要 <b>18 µs</b>，而线上搬运要 <b>184 ms</b>。
+              921600 波特率把线上时间压到 <b>23 ms（8.0×）</b>，
+              再把墙钟压到 <b>0.079 s（3.2×）</b>；剩下的约 55 ms 是 CH340 的 USB 往返，
+              不是 FPGA、也不是协议。<br><br>
+              <b>口径分两行，别混：</b>核的推算 Fmax（post-route，168 / 160 / 154 MHz）
+              与板上真跑的提频频率（80 / 75 / 62.5 MHz）不是同一个东西；
+              50 MHz 基线的 WNS 也不能反推 Fmax。
+            </div></div>
+            <div class="panelbox"><h2>数据从哪来</h2><div class="legend" id="srcNote"></div></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="footer-note" id="foot"></footer>
+  `;
+
+  const $ = (id) => document.getElementById(id);
+
+  /* ---- 状态栏 / 导航 ---------------------------------------------------- */
+  $('selfCheckBadge').textContent = selfCheck.okCnt === selfCheck.total
+    ? `本页自检 ${selfCheck.okCnt}/${selfCheck.total} 组 · 末级 = 黄金向量（${selfCheck.values} 个值）`
+    : `⚠️ 本页自检 ${selfCheck.okCnt}/${selfCheck.total} 组不符 —— 不要用于演示`;
+  $('selfCheckBadge').title = '页面加载时按页面写出的算式重算，正/逆各 16 组，末级与 research/mlkem_kat/ 的黄金向量逐值比较';
+
+  function goAct(n, fromAuto) {
+    if (!fromAuto && S.auto) stopAuto();
+    S.act = n;
+    document.querySelectorAll('section.act').forEach((el) => {
+      el.classList.toggle('on', Number(el.dataset.act) === n);
+    });
+    document.querySelectorAll('#tabs button').forEach((b) => {
+      b.classList.toggle('on', Number(b.dataset.go) === n);
+    });
+    if (n === 2) ensureLayers();
+    if (n === 3) renderCompare();
+    if (n === 4) renderTier();
+  }
+  document.querySelectorAll('#tabs button').forEach((b) => {
+    b.addEventListener('click', () => goAct(Number(b.dataset.go)));
+  });
+
+  /* ---- 第一幕：输入 ---------------------------------------------------- */
+  const dirSel = $('dirSel'), srcSel = $('srcSel'), vecSel = $('vecSel'), ta = $('ta');
+
+  for (let i = 0; i < V.meta.nVectors; i++) {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = '向量 ' + String(i).padStart(2, '0');
+    vecSel.appendChild(o);
+  }
+
+  function katInput(dir, idx) {
+    return V.dirs[dir].vectors[idx].input.slice();
+  }
+  function setInput(arr, src, note) {
+    S.input = arr.slice();
+    S.src = src;
+    ta.value = arr.join(' ');
+    srcSel.value = src;
+    updateInputStats(note);
+  }
+  function updateInputStats(note) {
+    const arr = S.input;
+    const uniq = new Set(arr).size;
+    const toHex = (v) => v;
+    $('inputStats').innerHTML =
+      `<span>共 <b>${arr.length}</b> 个数</span>` +
+      `<span>不同值 <b>${uniq}</b></span>` +
+      `<span>范围 <b>${Math.min(...arr)} .. ${Math.max(...arr)}</b></span>` +
+      `<span>方向 <b>${DIR_LABEL[S.dir]}</b></span>`;
+    if (S.src === 'kat') {
+      const vec = V.dirs[S.dir].vectors[S.vec];
+      const out = compute(arr, S.dir).snaps.slice(-1)[0];
+      const same = out.every((x, i) => x === vec.expected[i]);
+      $('inputMsg').className = 'hint ' + (same ? 'ok' : 'err');
+      $('inputMsg').textContent = same
+        ? `来源：KAT 向量 ${String(S.vec).padStart(2, '0')}（${DIR_LABEL[S.dir]}）—— 本页复算末级与黄金向量 ${N}/${N} 一致。`
+        : `来源：KAT 向量 ${String(S.vec).padStart(2, '0')}，但本页复算末级与黄金向量不一致！`;
+    } else {
+      $('inputMsg').className = 'hint';
+      $('inputMsg').textContent = note ||
+        '自定义输入：没有对应的黄金向量，末级无法对拍。现场演示建议用 KAT 向量，或先看动画再切到「对拍」页选一组 KAT。';
+    }
+    // 预览格
+    const grid = $('inputGrid');
+    grid.innerHTML = '';
+    for (let i = 0; i < N; i++) {
+      const d = document.createElement('div');
+      d.className = 'cell';
+      d.textContent = arr[i];
+      d.title = '下标 ' + i + ' ｜ 十进制 ' + arr[i] + ' ｜ 十六进制 ' + hex3(arr[i]);
+      grid.appendChild(d);
+    }
+  }
+
+  function loadKat() {
+    S.vec = Number(vecSel.value);
+    setInput(katInput(S.dir, S.vec), 'kat');
+  }
+  dirSel.addEventListener('change', () => {
+    S.dir = dirSel.value;
+    if (S.src === 'kat') loadKat();
+    else updateInputStats();
+  });
+  vecSel.addEventListener('change', () => {
+    S.src = 'kat';
+    srcSel.value = 'kat';
+    loadKat();
+  });
+  srcSel.addEventListener('change', () => {
+    S.src = srcSel.value;
+    if (S.src === 'kat') loadKat();
+    else updateInputStats();
+  });
+  $('btnLoadKat').addEventListener('click', loadKat);
+  ta.addEventListener('input', () => {
+    S.src = 'custom';
+    srcSel.value = 'custom';
+    const parsed = parseInput(ta.value);
+    if (parsed.error) {
+      $('inputMsg').className = 'hint err';
+      $('inputMsg').textContent = parsed.error;
+      return;
+    }
+    S.input = parsed.arr;
+    updateInputStats();
+  });
+  $('btnRand').addEventListener('click', () => {
+    const arr = new Array(N);
+    // 用整数 0..q-1；随机输入天然非退化，统计里会显示不同值个数
+    for (let i = 0; i < N; i++) arr[i] = Math.floor(Math.random() * Q);
+    setInput(arr, 'custom', '随机输入：每个系数独立取 0..3328。没有黄金向量，只用于看动画。');
+  });
+
+  function parseInput(text) {
+    const parts = text.split(/[\s,;]+/).filter((s) => s !== '');
+    if (parts.length !== N) return { error: `需要正好 ${N} 个数，现在是 ${parts.length} 个。` };
+    const arr = parts.map(Number);
+    for (const v of arr) {
+      if (!Number.isInteger(v) || v < 0 || v > 4095) {
+        return { error: '每个数必须是 0..4095 的整数（模 q 的系数，通常 0..3328）。' };
+      }
+    }
+    return { arr };
+  }
+
+  /* ---- 第二幕：逐层动画 ------------------------------------------------ */
+  function ensureLayers() {
+    const parsed = S.src === 'kat' ? { arr: katInput(S.dir, S.vec) } : parseInput(ta.value);
+    if (parsed.error) {
+      $('inputMsg').className = 'hint err';
+      $('inputMsg').textContent = parsed.error;
+      goAct(1);
+      return;
+    }
+    S.input = parsed.arr;
+    const out = compute(S.input, S.dir);
+    S.snaps = out.snaps;
+    S.steps = out.steps;
+    S.step = 0;
+    S.sel = null;
+    buildAnimGrid();
+    renderAnim();
+  }
+
+  function buildAnimGrid() {
+    const g = $('aGrid');
+    if (g.childElementCount === N) return;
+    g.innerHTML = '';
+    for (let i = 0; i < N; i++) {
+      const d = document.createElement('div');
+      d.className = 'cell';
+      d.addEventListener('click', () => { S.sel = (S.sel === i ? null : i); renderAnim(); });
+      g.appendChild(d);
+    }
+  }
+
+  function geometry(s, i) {
+    const st = S.steps[s];
+    const L = st.len;
+    const g = Math.floor(i / (2 * L));
+    const base = g * 2 * L;
+    const a = base + (i - base) % L;
+    const b = a + L;
+    const zetaIdx = (S.dir === 'ntt') ? st.zetaFrom + g : st.zetaFrom - g;
+    return { L, g, base, a, b, zeta: Z[zetaIdx], zetaIdx };
+  }
+
+  function renderAnim() {
+    if (!S.snaps) return;
+    const NS = S.steps.length;
+    const cur = S.snaps[S.step];
+    const prev = S.step > 0 ? S.snaps[S.step - 1] : null;
+    const st = S.step > 0 ? S.steps[S.step - 1] : null;
+    const cs = $('aGrid').children;
+
+    for (let i = 0; i < N; i++) {
+      const c = cs[i];
+      const changed = prev && cur[i] !== prev[i];
+      let cls = 'cell' + (S.step > 0 ? ' on' : '');
+      if (changed) cls += ' chg';
+      if (S.sel === i) cls += ' sel';
+      else if (st && st.kind === 'layer' && S.sel !== null &&
+               geometry(S.step - 1, i).g === geometry(S.step - 1, S.sel).g) cls += ' pair';
+      c.className = cls;
+      c.textContent = cur[i];
+      c.title = '下标 ' + i + ' ｜ 十进制 ' + cur[i] + ' ｜ 十六进制 ' + hex3(cur[i]);
+    }
+
+    $('aStage').innerHTML = S.step === 0
+      ? '状态：<b>输入</b>（还没开始）'
+      : `状态：第 <b>${S.step}</b> / ${NS} 步已经走完`;
+
+    let info = `<dt>步</dt><dd>${S.step} / ${NS}</dd>`;
+    if (st && st.kind === 'scale') {
+      info += `<dt>性质</dt><dd>末级缩放（不是蝶形）</dd>` +
+        `<dt>算式</dt><dd><code>r′ = fqmul(r, ${st.f})</code> ≡ <code>r × 512</code></dd>`;
+    } else if (st) {
+      const changed = prev.reduce((n, x, i) => n + (x !== cur[i] ? 1 : 0), 0);
+      info += `<dt>蝶形</dt><dd>${S.dir === 'ntt' ? 'CT / DIT' : 'GS / DIF'}</dd>` +
+        `<dt>len</dt><dd>${st.len}（每组 ${st.len} 个蝶形）</dd>` +
+        `<dt>组数</dt><dd>${st.groups}</dd>` +
+        `<dt>twiddle</dt><dd><code>zetas[${st.zetaFrom}] → [${st.zetaTo}]</code>（${S.dir === 'ntt' ? '递增' : '递减'}）</dd>` +
+        `<dt>本步数值变了</dt><dd>${changed} / ${N} 个</dd>`;
+    } else {
+      info += '<dt>说明</dt><dd>这 256 个数就是待变换的系数。点「下一层」开始。</dd>';
+    }
+    $('aInfo').innerHTML = info;
+
+    renderBf(cur, prev, st);
+
+    $('aLegend').innerHTML =
+      '<span class="swatch" style="background:var(--hot-bg);border:1px solid var(--hot)"></span> 这一步值变了　' +
+      '<span class="swatch" style="background:var(--sel);border:1px solid var(--accent)"></span> 你选中的数　' +
+      '<span class="swatch" style="border:1px dashed var(--accent)"></span> 它的配对　｜　' +
+      `共 ${NS} 步，剩余 <b>${NS - S.step}</b> 步`;
+
+    $('aPrev').disabled = S.step === 0;
+    $('aNext').disabled = S.step === NS;
+  }
+
+  function renderBf(cur, prev, st) {
+    const row = (k, v) => `<tr><td class="d">${k}</td><td>${v}</td></tr>`;
+    if (S.step === 0) { $('aBf').innerHTML = '<tr><td class="d">先按「下一层」，再点格子。</td></tr>'; return; }
+    if (S.sel === null) { $('aBf').innerHTML = '<tr><td class="d">点左边的格子。</td></tr>'; return; }
+    if (st.kind === 'scale') {
+      $('aBf').innerHTML =
+        row('你点的下标', `${S.sel}（这一步 256 个系数各算一次，没有配对）`) +
+        row('本步前', `${prev[S.sel]}（十六进制 ${hex3(prev[S.sel])}）`) +
+        row('本步后', `${cur[S.sel]}（十六进制 ${hex3(cur[S.sel])}）`) +
+        row('算式', `<code>r′ = fqmul(r, ${st.f})</code> ≡ <code>r × 512 mod q</code>；512 = R/128`);
+      return;
+    }
+    const G2 = geometry(S.step - 1, S.sel);
+    let html =
+      row('你点的下标', `${S.sel}（第 ${S.sel - G2.base + 1} / ${2 * G2.L} 个）`) +
+      row('所属组', `第 ${G2.g} 组，覆盖下标 ${G2.base} .. ${G2.base + 2 * G2.L - 1}`) +
+      row('本组的 zeta', `<code>zetas[${G2.zetaIdx}] = ${G2.zeta}</code>`) +
+      row(`a（下标 ${G2.a}）`, `${cur[G2.a]}（本步前 ${prev[G2.a]}）`) +
+      row(`b（下标 ${G2.b}）`, `${cur[G2.b]}（本步前 ${prev[G2.b]}）`);
+    if (S.dir === 'ntt') {
+      const t = canon(fqmul(G2.zeta, prev[G2.b]));
+      html += row('蝶形', `<code>t = fqmul(zeta, b) = ${t}</code><br>` +
+        `<code>a′ = a + t = ${prev[G2.a]} + ${t} = ${cur[G2.a]}</code><br>` +
+        `<code>b′ = a − t = ${prev[G2.a]} − ${t} = ${cur[G2.b]}</code>`);
+    } else {
+      const t = prev[G2.a];
+      html += row('蝶形', `<code>t = a = ${t}</code><br>` +
+        `<code>a′ = a + b = ${prev[G2.a]} + ${prev[G2.b]} = ${cur[G2.a]}</code><br>` +
+        `<code>b′ = fqmul(zeta, b − t) = ${cur[G2.b]}</code>`);
+    }
+    $('aBf').innerHTML = html;
+  }
+
+  function animStep(d) {
+    if (!S.snaps) return;
+    S.step = Math.max(0, Math.min(S.steps.length, S.step + d));
+    renderAnim();
+  }
+  $('aPrev').addEventListener('click', () => animStep(-1));
+  $('aNext').addEventListener('click', () => animStep(1));
+  $('aReset').addEventListener('click', () => { stopPlay(); S.step = 0; S.sel = null; renderAnim(); });
+
+  function stopPlay() {
+    if (S.playTimer) { clearInterval(S.playTimer); S.playTimer = null; }
+    $('aPlay').textContent = '自动走完';
+  }
+  $('aPlay').addEventListener('click', () => {
+    if (S.playTimer) { stopPlay(); return; }
+    if (!S.snaps) return;
+    if (S.step >= S.steps.length) { S.step = 0; renderAnim(); }
+    $('aPlay').textContent = '暂停';
+    const ms = Number($('aSpeed').value);
+    S.playTimer = setInterval(() => {
+      if (S.step >= S.steps.length) { stopPlay(); return; }
+      animStep(1);
+      if (S.step >= S.steps.length) stopPlay();
+    }, ms);
+  });
+
+  /* ---- 第三幕：对拍 ---------------------------------------------------- */
+  const F = C.fntt;
+  const real = F.golden;
+  const tampered = F.golden.slice();
+  tampered[C.negCtrl.linear] = C.negCtrl.written;
+
+  for (let i = 0; i < C.meta.nVectors; i++) {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = '向量 ' + String(i).padStart(2, '0');
+    $('cVec').appendChild(o);
+  }
+  const cGrid = $('cGrid');
+  for (let i = 0; i < N; i++) {
+    const d = document.createElement('div');
+    d.className = 'cell';
+    d.addEventListener('click', () => {
+      S.cmp.pick = (S.cmp.pick === i ? null : i);
+      renderCompare();
+    });
+    cGrid.appendChild(d);
+  }
+
+  function renderCompare() {
+    const E = S.cmp.mode === 'real' ? real : tampered;
+    const cs = cGrid.children;
+    let bad = 0;
+    for (let i = 0; i < N; i++) {
+      const got = F.rtl[S.cmp.vec * N + i];
+      const want = E[S.cmp.vec * N + i];
+      const same = got === want;
+      if (!same) bad++;
+      cs[i].className = 'cell ' + (same ? 'okc' : 'bad') +
+        (S.cmp.pick === i ? ' pick' : '');
+      cs[i].textContent = got;
+      cs[i].title = `下标 ${i} ｜ RTL ${got} ｜ 期望 ${want} ｜ ${same ? '一致' : '不一致'}`;
+    }
+    $('cStage').innerHTML = `向量 <b>${String(S.cmp.vec).padStart(2, '0')}</b> ：` +
+      (bad === 0
+        ? `<b class="okfg">${N} / ${N} 全中</b>`
+        : `<b class="errfg">${N - bad} / ${N}，${bad} 处不符</b>`);
+    $('cNote').innerHTML = S.cmp.mode === 'real'
+      ? '绿 = RTL 输出与黄金向量一致。格子里的数来自 <code>' + C.meta.rtlSource + '</code>。'
+      : `⚠️ <b>这是演示</b>：人为把第 ${C.negCtrl.vector} 组第 ${C.negCtrl.index} 号期望值改成 ` +
+        `<code>${C.negCtrl.written}</code>，红格就是测试抓出来的那一条。`;
+    renderCompareCell(E);
+
+    $('cOps').innerHTML = '<tr><th>运算</th><th>判定</th><th>怎么判的</th></tr>' +
+      C.quoted.map((q, i) =>
+        `<tr${i ? ' class="sep"' : ''}><td>${q.op}</td>` +
+        `<td><b>${q.result}</b><br>` +
+        (q.recomputed ? '<span class="okfg">本页复算</span>' : '<span class="d">引用</span>') +
+        `</td><td class="d">${q.how}<br><code>${q.evidence}</code></td></tr>`).join('');
+    $('cOpsNote').innerHTML =
+      '「本页复算」= 从仓库文件重新算过；「引用」= 只有 testbench 统计，仓库里没有逐值落盘 —— ' +
+      '<b>不替它们编造逐值数据</b>。';
+    $('cDegen').innerHTML = '<tr><th>文件</th><th>行数</th><th>不同值</th><th>最常见占比</th></tr>' +
+      C.nondegen.map((r) => `<tr><td><code>${r.file}</code></td><td>${r.rows}</td>` +
+        `<td>${r.distinct}</td><td>${r.topPct}%</td></tr>`).join('') +
+      '<tr><td class="d" colspan="4">4096 个系数里 2300 多个不同值 —— 「全中」不可能是巧合。</td></tr>';
+  }
+
+  function renderCompareCell(E) {
+    if (S.cmp.pick === null) {
+      $('cCell').innerHTML = '<tr><td class="d">点左边任意一格。</td></tr>';
+      return;
+    }
+    const i = S.cmp.pick;
+    const got = F.rtl[S.cmp.vec * N + i];
+    const want = E[S.cmp.vec * N + i];
+    const same = got === want;
+    const row = (k, v) => `<tr><td class="d">${k}</td><td>${v}</td></tr>`;
+    $('cCell').innerHTML =
+      row('第几组 / 第几号', `第 ${String(S.cmp.vec).padStart(2, '0')} 组，组内下标 <b>${i}</b>`) +
+      row('RTL 输出', `<code>${got}</code>（十进制 ${parseInt(got, 16)}）`) +
+      row('黄金向量', `<code>${want}</code>（十进制 ${parseInt(want, 16)}）`) +
+      row('判定', same ? '<span class="okfg">✅ 一致</span>' : '<span class="errfg">❌ 不一致</span>');
+  }
+
+  function setCmpMode(m) {
+    S.cmp.mode = m;
+    $('cReal').className = m === 'real' ? 'on' : '';
+    $('cNeg').className = m === 'neg' ? 'on' : '';
+    if (m === 'neg') {
+      S.cmp.vec = C.negCtrl.vector;
+      $('cVec').value = String(S.cmp.vec);
+    }
+    S.cmp.pick = null;
+    renderCompare();
+  }
+  $('cReal').addEventListener('click', () => setCmpMode('real'));
+  $('cNeg').addEventListener('click', () => setCmpMode('neg'));
+  $('cVec').addEventListener('change', () => {
+    S.cmp.mode = 'real';
+    $('cReal').className = 'on';
+    $('cNeg').className = '';
+    S.cmp.vec = Number($('cVec').value);
+    S.cmp.pick = null;
+    renderCompare();
+  });
+  $('cFromAnim').addEventListener('click', () => {
+    S.cmp.mode = 'real';
+    $('cReal').className = 'on';
+    $('cNeg').className = '';
+    S.cmp.vec = S.vec;
+    $('cVec').value = String(S.vec);
+    S.cmp.pick = null;
+    renderCompare();
+  });
+
+  /* ---- 第四幕：计时 / 资源 --------------------------------------------- */
+  const TIER_LABEL = { pe1: 'pe1 · 1 蝶形', pe4: 'pe4 · 4 蝶形', pe16: 'pe16 · 16 蝶形' };
+  $('tierBtns').innerHTML = G.tierOrder.map((t) =>
+    `<button data-tier="${t}">${TIER_LABEL[t]}</button>`).join('');
+  document.querySelectorAll('#tierBtns button').forEach((b) => {
+    b.addEventListener('click', () => { S.tier = b.dataset.tier; renderTier(); });
+  });
+
+  function card(k, v, s, hl) {
+    return `<div class="card${hl ? ' hl' : ''}"><div class="k">${k}</div>` +
+      `<div class="v">${v}</div><div class="s">${s || ''}</div></div>`;
+  }
+
+  function renderTier() {
+    document.querySelectorAll('#tierBtns button').forEach((b) => {
+      b.classList.toggle('on', b.dataset.tier === S.tier);
+    });
+    const t = G.tiers[S.tier];
+    $('tierCards').innerHTML =
+      card('内核周期数', t.cycles, `加速比 ${t.speedup}×（对 pe1）`, true) +
+      card('核延迟', t.coreUs + ' µs', '按 50 MHz 计时（不含读出）', true) +
+      card('LUT / DSP / BRAM', `${t.lut} / ${t.dsp} / ${t.bramTile}`, `LUT 占用 ${t.lutPct}%`) +
+      card('核推算 Fmax', t.fmaxCore + ' MHz', 'post-route，紧约束反推') +
+      card('板上实跑最高', t.boardMHz + ' MHz', 'MMCM 提频位流 · 6/6 PASS', true) +
+      card('功耗（估算）', `${t.powerBase} W`, `提频版 ${t.powerBoost} W · 非实测`) +
+      card('上板事务', `${t.board.base.pass}/${t.board.base.total}`, '基线 + 提频版各 6/6');
+
+    $('tierTable').innerHTML =
+      '<tr><th>档</th><th>周期</th><th>加速比</th><th>LUT</th><th>DSP</th><th>BRAM</th>' +
+      '<th>核 Fmax</th><th>板上 MHz</th></tr>' +
+      G.tierOrder.map((k) => {
+        const r = G.tiers[k];
+        return `<tr${k === S.tier ? ' style="background:var(--sel)"' : ''}>` +
+          `<td>${k}</td><td>${r.cycles}</td><td>${r.speedup}×</td>` +
+          `<td>${r.lut}</td><td>${r.dsp}</td><td>${r.bramTile}</td>` +
+          `<td>${r.fmaxCore}</td><td>${r.boardMHz}</td></tr>`;
+      }).join('');
+
+    drawCycles();
+    drawLatency();
+    $('srcNote').innerHTML =
+      '资源 / 周期 / 核 Fmax：<code>metrics/data/metrics.csv</code>（post-route 报告解析）<br>' +
+      '核延迟 / 串口搬运：<code>metrics/data/bottleneck.csv</code><br>' +
+      '功耗：<code>rtl/vivado/power_estimate.md</code>（vectorless <b>估算</b>，Confidence Medium）<br>' +
+      '921600：<code>rtl/vivado/high_baud_demo.md</code>；板上 6/6：<code>rtl/vivado/reports/board_*_txn.txt</code><br>' +
+      '生成：<code>' + G.meta.generatedBy + '</code>（' + G.meta.generatedAt + '）';
+  }
+
+  function drawCycles() {
+    const vals = G.tierOrder.map((t) => G.tiers[t].cycles);
+    const max = Math.max(...vals);
+    const W = 560, H = 170, left = 46, bottom = 24, barW = 80;
+    const slot = (W - left - 20) / vals.length;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="三档周期数">`;
+    for (let i = 0; i < vals.length; i++) {
+      const h = Math.max(3, Math.round(vals[i] / max * 112));
+      const x = left + i * slot + (slot - barW) / 2;
+      const y = H - bottom - h;
+      s += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="3" ` +
+        `fill="var(--accent)" opacity="${0.55 + 0.15 * i}"></rect>`;
+      s += `<text x="${x + barW / 2}" y="${y - 5}" text-anchor="middle" fill="var(--fg)" ` +
+        `font-size="12">${vals[i]}</text>`;
+      s += `<text x="${x + barW / 2}" y="${H - 7}" text-anchor="middle" fill="var(--dim)" ` +
+        `font-size="12">${G.tierOrder[i]}</text>`;
+    }
+    s += `<line x1="${left - 6}" y1="${H - bottom}" x2="${W - 10}" y2="${H - bottom}" ` +
+      `stroke="var(--line)"></line>`;
+    s += `<text x="4" y="${H - bottom - 4}" fill="var(--dim)" font-size="11">cycles</text></svg>`;
+    $('chartCycles').innerHTML = s;
+  }
+
+  function drawLatency() {
+    const T = G.timing;
+    const rows = [
+      { k: '计算核（pe1）', ms: T.coreLatencyUs.pe1 / 1000, label: T.coreLatencyUs.pe1 + ' µs', cls: 'ok' },
+      { k: '串口线上搬运（115200）', ms: T.serial115200.ntt, label: T.serial115200.ntt + ' ms', cls: 'bad' },
+      { k: '串口线上搬运（921600）', ms: T.serial921600.ntt, label: T.serial921600.ntt + ' ms', cls: 'bad' },
+      { k: 'USB 往返（约，两种波特率相同）', ms: 55, label: '~55 ms', cls: 'bad' }
+    ];
+    const max = Math.max(...rows.map((r) => r.ms));
+    const W = 560, rowH = 30, left = 190, H = rows.length * rowH + 18;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="端到端时间构成">`;
+    rows.forEach((r, i) => {
+      const y = 6 + i * rowH;
+      const w = Math.max(2, Math.round(r.ms / max * (W - left - 80)));
+      s += `<text x="${left - 8}" y="${y + 14}" text-anchor="end" fill="var(--dim)" ` +
+        `font-size="11">${r.k}</text>`;
+      s += `<rect x="${left}" y="${y + 4}" width="${w}" height="14" rx="2" ` +
+        `fill="${r.cls === 'ok' ? 'var(--ok)' : 'var(--hot)'}" opacity="0.85"></rect>`;
+      s += `<text x="${left + w + 6}" y="${y + 15}" fill="var(--fg)" font-size="11">${r.label}</text>`;
+    });
+    s += '</svg>';
+    $('chartLatency').innerHTML = s;
+  }
+
+  /* ---- 自动演示（无板回放，约 3 分钟） -------------------------------- */
+  const narr = $('narr');
+  const btnAuto = $('btnAuto'), btnStop = $('btnStop');
+  function say(html) {
+    narr.hidden = false;
+    narr.innerHTML = html;
+  }
+  function hideNarr() { narr.hidden = true; narr.innerHTML = ''; }
+
+  function wait(ms) {
+    return new Promise((resolve) => {
+      const id = setTimeout(resolve, ms);
+      S.autoTimers.push(id);
+    });
+  }
+  function stopAuto() {
+    if (!S.auto) return;
+    S.auto = null;
+    S.autoTimers.forEach((id) => clearTimeout(id));
+    S.autoTimers = [];
+    stopPlay();
+    btnAuto.disabled = false;
+    btnStop.disabled = true;
+    say('<b>已停止</b> —— 可以手动点标签页继续。');
+    setTimeout(hideNarr, 1500);
+  }
+  btnStop.addEventListener('click', stopAuto);
+
+  async function autoDemo() {
+    if (S.auto) { stopAuto(); return; }
+    stopPlay();
+    S.auto = {};
+    const token = S.auto;
+    btnAuto.disabled = true;
+    btnStop.disabled = false;
+    const alive = () => S.auto === token;
+
+    say('<b>第 0 幕 · 开场</b>：这是 ML-KEM 里最耗时的一步 NTT 的 FPGA 加速核。' +
+      '下面用 3 分钟走完：输入 → 逐层 → 对拍 → 计时与资源。');
+    await wait(8000);
+    if (!alive()) return;
+
+    goAct(1, true);
+    S.dir = 'ntt'; dirSel.value = 'ntt';
+    S.vec = 0; vecSel.value = '0';
+    S.src = 'kat'; srcSel.value = 'kat';
+    setInput(katInput('ntt', 0), 'kat');
+    say('<b>第 1 幕 · 输入</b>：256 个模 q 的系数，来自公开的 FIPS 203 <b>兼容</b> KAT 向量 00。' +
+      '最下面一行是统计：不同值有多少个 —— 这不是退化输入。');
+    await wait(12000);
+    if (!alive()) return;
+
+    goAct(2, true);
+    ensureLayers();
+    say('<b>第 2 幕 · 逐层动画</b>：FPGA 上一共 7 层，每层 128 个蝶形。' +
+      '黄格是这一步变了的数，点任意一格能看到它这一对的完整算式。');
+    await wait(5000);
+    if (!alive()) return;
+
+    for (let k = 1; k <= S.steps.length; k++) {
+      animStep(1);
+      if (k === 1) say('<b>第 2 幕 · 第 1 层</b>：len = 128，64 组，每个数都与相隔 128 的伙伴配对。');
+      if (k === 4) say('<b>第 2 幕 · 第 4 层</b>：已经走完一半。注意 twiddle 下标在逐层变化。');
+      if (k === S.steps.length) say('<b>第 2 幕 · 第 7 层完成</b>：末级结果就是 NTT 的输出。' +
+        '它与黄金向量逐值一致 —— 右边「数据从哪来」在页面加载时已自检。');
+      await wait(k === S.steps.length ? 8000 : 5000);
+      if (!alive()) return;
+    }
+
+    goAct(3, true);
+    setCmpMode('real');
+    say('<b>第 3 幕 · 对拍</b>：绿格是 RTL 仿真真正落盘的值，与黄金向量逐比特比。' +
+      '这一页不是拿参考实现冒充 RTL。');
+    await wait(12000);
+    if (!alive()) return;
+
+    setCmpMode('neg');
+    say('<b>第 3 幕 · 阴性对照</b>：故意把第 7 组第 100 号期望值改坏一条。' +
+      '结果 255 / 256、恰好 1 个红格 —— 说明这个测试确实抓得住错。');
+    await wait(12000);
+    if (!alive()) return;
+
+    setCmpMode('real');
+    say('<b>第 3 幕 · 对拍收尾</b>：实测 256 / 256 全中。' +
+      '非退化统计也在右边：4096 个系数里 2300 多个不同值。');
+    await wait(6000);
+    if (!alive()) return;
+
+    goAct(4, true);
+    S.tier = 'pe1'; renderTier();
+    say('<b>第 4 幕 · 计时与资源</b>：三档折叠度 —— 一次算 1 / 4 / 16 个蝶形。' +
+      '档位越深越快，但面积和功耗也越大。先看 pe1。');
+    await wait(9000);
+    if (!alive()) return;
+
+    S.tier = 'pe4'; renderTier();
+    say('<b>pe4</b>：周期数 904 → 232，快了 3.9×，LUT 从 727 涨到 2000、DSP 从 1 涨到 4。');
+    await wait(9000);
+    if (!alive()) return;
+
+    S.tier = 'pe16'; renderTier();
+    say('<b>pe16</b>：周期数 69，快了 13.1×，代价是 LUT 8922、DSP 16、BRAM 34.5。' +
+      '三档上真板都是 <b>6 / 6</b> 条命令通过。');
+    await wait(9000);
+    if (!alive()) return;
+
+    say('<b>第 4 幕 · 结论</b>：核快了 13.1×，但端到端只快 3.2× —— ' +
+      '因为核只要 18 µs，而 256 行数据走 115200 串口要 184 ms。' +
+      '921600 把线上时间压到 23 ms（8.0×），剩下的约 55 ms 卡在 CH340 的 USB 往返，' +
+      '不在 RTL、也不在协议。<b>瓶颈不在核，在接口。</b>');
+    await wait(14000);
+    if (!alive()) return;
+
+    say('<b>演示结束</b>：功能对拍、阴性对照、三档资源、板上 6/6 都有据可查；' +
+      '报告与证据文件见页面底部。');
+    await wait(8000);
+    if (!alive()) return;
+
+    hideNarr();
+    S.auto = null;
+    btnAuto.disabled = false;
+    btnStop.disabled = true;
+  }
+  btnAuto.addEventListener('click', autoDemo);
+
+  /* ---- 键盘操作 -------------------------------------------------------- */
+  document.addEventListener('keydown', (e) => {
+    if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+    if (e.key >= '1' && e.key <= '4') { goAct(Number(e.key)); e.preventDefault(); return; }
+    if (S.act === 2) {
+      if (e.key === 'ArrowRight') { animStep(1); e.preventDefault(); }
+      if (e.key === 'ArrowLeft') { animStep(-1); e.preventDefault(); }
+      if (e.key === 'r') { stopPlay(); S.step = 0; S.sel = null; renderAnim(); }
+    }
+  });
+
+  /* ---- 页脚 ------------------------------------------------------------ */
+  $('foot').innerHTML =
+    '数据来源：<code>data/vectors.js</code>（C 逐层复算，末级对 KAT）、' +
+    '<code>data/compare.js</code>（RTL vs 黄金）、<code>data/gui.js</code>（metrics / 板级报告解析）。' +
+    '　｜　一键脚本：<code>demo/run_gui.cmd</code>；浅色主题：<code>gui.html?theme=light</code>；' +
+    '自动演示：<code>gui.html?auto=1</code>。';
+
+  /* ---- 初始化 ---------------------------------------------------------- */
+  setInput(katInput('ntt', 0), 'kat');
+  renderCompare();
+  renderTier();
+  if (/[?&]auto=1\b/.test(location.search)) setTimeout(autoDemo, 600);
+})();
+</script>
+</body>
+</html>

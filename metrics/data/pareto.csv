@@ -1,0 +1,14 @@
+指标,pe1,pe4,pe16,单位,公式 / 口径,证据
+NTT 周期数,904,232,69,cycles,顶层 done 拍 − start − 3，不含读出延迟,rtl/probes/README.md §判据 2
+LUT,727,2000,8922,个,post-route，顶层边界,rtl/vivado/reports/pe*_nc_util.rpt
+ATP（LUT × cycle）,657208,464000,615618,LUT·cycle,面积 × 时间；与时钟无关，越小越好,本表 LUT × 周期
+ATP 归一（pe1 = 1）,1,0.706,0.937,×,ATP ÷ pe1 的 ATP,本表
+吞吐 @ 核推算 Fmax,185841,689655,2231884,NTT/s,Fmax(核) ÷ 周期；Fmax 是 5 ns 收紧约束反推值,metrics/data/metrics.csv
+吞吐 @ 板上提频频率,88496,323276,905797,NTT/s,板上 MMCM 频率 ÷ 周期；频率是「跑得通」，不是芯片极限,board_freq_sweep.md
+维持核吞吐所需带宽,188,686.6,1923.9,MB/s,吞吐 × 2124 B（每趟 #NTT 的线上真实字节）,high_baud_demo.md
+链路事务率上限 @115200,5.42,5.42,5.42,NTT/s,115200 ÷ 10 ÷ 2124 B,bottleneck.csv / high_baud_demo.md
+链路事务率上限 @921600,43.39,43.39,43.39,NTT/s,921600 ÷ 10 ÷ 2124 B,high_baud_demo.md
+核 / 链路倍差 @115200,16316,59604,167006,×,吞吐 @板上 ÷ 链路事务率上限,本表
+核 / 链路倍差 @921600,2040,7450,20876,×,吞吐 @板上 ÷ 链路事务率上限,本表
+功耗 @ 50 MHz（估算）,0.13,0.17,0.335,W,Vivado report_power，vectorless 估算，非实测,power_estimate.md
+功耗 @ 提频（估算）,0.257,0.3,0.44,W,同上；提频的增量主要是 MMCM,power_estimate.md

@@ -443,6 +443,54 @@ Vivado `report_power` 在**布线后**的 checkpoint 上跑（六版位流：50 
 > 25 °C、典型工艺角。**只能用量级与相对趋势，别当毫瓦级结论引。**
 > 完整口径与复跑见 `../../rtl/vivado/power_estimate.md`。
 
+### 3.10.6 Pareto / ATP / roofline：三档的取舍与接口天花板（2026-10-19 补）
+
+![Pareto / ATP / roofline：面积 vs 吞吐、面积×时间、核与串口的两个屋顶](../figures/pareto_atp_roofline.svg)
+
+图左：**Pareto**（横轴 LUT、纵轴吞吐，气泡大小 = 功耗估算），三档互不支配；
+图中：**ATP = LUT × 周期**，越低越好；图右：**roofline**（双对数），斜线是串口带宽屋顶，
+虚线是各档的计算屋顶 —— 链路点（红）与核点（蓝）之间差着 4–5 个数量级。
+
+| 档 | 周期 | LUT | **ATP**（LUT·cycle） | ATP 归一 | 吞吐 @核 Fmax | 吞吐 @板上提频 | 维持吞吐所需带宽 | 功耗（估算） |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| pe1（1 蝶形） | 904 | 727 | **657,208** | 1.000× | 185,841 NTT/s | 88,496 NTT/s | 188.0 MB/s | 0.130 / 0.257 W |
+| pe4（4 蝶形） | 232 | 2,000 | **464,000** | **0.706×** | 689,655 NTT/s | 323,276 NTT/s | 686.6 MB/s | 0.170 / 0.300 W |
+| pe16（16 蝶形） | 69 | 8,922 | **615,618** | 0.937× | 2,231,884 NTT/s | 905,797 NTT/s | 1,923.9 MB/s | 0.335 / 0.440 W |
+
+**三个定义（报告、图、CSV 共用）**：
+
+```
+ATP       = LUT × NTT 周期数                 （面积 × 时间，与时钟无关）
+吞吐       = 频率 ÷ NTT 周期数                 （NTT/s）
+带宽需求   = 吞吐 × 每趟事务字节数（#NTT = 2124 B）
+链路事务率 = 波特率 ÷ 10 bit/字节 ÷ 2124 B
+```
+
+**三条结论**：
+
+1. **ATP 最低的是 pe4（0.706× pe1），不是最深的一档。** pe16 用 12.3× 的 LUT
+   换 13.1× 的周期下降，ATP 回到 0.937× —— 折叠度不是「越深越划算」。
+   选档看约束：**省面积选 pe1、ATP 最低选 pe4、最低延迟选 pe16**。
+2. **三档都在 Pareto 前沿上**（LUT 越高、吞吐越高，互不支配），所以「三档都保留」
+   在面积–吞吐平面里是成立的，不是只留一档。
+3. **roofline 把接口瓶颈量成了倍数。** 三档要喂满核，分别需要
+   **188.0 / 686.6 / 1,923.9 MB/s**；115200 只给 **0.0115 MB/s**、921600 只给
+   **0.0922 MB/s** —— 核 / 链路差 **16,316–167,006×**（115200）或
+   **2,040–20,876×**（921600）。这与 §3.10.3「瓶颈不在核，在接口」是同一结论的
+   带宽口径，公式可现场复算。
+
+> ⚠️ **两套频率不能混**：`@核 Fmax` 是 post-route 推算（5 ns 收紧约束反推），
+> `@板上提频` 是 MMCM 位流真跑通的频率（80 / 75 / 62.5 MHz，各 6/6）。
+> **功耗列是 vectorless 估算**（Confidence Medium、25 °C、只算片内 PL），不是实测。
+> 表与图都由 `metrics/data/pareto.csv` 生成，不手抄。
+
+**重跑**：
+
+```bash
+node metrics/gen_pareto.mjs          # → metrics/data/pareto.csv + metrics/README.md 的 GEN 块
+node report/figures/gen_figures.mjs  # → 本图 + folding_sweep.svg
+```
+
 ---
 
 ## 3.11 数据溯源
@@ -454,15 +502,18 @@ Vivado `report_power` 在**布线后**的 checkpoint 上跑（六版位流：50 
 | 上游对照（3.5） | `rtl/vivado/reports/pe{1,4,16}_utop_{util,timing}.rpt` |
 | NTT 周期数 904 / 232 / 69 | `rtl/probes/README.md` §判据 2（顶层实测 `done` − `start` − 3） |
 | 三档 × 三运算的功能正确性 | `rtl/probes/README.md` §判据 3 |
-| 汇总（机器生成，46 行） | `metrics/data/metrics.csv` |
+| 汇总（机器生成，49 行） | `metrics/data/metrics.csv` |
 | 瓶颈归因三段（§3.10.3） | `metrics/data/bottleneck.csv`（`python metrics/bottleneck.py` 生成） |
 | 功耗（估算，§3.10.5） | `rtl/vivado/reports/power_pe{1,4,16}_{50,80,75,62}mhz.rpt`（`report_power`，vectorless，**非实测**） |
+| Pareto / ATP / roofline（§3.10.6） | `metrics/data/pareto.csv` 与 `metrics/README.md` 的 GEN 块（`node metrics/gen_pareto.mjs` 生成） |
 
 **本章所有表格都可以重新生成**：
 
 ```bash
-node metrics/gen_metrics.mjs      # 资源/频率/周期：从报告解析 → 更新 metrics/README.md + metrics/data/metrics.csv
-python metrics/bottleneck.py      # 瓶颈归因（§3.10.3）：走 host/ 协议栈 + 计时 C 参考实现
+node metrics/gen_metrics.mjs         # 资源/频率/周期：从报告解析 → 更新 metrics/README.md + metrics/data/metrics.csv
+python metrics/bottleneck.py         # 瓶颈归因（§3.10.3）：走 host/ 协议栈 + 计时 C 参考实现
+node metrics/gen_pareto.mjs          # Pareto / ATP / roofline（§3.10.6）→ metrics/data/pareto.csv
+node report/figures/gen_figures.mjs  # 两张数据图：folding_sweep.svg + pareto_atp_roofline.svg
 ```
 
 ---
