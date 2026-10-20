@@ -202,7 +202,7 @@ cd .. && sh skill/scripts/check_reproducible.sh --from-remote  # 段 7：通过 
 |---|---|---|---|
 | **上板串口录屏**（烧录 → `#PING` → 五条事务） | A | 段 5 | ✅ 10-15 已交 `2026-10-15_A_board_uart_five_transactions.mp4`（**112 MB，`.gitignore` 挡掉，剪辑前向 A 拿原始文件**） |
 | **Vivado 关键路径截图（两组）** | A | 段 6 | ✅ 10-15 已交两张：`../assets/2026-10-15_A_critical_path_board_pe1.png` / `..._core_pe1.png`（资源/时序报告截图仍可选） |
-| **`refsim/` 对拍波形截图** | B | 段 4（可选） | ⬜ 等 B 的 H5 |
+| **`refsim/` 对拍波形截图** | B | 段 4（可选） | ✅ 10-17 已交：`../report/figures/refsim_wave_fntt_compare.png`（上游 pe1 FNTT 第 0 组，256/256；**仅这一组**） |
 
 ---
 
