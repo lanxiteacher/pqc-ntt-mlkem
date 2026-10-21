@@ -521,6 +521,30 @@ node metrics/gen_pareto.mjs          # → metrics/data/pareto.csv + metrics/REA
 node report/figures/gen_figures.mjs  # → 本图 + folding_sweep.svg
 ```
 
+### 3.10.7 长时间稳定性：40 分钟 / 9,233 次连续事务（2026-10-21 补）
+
+2026-10-21 22:18–22:58，pe16 位流（板上 50 MHz）、COM9、115200，连续跑 `#NTT 1`，
+每次 256 个系数逐项对拍：
+
+| 项 | 结果 |
+|---|---|
+| 连续事务 | **9,233 次** |
+| 通过 | **9,233 / 9,233** |
+| 超时 / 数值不符 / 异常 | **0 / 0 / 0** |
+| 单次延迟 | avg **0.239 s**，p95 **0.250 s**，max **0.266 s** |
+| 吞吐 | **230.8 次/分** |
+| 事务间隔 | 20 ms（host 侧设置，非硬件极限） |
+
+**一个必须写下来的坑**：不加 `flush` 等待、或事务间隔太小时，CH340 的 `write/flush` 会在
+**~100–600 次之间永久阻塞**（host 进程不再前进，板子仍活着 —— kill 后 `#PING` 正常）。
+这不是 RTL 的问题，是 USB/驱动层：`pyserial` 的 `flush()` **没有超时**。本节的跑法用
+`rtl/vivado/soak_board.py`：**只 write 不等 flush**（后续每步有 1–5 s 等待，足够覆盖
+1 KB 在 115200 下的 87 ms）+ 写超时 + 60 s 看门狗。**建议 host 侧把「事务间隔 / 写超时」
+做成正式选项**，而不是只存在于浸泡脚本里。
+
+> ⚠️ 边界：单板、单机、115200、pe16、文本协议；**不是误码率测试**，也不是工业温度/长时间老化。
+> 20 ms 是 host 侧的等待设置，不代表硬件极限；40 分钟也不等于「永不挂」。
+
 ---
 
 ## 3.11 数据溯源
@@ -536,6 +560,7 @@ node report/figures/gen_figures.mjs  # → 本图 + folding_sweep.svg
 | 瓶颈归因三段（§3.10.3） | `metrics/data/bottleneck.csv`（`python metrics/bottleneck.py` 生成） |
 | 功耗（估算，§3.10.5） | `rtl/vivado/reports/power_pe{1,4,16}_{50,80,75,62}mhz.rpt`（`report_power`，vectorless，**非实测**） |
 | Pareto / ATP / roofline（§3.10.6） | `metrics/data/pareto.csv` 与 `metrics/README.md` 的 GEN 块（`node metrics/gen_pareto.mjs` 生成） |
+| 40 分钟浸泡（§3.10.7） | `logs/verification_2026-10-21_A_soak.txt`（`rtl/vivado/soak_board.py` 生成，no-flush + 看门狗） |
 
 **本章所有表格都可以重新生成**：
 

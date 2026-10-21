@@ -48,7 +48,9 @@
 > serial/replay.json），trace SHA-256 `e107dc71…`。口径：50 MHz 是人工声明、位流身份靠 SHA。
 > ③ **晚间评委视角审计** —— 16 条缺陷，Phase 1 口径修复已完成（§3.10.3 分档比 CPU、封面三口径、
 > 能量/NTT、README 板级入口、作品边界）；计划 `logs/plan_2026-10-21_audit_fixes.md`，
-> Phase 2 交 B、Phase 3 等板子、Phase 4 随 C。
+> Phase 2 交 B、Phase 4 随 C。
+> ④ **板级浸泡 40 分钟 / 9,233 次 `#NTT` 全过**（0 超时 / 0 数值不符 / 0 异常）—— 过程里定位并绕开
+> CH340 `flush()` 永久阻塞（host 层，报告 §3.10.7）；证据 `logs/verification_2026-10-21_A_soak.txt`。
 
 | | |
 |---|---|
