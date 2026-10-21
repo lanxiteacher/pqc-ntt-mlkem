@@ -78,6 +78,7 @@ def main():
     exp = unpack.read_values(vectors.BATCH_DIR / exp_file)[:vectors.GROUP_LEN]
     kind = unpack.kind_of(CMD)
 
+    time.sleep(1.0)          # 让上一次 close 的 USB 管道先落定（2026-10-21 实测：太急会卡）
     lk, hst, rdy = open_hst(args.port, args.baud)
     time.sleep(0.5)
     try:

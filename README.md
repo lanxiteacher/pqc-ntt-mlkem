@@ -80,6 +80,7 @@ ML-KEM（FIPS 203，即 CRYSTALS-Kyber）是 NIST 后量子密码标准中的密
   sh rtl/vivado/run_board_freq_sweep.sh                             # 提频综测（不需要板子，约 30 分钟）
   sh rtl/vivado/run_board_power.sh                                  # 功耗估算（不需要板子）
   PORT=<COMx> sh rtl/vivado/run_kem_trace_boards.sh                 # ML-KEM trace 三档送板
+  python rtl/vivado/soak_board.py --port <COMx> --build 16 --minutes 40  # 连续浸泡（带看门狗）
   python host/src/board_run.py "#NTT 1" --check --build 1 --port <COMx> --baud 921600  # 921600 演示
   ```
 

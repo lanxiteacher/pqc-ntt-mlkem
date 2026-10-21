@@ -80,6 +80,15 @@ PORT=COMx OUTTAG=_freeze sh rtl/vivado/run_kem_trace_boards.sh
 **判据**：三档各 15/15、3840 系数，合计 45 次 / 11520 系数；`session.json` 的
 `status=pass`、`transactions=15`。证据：`logs/verification_<日期>_A_kem_serial_pe{1,4,16}_freeze/`。
 
+## 5.5 连续浸泡（A，约 40 分钟，要板子；可选）
+
+```bash
+python rtl/vivado/soak_board.py --port COMx --build 16 --minutes 40
+```
+
+**判据**：0 超时、0 数值不符、0 异常；日志 `logs/verification_<日期>_A_soak.txt`。
+⚠️ 事务间隔默认 50 ms；无间隔时 CH340 可能在第 500 次左右阻塞（host 层，不是 RTL）。
+
 ## 6. 报告构建（C，约 10 分钟）
 
 ```bash
