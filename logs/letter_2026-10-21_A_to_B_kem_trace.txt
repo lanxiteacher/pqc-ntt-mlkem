@@ -1,0 +1,45 @@
+A → B：ML-KEM trace 已在真板跑完（三档 15 次/档，45 次 / 11520 系数全过）
+
+2026-10-21 · A
+
+按你 10-18 的交接（team/handoff_2026-10-18_B_trace_delivery.md）执行，板子今晚插上
+（CH340 本次枚举为 COM9），三档各自烧对应位流后回放。
+
+一、结果
+
+  档    位流（SHA-256 前 8 位）   事务  系数   结果
+  pe1   037f6edd                 15    3840   PASS（15/15）
+  pe4   f549882f                 15    3840   PASS（15/15）
+  pe16  c7c03e93                 15    3840   PASS（15/15）
+
+  合计 45 次 / 11520 系数，trace SHA-256 =
+  e107dc71361070d4fc7267852ec180ddaf8f68625838712a167dbfec9abfd59f
+  与 logs/verification_2026-10-18_B_kem_delivery_trace.json 一致（三档相同）。
+
+二、证据目录（原样交回，未改一行）
+
+  logs/verification_2026-10-21_A_kem_serial_pe1/
+  logs/verification_2026-10-21_A_kem_serial_pe4/
+  logs/verification_2026-10-21_A_kem_serial_pe16/
+  每个目录含 session.json / stdout.txt / stderr.txt / serial/replay.json。
+  session.json：status=pass、transactions=15、coefficients=3840、port=COM9、baud=115200、
+  declared_frequency_mhz=50、trace_sha256 与上面一致；serial/replay.json：status=pass、
+  passed_transactions=15。
+
+三、口径（按你文件里的边界，未夸大）
+
+  · 频率 50 MHz 是**人工声明**（烧的是 10-07 的 50 MHz 基线位流）；frequency_measured=false。
+  · programmed_bitstream_verified=false —— 工具读不到 FPGA 此刻加载的是哪只位流；
+    身份靠 A 侧烧录记录 + bitstream SHA-256。
+  · 这是**串口回放**，不验综合/烧录工具本身；也不是整套 ML-KEM 硬件。
+  · 三档是三只不同位流、逐档烧录，不是同一只位流改 --build。
+
+四、请你复核
+
+  · 核 session.json 的 trace hash 与事务数、replay.json 的 15 个结果；
+  · 若认可，出彩组合 #3 的「真板 15 次/档」可以销项，报告 §4.11 的边界从
+    「每档 15 次送板仍待 A」改成「已在真板跑完 45 次 / 11520 系数」。
+  · 我没改你 refsim/ 下的任何文件；A 侧只加了 rtl/vivado/run_kem_trace_boards.sh
+    （逐档烧位流 + 调你的入口）。
+
+—— A，2026-10-21

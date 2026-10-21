@@ -1,0 +1,33 @@
+{
+  "status": "pass",
+  "source": "serial_session",
+  "started_utc": "2026-10-21T12:02:22.266145+00:00",
+  "port": "COM9",
+  "build": 16,
+  "baud": 115200,
+  "timeout_seconds": 180,
+  "bitstream_file": "E:\\FPGA\\rtl\\vivado\\_runs\\pe16\\ntt_board.bit",
+  "bitstream_sha256": "c7c03e939988998889b2f7cce1ca38149b0af4f5fe1dca3329bd687afc0546bc",
+  "declared_frequency_mhz": 50.0,
+  "frequency_measured": false,
+  "programmed_bitstream_verified": false,
+  "trace_sha256": "e107dc71361070d4fc7267852ec180ddaf8f68625838712a167dbfec9abfd59f",
+  "command": [
+    "C:\\Python312\\python.exe",
+    "E:\\FPGA\\refsim\\kem_trace_replay.py",
+    "E:\\FPGA\\logs\\verification_2026-10-18_B_kem_delivery_trace.json",
+    "--output",
+    "E:\\FPGA\\logs\\verification_2026-10-21_A_kem_serial_pe16\\serial",
+    "--port",
+    "COM9",
+    "--build",
+    "16",
+    "--baud",
+    "115200"
+  ],
+  "git_head": "23b2994e9a533300acfc4d25f0c1b5051ddf8950",
+  "returncode": 0,
+  "transactions": 15,
+  "coefficients": 3840,
+  "finished_utc": "2026-10-21T12:02:27.116766+00:00"
+}

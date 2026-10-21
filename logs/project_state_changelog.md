@@ -236,7 +236,7 @@
 
 - **录屏交付**：112 MB 母版仍在本机（`.gitignore` 挡住，不动）；用本机 ffmpeg 转 **1080p / H.264 CRF 26 / 14.9 MB** 入库 `assets/2026-10-15_A_board_uart_five_transactions_1080p.mp4`，抽第 40 秒一帧核过终端文字可读。C 的视频剪辑不再等文件传输。
 - **trace 送板**：B 10-18 交接要求 A 把 15 次正向 NTT 逐档送真板。新增 `rtl/vivado/run_kem_trace_boards.sh`：逐档烧 `_runs/pe{1,4,16}` 的 50 MHz 基线位流 → `refsim/run_kem_board.py --build N --frequency-mhz 50`，输出 `logs/verification_<日期>_A_kem_serial_pe<N>/`。B 的离线 9 项编排测试本机复跑通过。
-- **现状**：板子未接（COM10 未枚举），真板 45 次回放待接板；在此之前报告不得写「真实板卡 45 次通过」。
+- **真板回放（当晚补）**：板子 20:01 插上，枚举为 **COM9**（不是 10-18 的 COM10，口号每次都变）。三档逐档烧 50 MHz 基线位流后回放，pe1/pe4/pe16 各 **15 次 / 3840 系数、15/15 PASS**，合计 **45 次 / 11520 系数**；trace SHA-256 `e107dc71…` 三档一致。证据 `logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`，已写信交回 B（`logs/letter_2026-10-21_A_to_B_kem_trace.txt`）。口径：50 MHz 是人工声明、位流身份靠 SHA。
 - **边界**：1080p 是压缩交付件（母版才是原始素材）；trace 的 50 MHz 是人工声明，工具不测实际时钟；送板只验串口回放，不验烧录工具本身。
 
 
