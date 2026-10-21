@@ -46,6 +46,7 @@
 | 端到端瓶颈归因 | `../metrics/data/bottleneck.csv`、`../report/design/03_performance_and_resources.md` §3.10.3 | `python metrics/bottleneck.py` | 核 **18.08 µs**（904 拍 ÷ 50 MHz）；串口 **184.4 ms**；核占 0.0098% | 串口段是模型值（真实字节 × 10 bit ÷ 115200）；软件参考实现随机器变 |
 | 指标汇总七列表 | `../metrics/data/metrics.csv`、`../metrics/README.md` | 同上两个生成器 | 资源 / 频率 / 周期 / 瓶颈归因 | 生成块不手改 |
 | Pareto / ATP / roofline | `../metrics/data/pareto.csv`、`../report/figures/pareto_atp_roofline.svg` | `node metrics/gen_pareto.mjs`；`node report/figures/gen_figures.mjs` | **ATP 最低 pe4（0.706× pe1）**；三档均在 Pareto 前沿；核需 188.0 / 686.6 / 1,923.9 MB/s，115200 只给 0.0115 MB/s（差 16,316–167,006×） | `@核 Fmax` 是工具推算、`@板上提频` 是实测频率；**功耗为估算**；带宽按每趟 2124 B 复算 |
+| 长时间稳定性（浸泡） | `../logs/verification_2026-10-21_A_soak.txt`、`../rtl/vivado/soak_board.py`、`../report/design/03_performance_and_resources.md` §3.10.7 | `python rtl/vivado/soak_board.py`（no-flush + 写超时 + 60 s 看门狗） | pe16@50 MHz、40 分钟 **9,233 / 9,233** 次 `#NTT` 全过；0 超时 / 0 数值不符 / 0 异常；avg **0.239 s**、p95 **0.250 s** | 单板单机、115200、文本协议；20 ms 间隔是 **host 设置**、非硬件极限；**不是误码率或老化测试**；flush 阻塞是 host/USB 层已定位并绕开 |
 
 ### 2.3 功能正确性（20 分）
 
