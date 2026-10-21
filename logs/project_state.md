@@ -51,6 +51,9 @@
 > Phase 2 交 B、Phase 4 随 C。
 > ④ **板级浸泡 40 分钟 / 9,233 次 `#NTT` 全过**（0 超时 / 0 数值不符 / 0 异常）—— 过程里定位并绕开
 > CH340 `flush()` 永久阻塞（host 层，报告 §3.10.7）；证据 `logs/verification_2026-10-21_A_soak.txt`。
+> ⑤ **视频旁白：A 真人配音已定**（2026-10-21 用户确认；C 已出提词稿 `demo/narration_teleprompter.md`）——
+> A 10/24 前按段录 9 段 WAV，C 负责剪辑；命名/交付见 `logs/letter_2026-10-21_A_to_C_voiceover.txt`。
+> **23:10 收工**：`main` 与远端一致；板子已无后续任务，可拔。明天从「录旁白 + 催 C 重建 PDF」开始。
 
 | | |
 |---|---|

@@ -228,7 +228,7 @@ cd .. && sh skill/scripts/check_reproducible.sh --from-remote  # 段 7：通过 
 
 ## 五、还没定 / 风险
 
-- ✅ **旁白定真人（2026-10-21）** —— 本人配音；提词稿见 `narration_teleprompter.md`。
+- ✅ **旁白定真人（2026-10-21 用户确认）** —— **A 本人配音**（C 负责剪辑，不录旁白）；提词稿见 `narration_teleprompter.md`；交付与命名见 `../logs/letter_2026-10-21_A_to_C_voiceover.txt`。
 - ✅ **段 5 素材已入库（2026-10-21）** —— 用 `../assets/2026-10-15_A_board_uart_five_transactions_1080p.mp4`
   （1080p / 14.9 MB）；母版 112 MB 仍留 A 本机，画质不够再要。**不再需要等 A 传文件。**
 - ⬜ **B-roll 用什么**：GUI 四幕（输入格、256 格逐层、对拍、图表）已能提供变化画面；
