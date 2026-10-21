@@ -150,7 +150,9 @@
       为什么延后：`logs/project_state_changelog.md` 2026-10-08（之十）
       ✅ **2026-10-21：账号 `lanxiteacher`、私有仓库 `pqc-ntt-mlkem` 已建，remote `github` 已加**
       （`https://github.com/lanxiteacher/pqc-ntt-mlkem.git`，与 `origin` 完全独立）。
-      按计划**等冻结日推**：`git push github main`，步骤与核对项见 `logs/guide_github_mirror.md`。
+      ✅ **当天已试推成功**（`main = 3b70f4e`，与本地 HEAD 一致）—— 这一步**只用于验证链路与凭据**；
+      **冻结日再推冻结版**（增量，几秒钟）。试推前 21:00 那次 `Could not connect` 是 GitHub 传输被间歇性掐断，
+      不是 token 或地址问题（`git ls-remote` 之后即恢复）。步骤与核对项见 `logs/guide_github_mirror.md`。
 
 
 ### D · 开放问题

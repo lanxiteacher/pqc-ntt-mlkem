@@ -197,7 +197,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
   <div>
     <h1>FPGA 创新设计竞赛 · 项目进度</h1>
     <p class="sub">后量子密码 ML-KEM 的 NTT / INTT / 点乘 FPGA 加速核 ｜ 3.3 自主选题（初级组）｜ 纯 PL 实现</p>
-    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-21 20:33 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 6 处未提交</p>
+    <p class="meta">本页由 <code>node status/gen_status.mjs</code> 生成 · 生成时间 2026-10-21 21:06 · 分支 main · 与远端一致（上次 fetch 时） · 上次 fetch 0 天前 · 工作区有 8 处未提交</p>
   </div>
   <button class="btn" id="theme" type="button">切换明暗</button>
 </header>
@@ -234,7 +234,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="grow ghand"><div class="glab">交接点</div><div class="gtrack"><div class="ghchip done" style="left:10.417%;width:14.583%" title="H1 A→B 端口说明 · H3 串口协议冻结 v1.0 · H7 C→A、B 演示页数据格式">H1 H3 H7</div><div class="ghchip key done" style="left:39.583%;width:14.583%" title="H4 A→C 资源数据 · H6 上位机接真板子 —— ⚠️ **2026-10-15 订正：H6 原定 10-13 交付、拖到 10-15 才做**（10-08 定的 10-09 / 10-11 两天都过了）。✅ **现已办结**：当天跑完全部六条命令 **5/6 PASS**（`rtl/vivado/reports/board_pe1_txn.txt`），途中修掉 `board_run.py` 少「装载序」一列的缺陷（`KNOWN_ISSUES.md` B7）；H4 资源数据两批此前已交。⚠️ 唯一那条 ❌（`#PMUL TIME 1`）卡在向量文件格式、属 B 的决定，不影响本交接点">H4 · H6</div><div class="ghchip" style="left:54.167%;width:14.583%" title="H5 已交（10-17）；H8 随报告正文推进；H10 仍等第二台电脑">H5 · H8 · H10</div><div class="ghchip" style="left:68.750%;width:14.583%" title="冻结：报告定稿、视频定稿、提交包组装 + 提交演练">提交包</div></div></div>
     <div class="gsec">
       <div class="glab"><span class="swatch" style="--c:var(--s1)"></span>A · 硬件与上板</div>
-      <div class="gact">最后提交 10-21 · 近 7 天 45 次 · 累计 165 次</div>
+      <div class="gact">最后提交 10-21 · 近 7 天 46 次 · 累计 166 次</div>
     </div><div class="grow">
         <div class="glab"><span class="glab-t" title="装 Vivado、跑通验证台（满屏全绿）、读懂 butterfly.v 与 addressgenerator.v">装 Vivado · 验证台跑通</span></div>
         <div class="gtrack"><div class="gbar st-done"
@@ -397,8 +397,8 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
     <div class="tile-p">人写 · rtl/vivado/folding_comparison.md §九 · 2026-09-29</div>
   </div><div class="tile" title="自动 · git log">
     <div class="tile-l">三人提交</div>
-    <div class="tile-v">281</div>
-    <div class="tile-n">A 165 · B 46 · C 70</div>
+    <div class="tile-v">282</div>
+    <div class="tile-n">A 166 · B 46 · C 70</div>
     <div class="tile-p">自动 · git log</div>
   </div></div>
 <p class="hint">仓库规模（自动 · git ls-files，跳过草稿与数据目录）：NTT 核（参数化版） 4,381 行 · 验证探针 2,905 行 · 综合脚本与报告 3,198 行 · 上位机（B） 5,076 行 · 验证台（B） 5,834 行 · 报告正文（C） 2,687 行 · 演示页（C） 3,298 行 · 技能包（C） 3,090 行 · 指标表（C） 1,352 行</p>
@@ -674,7 +674,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var
       <td class="c-src" title="refsim/gen_batch_vectors.py:141">refsim/gen_batch_vectors.py:141</td>
     </tr><tr data-owner="A" class="st-doing">
       <td class="c-owner"><span class="owner-dot" style="--c: var(--s1)"></span>A</td>
-      <td>**GitHub 镜像 —— 2026-10-08 定：挂，但提交前一次性推**（RTL 冻结后推冻结版，日常不做同步；⚠️ 两个独立 remote，不要配成「一次推两边」）—— ✅ 2026-10-21：账号 lanxiteacher、私有仓库 pqc-ntt-mlkem 已建，remote github 已加（与 origin 独立）；等冻结日 git push github main，步骤见 logs/guide_github_mirror.md</td>
+      <td>**GitHub 镜像 —— 2026-10-08 定：挂，但提交前一次性推**（RTL 冻结后推冻结版，日常不做同步；⚠️ 两个独立 remote，不要配成「一次推两边」）—— ✅ 2026-10-21：账号 lanxiteacher、私有仓库 pqc-ntt-mlkem 已建，remote github 已加（与 origin 独立）并**试推成功**（main=3b70f4e）；等冻结日推冻结版（增量），步骤见 logs/guide_github_mirror.md</td>
       <td class="c-state"><span class="ico">▶</span>进行中</td>
       <td class="c-src" title="logs/project_state.md §二 C；logs/project_state_changelog.md 2026-10-08（之十）">logs/project_state.md §二 C；logs/project_state_changelog.md 2026-10-08（之十）</td>
     </tr><tr data-owner="A" class="st-done">

@@ -238,5 +238,6 @@
 - **trace 送板**：B 10-18 交接要求 A 把 15 次正向 NTT 逐档送真板。新增 `rtl/vivado/run_kem_trace_boards.sh`：逐档烧 `_runs/pe{1,4,16}` 的 50 MHz 基线位流 → `refsim/run_kem_board.py --build N --frequency-mhz 50`，输出 `logs/verification_<日期>_A_kem_serial_pe<N>/`。B 的离线 9 项编排测试本机复跑通过。
 - **真板回放（当晚补）**：板子 20:01 插上，枚举为 **COM9**（不是 10-18 的 COM10，口号每次都变）。三档逐档烧 50 MHz 基线位流后回放，pe1/pe4/pe16 各 **15 次 / 3840 系数、15/15 PASS**，合计 **45 次 / 11520 系数**；trace SHA-256 `e107dc71…` 三档一致。证据 `logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`，已写信交回 B（`logs/letter_2026-10-21_A_to_B_kem_trace.txt`）。口径：50 MHz 是人工声明、位流身份靠 SHA。
 - **边界**：1080p 是压缩交付件（母版才是原始素材）；trace 的 50 MHz 是人工声明，工具不测实际时钟；送板只验串口回放，不验烧录工具本身。
+- **GitHub 镜像（试推）**：当天建私有库 `lanxiteacher/pqc-ntt-mlkem`、加独立 remote `github`，并**试推成功**（`main = 3b70f4e`，与本地一致）。试推只验证链路与凭据，冻结日再推冻结版（增量）。⚠️ 21:00 首次 `git ls-remote` 报 `Could not connect ... port 443` 是 GitHub 传输被**间歇性掐断**，不是 token/地址问题；随后 TCP/HTTPS 均通、`ls-remote` 退出 0（空库无输出）。
 
 

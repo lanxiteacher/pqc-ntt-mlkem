@@ -83,8 +83,9 @@ git ls-remote github
 - 失败：401/403 或反复弹窗 —— token 的 `repo` scope 没勾或已过期。
 验证成功后凭据会存进 Windows 凭据管理器，冻结日推送不用再输。
 
-> ✅ **本机已于 2026-10-21 加好**：`github = https://github.com/lanxiteacher/pqc-ntt-mlkem.git`（私有库）。
-> 现在**不要**推；等冻结日一条 `git push github main`。
+> ✅ **本机已于 2026-10-21 加好并试推成功**：`github = https://github.com/lanxiteacher/pqc-ntt-mlkem.git`（私有库），
+> `main = 3b70f4e` 与本地 HEAD 一致。试推只为验证链路与凭据；**冻结日再推冻结版（增量，几秒）**。
+> 当天 21:00 那次 `Could not connect` 是 GitHub 传输被间歇性掐断，不是 token/地址问题。
 
 ## 5. 冻结后推一次（10/25–27；**我可以代跑**，首次要你在弹窗点一下）
 
