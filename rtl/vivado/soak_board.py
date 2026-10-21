@@ -71,6 +71,8 @@ def main():
     ap.add_argument("--minutes", type=float, default=40.0)
     ap.add_argument("--count", type=int, default=0, help="0 = 按分钟数")
     ap.add_argument("--gap", type=float, default=0.02, help="两次事务之间的间隔秒数")
+    ap.add_argument("--no-flush", action="store_true",
+                    help="只 write 不 flush（浸泡用；CH340 的 flush 在持续负载下会永久阻塞）")
     ap.add_argument("--output", default="")
     args = ap.parse_args()
 
@@ -80,14 +82,19 @@ def main():
 
     time.sleep(1.0)          # 让上一次 close 的 USB 管道先落定（2026-10-21 实测：太急会卡）
     lk, hst, rdy = open_hst(args.port, args.baud)
+    if args.no_flush:
+        # 只把字节交给驱动，不等它真的发完。后续每一步都有 1–5 s 的等待，
+        # 足够覆盖 1 KB 数据在 115200 下的 87 ms；换来的是 flush 不再永久阻塞。
+        lk.write = lambda data: lk._ser.write(data)
     time.sleep(0.5)
     try:
         lk.discard_pending()
     except Exception:
         pass
     wd = start_watchdog(60.0)
-    print("port=%s baud=%d build=pe%d data_rows=%d gap=%.3fs rdy=%s"
+    print("port=%s baud=%d build=pe%d data_rows=%d gap=%.3fs flush=%s rdy=%s"
           % (lk.port, lk.baud, args.build, len(data), args.gap,
+             "no" if args.no_flush else "yes",
              ("pe%d" % hst.build) if rdy else "missed"))
     sys.stdout.flush()
 
