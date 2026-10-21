@@ -15,7 +15,7 @@
 | **创新性** | **30** | `../docs/related-work.md`、`../report/design/01_background_and_related_work.md` §1.3–§1.5、`../report/design/02_design_and_innovation.md` | 一套参数化 RTL 出 1/4/16 三档；对外 12 位接口使引脚恒为 37（上游 16 蝶形要 397，本器件仅 125） | §二.1 |
 | **性能与资源** | **20** | `../metrics/README.md`、`../rtl/vivado/reports/` | 核：LUT 727 / 2,000 / 8,922，周期 904 / 232 / 69；推算 Fmax 168 / 160 / 154 MHz；板级提频 80 / 75 / 62.5 MHz | §二.2 |
 | **功能正确性** | **20** | `../refsim/`、`../rtl/probes/`、`../rtl/vivado/reports/board_*_txn.txt` | KAT 1000/1000；四条通路各 4096/4096；三档各六条命令 6/6 | §二.3 |
-| **大模型协作与技能包** | **15** | `../report/ai-log/`、`../report/design/06_appendix.md`、`../skill/` | 逐日日志以 `git ls-files` 计数为准（10-19 时点 28 份）；附录摘 6 条自我纠错；技能包 4 条提示词 / 34 条坑 / 3 个校验脚本 / 3 个模板 | §二.4 |
+| **大模型协作与技能包** | **15** | `../report/ai-log/`、`../report/design/06_appendix.md`、`../skill/` | 逐日日志以 `git ls-files` 计数为准（10-21 时点 31 份）；附录摘 6 条自我纠错；技能包 4 条提示词 / 34 条坑 / 3 个校验脚本 / 3 个模板 | §二.4 |
 | **文档与可复现** | **15** | `../README.md`、`../report/design/05_reproducibility.md`、`../skill/scripts/check_reproducible.sh` | 非作者（C）远端全新 clone 跑出「通过 4 / 跳过 0 / 失败 0」；B 另在干净 clone 跑 18/18 | §二.5 |
 
 > 《选题指南》§3.3.5.3 七项正文的映射另见 `../report/design/00_front_matter.md` §三；
@@ -57,7 +57,7 @@
 | 参数化三档单运算 | `../rtl/probes/README.md` §判据 3 | `sh rtl/probes/run_probes.sh` | 3 运算 × 3 档，各 **4096 / 4096**（多重集） | 判据是多重集；读出顺序单独量，不并入 |
 | 改造前后逐拍等价 | `../rtl/probes/README.md`（`ag_equiv_tb.v` / `core_equiv_tb.v`） | 同上 | 三档逐拍全等（端口 + 内部状态） | 「等价 + 老核已验」才继承结论 |
 | 三档完整乘法（FULL/HALF） | `../refsim/check_polmul_param.py`、`../logs/verification_2026-10-17_B_clean_clone.json` | `sh refsim/run_polmul_param_check.sh`；`python refsim/check_polmul_param.py --negative-controls` | **24,576 个系数**（3 档 × 2 模式 × 16 组 × 256）；多重集与 τ 顺序全过 | 对象是 `rtl/ntt_core`；不能替代上板 |
-| ML-KEM transcript replay（无板侧） | `../logs/verification_2026-10-18_B_kem_delivery*.json`、`../refsim/accept_trace_delivery.py` | `python refsim/accept_trace_delivery.py --output <目录>` | keygen / encaps / decaps = 6 / 3 / 6，共 **15 次**正向 NTT；三档实际 RTL 回放 **45 次 / 11,520 系数**逐项全对 | **无板**：不含板级 UART；真板 15 次/档待 A；trace 基于社区兼容 KAT，非官方认证 |
+| ML-KEM transcript replay（仿真 + 真板） | `../logs/verification_2026-10-18_B_kem_delivery*.json`、`../refsim/accept_trace_delivery.py`、`../logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/` | `python refsim/accept_trace_delivery.py --output <目录>`；真板：`sh rtl/vivado/run_kem_trace_boards.sh` | 仿真：三档 RTL 各 15 次、共 45 次 / 11,520 系数全对；**真板（10-21，COM9）：三档各 15 次 / 3,840 系数，合计 45 次 / 11,520 系数全 PASS** | 回放的是 KEM 里的 15 次正向 NTT，**不是板上跑完整 KEM**；50 MHz 为人工声明、位流身份靠 SHA；trace 基于社区兼容 KAT，非官方认证 |
 | 变异测试 + 固定周期 | `../refsim/accept_strengthening.py`、`../team/handoff_2026-10-18_B_strengthening.md` | `python refsim/accept_strengthening.py --output <目录>` | 17/17 变异体被捕获（16 数值 + 1 输出 X）；三档各 103 次输入（100 随机 + 3 边界）周期恒定，核 **904 / 232 / 69** 拍 | 变异只覆盖 **pe4 / FULL**，不称全档全运算覆盖率；固定延迟不是侧信道安全证明 |
 | 阴性对照 | `../report/design/04_functional_correctness.md` §4.7 | 同上 + 探针负向控制 | 改坏一处必被抓（如 4095/4096、334/4096、FATAL） | 不同守卫的失败阶段不同（编译 / `vvp` 启动） |
 | 真板子端到端 | `../rtl/vivado/reports/board_pe{1,4,16}_txn.txt`（提频版 `..._f{80,75,62.5}_txn.txt`） | `sh rtl/vivado/run_board_txn_report.sh` | 三档各 **6/6**（PING + 五条计算事务，各 256 系数零差异） | 10-15 的 5/6 是向量变长格式，旧报告留底；PING 不做系数比较 |
@@ -67,8 +67,8 @@
 
 | 主张 | 证据文件 | 复跑 / 核对命令 | 结果 | 边界 |
 |---|---|---|---|---|
-| 逐日 AI 协作日志 | `../report/ai-log/*.md` | `git ls-files 'report/ai-log/*.md'`（再数行数） | 以命令输出为准（2026-10-19 时点 **28**） | 每天在变；附录索引行数必须等于文件数 |
-| 附录索引与自我纠错摘编 | `../report/design/06_appendix.md` §A.1 / §A.2 | 对文件计数、逐条回原日志 | 索引 28 行 = 28 个文件；摘 **6 条**轨迹 | B 的 09-29～10-05 **有意不补** |
+| 逐日 AI 协作日志 | `../report/ai-log/*.md` | `git ls-files 'report/ai-log/*.md'`（再数行数） | 以命令输出为准（2026-10-21 时点 **31**） | 每天在变；附录索引行数必须等于文件数 |
+| 附录索引与自我纠错摘编 | `../report/design/06_appendix.md` §A.1 / §A.2 | 对文件计数、逐条回原日志 | 索引 31 行 = 31 个文件；摘 **6 条**轨迹 | B 的 09-29～10-05 **有意不补** |
 | 技能包 | `../skill/README.md` | 看各子目录的四件套表 | `prompts/` 4 条、`checklists/` 5 份 34 条、`scripts/` 3 个（+ `refsim/` 四条入口）、`templates/` 3 个 | PYNQ 模板只过语法检查，**不宣称加分** |
 | 非作者独立复现咬出缺陷（CRLF 回写） | `../skill/`、`../report/ai-log/` | 回原日志 | 见附录 §A.2 | 结论只到「发现并修复」，不外推 |
 
@@ -107,7 +107,7 @@
 | 3 | ML-KEM transcript replay | B | 全部 NTT 逐位一致 | 10/22 | ✅ **10-21 完成**：无板侧（B，10-18）三档 RTL 各 15 次 / 45 次 11,520 系数全对；**真板（A，10-21）三档各 15 次 / 3840 系数、合计 45 次 / 11,520 系数全 PASS**（COM9，50 MHz 基线，逐档烧录；`../logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`） |
 | 4 | 变异测试 + 常数时间 | B | 变异体全捕获；周期恒 904/232/69 | 10/24 | ✅ 10-18（B）：17/17 被捕获；103 组输入三档周期恒定；边界只到 pe4/FULL（`../team/handoff_2026-10-18_B_strengthening.md`） |
 | 5 | 现场演示 GUI + 一键脚本 | C | 双击可跑；无板回放；3 分钟 | 10/24 | ✅ 10-19（`demo/gui.html` + `run_gui.cmd`；无头 Edge 实测） |
-| 6 | 证据地图 + 口径统一 | C+A | 报告/QA/metrics/视频四处一致 | 10/21 | ✅ 10-19（本文件）；报告草稿 10-19 重建 75 页、10-20 并入 §4.11 后 76 页（以构建输出为准） |
+| 6 | 证据地图 + 口径统一 | C+A | 报告/QA/metrics/视频四处一致 | 10/21 | ✅ 10-19（本文件）；报告草稿随正文重建（2026-10-21 构建 59 页；**页数以打开 PDF 为准**） |
 | 7 | Pareto / ATP / roofline + 功耗估算 | C+A | 一图一表；功耗标估算 | 10/24 | ✅ 10-19（C：`metrics/gen_pareto.mjs` + 三面板图；A：功耗 10-18） |
 
 > 边界：完整 ML-KEM RTL、AXI/PS、radix-4、PYNQ、2/8 折叠档**都不做**，

@@ -15,6 +15,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -172,10 +173,25 @@ for (const t of TIERS) {
     };
 }
 
+/* 「数据截至」取输入文件最后一次提交的日期 —— 不用当天日期，否则每次重跑都会弄脏工作区，
+ * 录制前的「生成器重跑后 git status 干净」体检就永远为假。 */
+function dataAsOf() {
+    try {
+        const out = execSync(
+            'git log -1 --format=%cs -- metrics/data/metrics.csv metrics/data/bottleneck.csv ' +
+            'rtl/vivado/power_estimate.md rtl/vivado/high_baud_demo.md',
+            { cwd: REPO, encoding: 'utf8' }
+        ).trim();
+        return out || 'unknown';
+    } catch {
+        return 'unknown';
+    }
+}
+
 const payload = {
     meta: {
         generatedBy: 'demo/gen_gui_data.mjs（node）',
-        generatedAt: new Date().toISOString().slice(0, 10),
+        dataAsOf: dataAsOf(),
         tierNote: '资源与推算 Fmax 为 post-route；板上频率是提频位流真板跑通的频率，不是芯片极限',
         powerNote: '功耗是 Vivado report_power 的 vectorless 估算（Confidence Medium，25 °C，只算片内 PL），不是实测',
         boardNote: '板上数据来自 2026-10-18 已提交的串口事务报告；本页面不连接开发板，按回放模式展示',
