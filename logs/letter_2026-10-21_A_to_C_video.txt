@@ -1,0 +1,33 @@
+A → C：上板录屏的交付版已入库（1080p / 14.9 MB）
+
+2026-10-21 · A
+
+一、你卡的那件（112 MB 怎么传）有解了
+
+  原文件仍是 112 MB / HEVC，留在 A 本机（.gitignore 挡住，不动）。
+  今天用本机的 ffmpeg 转了一版入库：
+    assets/2026-10-15_A_board_uart_five_transactions_1080p.mp4
+    1080p（1594x1080，与原片同分辨率）、H.264、CRF 26、14.9 MB、1 分 12 秒、AAC 128k。
+  抽第 40 秒一帧核过：终端里的命令、#OK 回帧、256 行结果都清楚可读。
+  你可以直接从仓库拿这版剪；需要更高画质再向我要母版（母版没删）。
+
+  这是**交付件**，不是重新录制：内容与 10-15 那版完全一样（日期仍是 10-15）。
+
+二、ML-KEM trace 送板：入口已就绪，等板子
+
+  B 的 10-18 交接要求 A 把 15 次正向 NTT 逐档送真板（三档共 45 次 / 11520 系数）。
+  今天把 A 侧的「先烧对应档位再回放」补成了脚本：
+    rtl/vivado/run_kem_trace_boards.sh
+  用法：板子接好后 PORT=COM10 sh rtl/vivado/run_kem_trace_boards.sh，
+  它逐档烧 _runs/pe{1,4,16} 的 50 MHz 基线位流、跑 refsim/run_kem_board.py，
+  输出落 logs/verification_<日期>_A_kem_serial_pe{1,4,16}/。
+  B 的离线 9 项编排测试本机复跑通过；现在只缺实体板卡。
+  板子插上我就跑，结果按 B 的规矩原样交回（session.json + stdout/stderr + serial/replay.json）。
+
+三、边界
+
+  · 1080p 版是压缩件，画质略低于母版；母版才是原始素材。
+  · trace 送板只验串口回放，不验综合/烧录工具本身；frequency 是人工声明 50 MHz。
+  · 未跑完之前，报告里不能写「真实板卡 45 次通过」。
+
+—— A，2026-10-21

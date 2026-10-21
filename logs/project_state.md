@@ -37,6 +37,13 @@
 > `logs/verification_2026-10-18_A_refsim.txt`）；**板级冒烟台三档全过** ——
 > **pe1 / pe4 / pe16 各 521 个比对点、0 失败**（日志同目录）。
 > Fmax 口径已与 C 对齐（核 168/160/154 与板级 80/75/62.5 分两行）。
+>
+> **A 当前状态（10-21）**：**板子不在**（COM10 未枚举，只剩蓝牙串口）。当天做完两件：
+> ① **上板录屏交付版入库** —— `assets/2026-10-15_A_board_uart_five_transactions_1080p.mp4`
+> （1080p / 14.9 MB，母版 112 MB 仍在本机），C 的剪辑阻塞解除，见 `logs/letter_2026-10-21_A_to_C_video.txt`。
+> ② **ML-KEM trace 送板入口就绪** —— 新增 `rtl/vivado/run_kem_trace_boards.sh`（逐档烧
+> `_runs/pe{1,4,16}` 的 50 MHz 基线位流再跑 `refsim/run_kem_board.py`）；B 的离线 9 项编排测试
+> 本机复跑通过。**只等实体板卡**：三档 × 15 次 = 45 次 / 11520 系数，结果按 B 的规矩原样交回。
 
 | | |
 |---|---|
