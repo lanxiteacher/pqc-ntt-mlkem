@@ -16,7 +16,7 @@ origin  https://gitee.com/lanxiteacher/pqc-ntt-mlkem.git
 
 ```text
 origin  https://gitee.com/lanxiteacher/pqc-ntt-mlkem.git   ← 日常，不动
-github  https://github.com/<你的用户名>/pqc-ntt-mlkem.git    ← 冻结后推一次
+github  https://github.com/lanxiteacher/pqc-ntt-mlkem.git    ← 冻结后推一次
 ```
 
 ## 1. 建 GitHub 账号（**只能你做**）
@@ -69,6 +69,22 @@ GitHub → Settings → **SSH and GPG keys** → New SSH key → 粘贴 → Add�
 git remote add github https://github.com/<你的用户名>/pqc-ntt-mlkem.git
 git remote -v          # 应看到 origin 与 github 两行，各自独立
 ```
+
+## 4.5 先验一次认证（可选，1 分钟，**不会上传任何东西**）
+
+加完 remote 后，在 Git Bash 里跑：
+
+```bash
+git ls-remote github
+```
+
+- 弹窗要凭据：Username 填 GitHub 用户名，Password 粘 token；
+- 成功：命令直接返回、**没有任何输出**（仓库还是空的），退出码 0；
+- 失败：401/403 或反复弹窗 —— token 的 `repo` scope 没勾或已过期。
+验证成功后凭据会存进 Windows 凭据管理器，冻结日推送不用再输。
+
+> ✅ **本机已于 2026-10-21 加好**：`github = https://github.com/lanxiteacher/pqc-ntt-mlkem.git`（私有库）。
+> 现在**不要**推；等冻结日一条 `git push github main`。
 
 ## 5. 冻结后推一次（10/25–27；**我可以代跑**，首次要你在弹窗点一下）
 

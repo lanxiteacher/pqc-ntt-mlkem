@@ -148,6 +148,9 @@
       ⚠️ **归谁做**：`team/roles_and_duties.md` 第 7 项（开源仓库）归 **B**，
       而 Gitee 仓库与账号在 **A** 名下 —— 谁有 GitHub 账号谁做，**提交前必须有人做**。
       为什么延后：`logs/project_state_changelog.md` 2026-10-08（之十）
+      ✅ **2026-10-21：账号 `lanxiteacher`、私有仓库 `pqc-ntt-mlkem` 已建，remote `github` 已加**
+      （`https://github.com/lanxiteacher/pqc-ntt-mlkem.git`，与 `origin` 完全独立）。
+      按计划**等冻结日推**：`git push github main`，步骤与核对项见 `logs/guide_github_mirror.md`。
 
 
 ### D · 开放问题
