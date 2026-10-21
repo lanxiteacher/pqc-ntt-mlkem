@@ -46,6 +46,9 @@
 > **15 次 / 3840 系数、全部 PASS**，合计 **45 次 / 11520 系数**；证据
 > `logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`（session.json + stdout/stderr +
 > serial/replay.json），trace SHA-256 `e107dc71…`。口径：50 MHz 是人工声明、位流身份靠 SHA。
+> ③ **晚间评委视角审计** —— 16 条缺陷，Phase 1 口径修复已完成（§3.10.3 分档比 CPU、封面三口径、
+> 能量/NTT、README 板级入口、作品边界）；计划 `logs/plan_2026-10-21_audit_fixes.md`，
+> Phase 2 交 B、Phase 3 等板子、Phase 4 随 C。
 
 | | |
 |---|---|

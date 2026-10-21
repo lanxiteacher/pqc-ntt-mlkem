@@ -63,13 +63,25 @@ ML-KEM（FIPS 203，即 CRYSTALS-Kyber）是 NIST 后量子密码标准中的密
   真板子 PASS，后者探针 `-DOP_PWM2AB` 三档 4096/4096）。⚠️ 验证在 `rtl/probes/`，不在 `refsim/` 链子里。
 - **综合与资源**：上游基线三档已综合/实现（2026-09-22；⚠️ pe16 只到综合未布线）。资源与频率见
   `rtl/vivado/folding_comparison.md` 与 `rtl/vivado/reports/`。**参数化版本三档已综合并布线**（§九）；板级亦已到 bitstream。
-- **功耗**：未测。
+- **功耗**：已完成 **vectorless 估算**（50 MHz 三档 **0.130 / 0.170 / 0.335 W**，提频 0.257 / 0.300 / 0.440 W；Confidence Medium、只算片内 PL，**非实测**）—— `rtl/vivado/power_estimate.md`，复跑 `sh rtl/vivado/run_board_power.sh`。
 - **上板**：**NTT 核已上板（2026-10-04）** —— 板级 wrapper 见 `rtl/board/`（顶层 / 状态机 /
   行组装 / XDC），三档 pe1/pe4/pe16 各五条事务 256/256；PL 通路更早于 2026-09-29 用官方 `19_uart_loopback` 校验（16 字节原样返回）。
 - **上位机与协议**：`host/proto.md` 已**冻结 v1.0（2026-09-29 生效）**，比原计划 W2 提前。
   PC 端上位机已成形（`host/src/` 14 个 `.py` / 4289 行，7 个自测全绿，含对真串口跑事务的
   `board_run.py`）；板子端实现即 `rtl/board/`。⚠️ 冻结说明 `host/proto.md` §九(d) 如实列了
   四个已知缺口，其中一条是**FNTT 的回传顺序随折叠度变**（pe1 交织 / pe4、pe16 自然序）。
+- **板级进阶（2026-10-18 / 10-21 补）**：基线三档各 **6/6**（5 条计算 + 1 条 `#PING` 探活），
+  提频版 **80 / 75 / 62.5 MHz** 各 6/6；真实 ML-KEM trace **45 次 / 11,520 系数**逐位一致。
+  常用入口（板级脚本都在 `rtl/vivado/`，不需要 GUI）：
+
+  ```sh
+  BIT=<位流> sh rtl/vivado/run_board_prog.sh                        # 烧录
+  PE=1 TAG=<标签> PORT=<COMx> sh rtl/vivado/run_board_txn_report.sh  # 探活 + 五条计算事务
+  sh rtl/vivado/run_board_freq_sweep.sh                             # 提频综测（不需要板子，约 30 分钟）
+  sh rtl/vivado/run_board_power.sh                                  # 功耗估算（不需要板子）
+  PORT=<COMx> sh rtl/vivado/run_kem_trace_boards.sh                 # ML-KEM trace 三档送板
+  python host/src/board_run.py "#NTT 1" --check --build 1 --port <COMx> --baud 921600  # 921600 演示
+  ```
 
 覆盖边界的完整说明在 `refsim/README.md` 第八节。
 
