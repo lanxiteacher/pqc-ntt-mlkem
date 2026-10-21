@@ -16,7 +16,7 @@
       "scope": "rtl/ ｜ 综合 ｜ 板子（本机）",
       "color": 1,
       "git_authors": ["lanxiteacher"],
-      "now": "✅ **2026-10-21：A 侧出彩组合仍全部收口，另补两件。** ① 上板录屏交付版入库：`assets/2026-10-15_A_board_uart_five_transactions_1080p.mp4`（1080p / 14.9 MB，母版 112 MB 留本机）—— C 的剪辑阻塞解除。② ML-KEM trace **真板回放已跑完**：三档各 15 次 / 3840 系数，合计 **45 次 / 11520 系数全 PASS**（COM9，20:01–20:02）；证据 `logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`，trace SHA `e107dc71…`。A 侧 entry `rtl/vivado/run_kem_trace_boards.sh`（逐档烧位流 + B 的 `run_kem_board.py`）。10-18 的板级 6/6、提频 6/6、921600（8.0×）、功耗估算、全量回归结论不变。晚间板级浸泡 40 分钟 / **9,233 次 #NTT 0 错**；评委视角审计 Phase 1 口径已改（分档比 CPU、能量/NTT、作品边界）。",
+      "now": "✅ **2026-10-21：A 侧出彩组合仍全部收口，另补两件。** ① 上板录屏交付版入库：`assets/2026-10-15_A_board_uart_five_transactions_1080p.mp4`（1080p / 14.9 MB，母版 112 MB 留本机）—— C 的剪辑阻塞解除。② ML-KEM trace **真板回放已跑完**：三档各 15 次 / 3840 系数，合计 **45 次 / 11520 系数全 PASS**（COM9，20:01–20:02）；证据 `logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`，trace SHA `e107dc71…`。A 侧 entry `rtl/vivado/run_kem_trace_boards.sh`（逐档烧位流 + B 的 `run_kem_board.py`）。10-18 的板级 6/6、提频 6/6、921600（8.0×）、功耗估算、全量回归结论不变。晚间板级浸泡 40 分钟 / **9,233 次 #NTT 0 错**；评委视角审计 Phase 1 口径已改（分档比 CPU、能量/NTT、作品边界）；视频旁白定 A 真人配音。**23:10 收工，main 与远端一致。**",
       "next": "① 交回 B 复核 45 次真板证据（已写信）；② 每天补 ai-log；③ 配合 C 的视频剪辑（素材已入库）与 10/25–27 冻结后复跑、镜像。",
       "as_of": "2026-10-18",
       "source": "logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2"

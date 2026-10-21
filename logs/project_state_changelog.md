@@ -250,5 +250,12 @@
 - **板级浸泡（Phase 3，22:18–22:58）**：pe16 / 50 MHz / 115200，连续 **9,233 次 `#NTT`，9,233 通过**（0 超时 / 0 数值不符 / 0 异常），avg 0.239 s、p95 0.250 s。过程里发现：无 `flush` 等待或间隔太小时，CH340 的 `write/flush` 会在 ~100–600 次之间**永久阻塞**（host 层，板子仍活）；`pyserial` 的 `flush()` 没有超时。`rtl/vivado/soak_board.py` 用 no-flush + 写超时 + 60 s 看门狗绕开。报告新增 §3.10.7，证据 `logs/verification_2026-10-21_A_soak.txt`。
 - **视频旁白定人（23:10）**：用户确认 **A 真人配音**（非 TTS、非 C）；C 的提词稿与脚本里的归属已从 C 改成 A（`demo/narration_teleprompter.md`、`demo/video_script.md`）；A 10/24 前交九段 WAV，格式/命名/待 C 拍板的五件事见 `logs/letter_2026-10-21_A_to_C_voiceover.txt`。
 
+## 2026-10-21 收工
+
+- **A 侧完成**：评委视角审计 Phase 1（§3.10.3 分档比 CPU、§3.10.5 能量/NTT、封面三口径、README 板级入口、00 作品边界、02 三层贡献 + §2.8.5 集成路线）；Phase 3 板级浸泡（40 分钟 / **9,233 次 `#NTT` 0 错**）；视频旁白归属改 A 真人配音。
+- **未完成**：Phase 2（B：100 组随机 NTT / 3 transcript / 变异三档）、Phase 4（视频剪辑、提交包、页码）、GitHub 冻结日推送。
+- **收工状态**：`main` 与远端一致（`e1c3336`）；板子无后续任务，可拔。
+
+
 
 
