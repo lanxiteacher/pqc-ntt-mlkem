@@ -30,4 +30,12 @@ A → C：上板录屏的交付版已入库（1080p / 14.9 MB）
   · trace 送板只验串口回放，不验综合/烧录工具本身；frequency 是人工声明 50 MHz。
   · 未跑完之前，报告里不能写「真实板卡 45 次通过」。
 
+四、顺手补了参考文献里最后 2 处 `未消`
+
+  A2（Kyber v3.0 规格）与 B3（Round-3 KAT）都来自 NIST 官方 Round-3 包，条目里已补：
+    · 官方 URL：https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Kyber-Round3.zip
+    · 包内路径（A2: Supporting_Documentation/kyber.pdf；B3: Additional_Implementations/avx2/crypto_kem/kyber768/…）
+    · 本机归档 research/Kyber-Round3.zip 的 SHA-256（归档不进仓库）
+  只改了 07_references.md 的这两行与开头计数；你重建 PDF 时会带上。
+
 —— A，2026-10-21

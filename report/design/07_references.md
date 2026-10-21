@@ -18,7 +18,7 @@
 
 **2026-10-09 首次成文时**，这份列表「除 PQShield 外几乎全缺 DOI/URL，多篇缺英文原标题与作者全名」。
 **2026-10-10 按公开网络检索逐条补全了书目信息**（标题 / 作者 / venue / 年 / 卷页 / DOI），
-缺口从 20 余处降到 **3 处**（下表 `未消`）。
+缺口从 20 余处降到 2 处；**2026-10-21 这 2 处也消了**（A2/B3 补上 NIST Round-3 官方包 URL 与本机归档 SHA-256）。
 
 **两条边界 —— 用之前必须知道：**
 
@@ -26,7 +26,10 @@
    补的是**「谁在哪发表的」**（出版方自己发布，可靠性高）；
    **报告里引用的「数字」（器件型号 / LUT / 频率 / 周期）仍要回原始 PDF 核** ——
    那是另一回事，见 `../../docs/related-work.md` §五。**别把「引用信息已补齐」当成「数字已核实」。**
-2. **仍有 3 处没消**，逐条标为 `未消` —— 都是**文件本身不在仓库**、只能 A/B 拿原始 PDF 的那种。
+2. ~~**仍有 3 处没消**~~ → **2026-10-21 已全部销**：A2（Kyber v3.0 规格）与 B3（Round-3 KAT）
+   都来自 NIST 官方 Round-3 包（`Kyber-Round3.zip`，7 MB，2020-10-01），条目里已补官方 URL；
+   本机归档 `../../research/Kyber-Round3.zip`（**SHA-256 `A68B152C…`**）留作原件，
+   **归档不进仓库**（见 `.gitignore`）。⚠️ 链接与文件存在已核，**内容未逐字核**。
 
 标注规则：
 
@@ -43,7 +46,7 @@
 | # | 条目 | 出处 |
 |---|---|---|
 | A1 | **NIST.** *Module-Lattice-Based Key-Encapsulation Mechanism Standard*（**FIPS 203**, **2024**）`网核` | 本仓库副本 `../../research/standards/NIST.FIPS.203.pdf` |
-| A2 | **CRYSTALS-Kyber 团队.** *Kyber v3.0 官方规格*（Round-3 支持文档）. ⚠️ **非 FIPS 203** `未消` | ⚠️ **该文件不在本仓库**（汇编 §3.5 记的路径是调研环境里的 `_round3_extract/…/kyber.pdf`）|
+| A2 | **CRYSTALS-Kyber 团队.** *Kyber v3.0 官方规格*（Round-3 支持文档，2020-10-01）. ⚠️ **非 FIPS 203** `网核` | 官方包 `https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Kyber-Round3.zip` → `Supporting_Documentation/kyber.pdf`；本机归档 `../../research/Kyber-Round3.zip`（**SHA-256 `A68B152C7CF70A32BAB1ABAF2AB5A21423F33B0AC11CA8DB9B9DD4864007319B`**，7,340,227 B，与官方 7 MB 包一致；**归档本身不进仓库**，见 `.gitignore`） |
 | A3 | **NIST.** FIPS 204（ML-DSA）／ FIPS 205（SLH-DSA）. ⚠️ **本作品未引用**，随 A1 一批下载 | `../../research/standards/NIST.FIPS.204.pdf`、`NIST.FIPS.205.pdf` |
 
 ## B. 参考实现与测试数据
@@ -52,7 +55,7 @@
 |---|---|---|
 | B1 | **pq-crystals.** *kyber* —— CRYSTALS-Kyber / ML-KEM 参考实现（C）. `ref/ntt.c` 是 twiddle 表与 INTT 层序的权威来源。`网核` `https://github.com/pq-crystals/kyber` | `../../research/kyber_ref/` |
 | B2 | **post-quantum-cryptography.** *KAT* —— FIPS 203 **兼容**考题（ML-KEM-768，1000 条）. `网核` `https://github.com/post-quantum-cryptography/KAT`。⚠️ **社区维护，不是 NIST 官方发布**（措辞红线，见 `../../research/mlkem_kat/README.md` 文首） | `../../research/mlkem_kat/` |
-| B3 | **NIST / Kyber Round-3 提交包.** Kyber Round-3 KAT（.req/.rsp）. ⚠️ **不是 ML-KEM 的 KAT** —— 种子派生是 `G(d)` 而非 `G(d‖K)`，**只作反面材料**（见 `../../research/verified_corrections_to_guide.md` 修正 4）`未消` | ⚠️ **不在本仓库**（同 A2）；结论记于 `../../research/verified_corrections_to_guide.md` |
+| B3 | **NIST / Kyber Round-3 提交包.** Kyber Round-3 KAT（`.req`/`.rsp`，2020-10-01）. ⚠️ **不是 ML-KEM 的 KAT** —— 种子派生是 `G(d)` 而非 `G(d‖K)`，**只作反面材料**（见 `../../research/verified_corrections_to_guide.md` 修正 4）`网核` | 同一个官方 zip → `Additional_Implementations/avx2/crypto_kem/kyber768/PQCkemKAT_2400.req` / `.rsp`（512/1024 同目录）；本机归档与哈希同 A2；结论记于 `../../research/verified_corrections_to_guide.md` |
 
 ## C. 公开工作（横向对比对象，对应 `../../docs/related-work.md` 主表）
 
