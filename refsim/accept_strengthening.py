@@ -75,7 +75,8 @@ def build_oracles(work):
     for name,src in [('polmul','polmul_full_tool.c'),('ntt','ntt_once_tool.c')]:
         checked([tool('gcc'),'-O2','-Wall','-I'+str(ref),'-o',work/(name+'.exe'),HERE/src,*libs],work,'compile_'+name)
 
-def mutation_stage(work):
+def mutation_stage(work, pe=4, require_all_detected=True):
+    if pe not in (1,4,16): raise ValueError('unsupported PE')
     a=read_hex(HERE/'batch/fullmul_a.txt',4096)
     b=read_hex(HERE/'batch/fullmul_b.txt',4096)
     frozen=read_hex(HERE/'batch/fullmul_exp.txt',4096)
@@ -93,7 +94,7 @@ def mutation_stage(work):
         case=work/name;case.mkdir()
         write_hex(case/'in_a.txt',a);write_hex(case/'in_b.txt',b)
         src=case/'core';shutil.copytree(CORE,src)
-        info={'id':name,'build':4,'mode':'FULL','groups':16,'coefficients':4096}
+        info={'id':name,'build':pe,'mode':'FULL','groups':16,'coefficients':4096}
         if item:
             _,file,old,new,why=item
             p=src/file;raw=p.read_bytes();anchor=old.encode('ascii')
@@ -101,7 +102,7 @@ def mutation_stage(work):
             p.write_bytes(raw.replace(anchor,new.encode('ascii')))
             info.update(file=file,before=old,after=new,mechanism=why,
                         original_sha256=digest(CORE/file),mutant_sha256=digest(p))
-        compiled=command([tool('iverilog'),'-g2012','-s','polmul_param_tb','-DCFG_PE_NUM=4',
+        compiled=command([tool('iverilog'),'-g2012','-s','polmul_param_tb',f'-DCFG_PE_NUM={pe}',
               '-DCFG_HALF=0','-o',case/'dut.vvp',*sorted(src.glob('*.v')),HERE/'polmul_param_tb.v'],case,'compile')
         if compiled.returncode:
             info['status']='compile_error'
@@ -112,7 +113,7 @@ def mutation_stage(work):
                 info['detail']='nonzero simulation exit; not counted as detected arithmetic fault'
             else:
                 try:
-                    got=parse_output(sim.stdout,4,0)
+                    got=parse_output(sim.stdout,pe,0)
                     multi,ordered=compare(got,expected)
                     info.update(multiset_matches=multi,ordered_matches=ordered)
                     info['status']='pass' if ordered==4096 and multi==4096 else 'detected_mismatch'
@@ -123,16 +124,18 @@ def mutation_stage(work):
                             if x!=expected[g*256+i//2+128*(i%2)])
                 except ValueError as exc:
                     # Unknown data is a behavioral detection only after a complete run.
-                    complete=sim.stdout.splitlines().count('COMPLETE 4 0 16')==1
+                    complete=sim.stdout.splitlines().count(f'COMPLETE {pe} 0 16')==1
                     rows=[s for s in sim.stdout.splitlines() if s.startswith('DOUT ')]
                     unknown=any(re.fullmatch(r'DOUT \d+ \d+ [0-9a-fA-FxXzZ]{3}',s) and re.search('[xXzZ]',s.split()[-1]) for s in rows)
                     info['status']='detected_unknown' if complete and len(rows)==4096 and unknown else 'invalid_output'
                     info['detail']=str(exc)
         results.append(info);save(case/'result.json',info);save(work/'mutations.json',results)
-        print(f"MUTATION {name}: {info['status']}",flush=True)
+        print(f"MUTATION pe{pe} {name}: {info['status']}",flush=True)
         if item is None and info['status']!='pass': raise AssertionError('baseline must pass before mutants')
     survivors=[r for r in results[1:] if not r['status'].startswith('detected_')]
-    if survivors: raise AssertionError('survivors/infrastructure failures: '+str([(r['id'],r['status']) for r in survivors]))
+    infrastructure=[r for r in survivors if r['status']!='pass']
+    if infrastructure or (require_all_detected and survivors):
+        raise AssertionError('survivors/infrastructure failures: '+str([(r['id'],r['status']) for r in survivors]))
     return results
 
 def timing_stage(work):

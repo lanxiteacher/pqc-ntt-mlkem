@@ -17,7 +17,7 @@ python refsim/accept_kem_trace.py --output ../B_kem_manual_01
 
 ## 输入来源与实际调用数
 
-- 输入：research/mlkem_kat/kat_MLKEM_768.rsp 的首条 count=0，d/z/msg 与期望 pk/sk/ct/ss；社区维护的 FIPS 203 兼容向量，非 NIST 官方发布。
+- 输入：research/mlkem_kat/kat_MLKEM_768.rsp 默认首条 count=0；10-21 增加 `--kat-count` 选择其他条目（扩展验收见 `phase2_README.md`）。字段为 d/z/msg 与期望 pk/sk/ct/ss；社区维护的 FIPS 203 兼容向量，非 NIST 官方发布。
 - 固定 KYBER_K=3，确定性接口 keypair_derand(d||z)、enc_derand(msg)、dec(ct,sk)。randombytes 哨兵如果被意外调用会失败，不提供伪随机默认值。
 - keygen：skpv、e 各 3 个多项式，共 6 次。
 - encaps：sp 的 3 个多项式，共 3 次。

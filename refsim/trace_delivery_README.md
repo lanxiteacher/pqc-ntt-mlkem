@@ -13,7 +13,7 @@ python refsim/accept_trace_delivery.py --output ../B_trace_delivery_manual_01
 
 1. 重新提取社区 FIPS 203 兼容 KAT count=0 的正常 ML-KEM-768 流程，检查 KAT、原版/插桩一致性、确定性、15 次调用的 C 复核和三档陪练。不是 NIST 官方向量，不是完整硬件 KEM。
 2. 用本次编译的三档 `rtl/ntt_core` 实际计算这 15 次正向 NTT，共 45 次/11520 系数。按固定输出窗口和已有物理排列逐项核对，同时核对外层周期 907/235/72。每档再确认一个错误答案、未知输出、重复行和缺完成标志均被拒绝。
-3. 三档 × 五命令 × 16 组分别走批量/逐行 Host 路径，共 480 次事务、122880 系数。发送字节流、结果、尝试次数和逐行审计记录一致；批量数据一次写出，逐行写出 256/512 次。另用记录字节对象执行正式 `SerialLink.write`，检查一次写入/一次 flush。这里是模拟传输对象，不验证 USB 或真实波特率。
+3. 三档 × 五命令 × 16 组分别走批量/逐行 Host 路径，共 480 次事务、122880 系数。发送字节流、结果、尝试次数和逐行审计记录一致；批量数据一次写出，逐行写出 256/512 次。另用记录字节对象执行正式 `SerialLink.write`，检查一次写入/零次 flush（10-21 正式驱动修复后；10-18 历史验收为一次 flush）。这里是模拟传输对象，不验证 USB 或真实波特率。
 4. 用替代串口对象及受控子进程测试送板工具：正确流程、错误档位、错误数值、打开失败、非零退出、超时、伪成功证据和旧目录保护。所有这些测试均无实体板卡。
 
 最后显示 `PASS: offline trace delivery complete; actual RTL 45/45`，并明确 `board NOT tested`。总结果在新目录 `acceptance.json`，四阶段 stdout/stderr 和命令另存；`rtl/replay.json` 保留实际 RTL 结果，`board_kit/trace.json` 为本次可交接 trace。请截图最后结果完成用户人工验收。
@@ -45,10 +45,10 @@ python refsim/run_kem_board.py --trace logs/verification_2026-10-18_B_kem_delive
 - `stdout.txt`、`stderr.txt`：子进程完整输出；默认 180 秒超时，可用 `--timeout` 在 1..600 秒内调整。
 - `serial/replay.json`：逐次检查点、RDY 信息、当前调用、已完成调用的原始行/事务日志/还原值及差异。可捕获的失败写 `fail`；打开串口就失败时也尽量留记录。总超时强制终止子进程时，此文件可能停在最后的 `running` 检查点，必须以外层 `session.json` 的 `timeout` 为准，不能当作通过。
 
-原来的 SerialLink 写入/flush 没有显式超时，本入口使用独立子进程总时限，超时终止该次 Python 子进程并保留部分证据，退出码非零。后续如需重试，请排查串口和板子状态，使用新输出目录，不自动重复硬件事务。
+10-21 正式 SerialLink 已增加 5 秒写超时、移除无界 flush 并拒绝短写（见 `host/serial_write_safety.md`）；本入口仍使用独立子进程总时限，超时终止该次 Python 子进程并保留部分证据，退出码非零。后续如需重试，请排查串口和板子状态，使用新输出目录，不自动重复硬件事务。
 
 A 跑完后将成功或失败的输出目录完整交回 B；B 再检查原始结果与 trace 哈希是否对应。不要只转发终端的一句 PASS。日志入库可以先放在 `logs/` 下，按日期、A、档位命名；无需改写 B 已记录的本机仿真结论。
 
 ## 当前完成边界
 
-本机已具备真实 ML-KEM 调用的 C、Host 陪练和三档 RTL 三层证据。串口执行入口及失败留证逻辑在模拟条件下验证。实际 ML-KEM trace 送实体板卡仍待 A 执行，不能据这里的本机 PASS 将“全部 NTT 送板逐位比对”销项。也未完成第二台实体电脑验收。
+本机已具备真实 ML-KEM 调用的 C、Host 陪练和三档 RTL 三层证据。串口执行入口及失败留证逻辑在模拟条件下验证。count=0 的实际 ML-KEM trace 已由 A 于 10-21 完成三档实体板回放，45 次/11,520 系数，日志位于 `logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`。B 的离线复核及新增 count=1/2 RTL 扩展见 `phase2_README.md`；这两份新增 trace 的实体板回放仍待 A。新串口修复的真板复测、第二台实体电脑验收也未完成。

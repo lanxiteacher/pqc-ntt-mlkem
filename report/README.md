@@ -138,3 +138,8 @@ PDF 在这两点上最稳；Markdown 留在仓库里承担「可复现、可核�
   选题指导 §8.3 要求的表在 `../metrics/README.md`，数字由 `../metrics/gen_metrics.mjs`
   从 Vivado 报告解析生成，并另有 `../metrics/data/metrics.csv`。
   **未测项（上板实测频率、端到端延迟、功耗）在那份 README 里列成了一张表，没有藏。**
+
+
+## 2026-10-21 B 增量：待 C 重建 PDF
+
+功能正确性 §4.11.3 已加入 Phase 2 的 NTT100、三份 transcript 和三档变异结果；附录加当日 B 日志索引。证据与操作见 `../team/handoff_2026-10-21_B_phase2.md`。本次只更新 Markdown 与证据索引，尚未重建 PDF，之前 59 页记录不含此次新增段落。

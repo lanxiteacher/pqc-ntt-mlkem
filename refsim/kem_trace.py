@@ -30,16 +30,22 @@ def write_json(path, value):
     path.write_bytes((json.dumps(value, ensure_ascii=False, indent=2) + '\n').encode('utf-8'))
 
 
-def read_first_kat():
+def read_first_kat(count=0):
+    if type(count) is not int or count < 0:
+        raise ValueError('KAT count must be a nonnegative integer')
     record = {}
     path = ROOT / 'research/mlkem_kat/kat_MLKEM_768.rsp'
     for line in path.read_text(encoding='ascii').splitlines():
         if '=' not in line:
             continue
         key, value = (s.strip() for s in line.split('=', 1))
-        if key == 'count' and 'count' in record:
-            break
+        if key == 'count':
+            if record.get('count') == str(count):
+                break
+            record = {}
         record[key] = value
+    if record.get('count') != str(count):
+        raise ValueError('KAT count not found: ' + str(count))
     sizes = dict(d=32, z=32, msg=32, pk=1184, sk=2400, ct=1088, ss=32)
     for key, size in sizes.items():
         if not re.fullmatch('[0-9a-fA-F]{' + str(size * 2) + '}', record.get(key, '')):
@@ -88,11 +94,11 @@ def verify_oracle(records, exe, work):
             raise ValueError(f'NTT oracle mismatch id={row["id"]}')
 
 
-def extract(output):
+def extract(output, kat_count=0):
     if output.exists():
         raise FileExistsError('output must be a new directory')
     gcc = tool('gcc')
-    kat, kat_path = read_first_kat()
+    kat, kat_path = read_first_kat(kat_count)
     original = {p.name: p.read_bytes() for p in REF.glob('*') if p.is_file()}
     source = (REF / 'poly.c').read_text(encoding='utf-8')
     target = 'void poly_ntt(poly *r)\n{\n  ntt(r->coeffs);\n  poly_reduce(r);\n}'
@@ -181,9 +187,10 @@ def extract(output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--kat-count', type=int, default=0)
     args = parser.parse_args()
     try:
-        result = extract(args.output.resolve())
+        result = extract(args.output.resolve(), args.kat_count)
     except (OSError, ValueError, RuntimeError, AssertionError, subprocess.TimeoutExpired) as exc:
         parser.exit(2, f'ERROR: {exc}\n')
     print('PASS:', result['phase_counts'], 'calls=', result['total_ntt_calls'],

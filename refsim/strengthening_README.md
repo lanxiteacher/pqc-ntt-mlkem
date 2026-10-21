@@ -56,3 +56,8 @@ python refsim/accept_strengthening.py --output ../B_strengthening_manual_01
 - `timing_pe*.stdout.txt`：逐拍地址、周期和输出数据，便于追查。
 
 工具不会读写串口或烧录板卡。`research/` 与 `rtl/` 的源文件仅复制、读取并检查哈希；任何输出都在显式指定的新目录内。
+
+
+## 2026-10-21 三档扩展入口
+
+上文保留 10-18 的 pe4/FULL 与 103 输入周期验收。新的同批 17 变异三档矩阵、100 组 NTT 和三份 transcript 使用 `phase2_README.md` 的统一入口，独立留证。三档矩阵允许如实记录未捕获项；特别是 pe1 的输出 lane 顺序变异在单 lane 下等价，不能计为捕获。旧 `accept_strengthening.py` 默认仍为 pe4 且要求全部捕获，旧验收语义不变。

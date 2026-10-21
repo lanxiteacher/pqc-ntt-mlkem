@@ -1,0 +1,51 @@
+{
+  "status": "pass",
+  "scope": "three different community-compatible KAT records; forward NTT only",
+  "rtl_transactions": 135,
+  "rtl_coefficients": 34560,
+  "new_board_runs_performed": false,
+  "transcripts": [
+    {
+      "kat_count": 0,
+      "status": "pass",
+      "trace_sha256": "e107dc71361070d4fc7267852ec180ddaf8f68625838712a167dbfec9abfd59f",
+      "pk_sha256": "4bec4730f26273c6319ef7387dd4758315240a9394cd89264b148b9113060b61",
+      "d_sha256": "13b93634759e8bcceb0b9f60a2b193467f804b897ee19df2ab0d6b239564dee7",
+      "phase_counts": {
+        "keygen": 6,
+        "encaps": 3,
+        "decaps": 6
+      },
+      "rtl_transactions": 45,
+      "rtl_coefficients": 11520
+    },
+    {
+      "kat_count": 1,
+      "status": "pass",
+      "trace_sha256": "500941546824aa440180238f6cd356ffc77d3860bca73aa4b9c3d9b83d5077a9",
+      "pk_sha256": "9c8ac777dde8448cb0e9ccc82dcc286401aa50007731c1e96bcb0c40564d9079",
+      "d_sha256": "88a84f24ce113ec6a5d16d682792ba6c93bdaca47e456aa2e626527fe72a4c0d",
+      "phase_counts": {
+        "keygen": 6,
+        "encaps": 3,
+        "decaps": 6
+      },
+      "rtl_transactions": 45,
+      "rtl_coefficients": 11520
+    },
+    {
+      "kat_count": 2,
+      "status": "pass",
+      "trace_sha256": "2885ecf7561220baf8bad1fa55631286299252fedba5386517cafc7d21c779dc",
+      "pk_sha256": "cb8c4312673c7356398dd204a991a18bc5de8835febcb48ff2c736a184305d3d",
+      "d_sha256": "da19027826cdd68613bf63df07114258ac55351cf617bb560009a65562c106d8",
+      "phase_counts": {
+        "keygen": 6,
+        "encaps": 3,
+        "decaps": 6
+      },
+      "rtl_transactions": 45,
+      "rtl_coefficients": 11520
+    }
+  ]
+}

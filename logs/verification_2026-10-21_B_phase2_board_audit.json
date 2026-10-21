@@ -1,0 +1,48 @@
+{
+  "status": "pass",
+  "scope": "offline audit of A archived serial results; no new hardware run",
+  "trace_sha256": "e107dc71361070d4fc7267852ec180ddaf8f68625838712a167dbfec9abfd59f",
+  "transactions": 45,
+  "coefficients": 11520,
+  "builds": [
+    {
+      "pe": 1,
+      "status": "pass",
+      "transactions": 15,
+      "coefficients": 3840,
+      "session_sha256": "9493a7e5706268dbe34f0a71d06dbf8d0a076bdc5161b06adb1e8cb9e37d37b2",
+      "replay_sha256": "655360cae8e8c935486052795aa520595901611d4df4e366715e674e25753a6d",
+      "bitstream_sha256": "037f6edd1f37f545203de339c1fb5017267f525e26aed4878db8967e6770b944",
+      "declared_frequency_mhz": 50.0,
+      "baud": 115200,
+      "frequency_measured": false,
+      "programmed_bitstream_verified": false
+    },
+    {
+      "pe": 4,
+      "status": "pass",
+      "transactions": 15,
+      "coefficients": 3840,
+      "session_sha256": "f73822503481d424de84d22080722a63b1e4ef10664f1011cd2798bece473572",
+      "replay_sha256": "16b8485559091e53d14dfc3ee9bfc92adedbde20179ca615053b60dea8d0d25d",
+      "bitstream_sha256": "f549882f543f9c436bb1962951acf131857f02944e0b3022594241d51b568097",
+      "declared_frequency_mhz": 50.0,
+      "baud": 115200,
+      "frequency_measured": false,
+      "programmed_bitstream_verified": false
+    },
+    {
+      "pe": 16,
+      "status": "pass",
+      "transactions": 15,
+      "coefficients": 3840,
+      "session_sha256": "d2e2fb366ca94e378e8deb21c32396ee5b5e8b696feb28279163fa55a585d9cc",
+      "replay_sha256": "3297467a083c96857df2e0c4358fada5af56b97cee17252cd54e9fa09fb12a97",
+      "bitstream_sha256": "c7c03e939988998889b2f7cce1ca38149b0af4f5fe1dca3329bd687afc0546bc",
+      "declared_frequency_mhz": 50.0,
+      "baud": 115200,
+      "frequency_measured": false,
+      "programmed_bitstream_verified": false
+    }
+  ]
+}
