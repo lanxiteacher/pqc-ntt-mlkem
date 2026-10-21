@@ -33,7 +33,7 @@ def main():
         sink=SerialSink();serial_adapter._ser=sink
         payload=b'123\n'*n
         serial_adapter.write(payload)
-        assert sink.chunks==[payload] and sink.flushes==1
+        assert sink.chunks==[payload] and sink.flushes==0
     transactions=0
     for pe in (1,4,16):
         for key,(files,exp_file) in vectors.VECTORS.items():
@@ -82,7 +82,7 @@ def main():
     else:raise AssertionError('damaged bulk data accepted')
     finally:lk.close()
     print(f'PASS: {transactions} transactions (240 bulk + 240 line), 122880 coefficients; bad bulk input rejected.')
-    print('PASS: production SerialLink.write with recording byte sink: one write and one flush per 256/512-row block.')
+    print('PASS: production SerialLink.write with recording byte sink: one write and zero flushes per 256/512-row block.')
     print('Scope: Host bulk branch/framing/layout; no USB timing, real serial or RTL arithmetic proof.')
 
 if __name__=='__main__':main()

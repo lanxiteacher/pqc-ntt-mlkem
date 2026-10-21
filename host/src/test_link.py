@@ -339,7 +339,7 @@ def main():
             eq(lk.port, "loop://", "loop:// 下 port 没存对")
             eq(lk.baud, link.DEFAULT_BAUD, "loop:// 下 baud 没存对")
 
-            # 9a 写进去 → 原样读回来（走真正 pyserial 的 write + flush）
+            # 9a 写进去 → 原样读回来（走真正 pyserial 的 write（有限超时，不调用 flush））
             lk.write(b"#PING*33\n")
             eq(lk.read_line(1.0), b"#PING*33\n", "loop:// 下没把整行搬回来")
 

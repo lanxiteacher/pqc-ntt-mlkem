@@ -46,6 +46,7 @@ LF = b"\n"
 # §4.1:145 —— 波特率是**可改参数，不是写死的常数**（改要统一改，§5.5 的超时值按它推导）。
 # 8N1 = 1 起始 + 8 数据 + 1 停止 = 每字节 10 位。
 DEFAULT_BAUD = 115200
+DEFAULT_WRITE_TIMEOUT = 5.0  # finite driver write wait; flush has no such bound
 
 # host/README.md:21-23 —— 板载 CH340C 的**设备名**。按名字找口，**不写死口号**：
 # 口号是 Windows 按「插在哪个 USB 口」现分配的（这块板子见过 COM10，也见过 COM9），
@@ -103,8 +104,8 @@ class Link:
     """插座的形状。上位机只依赖这三个动作（外加 close）。"""
 
     # 2026-10-18：允许上位机把整段数据行**一次写出去**吗？
-    #   真串口置 True —— 逐行 write 会逐行 flush，921600 时那 256 次 USB 往返
-    #   比线上 23 ms 还贵（实测 0.094 s → 约 0.03 s）。
+    #   真串口置 True —— 10-18 逐行 write 会逐行 flush，921600 时那 256 次 USB 往返
+    #   比线上 23 ms 还贵（实测 0.094 s → 约 0.03 s）。10-21 移除 flush，仍保留批量发送。
     #   陪练保持 False：test_host.py 按「一次 write = 一行」数发送行数，
     #   批量写会让那条断言从 512 变成 1；陪练本来就跑不出 USB 开销，不必改它。
     BULK_WRITE = False
@@ -213,7 +214,8 @@ class SerialLink(Link):
             self._ser = serial.serial_for_url(port, baudrate=baud, bytesize=8,
                                               parity=serial.PARITY_NONE,
                                               stopbits=serial.STOPBITS_ONE,
-                                              timeout=POLL_SLICE)
+                                              timeout=POLL_SLICE,
+                                              write_timeout=DEFAULT_WRITE_TIMEOUT)
         # ValueError 必须一起接：serial_for_url 认不出 scheme（如 "foo://bar"）时
         # 抛的是 ValueError，**不是** SerialException —— 漏掉它就会冒裸 traceback，
         # 绕过下面这句人话。真口号打不开那条路仍旧走 SerialException。
@@ -224,10 +226,14 @@ class SerialLink(Link):
                 "   看一眼本机有哪些串口：python -m serial.tools.list_ports" % (port, baud, e))
 
     def write(self, data):
-        self._ser.write(data)
-        # 必须等真的发完再返回。协议里的时序全靠「这一行已经出去了」这几个字，
-        # 缓冲里还堆着就往下走，等于骗自己。
-        self._ser.flush()
+        # CH340 flush can block indefinitely under sustained load (A, 2026-10-21).
+        # Queue bytes with a finite write timeout; protocol ACK/BEGIN/DONE waits
+        # establish progress. A successful write does not prove wire delivery.
+        sent = self._ser.write(data)
+        if sent != len(data):
+            # Do not retry a partial frame: its prefix may already be on wire.
+            raise OSError("serial short write: %s/%s bytes; stop and resynchronize" %
+                          (sent, len(data)))
 
     def read_line(self, max_wait):
         deadline = time.monotonic() + max_wait
