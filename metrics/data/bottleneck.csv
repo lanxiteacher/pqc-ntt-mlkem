@@ -7,5 +7,6 @@
 串口搬运,#PMUL NTT 1,275.0,ms,线上 3168 B × 10 bit ÷ 115200 bps（模型）,host/src/ 协议栈实数 + proto.md §4.1
 串口搬运,#PMUL TIME 1,275.3,ms,线上 3172 B × 10 bit ÷ 115200 bps（模型）,host/src/ 协议栈实数 + proto.md §4.1
 串口搬运,#PMUL FULL 1,275.3,ms,线上 3172 B × 10 bit ÷ 115200 bps（模型）,host/src/ 协议栈实数 + proto.md §4.1
-软件参考实现,ntt(),4.05,µs,"gcc -O2, 3 轮 × 200000 次取中位（本机）",metrics/bottleneck_ref_timing.c
-PC 侧软件开销,#NTT 1,7.5,ms,陪练在进程内（无电气层）；含陪练自己的向量匹配开销，是上界,host/src/board_run.py 同一条路径
+软件参考实现,poly_ntt(),4.83,µs,gcc -O2；poly_ntt = ntt + poly_reduce；每轮合法输入；3 轮 × 200000 次取中位；已扣输入准备,metrics/bottleneck_ref_timing.c
+软件参考实现-输入准备,poly_ntt(),0.01,µs,每轮 512 B memcpy 回合法输入；3 轮 × 200000 次取中位（本机）,metrics/data/bottleneck_ref_raw.csv
+PC 侧软件开销,#NTT 1,6.1,ms,陪练在进程内（无电气层）；含陪练自己的向量匹配开销，是上界,host/src/board_run.py 同一条路径

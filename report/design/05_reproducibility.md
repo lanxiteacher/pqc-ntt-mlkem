@@ -82,8 +82,12 @@ sh rtl/vivado/run_board_prog.sh          # 烧到 End of startup status: HIGH
 - Vivado **必须从仓库外目录启动** —— 仓库路径含撇号时（本队 A 工位即如此），
   会把提交给综合引擎的工作目录咬死。
 
-⚠️ 上板事务的**驱动脚本未入库**（A 写的 `board_txn_all.py` 在仓库外）—— 它测出的结果
-（`rtl/vivado/reports/board_pe{4,16}_txn.txt`）已入库，但脚本本身没有。正式版应由 B 的 `host/` 承担。
+✅ **2026-10-22 订正**：上板事务的驱动**已经入库** ——
+`rtl/vivado/run_board_txn_report.sh` 调用 `host/src/board_run.py` 跑完整事务并把报告原样落盘
+（只搬运、不判读）；提频扫描、功耗、浸泡、ML-KEM trace 回放分别另有
+`run_board_freq_sweep.sh` / `run_board_power.sh` / `soak_board.py` / `run_kem_trace_boards.sh`。
+10-04 那份仓库外的 `board_txn_all.py` 是临时脚本，已被上述正式路径取代，**不再是复现缺口**。
+（上一句的旧表述是 10-15 的实况，保留订正日期便于对照历史记录。）
 
 ---
 

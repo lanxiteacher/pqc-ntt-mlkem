@@ -32,14 +32,26 @@ sh run_ntt_layers.sh
 **判据**：四条都 `rc=0`；前三条各 16/16 向量逐比特一致；`run_ntt_layers` 输出「逐层一致」。
 证据：`logs/verification_<日期>_A_refsim.txt`（重定向保存）。
 
-## 2. 上位机 9 个自测（B，约 1 分钟）
+## 2. 上位机自测（B，约 1 分钟）
 
 ```bash
 cd host/src
 for t in test_*.py; do python "$t" || echo "FAIL $t"; done
 ```
 
-**判据**：9 个全部退出 0；`test_host.py` 97 项通过、`test_link.py` 通过。
+**判据**：以 `ls host/src/test_*.py` 的实际个数为准（2026-10-22 为 **11 个**），全部退出 0；
+`test_host.py`、`test_link.py`、`test_serial_write_safety.py` 无 FAIL。
+⚠️ 不要在这里写死个数 —— 10-21 前写的是 9 个，B Phase 2 后已经过期。
+
+## 2b. B Phase 2 总入口（B/C，不需要板子）
+
+```bash
+python refsim/accept_phase2.py --output logs/verification_<日期>_B_phase2
+```
+
+**判据**：`acceptance.json` 的 `status = complete`；100 组 NTT、3 份 trace、51 个变异体全部执行；
+捕获/未捕获如实列出（10-21 为 50/51 捕获，pe1 `serializer_order` 为等价项）。
+⚠️ 它会审计 A 已归档的真板回放，但**不接板、不产生新硬件证据**。
 
 ## 3. 指标生成器（C，约 2 分钟）
 
@@ -129,7 +141,7 @@ python refsim/check_clean_clone.py --output logs/clean_clone_freeze.json
 
 - [ ] `git status` 干净（允许本机临时项）
 - [ ] refsim 四条 rc=0、各 16/16
-- [ ] host 9 个自测 rc=0
+- [ ] host 全部自测 rc=0（个数按 `ls host/src/test_*.py`）
 - [ ] 指标生成器重跑后与报告一致
 - [ ] 真板三档各 6/6（含 `#PMUL TIME 1`）
 - [ ] trace 三档各 15/15（45 次 / 11520 系数）

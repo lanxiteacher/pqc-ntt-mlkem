@@ -1,6 +1,6 @@
 {
   "_how": "本文件只放「机器判不出来」的东西：下一步、卡点、里程碑、人的判断。每条都要写 as_of（这条是几号核的）与 source（出处）。能自动抓的数字不要写进来 —— 见 gen_status.mjs 的 AUTO 段。",
-  "updated": "2026-10-18",
+  "updated": "2026-10-22",
 
   "countdown": {
     "submission": "2026-11-04",
@@ -38,10 +38,10 @@
       "scope": "report/ ｜ demo/ ｜ docs/ ｜ skill/ ｜ metrics/ ｜ assets/",
       "color": 3,
       "git_authors": ["于宸", "yuchen", "C"],
-      "now": "✅ **2026-10-18 现状：瓶颈归因表（10-16）、报告 ③/⑥ 章（10-17）、metrics 七列（10-17）、H5 波形与三档回归进正文（10-18）、PDF 构建链 70 页（10-18）、证据地图 + Fmax 口径统一（10-18，`docs/evidence_map.md`）均已完成**；通用 PYNQ Skill 候选已落，但明确**不宣称加分**。C 侧加强项已清。",
-      "next": "① **P1 现场演示 GUI + 一键脚本**（输入 → 逐层动画 → 对拍 → 计时/资源，带阴性对照，10/24）；② **P2 Pareto/ATP/roofline**（三档 × 实测频率，一图一表，10/24）；③ 视频 / 页码 / 提交包按「总结类」后置到 10/25–27。",
-      "as_of": "2026-10-18",
-      "source": "report/README.md §三；team/todo_C.md §二"
+      "now": "✅ **2026-10-22：B 评委视角审阅的 C 侧口径修复已完成** —— J01 撤销「FPGA 比 CPU 低两个数量级」的能效结论（改为边界说明 + 敏感性假设）；J02 吞吐分「纯计算上限 / 装载→读出上限 / 真实串口事务」三层，不再把 f/CC 叫整机吞吐；J03 把 ATP 明确为 LUT·cycle（面积×周期）并补 LUT·µs、标注只计 LUT；J04 CPU 基线改为 `poly_ntt()` 语义（每轮合法输入、输入准备另计、原始轮次落 `metrics/data/bottleneck_ref_raw.csv`）；J05 补 397/37/4 三个引脚边界表并承认替代集成方式。报告/图/指标/提词稿已同步并重建 PDF。视频文本 10-22 已冻结，回信 `logs/letter_2026-10-22_C_to_A_voiceover.txt`。",
+      "next": "① 等 A 的 9 段 WAV（10/24 前）→ 10/25–27 粗剪成片；② A 回传新真板回归后回填 J07；③ 冻结前按最终包重建 PDF / 核对页码与 manifest（J11）。",
+      "as_of": "2026-10-22",
+      "source": "team/review_2026-10-22_B_judge_audit.md；logs/letter_2026-10-22_C_to_A_voiceover.txt"
     }
   ],
 
@@ -182,7 +182,9 @@
     {"owner": "C", "text": "✅ 2026-10-18 已交付：`docs/evidence_map.md` + `docs/defense_qa.md` / metrics / 报告口径统一（0132682）；核 Fmax 与板级实测已分两行", "state": "done", "as_of": "2026-10-18", "source": "logs/letter_2026-10-18_A_to_BC_plan.txt §三"},
     {"owner": "C", "text": "★ 2026-10-18 出彩组合 · P1 现场演示 GUI + 一键脚本（输入 → 逐层动画 → 对拍 → 计时/资源，带阴性对照） —— ✅ 10-19 C 交付：demo/gui.html + run_gui.cmd", "state": "done", "as_of": "2026-10-18", "source": "logs/letter_2026-10-18_A_to_BC_plan.txt §三"},
     {"owner": "C", "text": "★ 2026-10-18 出彩组合 · P2 Pareto/ATP/roofline（三档 × 实测频率，一图一表） —— ✅ 10-19 C 交付：metrics/gen_pareto.mjs + report/figures/pareto_atp_roofline.svg", "state": "done", "as_of": "2026-10-18", "source": "logs/letter_2026-10-18_A_to_BC_plan.txt §三"},
-    {"owner": "A+B+C", "text": "★ 2026-10-18 出彩组合 · 10/24 前完成七件；10/25–27 冻结报告/视频，不再加新功能 —— ✅ 七件 10-21 全部收口（trace 真板 45 次是最后一件）", "state": "done", "as_of": "2026-10-18", "source": "logs/letter_2026-10-18_A_to_BC_plan.txt §四"}
+    {"owner": "A+B+C", "text": "★ 2026-10-18 出彩组合 · 10/24 前完成七件；10/25–27 冻结报告/视频，不再加新功能 —— ✅ 七件 10-21 全部收口（trace 真板 45 次是最后一件）", "state": "done", "as_of": "2026-10-18", "source": "logs/letter_2026-10-18_A_to_BC_plan.txt §四"},
+    {"owner": "C", "text": "★ 2026-10-22 B 审阅口径修复（C 侧）—— ✅ J01 能量结论、J02 三层吞吐、J03 ATP 定义、J04 CPU 基线改 poly_ntt 语义、J05 引脚边界表；报告/图/CSV/提词稿同步并重建 PDF", "state": "done", "as_of": "2026-10-22", "source": "team/review_2026-10-22_B_judge_audit.md §2"},
+    {"owner": "C", "text": "★ 演示视频：文本 10-22 已冻结（回信 A 五个决定）；等 A 10/24 前交 9 段 WAV，C 10/25–27 剪", "state": "doing", "as_of": "2026-10-22", "source": "logs/letter_2026-10-22_C_to_A_voiceover.txt"}
   ],
 
   "manual_numbers": [

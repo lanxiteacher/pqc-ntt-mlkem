@@ -1,0 +1,4 @@
+utc,round,iters,prep_ns,total_ns,net_ns,checksum,bad_coeffs,cpu,python,gcc,task
+2026-10-22T15:52:52+00:00,1,200000,9.2,4839.9,4830.8,12255335580397223033,0,AMD Ryzen 9 7945HX with Radeon Graphics,3.12.10,"gcc (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r1) 16.2.0",poly_ntt = ntt + poly_reduce; valid input each round
+2026-10-22T15:52:53+00:00,2,200000,10.1,4921.9,4911.8,12255335580397223033,0,AMD Ryzen 9 7945HX with Radeon Graphics,3.12.10,"gcc (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r1) 16.2.0",poly_ntt = ntt + poly_reduce; valid input each round
+2026-10-22T15:52:54+00:00,3,200000,10.1,4678.7,4668.6,12255335580397223033,0,AMD Ryzen 9 7945HX with Radeon Graphics,3.12.10,"gcc (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r1) 16.2.0",poly_ntt = ntt + poly_reduce; valid input each round

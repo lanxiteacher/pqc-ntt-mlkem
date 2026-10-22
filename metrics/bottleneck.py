@@ -21,8 +21,11 @@
                   波特率是协议定死的 ⇒ 这个耗时是**模型值**，不是秒表读数。
                   ⚠️ loopback 是进程内的，**没有真的串口时序** —— 电气层的时间量不出来，
                   只能算。算出来的值与上板实测的复核见文末「复核」一节。
-    ③ 软件参考实现 —— **真编译真跑**：`gcc -O2` 编 `research/kyber_ref/`，反复调 `ntt()`
-                  高精度计时取中位数。⚠️ 这个数**随机器变**，机器与编译命令写进产物。
+    ③ 软件参考实现 —— **真编译真跑**：`gcc -O2` 编 `research/kyber_ref/`，量的是
+                  **`poly_ntt()` 的语义**（`ntt()` + `poly_reduce()`），不是裸 `ntt()`；
+                  每轮先把合法输入（系数在 [0,q)）拷回工作数组，**输入准备与计算分开计时**。
+                  原始轮次写 `metrics/data/bottleneck_ref_raw.csv`。⚠️ 这个数**随机器变**，
+                  CPU 型号、OS、编译器与编译命令写进产物；电源模式未控制。
 
 产物
     `metrics/data/bottleneck.csv`          长表，一列一个数
@@ -35,6 +38,8 @@
 """
 
 import csv
+import datetime
+import platform
 import re
 import statistics
 import subprocess
@@ -50,6 +55,7 @@ REF_DIR = REPO / "research" / "kyber_ref"
 PROBES_MD = REPO / "rtl" / "probes" / "README.md"
 C_SRC = HERE / "bottleneck_ref_timing.c"
 CSV_OUT = HERE / "data" / "bottleneck.csv"
+REF_RAW_OUT = HERE / "data" / "bottleneck_ref_raw.csv"
 README = HERE / "README.md"
 
 # 让 `import host` 等能找到 B 的模块。**不改它们**，只是 import。
@@ -197,8 +203,28 @@ def gcc_version():
     return out.stdout.splitlines()[0].strip()
 
 
+def cpu_model():
+    """CPU 型号 —— 能拿到就写，拿不到不编。"""
+    if sys.platform == "win32":
+        try:
+            out = subprocess.run(
+                ["powershell", "-NoProfile", "-Command",
+                 "(Get-CimInstance Win32_Processor).Name"],
+                capture_output=True, text=True, timeout=15, check=True)
+            name = out.stdout.strip().splitlines()[0].strip()
+            if name:
+                return name
+        except (OSError, subprocess.SubprocessError, IndexError):
+            pass
+    return platform.processor() or platform.machine() or "unknown"
+
+
 def time_reference(reps=REPS, iters=REF_ITERS):
-    """编译并跑 `research/kyber_ref` 的 ntt()，返回单次耗时的中位数（秒）。"""
+    """编译并跑 `research/kyber_ref` 的 poly_ntt() 语义，返回单次耗时中位数（秒）。
+
+    计时程序输出一行：`<n> <prep_s> <total_s> <checksum> <bad>`；
+    净计算 = total - prep。每一轮都换回合法输入，避免把上一轮输出当下一轮输入。
+    """
     with tempfile.TemporaryDirectory() as td:
         exe = Path(td) / ("ref_timing.exe" if sys.platform == "win32" else "ref_timing")
         cmd = ["gcc", "-O2", "-I", str(REF_DIR), str(C_SRC),
@@ -208,19 +234,56 @@ def time_reference(reps=REPS, iters=REF_ITERS):
             raise SystemExit("!! 编译 C 参考实现失败：\n%s\n%s"
                              % (" ".join(cmd), build.stderr))
 
-        singles = []
-        for _ in range(reps):
+        rows, nets, preps, checksums = [], [], [], set()
+        for r in range(1, reps + 1):
             run = subprocess.run([str(exe), str(iters)], capture_output=True,
                                  text=True, check=True)
-            n_str, secs_str = run.stdout.split()
-            singles.append(float(secs_str) / int(n_str))
+            parts = run.stdout.split()
+            if len(parts) != 5:
+                raise SystemExit("!! 计时程序输出格式变了：%r" % run.stdout)
+            n = int(parts[0])
+            prep, total = float(parts[1]), float(parts[2])
+            checksum, bad = int(parts[3]), int(parts[4])
+            if bad:
+                raise SystemExit("!! poly_ntt 输出有 %d 个系数落在中心代表区间外" % bad)
+            checksums.add(checksum)
+            preps.append(prep / n)
+            nets.append((total - prep) / n)
+            rows.append({
+                "utc": datetime.datetime.now(datetime.timezone.utc)
+                       .isoformat(timespec="seconds"),
+                "round": r, "iters": n,
+                "prep_ns": "%.1f" % (prep / n * 1e9),
+                "total_ns": "%.1f" % (total / n * 1e9),
+                "net_ns": "%.1f" % ((total - prep) / n * 1e9),
+                "checksum": checksum, "bad_coeffs": bad,
+            })
+    if len(checksums) != 1:
+        raise SystemExit("!! 各轮输出的 checksum 不一致：%s" % checksums)
     return {
-        "median": statistics.median(singles),
-        "min": min(singles),
-        "max": max(singles),
+        "median": statistics.median(nets),
+        "min": min(nets),
+        "max": max(nets),
+        "prep_median": statistics.median(preps),
+        "total_median": statistics.median(nets) + statistics.median(preps),
+        "checksum": checksums.pop(),
+        "rows": rows,
         "reps": reps,
         "iters": iters,
     }
+
+
+def write_ref_raw(ref, gcc, cpu):
+    REF_RAW_OUT.parent.mkdir(parents=True, exist_ok=True)
+    with REF_RAW_OUT.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["utc", "round", "iters", "prep_ns", "total_ns", "net_ns",
+                    "checksum", "bad_coeffs", "cpu", "python", "gcc", "task"])
+        for row in ref["rows"]:
+            w.writerow([row["utc"], row["round"], row["iters"], row["prep_ns"],
+                        row["total_ns"], row["net_ns"], row["checksum"],
+                        row["bad_coeffs"], cpu, platform.python_version(), gcc,
+                        "poly_ntt = ntt + poly_reduce; valid input each round"])
 
 
 # ---------------------------------------------------------------- 拼表
@@ -274,11 +337,14 @@ def main():
             print("      %-13s 发 %d B ／ 收 %d B ⇒ %s @ %d bps"
                   % (command, r["tx"], r["rx"], fmt_s(r["serial_secs"]), BAUD))
 
-    print("  [2/3] 编译并计时 C 参考实现 ……")
+    print("  [2/3] 编译并计时 C 参考实现（poly_ntt 语义）……")
     ref = time_reference()
-    print("      research/kyber_ref ntt()：中位 %s（%d 轮 × %d 次）"
-          % (fmt_s(ref["median"]), ref["reps"], ref["iters"]))
     gcc = gcc_version()
+    cpu = cpu_model()
+    print("      poly_ntt() 净计算：中位 %s；输入准备：中位 %s（%d 轮 × %d 次）"
+          % (fmt_s(ref["median"]), fmt_s(ref["prep_median"]), ref["reps"], ref["iters"]))
+    print("      CPU：%s" % cpu)
+    write_ref_raw(ref, gcc, cpu)
 
     # 主表用 `#NTT 1`（最干净的一条：256 进 / 256 出）。它必须跑通，否则整张表没意义。
     ntt = next((r for r in prof if r.get("command") == "#NTT 1"), None)
@@ -302,7 +368,7 @@ def main():
     G.append("| ② 串口搬运（%d 8N1） | **%s** | **%.3f%%** | %d B × %d bit ÷ %d bps |"
              % (BAUD, fmt_s(ntt["serial_secs"]), 100 * ntt["serial_secs"] / total,
                 ntt["wire"], BITS_PER_BYTE, BAUD))
-    G.append("| ③ 软件参考实现（同一件事改在 PC 上算） | %s | —（③ 不是这一趟的一段，是 ① 的替代） | gcc -O2 实测，见文末 |"
+    G.append("| ③ 软件参考实现（同一件事改在 PC 上算） | %s | —（③ 不是这一趟的一段，是 ① 的替代） | `poly_ntt()` = `ntt()` + `poly_reduce()`；gcc -O2 实测，见文末 |"
              % fmt_s(ref["median"]))
     G.append("")
     G.append("**结论：瓶颈不在核，在接口。** —— 核占 %.3f%%，串口搬运占 **%.3f%%**，差 **4 个数量级**。"
@@ -369,11 +435,17 @@ def main():
     G.append("| 板上时钟 | %.0f MHz（`sys_clk`，`board_pe*_timing.rpt`） |" % BOARD_MHZ)
     G.append("| 串口参数 | %d 8N1，%d bit/字节 |" % (BAUD, BITS_PER_BYTE))
     G.append("| 串口字节数来源 | 走 `host/src/` 真实协议栈（陪练当对端）数出来的**线上真实字节** |")
-    G.append("| 软件参考实现 | `research/kyber_ref/` 的 `ntt()`，`gcc -O2`，%d 轮 × %d 次取中位 |"
+    G.append("| 软件参考实现 | `research/kyber_ref/` 的 **`poly_ntt()` 语义**（`ntt()` + `poly_reduce()`）"
+             "；每轮先拷回合法输入（系数在 [0,q)）；`gcc -O2`，%d 轮 × %d 次取中位 |"
              % (ref["reps"], ref["iters"]))
-    G.append("| 参考实现耗时（%d 次单跑） | %s ／ %s ／ %s（中位／最小／最大） |"
+    G.append("| 参考实现净计算（%d 次单跑） | %s ／ %s ／ %s（中位／最小／最大） |"
              % (ref["reps"], fmt_s(ref["median"]), fmt_s(ref["min"]), fmt_s(ref["max"])))
-    G.append("| 编译器 | %s |" % gcc)
+    G.append("| 输入准备（每轮 512 B memcpy） | %s（已从净计算中扣除） |"
+             % fmt_s(ref["prep_median"]))
+    G.append("| 输出校验 | checksum `%016x`；越界系数 0 个 |" % ref["checksum"])
+    G.append("| CPU | %s |" % cpu)
+    G.append("| OS / Python | %s / %s |" % (platform.platform(), platform.python_version()))
+    G.append("| 编译器 | %s（`-O2`；电源模式未控制） |" % gcc)
     G.append("| 本机 Python 侧一趟开销 | %s（含陪练自己的向量匹配，是上界） |"
              % fmt_s(ntt["pc_secs"]))
     G.append("")
@@ -399,9 +471,13 @@ def main():
         add("串口搬运", r["command"], r["serial_secs"],
             "线上 %d B × %d bit ÷ %d bps（模型）" % (r["wire"], BITS_PER_BYTE, BAUD),
             "host/src/ 协议栈实数 + proto.md §4.1")
-    add("软件参考实现", "ntt()", ref["median"],
-        "gcc -O2, %d 轮 × %d 次取中位（本机）" % (ref["reps"], ref["iters"]),
+    add("软件参考实现", "poly_ntt()", ref["median"],
+        "gcc -O2；poly_ntt = ntt + poly_reduce；每轮合法输入；%d 轮 × %d 次取中位；已扣输入准备"
+        % (ref["reps"], ref["iters"]),
         "metrics/bottleneck_ref_timing.c")
+    add("软件参考实现-输入准备", "poly_ntt()", ref["prep_median"],
+        "每轮 512 B memcpy 回合法输入；%d 轮 × %d 次取中位（本机）" % (ref["reps"], ref["iters"]),
+        "metrics/data/bottleneck_ref_raw.csv")
     add("PC 侧软件开销", "#NTT 1", ntt["pc_secs"],
         "陪练在进程内（无电气层）；含陪练自己的向量匹配开销，是上界",
         "host/src/board_run.py 同一条路径")

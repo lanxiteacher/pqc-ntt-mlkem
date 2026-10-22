@@ -13,11 +13,15 @@
  *
  * 用法：node metrics/gen_pareto.mjs
  *
- * 三个定义（写死在这里，正文与图都引用同一套）：
- *   ATP          = LUT × NTT 周期数            （面积×时间，越小越好，时钟无关）
- *   吞吐          = 频率 ÷ NTT 周期数            （NTT/s）
- *   带宽需求      = 吞吐 × 每趟事务字节数        （B/s；字节数取线上真实值 2124 B）
- *   链路事务率上限 = 波特率 ÷ 10 ÷ 每趟字节数    （8N1，10 bit/字节）
+ * 定义（写死在这里，正文与图都引用同一套）：
+ *   LUT·cycle      = LUT × NTT 周期数           （面积 × 周期，不是面积 × 时间）
+ *   LUT·µs         = LUT × (周期数 ÷ 板上频率)   （面积 × 计算时间；按各档实际频率）
+ *   ① 纯计算吞吐上限 = 频率 ÷ NTT 周期数          （只覆盖计算窗口，不含装载/读出）
+ *   ② 装载到读出上限 = 频率 ÷ (256 + 周期数 + 256)（1 系数/拍、不重叠、无控制开销的下界）
+ *   带宽需求        = 事务率 × 每趟事务字节数      （B/s；字节数取线上真实值 2124 B）
+ *   链路事务率上限   = 波特率 ÷ 10 ÷ 每趟字节数     （8N1，10 bit/字节）
+ *
+ * ⚠️ 纯计算上限与装载到读出上限是两种边界；对外称「吞吐」时一律带边界名。
  * =========================================================================== */
 
 import fs from 'node:fs';
@@ -92,18 +96,25 @@ for (const t of TIERS) {
     const atp = r.lut * r.cycles;
     if (atpRef === null) atpRef = atp;
     const tputCore = r.fmaxCore * 1e6 / r.cycles;   // 推算：post-route 核 Fmax
-    const tputBoard = r.boardMHz * 1e6 / r.cycles;  // 实测频率：提频位流
+    const tputBoard = r.boardMHz * 1e6 / r.cycles;  // 实测频率：提频位流，纯计算窗口
+    const ioCycles = 256 + r.cycles + 256;          // 装载 + 计算 + 读出（不重叠）
+    const tputSustained = r.boardMHz * 1e6 / ioCycles;
     rows[t] = {
         ...r,
         atp,
         atpNorm: atp / atpRef,
+        lutUs: r.lut * r.cycles / r.boardMHz,       // LUT·µs：LUT × 计算时间
         tputCore,
         tputBoard,
-        bwReq: tputBoard * BYTES.ntt,               // B/s
+        tputSustained,
+        bwReq: tputBoard * BYTES.ntt,               // B/s（按纯计算上限）
+        bwReqSustained: tputSustained * BYTES.ntt,  // B/s（按装载到读出上限）
         powerBase: POWER[t]?.base,
         powerBoost: POWER[t]?.boost
     };
 }
+const lutUsRef = rows.pe1?.lutUs;
+for (const t of TIERS) if (rows[t]) rows[t].lutUsNorm = rows[t].lutUs / lutUsRef;
 
 const linkNtt = (baud) => baud / BITS_PER_BYTE / BYTES.ntt;
 const LINK = {
@@ -141,23 +152,35 @@ const csv = [
     ['LUT', ...TIERS.map((t) => rows[t].lut), '个',
         'post-route，顶层边界', 'rtl/vivado/reports/pe*_nc_util.rpt'],
     ['ATP（LUT × cycle）', ...TIERS.map((t) => rows[t].atp), 'LUT·cycle',
-        '面积 × 时间；与时钟无关，越小越好', '本表 LUT × 周期'],
+        '面积 × 周期；与频率无关，越小越好。只计 LUT 不含 DSP/BRAM/FF', '本表 LUT × 周期'],
     ['ATP 归一（pe1 = 1）', ...TIERS.map((t) => num(rows[t].atpNorm, 3)), '×',
         'ATP ÷ pe1 的 ATP', '本表'],
-    ['吞吐 @ 核推算 Fmax', ...TIERS.map((t) => num(rows[t].tputCore)), 'NTT/s',
-        'Fmax(核) ÷ 周期；Fmax 是 5 ns 收紧约束反推值', 'metrics/data/metrics.csv'],
-    ['吞吐 @ 板上提频频率', ...TIERS.map((t) => num(rows[t].tputBoard)), 'NTT/s',
-        '板上 MMCM 频率 ÷ 周期；频率是「跑得通」，不是芯片极限', 'board_freq_sweep.md'],
-    ['维持核吞吐所需带宽', ...TIERS.map((t) => num(rows[t].bwReq / 1e6, 1)), 'MB/s',
-        '吞吐 × 2124 B（每趟 #NTT 的线上真实字节）', 'high_baud_demo.md'],
+    ['LUT·µs @板上提频', ...TIERS.map((t) => num(rows[t].lutUs, 0)), 'LUT·µs',
+        'LUT × 计算时间（周期数 ÷ 该档板上频率）；只计计算窗口', 'board_freq_sweep.md'],
+    ['LUT·µs 归一（pe1 = 1）', ...TIERS.map((t) => num(rows[t].lutUsNorm, 3)), '×',
+        'LUT·µs ÷ pe1；按各档实际工作频率复算', '本表'],
+    ['纯计算吞吐上限 @核推算 Fmax', ...TIERS.map((t) => num(rows[t].tputCore)), 'NTT/s',
+        'Fmax(核) ÷ 周期；只覆盖计算窗口。Fmax 是 5 ns 收紧约束反推值', 'metrics/data/metrics.csv'],
+    ['纯计算吞吐上限 @板上提频', ...TIERS.map((t) => num(rows[t].tputBoard)), 'NTT/s',
+        '板上 MMCM 频率 ÷ 周期；只覆盖计算窗口 不含装载/读出', 'board_freq_sweep.md'],
+    ['装载到读出上限 @板上提频', ...TIERS.map((t) => num(rows[t].tputSustained)), 'NTT/s',
+        '频率 ÷ (256 + 周期数 + 256)；1 系数/拍 不重叠 无控制开销的下界', '本表（模型）'],
+    ['维持纯计算上限所需带宽', ...TIERS.map((t) => num(rows[t].bwReq / 1e6, 1)), 'MB/s',
+        '纯计算吞吐上限 × 2124 B（每趟 #NTT 的线上真实字节）', 'high_baud_demo.md'],
+    ['维持装载到读出上限所需带宽', ...TIERS.map((t) => num(rows[t].bwReqSustained / 1e6, 1)), 'MB/s',
+        '装载到读出上限 × 2124 B', '本表（模型）'],
     ['链路事务率上限 @115200', ...TIERS.map(() => num(LINK.uart115200, 2)), 'NTT/s',
         '115200 ÷ 10 ÷ 2124 B', 'bottleneck.csv / high_baud_demo.md'],
     ['链路事务率上限 @921600', ...TIERS.map(() => num(LINK.uart921600, 2)), 'NTT/s',
         '921600 ÷ 10 ÷ 2124 B', 'high_baud_demo.md'],
-    ['核 / 链路倍差 @115200', ...TIERS.map((t) => num(rows[t].tputBoard / LINK.uart115200)), '×',
-        '吞吐 @板上 ÷ 链路事务率上限', '本表'],
-    ['核 / 链路倍差 @921600', ...TIERS.map((t) => num(rows[t].tputBoard / LINK.uart921600)), '×',
-        '吞吐 @板上 ÷ 链路事务率上限', '本表'],
+    ['纯计算上限 / 链路倍差 @115200', ...TIERS.map((t) => num(rows[t].tputBoard / LINK.uart115200)), '×',
+        '纯计算吞吐上限 ÷ 链路事务率上限；上界口径', '本表'],
+    ['纯计算上限 / 链路倍差 @921600', ...TIERS.map((t) => num(rows[t].tputBoard / LINK.uart921600)), '×',
+        '纯计算吞吐上限 ÷ 链路事务率上限；上界口径', '本表'],
+    ['装载到读出上限 / 链路倍差 @115200', ...TIERS.map((t) => num(rows[t].tputSustained / LINK.uart115200)), '×',
+        '装载到读出上限 ÷ 链路事务率上限；下界口径', '本表'],
+    ['装载到读出上限 / 链路倍差 @921600', ...TIERS.map((t) => num(rows[t].tputSustained / LINK.uart921600)), '×',
+        '装载到读出上限 ÷ 链路事务率上限；下界口径', '本表'],
     ['功耗 @ 50 MHz（估算）', ...TIERS.map((t) => rows[t].powerBase), 'W',
         'Vivado report_power，vectorless 估算，非实测', 'power_estimate.md'],
     ['功耗 @ 提频（估算）', ...TIERS.map((t) => rows[t].powerBoost), 'W',
@@ -172,47 +195,55 @@ const fmtNum = (v, d = 0) => Number(v).toLocaleString('en-US', {
     minimumFractionDigits: d, maximumFractionDigits: d
 });
 const minAtp = TIERS.reduce((a, b) => (rows[a].atp <= rows[b].atp ? a : b));
-const maxGap = Math.max(...TIERS.map((t) => rows[t].tputBoard / LINK.uart115200));
-const minGap = Math.min(...TIERS.map((t) => rows[t].tputBoard / LINK.uart115200));
+const minLutUs = TIERS.reduce((a, b) => (rows[a].lutUs <= rows[b].lutUs ? a : b));
+const gapsS = TIERS.map((t) => rows[t].tputSustained / LINK.uart115200);
+const minGapS = Math.min(...gapsS);
+const maxGapS = Math.max(...gapsS);
 
 const GEN = [
     '<!-- 这一段由 `node metrics/gen_pareto.mjs` 生成，别手改 -->',
     '',
-    '### Pareto / ATP / roofline（2026-10-19）',
+    '### Pareto / LUT·cycle / roofline（2026-10-22 口径修订）',
     '',
-    '| 档 | 周期 | LUT | **ATP**（LUT·cycle） | ATP 归一 | 吞吐 @核 Fmax | 吞吐 @板上提频 | 维持吞吐所需带宽 | 功耗（估算） |',
-    '|---|---:|---:|---:|---:|---:|---:|---:|---:|',
+    '| 档 | 周期 | LUT | **LUT·cycle** | 归一 | **LUT·µs @板上提频** | 归一 | 功耗（估算） |',
+    '|---|---:|---:|---:|---:|---:|---:|---:|',
     ...TIERS.map((t) => {
         const r = rows[t];
         return `| ${t}（${PE_LABEL[t]}） | ${r.cycles} | ${r.lut} | **${r.atp.toLocaleString('en-US')}** | ` +
-            `${f(r.atpNorm, 3)}× | ${Math.round(r.tputCore).toLocaleString('en-US')} NTT/s | ` +
-            `${Math.round(r.tputBoard).toLocaleString('en-US')} NTT/s | ${fmtNum(r.bwReq / 1e6, 1)} MB/s | ` +
+            `${f(r.atpNorm, 3)}× | ${fmtNum(r.lutUs, 0)} | ${f(r.lutUsNorm, 3)}× | ` +
             `${r.powerBase} / ${r.powerBoost} W |`;
     }),
     '',
-    `**ATP 最低的是 ${minAtp}（${f(rows[minAtp].atpNorm, 3)}× pe1）** —— ` +
-        `面积 × 时间不是「越深越好」：pe16 用 12.3× 的 LUT 换 13.1× 的周期下降，ATP 反而回到 ${f(rows.pe16.atpNorm, 3)}×。`,
+    `**两种面积–时间指标都指向 ${minAtp}**（LUT·cycle ${f(rows[minAtp].atpNorm, 3)}× pe1、` +
+        `LUT·µs ${f(rows[minLutUs].lutUsNorm, 3)}× pe1），但结论只对**这三个已测配置、只计 LUT** 成立；` +
+        `DSP / BRAM / FF 未计入（见报告 §3.3 主表）。LUT·cycle 是面积 × 周期，与频率无关；` +
+        `LUT·µs 按各档实际工作频率复算，排名可能与 LUT·cycle 不同 —— 引用时必须说明用哪一种。`,
     '',
-    '**roofline 的两个屋顶**（每趟 `#NTT` 线上 **2124 B**，8N1 = 10 bit/字节）：',
+    '**两种吞吐边界**（每趟 `#NTT` 线上 **2124 B**，8N1 = 10 bit/字节）：',
     '',
-    '| 屋顶 | 公式 | 结果 |',
-    '|---|---|---:|',
-    `| 串口链路（115200） | 115200 ÷ 10 ÷ 2124 | **${f(LINK.uart115200, 2)} NTT/s** |`,
-    `| 串口链路（921600） | 921600 ÷ 10 ÷ 2124 | **${f(LINK.uart921600, 2)} NTT/s** |`,
-    `| 核（pe1，板上 80 MHz） | 80 MHz ÷ 904 | ${Math.round(rows.pe1.tputBoard).toLocaleString('en-US')} NTT/s |`,
-    `| 核（pe16，板上 62.5 MHz） | 62.5 MHz ÷ 69 | ${Math.round(rows.pe16.tputBoard).toLocaleString('en-US')} NTT/s |`,
+    '| 档 | ① 纯计算上限 @板上提频 | ② 装载→读出上限 @板上提频 | ② 所需带宽 | ② / 115200 | ② / 921600 |',
+    '|---|---:|---:|---:|---:|---:|',
+    ...TIERS.map((t) => {
+        const r = rows[t];
+        return `| ${t} | ${Math.round(r.tputBoard).toLocaleString('en-US')} NTT/s | ` +
+            `${Math.round(r.tputSustained).toLocaleString('en-US')} NTT/s | ` +
+            `${fmtNum(r.bwReqSustained / 1e6, 1)} MB/s | ` +
+            `${fmtNum(r.tputSustained / LINK.uart115200)}× | ${fmtNum(r.tputSustained / LINK.uart921600)}× |`;
+    }),
     '',
-    `- **带宽需求可复算**：\`带宽 = 吞吐 × 2124 B\`。三档要喂满核，分别需要 ` +
-        `${TIERS.map((t) => `${t} ${fmtNum(rows[t].bwReq / 1e6, 1)} MB/s`).join(' / ')}；` +
-        `而 115200 只有 **0.0115 MB/s**、921600 只有 **0.0922 MB/s**。`,
-    `- **核 / 链路倍差**：115200 下 **${fmtNum(minGap)}–${fmtNum(maxGap)}×**；` +
-        `921600 下 **${fmtNum(minGap / 8)}–${fmtNum(maxGap / 8)}×**。` +
-        `这不是核慢，是接口带宽差 4–5 个数量级。`,
-    `- **Pareto**：三档互不支配（LUT 越高、吞吐越高），所以三档都留在前沿上；` +
-        `选档看约束 —— 要面积选 pe1，要 ATP 最低选 ${minAtp}，要最低延迟选 pe16。`,
+    '① = 频率 ÷ 周期数，**只覆盖计算窗口**；② = 频率 ÷ (256 + 周期数 + 256)，' +
+        '假设装载/读出各 1 系数/拍、与计算不重叠、不计控制开销，**是下限**。',
+    '真实串口事务另见报告 §3.10.3 / §3.10.4（pe1 实测 0.250 s @115200、0.079 s @921600）。',
+    '',
+    `- **链路屋顶**：115200 = **${f(LINK.uart115200, 2)} NTT/s**，921600 = **${f(LINK.uart921600, 2)} NTT/s**（÷10 bit ÷2124 B）。`,
+    `- **带宽需求可复算**（按 ②）：三档需 ${TIERS.map((t) => `${t} ${fmtNum(rows[t].bwReqSustained / 1e6, 1)} MB/s`).join(' / ')}；` +
+        `115200 只给 0.0115 MB/s、921600 只给 0.0922 MB/s —— 差 **${fmtNum(minGapS)}–${fmtNum(maxGapS)}×**（115200）。`,
+    `- **装载/读出把深档位拉平**：pe16 的 ① 是 pe1 的 ${f(rows.pe16.tputBoard / rows.pe1.tputBoard, 1)}×，` +
+        `到 ② 只剩 ${f(rows.pe16.tputSustained / rows.pe1.tputSustained, 2)}× —— 折叠越深，256 拍装载 + 256 拍读出越占主导。`,
+    `- **Pareto**：按 ② 三档仍互不支配；选档看约束 —— 要面积选 pe1，要 LUT·cycle 最低选 ${minAtp}，要最低延迟选 pe16。`,
     '',
     '> ⚠️ **功耗列是 vectorless 估算**（Confidence Medium、25 °C、只算片内 PL），不是实测。',
-    '> ⚠️ **吞吐列用两套频率**：`@核 Fmax` 是 post-route 推算（5 ns 约束反推），`@板上提频` 是 MMCM 位流真跑通的频率；**两者不能互相替代**。',
+    '> ⚠️ **频率两套**：`@核 Fmax` 是 post-route 推算（5 ns 约束反推），`@板上提频` 是 MMCM 位流真跑通的频率；**两者不能互相替代**。',
     '',
     '```bash',
     'node metrics/gen_pareto.mjs     # → metrics/data/pareto.csv + 本块',
@@ -235,10 +266,10 @@ fs.writeFileSync(README, md, { encoding: 'utf8' });
 console.log('  三档：');
 for (const t of TIERS) {
     const r = rows[t];
-    console.log(`    ${t.padEnd(4)} ATP ${String(r.atp).padStart(9)}  ` +
-        `(${f(r.atpNorm, 3)}×)  @核 ${String(Math.round(r.tputCore)).padStart(8)} NTT/s  ` +
-        `@板 ${String(Math.round(r.tputBoard)).padStart(7)} NTT/s  ` +
-        `需 ${String(f(r.bwReq / 1e6, 1)).padStart(7)} MB/s`);
+    console.log(`    ${t.padEnd(4)} LUT·cycle ${String(r.atp).padStart(9)} (${f(r.atpNorm, 3)}×)  ` +
+        `LUT·µs ${String(f(r.lutUs, 0)).padStart(7)} (${f(r.lutUsNorm, 3)}×)  ` +
+        `① ${String(Math.round(r.tputBoard)).padStart(7)} ② ${String(Math.round(r.tputSustained)).padStart(6)} NTT/s  ` +
+        `②需 ${String(f(r.bwReqSustained / 1e6, 1)).padStart(6)} MB/s`);
 }
 console.log(`  链路屋顶：115200 = ${f(LINK.uart115200, 2)} NTT/s，921600 = ${f(LINK.uart921600, 2)} NTT/s（2124 B/趟）`);
 console.log(`  ATP 最低：${minAtp}（${f(rows[minAtp].atpNorm, 3)}× pe1）`);
