@@ -15,7 +15,7 @@
 | **创新性** | **30** | `../docs/related-work.md`、`../report/design/01_background_and_related_work.md` §1.3–§1.5、`../report/design/02_design_and_innovation.md` | 一套参数化 RTL 出 1/4/16 三档；对外 12 位接口使引脚恒为 37（上游 16 蝶形要 397，本器件仅 125） | §二.1 |
 | **性能与资源** | **20** | `../metrics/README.md`、`../rtl/vivado/reports/` | 核：LUT 727 / 2,000 / 8,922，周期 904 / 232 / 69；推算 Fmax 168 / 160 / 154 MHz；板级提频 80 / 75 / 62.5 MHz | §二.2 |
 | **功能正确性** | **20** | `../refsim/`、`../rtl/probes/`、`../rtl/vivado/reports/board_*_txn.txt` | KAT 1000/1000；四条通路各 4096/4096；三档各六条命令 6/6 | §二.3 |
-| **大模型协作与技能包** | **15** | `../report/ai-log/`、`../report/design/06_appendix.md`、`../skill/` | 逐日日志以 `git ls-files` 计数为准（不固定篇数）；附录摘 6 条自我纠错；技能包 4 条提示词 / 34 条坑 / 3 个校验脚本 / 3 个模板 | §二.4 |
+| **大模型协作与技能包** | **15** | `../report/ai-log/`、`../report/design/06_appendix.md`、`../skill/` | 逐日日志以 `git ls-files` 计数为准（不固定篇数）；附录摘 7 条自我纠错；技能包 4 条提示词 / 34 条坑 / 3 个校验脚本 / 4 个模板（PYNQ 骨架未验证） | §二.4 |
 | **文档与可复现** | **15** | `../README.md`、`../report/design/05_reproducibility.md`、`../skill/scripts/check_reproducible.sh` | 非作者（C）远端全新 clone 跑出「通过 4 / 跳过 0 / 失败 0」；B 另在干净 clone 跑 18/18 | §二.5 |
 
 > 《选题指南》§3.3.5.3 七项正文的映射另见 `../report/design/00_front_matter.md` §三；
@@ -69,7 +69,7 @@
 | 主张 | 证据文件 | 复跑 / 核对命令 | 结果 | 边界 |
 |---|---|---|---|---|
 | 逐日 AI 协作日志 | `../report/ai-log/*.md` | `git ls-files 'report/ai-log/*.md'`（再数行数） | 以命令输出为准（含本轮 B 日志） | 每天在变；附录索引行数必须等于文件数 |
-| 附录索引与自我纠错摘编 | `../report/design/06_appendix.md` §A.1 / §A.2 | 对文件计数、逐条回原日志 | 索引按日期/成员逐条对应日志文件；摘 **6 条**轨迹 | B 的 09-29～10-05 **有意不补** |
+| 附录索引与自我纠错摘编 | `../report/design/06_appendix.md` §A.1 / §A.2 | 对文件计数、逐条回原日志 | 索引按日期/成员逐条对应日志文件；摘 **7 条**轨迹 | B 的 09-29～10-05 **有意不补** |
 | 技能包 | `../skill/README.md` | 看各子目录的四件套表 | `prompts/` 4 条、`checklists/` 5 份 34 条、`scripts/` 3 个（+ `refsim/` 四条入口）、`templates/` 3 个 | PYNQ 模板只过语法检查，**不宣称加分** |
 | 非作者独立复现咬出缺陷（CRLF 回写） | `../skill/`、`../report/ai-log/` | 回原日志 | 见附录 §A.2 | 结论只到「发现并修复」，不外推 |
 
@@ -81,7 +81,7 @@
 | 一键复现检查 | `../skill/scripts/check_reproducible.sh` | `sh skill/scripts/check_reproducible.sh --from-remote` | **通过 4 / 跳过 0 / 失败 0**，退 0（2026-10-05） | 需要联网；**不是**第二台电脑验收 |
 | 非作者全新 clone | `../report/design/05_reproducibility.md` §5.6 | 同上 | C（非代码作者）从远端 clone 独立跑通 | 同一人、另一台机器上的首次；H10 的「第二台电脑」另计 |
 | 同一 PC 干净 clone 18 项 | `../logs/verification_2026-10-17_B_clean_clone.json` | 读 JSON `scope` | 18 项全过 | **不算 H10 换机** |
-| 报告构建 | `../report/build_report.py` | `python report/build_report.py` | Markdown → HTML → PDF；产物在 `report/build/`（不入库） | 页码/页眉在 W5 加 |
+| 报告构建 | `../report/build_report.py` | `python report/build_report.py` | Markdown → HTML → PDF（2026-10-23：65 页，页眉/页码 + 8 章节书签自动叠加）；产物在 `report/build/`（不入库） | 需 `markdown` + `pymdownx` + `pypdf` + 无头 Edge |
 | 现场演示 GUI + 一键脚本 | `../demo/gui.html`、`../demo/run_gui.cmd` | 双击 `run_gui.cmd`；或 `node demo/gen_gui_data.mjs` 重生成数据 | 四幕（输入 / 逐层 / 对拍 / 计时资源）；页面自检 32/32 组；对拍 256/256；阴性对照 255/256（1 个红格） | **无板回放**：板上数据来自已提交的 `board_*_txn.txt`，不是现场采集；自动演示约 3 分钟 |
 
 ---
@@ -108,7 +108,7 @@
 | 3 | ML-KEM transcript replay | B | 全部 NTT 逐位一致 | 10/22 | ✅ **10-21 完成**：无板侧（B，10-18）三档 RTL 各 15 次 / 45 次 11,520 系数全对；**真板（A，10-21）三档各 15 次 / 3840 系数、合计 45 次 / 11,520 系数全 PASS**（COM9，50 MHz 基线，逐档烧录；`../logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`） |
 | 4 | 变异测试 + 常数时间 | B | 变异体全捕获；周期恒 904/232/69 | 10/24 | ✅ 10-18（B）：17/17 被捕获；103 组输入三档周期恒定；边界只到 pe4/FULL（`../team/handoff_2026-10-18_B_strengthening.md`） |
 | 5 | 现场演示 GUI + 一键脚本 | C | 双击可跑；无板回放；3 分钟 | 10/24 | ✅ 10-19（`demo/gui.html` + `run_gui.cmd`；无头 Edge 实测） |
-| 6 | 证据地图 + 口径统一 | C+A | 报告/QA/metrics/视频四处一致 | 10/21 | ✅ 10-19（本文件）；报告随正文重建（**2026-10-23 构建 64 页，已加页码/页眉/书签**；**页数以打开 PDF 为准**） |
+| 6 | 证据地图 + 口径统一 | C+A | 报告/QA/metrics/视频四处一致 | 10/21 | ✅ 10-19（本文件）；报告随正文重建（**2026-10-23 构建 65 页，已加页码/页眉/书签**；**页数以打开 PDF 为准**） |
 | 7 | Pareto / ATP / roofline + 功耗估算 | C+A | 一图一表；功耗标估算 | 10/24 | ✅ 10-19（C：`metrics/gen_pareto.mjs` + 三面板图；A：功耗 10-18） |
 
 > 边界：完整 ML-KEM RTL、AXI/PS、radix-4、PYNQ、2/8 折叠档**都不做**，

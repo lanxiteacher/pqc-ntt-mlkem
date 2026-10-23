@@ -118,7 +118,7 @@ report/
 | **提交件** | **PDF** —— 版式固定、离线可开、图表不会因阅卷机器缺字体/插件而变样 |
 | **不做** | 不交 Word（版式随 Office 版本漂移）；不只交 Markdown（评审环境是否渲染表格与图片不可控） |
 | **生成时点** | W5「冻结与组装」：Markdown 冻结后再出 PDF，**不反过来改 PDF** |
-| **生成方式** | ✅ **2026-10-18 实测通过**：`python report/build_report.py`（Markdown → HTML → 无头 Edge 打印 PDF）。依赖：Python 3、`markdown==3.11.1`、`pymdown-extensions==12.3`、`pypdf`、Microsoft Edge（Windows 11 自带）。产物在 `report/build/`（已在 `.gitignore`，不进仓库）；`--html-only` 可只出 HTML。<br>实测（2026-10-21 重建，含 A 的 Phase 1 改动与 §4.11）：**59 页 / 4.0 MB**，10 张图（4 SVG 矢量 + 6 PNG）全部解析，八份源文件八个部分齐全，表格全部渲染。⚠️ 页数随内容与渲染环境变 —— 10-20 记 76 页、10-21 为 59 页、10-23 为 64 页（10-23 起每章另起页 + 页码，页数因此增加）；**提交前以打开 PDF 的实际页数为准，文档里不写死** |
+| **生成方式** | ✅ **2026-10-18 实测通过**：`python report/build_report.py`（Markdown → HTML → 无头 Edge 打印 PDF）。依赖：Python 3、`markdown==3.11.1`、`pymdown-extensions==12.3`、`pypdf`、Microsoft Edge（Windows 11 自带）。产物在 `report/build/`（已在 `.gitignore`，不进仓库）；`--html-only` 可只出 HTML。<br>实测（2026-10-21 重建，含 A 的 Phase 1 改动与 §4.11）：**59 页 / 4.0 MB**，10 张图（4 SVG 矢量 + 6 PNG）全部解析，八份源文件八个部分齐全，表格全部渲染。⚠️ 页数随内容与渲染环境变 —— 10-20 记 76 页、10-21 为 59 页、10-23 为 65 页（10-23 起每章另起页 + 页码，页数因此增加）；**提交前以打开 PDF 的实际页数为准，文档里不写死** |
 | **页码** | ✅ **2026-10-23 已加**：构建脚本用无头 Edge 生成等页数叠层、pypdf 逐页合并，页脚「第 N 页 / 共 M 页」+ 页眉作品名，封面不编号；同时写入 8 个章节书签。**不手改 PDF**；重跑脚本即重算 |
 
 理由一句话：**评审看的是「能不能稳定打开、图表是否完整」**，
