@@ -109,7 +109,9 @@ python report/build_report.py
 
 **判据**：PDF 页数与 `report/README.md` 记录一致（±1 页可解释）；图表无破版；
 **页码/页眉已加**（W5 项）；正文里的数与 `metrics/` 一致。
-⚠️ 构建依赖 `markdown` + `pymdownx` + 无头 Edge；本机（A）缺 `pymdownx`，在 C 机器上构建。
+⚠️ 构建依赖 `markdown` + `pymdownx` + `pypdf` + 无头 Edge；本机（A）缺 `pymdownx`，在 C 机器上构建。
+⚠️ 页码/页眉/书签由构建脚本自动叠加（`add_page_furniture`），**不要手改 PDF**；若 Edge 渲染页数变化，
+脚本会拒绝合并并报出「叠层页数 ≠ 正文页数」。
 
 ## 7. 换目录复现（B/C，约 10 分钟，不需要板子）
 

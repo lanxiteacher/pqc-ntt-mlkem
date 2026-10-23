@@ -1,6 +1,6 @@
 {
   "_how": "本文件只放「机器判不出来」的东西：下一步、卡点、里程碑、人的判断。每条都要写 as_of（这条是几号核的）与 source（出处）。能自动抓的数字不要写进来 —— 见 gen_status.mjs 的 AUTO 段。",
-  "updated": "2026-10-22",
+  "updated": "2026-10-23",
 
   "countdown": {
     "submission": "2026-11-04",
@@ -38,10 +38,10 @@
       "scope": "report/ ｜ demo/ ｜ docs/ ｜ skill/ ｜ metrics/ ｜ assets/",
       "color": 3,
       "git_authors": ["于宸", "yuchen", "C"],
-      "now": "✅ **2026-10-22：B 评委视角审阅的 C 侧口径修复已完成** —— J01 撤销「FPGA 比 CPU 低两个数量级」的能效结论（改为边界说明 + 敏感性假设）；J02 吞吐分「纯计算上限 / 装载→读出上限 / 真实串口事务」三层，不再把 f/CC 叫整机吞吐；J03 把 ATP 明确为 LUT·cycle（面积×周期）并补 LUT·µs、标注只计 LUT；J04 CPU 基线改为 `poly_ntt()` 语义（每轮合法输入、输入准备另计、原始轮次落 `metrics/data/bottleneck_ref_raw.csv`）；J05 补 397/37/4 三个引脚边界表并承认替代集成方式。报告/图/指标/提词稿已同步并重建 PDF。视频文本 10-22 已冻结，回信 `logs/letter_2026-10-22_C_to_A_voiceover.txt`。",
-      "next": "① 等 A 的 9 段 WAV（10/24 前）→ 10/25–27 粗剪成片；② A 回传新真板回归后回填 J07；③ 冻结前按最终包重建 PDF / 核对页码与 manifest（J11）。",
-      "as_of": "2026-10-22",
-      "source": "team/review_2026-10-22_B_judge_audit.md；logs/letter_2026-10-22_C_to_A_voiceover.txt"
+      "now": "✅ **2026-10-23：报告 PDF 收口 + 指标一致性审计。** ① PDF 重建 **64 页**：页眉/页脚「第 N 页 / 共 M 页」、封面不编号、8 个章节书签，章节改为每章另起页（修掉 `h1:first-of-type` 在每节都命中的排版 bug）。② 指标链重跑发现 CPU 参考实现读数跨会话漂移 **4.0–5.0 µs**：`bottleneck.py` 改为原始轮次**追加**+累计中位、`--record` 才记新会话；报告统一为 **4.80 µs**（5 次会话 / 15 轮，4.70–5.10），pe1 3.8×、pe4 0.97×、CPU 208,333 NTT/s、216 µJ 同步。③ `demo/data/gui.js` 重生成（4.05→4.80），无头 Edge 自检 32/32。日志 `report/ai-log/2026-10-23_C.md`。",
+      "next": "① 等 A 的 9 段 WAV（10/24 前）→ 定 ffmpeg → 10/25–27 粗剪成片；② A 回传新真板回归后回填 J07；③ 冻结前按最终包重建 PDF / 核对页码与 manifest（J11）；④ 技能包 README 的适用范围/失效条件/复用结果仍待补。",
+      "as_of": "2026-10-23",
+      "source": "report/build/report.pdf（本机产物）；metrics/data/bottleneck_ref_raw.csv；report/ai-log/2026-10-23_C.md"
     }
   ],
 
@@ -184,6 +184,8 @@
     {"owner": "C", "text": "★ 2026-10-18 出彩组合 · P2 Pareto/ATP/roofline（三档 × 实测频率，一图一表） —— ✅ 10-19 C 交付：metrics/gen_pareto.mjs + report/figures/pareto_atp_roofline.svg", "state": "done", "as_of": "2026-10-18", "source": "logs/letter_2026-10-18_A_to_BC_plan.txt §三"},
     {"owner": "A+B+C", "text": "★ 2026-10-18 出彩组合 · 10/24 前完成七件；10/25–27 冻结报告/视频，不再加新功能 —— ✅ 七件 10-21 全部收口（trace 真板 45 次是最后一件）", "state": "done", "as_of": "2026-10-18", "source": "logs/letter_2026-10-18_A_to_BC_plan.txt §四"},
     {"owner": "C", "text": "★ 2026-10-22 B 审阅口径修复（C 侧）—— ✅ J01 能量结论、J02 三层吞吐、J03 ATP 定义、J04 CPU 基线改 poly_ntt 语义、J05 引脚边界表；报告/图/CSV/提词稿同步并重建 PDF", "state": "done", "as_of": "2026-10-22", "source": "team/review_2026-10-22_B_judge_audit.md §2"},
+    {"owner": "C", "text": "★ 2026-10-23 报告 PDF 收口 —— ✅ 64 页、页眉/页码、8 章节书签、每章另起页；构建脚本 `add_page_furniture` 自动叠加", "state": "done", "as_of": "2026-10-23", "source": "report/build_report.py；report/README.md"},
+    {"owner": "C", "text": "★ 2026-10-23 指标一致性审计 —— ✅ CPU 参考实现跨会话漂移（4.0–5.0 µs）查明；bottleneck 改追加+累计中位、`--record` 才记新会话；报告统一 4.80 µs，pe1 3.8× / pe4 0.97× / 208,333 NTT/s / 216 µJ 同步", "state": "done", "as_of": "2026-10-23", "source": "metrics/data/bottleneck_ref_raw.csv；report/ai-log/2026-10-23_C.md"},
     {"owner": "C", "text": "★ 演示视频：文本 10-22 已冻结（回信 A 五个决定）；等 A 10/24 前交 9 段 WAV，C 10/25–27 剪", "state": "doing", "as_of": "2026-10-22", "source": "logs/letter_2026-10-22_C_to_A_voiceover.txt"}
   ],
 

@@ -24,19 +24,23 @@
     ③ 软件参考实现 —— **真编译真跑**：`gcc -O2` 编 `research/kyber_ref/`，量的是
                   **`poly_ntt()` 的语义**（`ntt()` + `poly_reduce()`），不是裸 `ntt()`；
                   每轮先把合法输入（系数在 [0,q)）拷回工作数组，**输入准备与计算分开计时**。
-                  原始轮次写 `metrics/data/bottleneck_ref_raw.csv`。⚠️ 这个数**随机器变**，
-                  CPU 型号、OS、编译器与编译命令写进产物；电源模式未控制。
+                  原始轮次追加到 `metrics/data/bottleneck_ref_raw.csv`（一次会话一组）。
+                  ⚠️ 这个数**随机器变**，同一台机器跨会话也会漂 ±10%（CPU 调频）——
+                  报告引用的是**全部已记录轮次的累计中位**，所以默认重跑**不追加**，
+                  要留新一轮证据显式加 `--record`。CPU 型号、OS、编译器写进产物。
 
 产物
     `metrics/data/bottleneck.csv`          长表，一列一个数
     `metrics/README.md` 的 GEN 块          两张表，脚本维护、别手改
 
 用法
-    python metrics/bottleneck.py
+    python metrics/bottleneck.py             # 只读历史：重跑不改变报告值
+    python metrics/bottleneck.py --record    # 追加本轮原始轮次（留证据时才用）
 
 ⚠️ 本脚本**只读** `host/`、`research/`、`rtl/probes/` 下的文件，一个字节都不改。
 """
 
+import argparse
 import csv
 import datetime
 import platform
@@ -225,6 +229,7 @@ def time_reference(reps=REPS, iters=REF_ITERS):
     计时程序输出一行：`<n> <prep_s> <total_s> <checksum> <bad>`；
     净计算 = total - prep。每一轮都换回合法输入，避免把上一轮输出当下一轮输入。
     """
+    session = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
     with tempfile.TemporaryDirectory() as td:
         exe = Path(td) / ("ref_timing.exe" if sys.platform == "win32" else "ref_timing")
         cmd = ["gcc", "-O2", "-I", str(REF_DIR), str(C_SRC),
@@ -250,6 +255,7 @@ def time_reference(reps=REPS, iters=REF_ITERS):
             preps.append(prep / n)
             nets.append((total - prep) / n)
             rows.append({
+                "session": session,
                 "utc": datetime.datetime.now(datetime.timezone.utc)
                        .isoformat(timespec="seconds"),
                 "round": r, "iters": n,
@@ -274,16 +280,44 @@ def time_reference(reps=REPS, iters=REF_ITERS):
 
 
 def write_ref_raw(ref, gcc, cpu):
+    """把本轮计时**追加**到原始轮次表（表头只在文件不存在时写）。
+
+    为什么追加而不是覆盖：同一台机器跨会话的读数会漂 ±20%（笔记本 CPU 调频/温热状态），
+    只留最后一次会把「读数随环境变」这件事藏掉；报告里的参考值取全部已记录轮次的中位。
+    """
     REF_RAW_OUT.parent.mkdir(parents=True, exist_ok=True)
-    with REF_RAW_OUT.open("w", encoding="utf-8", newline="") as f:
+    fresh = not REF_RAW_OUT.exists() or REF_RAW_OUT.stat().st_size == 0
+    with REF_RAW_OUT.open("a", encoding="utf-8", newline="") as f:
         w = csv.writer(f, lineterminator="\n")
-        w.writerow(["utc", "round", "iters", "prep_ns", "total_ns", "net_ns",
-                    "checksum", "bad_coeffs", "cpu", "python", "gcc", "task"])
+        if fresh:
+            w.writerow(["utc", "session", "round", "iters", "prep_ns", "total_ns",
+                        "net_ns", "checksum", "bad_coeffs", "cpu", "python", "gcc", "task"])
         for row in ref["rows"]:
-            w.writerow([row["utc"], row["round"], row["iters"], row["prep_ns"],
+            w.writerow([row["utc"], row["session"], row["round"], row["iters"], row["prep_ns"],
                         row["total_ns"], row["net_ns"], row["checksum"],
                         row["bad_coeffs"], cpu, platform.python_version(), gcc,
                         "poly_ntt = ntt + poly_reduce; valid input each round"])
+
+
+def aggregate_ref():
+    """读原始轮次表，返回**跨会话**的中位与范围（报告引用的是这一组数）。
+
+    读数噪声约 ±0.2 µs（CPU 调频），所以返回前**取到 0.1 µs**：
+    否则每次重跑累计中位都会在小数第二位跳一下，报告与生成器永远差一点点。
+    """
+    nets, preps, sessions = [], [], set()
+    with REF_RAW_OUT.open(encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            nets.append(float(row["net_ns"]) / 1e9)
+            preps.append(float(row["prep_ns"]) / 1e9)
+            sessions.add(row.get("session") or row["utc"][:16])
+    us = lambda s: round(s * 1e6, 1) / 1e6
+    return {
+        "median": us(statistics.median(nets)),
+        "min": us(min(nets)), "max": us(max(nets)),
+        "prep_median": statistics.median(preps),
+        "rounds": len(nets), "sessions": len(sessions),
+    }
 
 
 # ---------------------------------------------------------------- 拼表
@@ -317,6 +351,12 @@ def fmt_s(secs):
 
 
 def main():
+    ap = argparse.ArgumentParser(description="瓶颈归因：核 / 串口搬运 / 软件参考实现")
+    ap.add_argument("--record", action="store_true",
+                    help="把本轮原始轮次追加到 data/bottleneck_ref_raw.csv"
+                         "（默认只读历史，保证重跑不改变报告的累计中位）")
+    args = ap.parse_args()
+
     # Windows 控制台默认 GBK，打印带 ⇒ / µ 的行会当场炸。**只影响控制台**，
     # 写文件的地方一律显式 utf-8 —— 见下面 write_text / csv 两处的 encoding。
     try:
@@ -341,10 +381,20 @@ def main():
     ref = time_reference()
     gcc = gcc_version()
     cpu = cpu_model()
-    print("      poly_ntt() 净计算：中位 %s；输入准备：中位 %s（%d 轮 × %d 次）"
-          % (fmt_s(ref["median"]), fmt_s(ref["prep_median"]), ref["reps"], ref["iters"]))
+    session = dict(ref)                 # 本轮读数，留作对照
+    if args.record:
+        write_ref_raw(ref, gcc, cpu)
+    else:
+        print("      （本轮不写入原始轮次表；要追加证据请加 --record）")
+    ref = aggregate_ref()               # 报告引用：跨会话累计
+    ref.update({"reps": session["reps"], "iters": session["iters"],
+                "checksum": session["checksum"]})
+    print("      poly_ntt() 净计算：本轮中位 %s；跨 %d 次会话 %d 轮累计中位 %s"
+          "（%s–%s）；输入准备：中位 %s"
+          % (fmt_s(session["median"]), ref["sessions"], ref["rounds"],
+             fmt_s(ref["median"]), fmt_s(ref["min"]), fmt_s(ref["max"]),
+             fmt_s(ref["prep_median"])))
     print("      CPU：%s" % cpu)
-    write_ref_raw(ref, gcc, cpu)
 
     # 主表用 `#NTT 1`（最干净的一条：256 进 / 256 出）。它必须跑通，否则整张表没意义。
     ntt = next((r for r in prof if r.get("command") == "#NTT 1"), None)
@@ -436,17 +486,19 @@ def main():
     G.append("| 串口参数 | %d 8N1，%d bit/字节 |" % (BAUD, BITS_PER_BYTE))
     G.append("| 串口字节数来源 | 走 `host/src/` 真实协议栈（陪练当对端）数出来的**线上真实字节** |")
     G.append("| 软件参考实现 | `research/kyber_ref/` 的 **`poly_ntt()` 语义**（`ntt()` + `poly_reduce()`）"
-             "；每轮先拷回合法输入（系数在 [0,q)）；`gcc -O2`，%d 轮 × %d 次取中位 |"
-             % (ref["reps"], ref["iters"]))
-    G.append("| 参考实现净计算（%d 次单跑） | %s ／ %s ／ %s（中位／最小／最大） |"
-             % (ref["reps"], fmt_s(ref["median"]), fmt_s(ref["min"]), fmt_s(ref["max"])))
+             "；每轮先拷回合法输入（系数在 [0,q)）；`gcc -O2`，每次会话 %d 轮 × %d 次，"
+             "**跨 %d 次会话累计取中位** |"
+             % (ref["reps"], ref["iters"], ref["sessions"]))
+    G.append("| 参考实现净计算（%d 次会话 / %d 轮） | %s ／ %s ／ %s（中位／最小／最大） |"
+             % (ref["sessions"], ref["rounds"], fmt_s(ref["median"]),
+                fmt_s(ref["min"]), fmt_s(ref["max"])))
     G.append("| 输入准备（每轮 512 B memcpy） | %s（已从净计算中扣除） |"
              % fmt_s(ref["prep_median"]))
     G.append("| 输出校验 | checksum `%016x`；越界系数 0 个 |" % ref["checksum"])
     G.append("| CPU | %s |" % cpu)
     G.append("| OS / Python | %s / %s |" % (platform.platform(), platform.python_version()))
     G.append("| 编译器 | %s（`-O2`；电源模式未控制） |" % gcc)
-    G.append("| 本机 Python 侧一趟开销 | %s（含陪练自己的向量匹配，是上界） |"
+    G.append("| 本机 Python 侧一趟开销 | %s（单次会话读数，波动约 ±10%%；含陪练自己的向量匹配，是上界） |"
              % fmt_s(ntt["pc_secs"]))
     G.append("")
     G.append("> ⚠️ 软件参考实现那个数**随机器变**（CPU / 编译器 / 优化级）。上表是**本机**的读数，")
@@ -472,8 +524,8 @@ def main():
             "线上 %d B × %d bit ÷ %d bps（模型）" % (r["wire"], BITS_PER_BYTE, BAUD),
             "host/src/ 协议栈实数 + proto.md §4.1")
     add("软件参考实现", "poly_ntt()", ref["median"],
-        "gcc -O2；poly_ntt = ntt + poly_reduce；每轮合法输入；%d 轮 × %d 次取中位；已扣输入准备"
-        % (ref["reps"], ref["iters"]),
+        "gcc -O2；poly_ntt = ntt + poly_reduce；每轮合法输入；跨 %d 次会话 / %d 轮取中位；已扣输入准备"
+        % (ref["sessions"], ref["rounds"]),
         "metrics/bottleneck_ref_timing.c")
     add("软件参考实现-输入准备", "poly_ntt()", ref["prep_median"],
         "每轮 512 B memcpy 回合法输入；%d 轮 × %d 次取中位（本机）" % (ref["reps"], ref["iters"]),

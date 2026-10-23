@@ -7,7 +7,7 @@
 
 依赖：
   - Python 3
-  - pip install markdown==3.11.1 pymdown-extensions
+  - pip install markdown==3.11.1 pymdown-extensions pypdf
   - 出 PDF 时：Microsoft Edge（Windows 11 自带），无头模式打印
 
 用法：
@@ -66,7 +66,7 @@ h1 {
   font-size: 20pt; border-bottom: 2px solid #333; padding-bottom: 4px;
   page-break-before: always;
 }
-h1:first-of-type { page-break-before: avoid; }
+section.chapter:first-of-type h1 { page-break-before: avoid; }
 h2 { font-size: 15pt; margin-top: 1.2em; page-break-after: avoid; }
 h3 { font-size: 12.5pt; page-break-after: avoid; }
 table {
@@ -126,6 +126,95 @@ def convert(sources):
     return "\n".join(parts)
 
 
+CHAPTERS = [
+    "封面与摘要", "一、选题背景与相关工作", "二、设计与创新点", "三、性能与资源",
+    "四、功能正确性", "五、可复现性", "附录", "参考文献",
+]
+
+OVERLAY_CSS = """
+@page { size: A4; margin: 0; }
+html, body { margin: 0; padding: 0; }
+.page {
+  position: relative; width: 210mm; height: 296.8mm;
+  page-break-after: always; break-after: page;
+}
+.page:last-child { page-break-after: auto; break-after: auto; }
+.hd {
+  position: absolute; top: 7mm; left: 16mm; right: 16mm;
+  font: 8.5pt "Microsoft YaHei", sans-serif; color: #666;
+  border-bottom: 0.4pt solid #ccc; padding-bottom: 1.5mm;
+}
+.ft {
+  position: absolute; bottom: 6mm; left: 16mm; right: 16mm;
+  font: 8.5pt "Microsoft YaHei", sans-serif; color: #666; text-align: center;
+}
+"""
+
+
+def add_page_furniture(pdf_path, edge, out_dir, title="后量子密码FPGA加速平台 · 设计报告"):
+    """给 PDF 逐页叠加页眉与页码（封面页不加）。
+
+    Chrome 无头打印不支持 CSS `@page` 的 margin box（`@bottom-center` / `counter(page)`），
+    所以用同一条 Edge 生成一份与正文等页数的空白叠层（每页只写页眉/页码），再用 pypdf 逐页合并。
+    不引入第二种渲染器，页码位置与正文版心同一次渲染确定。
+    """
+    try:
+        from pypdf import PdfReader, PdfWriter
+    except ImportError:
+        sys.exit("缺少 pypdf：先运行  python -m pip install pypdf（叠加页码用）")
+
+    n = len(PdfReader(str(pdf_path)).pages)
+    if n < 2:
+        return
+
+    pages = []
+    for i in range(1, n + 1):
+        head = "" if i == 1 else f'<div class="hd">{title}</div>'
+        foot = "" if i == 1 else f'<div class="ft">第 {i} 页 / 共 {n} 页</div>'
+        pages.append(f'<div class="page">{head}{foot}</div>')
+    overlay_html = out_dir / "overlay.html"
+    overlay_pdf = out_dir / "overlay.pdf"
+    overlay_html.write_text(
+        '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">'
+        f"<style>{OVERLAY_CSS}</style></head><body>{''.join(pages)}</body></html>",
+        encoding="utf-8", newline="\n")
+
+    cmd = [str(edge), "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
+           f"--print-to-pdf={overlay_pdf}", overlay_html.as_uri()]
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120)
+    if proc.returncode != 0 or not overlay_pdf.exists():
+        sys.stdout.write(proc.stdout.decode("utf-8", "replace"))
+        sys.exit("ERROR: 页码叠层生成失败（Edge 打印 overlay.html）")
+
+    reader = PdfReader(str(pdf_path))
+    over = PdfReader(str(overlay_pdf))
+    if len(over.pages) != n:
+        sys.exit(f"ERROR: 叠层页数 {len(over.pages)} ≠ 正文页数 {n}，"
+                 "页码会错位；拒绝合并（检查 overlay.html 的分页样式）")
+
+    # 先按正文（未叠页眉）找章节起始页：每个 h1 都从新页开始，页首即标题
+    starts = {}
+    for i in range(n):
+        head = (reader.pages[i].extract_text() or "").strip()
+        for ch in CHAPTERS:
+            if ch not in starts and head.startswith(ch):
+                starts[ch] = i
+    if "封面与摘要" not in starts and "封面与摘要" in (reader.pages[0].extract_text() or ""):
+        starts["封面与摘要"] = 0       # 第 1 页顶上是构建说明，标题不在行首
+
+    writer = PdfWriter()
+    for i, page in enumerate(reader.pages):
+        page.merge_page(over.pages[i])
+        writer.add_page(page)
+    for ch in CHAPTERS:                      # 书签：评委可点目录跳章
+        if ch in starts:
+            writer.add_outline_item(ch, starts[ch])
+    numbered = out_dir / "report_numbered.pdf"
+    with numbered.open("wb") as f:
+        writer.write(f)
+    numbered.replace(pdf_path)
+
+
 def main():
     ap = argparse.ArgumentParser(description="把 report/design/*.md 合成 HTML/PDF")
     ap.add_argument("--out-dir", default=str(HERE / "build"))
@@ -176,7 +265,8 @@ def main():
     if proc.returncode != 0 or not pdf_path.exists():
         sys.stdout.write(proc.stdout.decode("utf-8", "replace"))
         sys.exit(f"ERROR: PDF generation failed (edge rc={proc.returncode}). HTML kept: {html_path}")
-    print(f"OK  PDF : {pdf_path} ({pdf_path.stat().st_size / 1024:.0f} KB)")
+    add_page_furniture(pdf_path, edge, out_dir)
+    print(f"OK  PDF : {pdf_path} ({pdf_path.stat().st_size / 1024:.0f} KB，已加页眉/页码)")
 
 
 if __name__ == "__main__":
