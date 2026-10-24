@@ -94,6 +94,7 @@ a { color: #0645ad; text-decoration: none; }
   font-size: 9pt; color: #666; border-bottom: 1px solid #ddd;
   padding-bottom: 6px; margin-bottom: 18px;
 }
+@media print { .generated-note { display: none; } }
 """
 
 
@@ -109,6 +110,32 @@ def find_edge():
     return None
 
 
+def strip_build_meta(text):
+    """去掉每章标题下那段写给队友的「状态 / 原料 / 评分项」元信息。
+
+    这些块以 `>` 开头、以 `---` 结束，留在源文件里给协作用；PDF 是提交件，
+    不能把「初稿」「骨架」「C 不代改」这类内部状态印给评委。
+    """
+    lines = text.splitlines()
+    i = next((k for k, line in enumerate(lines) if line.startswith("# ")), None)
+    if i is None:
+        return text
+    j = i + 1
+    while j < len(lines) and not lines[j].strip():
+        j += 1
+    if j >= len(lines) or not lines[j].startswith(">"):
+        return text
+    k = j
+    while k < len(lines) and lines[k].startswith(">"):
+        k += 1
+    m = k
+    while m < len(lines) and not lines[m].strip():
+        m += 1
+    if m < len(lines) and lines[m].strip() == "---":
+        return "\n".join(lines[:j] + lines[m + 1:])
+    return text
+
+
 def convert(sources):
     md = markdown.Markdown(
         extensions=["tables", "fenced_code", "sane_lists", "attr_list", "pymdownx.tilde"],
@@ -119,7 +146,7 @@ def convert(sources):
         path = DESIGN / name
         if not path.exists():
             sys.exit(f"缺少源文件：{path}")
-        text = path.read_text(encoding="utf-8")
+        text = strip_build_meta(path.read_text(encoding="utf-8"))
         parts.append(f'<section class="chapter" data-source="{name}">\n')
         parts.append(md.convert(text))
         parts.append("\n</section>\n")
@@ -230,7 +257,7 @@ def main():
 <head>
 <meta charset="utf-8">
 <base href="{DESIGN.as_uri()}/">
-<title>后量子密码FPGA加速平台 · 设计报告（草稿）</title>
+<title>后量子密码FPGA加速平台 · 设计报告</title>
 <style>{CSS}</style>
 </head>
 <body>
