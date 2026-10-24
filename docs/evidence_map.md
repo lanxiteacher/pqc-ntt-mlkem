@@ -81,7 +81,7 @@
 | 一键复现检查 | `../skill/scripts/check_reproducible.sh` | `sh skill/scripts/check_reproducible.sh --from-remote` | **通过 4 / 跳过 0 / 失败 0**，退 0（2026-10-05） | 需要联网；**不是**第二台电脑验收 |
 | 非作者全新 clone | `../report/design/05_reproducibility.md` §5.6 | 同上 | C（非代码作者）从远端 clone 独立跑通 | 同一人、另一台机器上的首次；H10 的「第二台电脑」另计 |
 | 同一 PC 干净 clone 18 项 | `../logs/verification_2026-10-17_B_clean_clone.json` | 读 JSON `scope` | 18 项全过 | **不算 H10 换机** |
-| 报告构建 | `../report/build_report.py` | `python report/build_report.py` | Markdown → HTML → PDF（2026-10-23：65 页，页眉/页码 + 8 章节书签自动叠加）；产物在 `report/build/`（不入库） | 需 `markdown` + `pymdownx` + `pypdf` + 无头 Edge |
+| 报告构建 | `../report/build_report.py` | `python report/build_report.py` | Markdown → HTML → PDF（2026-10-24：63 页，页眉/页码 + 8 章节书签自动叠加，构建时剥离内部状态块）；产物在 `report/build/`（不入库） | 需 `markdown` + `pymdownx` + `pypdf` + 无头 Edge |
 | 现场演示 GUI + 一键脚本 | `../demo/gui.html`、`../demo/run_gui.cmd` | 双击 `run_gui.cmd`；或 `node demo/gen_gui_data.mjs` 重生成数据 | 四幕（输入 / 逐层 / 对拍 / 计时资源）；页面自检 32/32 组；对拍 256/256；阴性对照 255/256（1 个红格） | **无板回放**：板上数据来自已提交的 `board_*_txn.txt`，不是现场采集；自动演示约 3 分钟 |
 
 ---
@@ -108,7 +108,7 @@
 | 3 | ML-KEM transcript replay | B | 全部 NTT 逐位一致 | 10/22 | ✅ **10-21 完成**：无板侧（B，10-18）三档 RTL 各 15 次 / 45 次 11,520 系数全对；**真板（A，10-21）三档各 15 次 / 3840 系数、合计 45 次 / 11,520 系数全 PASS**（COM9，50 MHz 基线，逐档烧录；`../logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`） |
 | 4 | 变异测试 + 常数时间 | B | 变异体全捕获；周期恒 904/232/69 | 10/24 | ✅ 10-18（B）：17/17 被捕获；103 组输入三档周期恒定；边界只到 pe4/FULL（`../team/handoff_2026-10-18_B_strengthening.md`） |
 | 5 | 现场演示 GUI + 一键脚本 | C | 双击可跑；无板回放；3 分钟 | 10/24 | ✅ 10-19（`demo/gui.html` + `run_gui.cmd`；无头 Edge 实测） |
-| 6 | 证据地图 + 口径统一 | C+A | 报告/QA/metrics/视频四处一致 | 10/21 | ✅ 10-19（本文件）；报告随正文重建（**2026-10-23 构建 65 页，已加页码/页眉/书签**；**页数以打开 PDF 为准**） |
+| 6 | 证据地图 + 口径统一 | C+A | 报告/QA/metrics/视频四处一致 | 10/21 | ✅ 10-19（本文件）；报告随正文重建（**2026-10-24 构建 63 页，已加页码/页眉/书签**；**页数以打开 PDF 为准**） |
 | 7 | Pareto / ATP / roofline + 功耗估算 | C+A | 一图一表；功耗标估算 | 10/24 | ✅ 10-19（C：`metrics/gen_pareto.mjs` + 三面板图；A：功耗 10-18） |
 
 > 边界：完整 ML-KEM RTL、AXI/PS、radix-4、PYNQ、2/8 折叠档**都不做**，

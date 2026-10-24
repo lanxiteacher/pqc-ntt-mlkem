@@ -38,10 +38,10 @@
       "scope": "report/ ｜ demo/ ｜ docs/ ｜ skill/ ｜ metrics/ ｜ assets/",
       "color": 3,
       "git_authors": ["于宸", "yuchen", "C"],
-      "now": "✅ **2026-10-23：报告 PDF 收口 + 指标一致性审计。** ① PDF 重建 **65 页**：页眉/页脚「第 N 页 / 共 M 页」、封面不编号、8 个章节书签，章节改为每章另起页（修掉 `h1:first-of-type` 在每节都命中的排版 bug）。② 指标链重跑发现 CPU 参考实现读数跨会话漂移 **4.0–5.0 µs**：`bottleneck.py` 改为原始轮次**追加**+累计中位、`--record` 才记新会话；报告统一为 **4.80 µs**（5 次会话 / 15 轮，4.70–5.10），pe1 3.8×、pe4 0.97×、CPU 208,333 NTT/s、216 µJ 同步。③ `demo/data/gui.js` 重生成（4.05→4.80），无头 Edge 自检 32/32。日志 `report/ai-log/2026-10-23_C.md`。",
-      "next": "① 等 A 的 9 段 WAV（10/24 前）→ 定 ffmpeg → 10/25–27 粗剪成片；② A 回传新真板回归后回填 J07；③ 冻结前按最终包重建 PDF / 核对页码与 manifest（J11）；④ 技能包 README 的适用范围/失效条件/复用结果仍待补。",
-      "as_of": "2026-10-23",
-      "source": "report/build/report.pdf（本机产物）；metrics/data/bottleneck_ref_raw.csv；report/ai-log/2026-10-23_C.md"
+      "now": "✅ **2026-10-24：提交口径收口 + 指标链复跑。** ① 报告重建 **63 页**：构建时剥离每章标题下的内部状态块（「骨架/初稿」不再印进 PDF），封面去掉内部路径与队内代号，正文 01–05 的「A/B/C 的…」改为中性表述，附录补代号定义。② 指标链三件重跑：`gen_metrics` / `bottleneck` / `gen_pareto` 与报告一致；发现 `demo/data/gui.js` 的 CPU 参考值停在 **4.82 µs**（报告 4.80），已重生成并自检 32/32。③ 证据地图与提交清单的页数同步。日志 `report/ai-log/2026-10-24_C.md`。",
+      "next": "① 视频改为用户用剪映剪辑，C 侧先交素材清单 / 时间线 / SRT 字幕（等 A 的 9 段 WAV）；② A 回传新真板回归后回填 J07；③ 冻结前按最终包重建 PDF / 核对 manifest（J11）；④ 换目录 clone 复现检查。",
+      "as_of": "2026-10-24",
+      "source": "report/build/report.pdf（本机产物）；metrics/data/bottleneck_ref_raw.csv；report/ai-log/2026-10-24_C.md"
     }
   ],
 
@@ -186,7 +186,9 @@
     {"owner": "C", "text": "★ 2026-10-22 B 审阅口径修复（C 侧）—— ✅ J01 能量结论、J02 三层吞吐、J03 ATP 定义、J04 CPU 基线改 poly_ntt 语义、J05 引脚边界表；报告/图/CSV/提词稿同步并重建 PDF", "state": "done", "as_of": "2026-10-22", "source": "team/review_2026-10-22_B_judge_audit.md §2"},
     {"owner": "C", "text": "★ 2026-10-23 报告 PDF 收口 —— ✅ 65 页、页眉/页码、8 章节书签、每章另起页；构建脚本 `add_page_furniture` 自动叠加", "state": "done", "as_of": "2026-10-23", "source": "report/build_report.py；report/README.md"},
     {"owner": "C", "text": "★ 2026-10-23 指标一致性审计 —— ✅ CPU 参考实现跨会话漂移（4.0–5.0 µs）查明；bottleneck 改追加+累计中位、`--record` 才记新会话；报告统一 4.80 µs，pe1 3.8× / pe4 0.97× / 208,333 NTT/s / 216 µJ 同步", "state": "done", "as_of": "2026-10-23", "source": "metrics/data/bottleneck_ref_raw.csv；report/ai-log/2026-10-23_C.md"},
-    {"owner": "C", "text": "★ 演示视频：文本 10-22 已冻结（回信 A 五个决定）；等 A 10/24 前交 9 段 WAV，C 10/25–27 剪", "state": "doing", "as_of": "2026-10-22", "source": "logs/letter_2026-10-22_C_to_A_voiceover.txt"}
+    {"owner": "C", "text": "★ 2026-10-24 提交口径收口 —— ✅ 构建时剥离内部状态块、封面去内部路径/队内代号、正文 A/B/C 改中性表述；重建 63 页（页眉/页码/8 书签/无空白页）", "state": "done", "as_of": "2026-10-24", "source": "report/build_report.py；report/ai-log/2026-10-24_C.md"},
+    {"owner": "C", "text": "★ 2026-10-24 指标链复跑 —— ✅ 三生成器与报告一致；发现 GUI 数据停在 4.82 µs，已重生成 4.80 并自检 32/32", "state": "done", "as_of": "2026-10-24", "source": "metrics/data/bottleneck.csv；demo/data/gui.js"},
+    {"owner": "C", "text": "★ 演示视频：文本 10-22 已冻结；剪辑改用剪映（用户决定）；C 先交素材清单/时间线/SRT，等 A 的 9 段 WAV", "state": "doing", "as_of": "2026-10-24", "source": "logs/letter_2026-10-22_C_to_A_voiceover.txt"}
   ],
 
   "manual_numbers": [
