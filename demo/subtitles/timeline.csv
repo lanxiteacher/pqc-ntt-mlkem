@@ -1,0 +1,10 @@
+seg,title,audio,audio_seconds,planned_seconds,target_seconds,visual
+0,片头,(缺) *_video_vo_seg0.wav,,19,20,`demo/title.html` 片头卡，1920×1080 满屏静置。
+1,问题,(缺) *_video_vo_seg1.wav,,30,60,`demo/gui.html` 第②幕，点「自动走完」（约 15 s）。念到「你看」时让动画在跑。
+2,我们做了什么,(缺) *_video_vo_seg2.wav,,30,60,`report/figures/architecture.svg` 浏览器全屏放大（别用位图放大）。
+3,演示页对拍,(缺) *_video_vo_seg3.wav,,33,90,`demo/gui.html` 第③幕。静置展示 256/256 → 点「阴性对照」→ 停在 1 个红格上。
+4,验证链,(缺) *_video_vo_seg4.wav,,22,90,终端跑 `refsim/run_fntt_check.sh`（实测 **13 s**，满屏 4096/4096）。
+5,真板子,(缺) *_video_vo_seg5.wav,,42,120,`assets/2026-10-15_A_board_uart_five_transactions_1080p.mp4`（**1 分 12 秒**）。
+6,性能与资源,(缺) *_video_vo_seg6.wav,,46,60,`demo/gui.html` 第④幕 → `folding_sweep.svg` → `pareto_atp_roofline.svg` →
+7,可复现,(缺) *_video_vo_seg7.wav,,15,60,终端跑 `sh skill/scripts/check_reproducible.sh --from-remote`（要联网）。
+8,结尾,(缺) *_video_vo_seg8.wav,,9,30,`demo/title.html?card=outro&ui=0` 结尾卡满屏静置 + 仓库地址。

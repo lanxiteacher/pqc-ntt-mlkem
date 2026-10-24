@@ -1,6 +1,6 @@
 # demo —— 可视化演示页
 
-**主责：C** ｜ 状态：✅ **现场演示 GUI 已加（2026-10-19，出彩组合 #5）**；三页都能跑（2026-09-29）、浅色主题 `?theme=light`（2026-10-02）、视频标题卡 `title.html`（2026-10-13）、录制流水单 + 体检（2026-10-14 / v3 2026-10-21）；**2026-10-21 视频阻塞解除**：旁白定真人、上板录屏 1080p 版入库、提词稿 `narration_teleprompter.md` 已成
+**主责：C** ｜ 状态：✅ **现场演示 GUI 已加（2026-10-19，出彩组合 #5）**；三页都能跑（2026-09-29）、浅色主题 `?theme=light`（2026-10-02）、视频标题卡 `title.html`（2026-10-13）、录制流水单 + 体检（2026-10-14 / v3 2026-10-21）；**2026-10-21 视频阻塞解除**：旁白定真人、上板录屏 1080p 版入库、提词稿 `narration_teleprompter.md` 已成；**2026-10-24 剪辑定为剪映**，新增 `video_cut_sheet.md` + `make_video_srt.py`（字幕预览在 `subtitles/`，等 A 的 WAV 后重跑）
 
 - 输入 256 个系数 → 按一下走一步 → 看到数字在变。
 - 报告配图、视频素材、答辩演示都用它。静态波形截图讲不清「7 层蝶形在干什么」，动画可以。
@@ -18,6 +18,9 @@ demo/
 ├── title.html         ← 视频标题卡（片头 / 结尾两版，段 0 / 段 8 的画面）
 ├── video_script.md    ← 分镜、旁白、录制流水单、口径红线
 ├── narration_teleprompter.md ← 真人配音提词稿（九段逐字 + 目标时长）
+├── video_cut_sheet.md ← 剪映剪辑单（导入清单 / 分段时长 / 字幕对位 / 导出设置）
+├── make_video_srt.py  ← 从提词稿生成剪映字幕（有 WAV 按真实时长，缺则预览）
+├── subtitles/         ← 生成物：seg0–8.srt、all.srt、timeline.csv
 ├── ntt-view.js        ← 正/逆变换两个页面共用的可视化代码（gui.html 也复用主题与导航）
 ├── gen_layers.mjs     ← 生成正/逆变换的逐层中间数据
 ├── gen_compare.mjs    ← 生成对拍页的数据
@@ -235,6 +238,11 @@ node demo/gen_shots.mjs gui      # 只截文件名含 gui 的（2026-10-19 新�
 - 🔄 **完整演示录屏**（不是截图）尚未录 —— **2026-10-21 前置已备齐**：旁白定真人
   （提词稿 `narration_teleprompter.md`）、上板录屏 1080p 版已入库、两条终端链体检 v3 全绿
   （FNTT 13 s / 复现检查 121 s）、标题卡静帧已出；只差按时段录屏与剪辑
+- 🔄 **剪辑交付物（2026-10-24）**：成片改用**剪映**剪（用户决定），本仓库不再装 ffmpeg。
+  已交 [`video_cut_sheet.md`](video_cut_sheet.md)（导入清单 / 分段时长 / 字幕对位 / 导出设置）
+  与 [`make_video_srt.py`](make_video_srt.py)（生成九段 SRT + 合并版 + 时间线）。
+  ⚠️ A 的 9 段 WAV 仍未入库，当前 `subtitles/` 是按目标秒数生成的**预览**；
+  WAV 到齐后重跑脚本即为同步字幕
 - ✅ ~~报告用的静态配图~~ —— **浅底版已成**：`../report/figures/demo_ntt_layer3.png` /
   `demo_compare_pass.png` / `demo_compare_negctrl.png`（`?theme=light` + `clip`，
   由本脚本生成）；折叠度 ↔ 周期数曲线在 `../report/figures/folding_sweep.svg`
