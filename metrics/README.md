@@ -180,7 +180,7 @@ python metrics/bottleneck.py --record    # 追加本轮原始轮次（要留新�
 | CPU | AMD Ryzen 9 7945HX with Radeon Graphics |
 | OS / Python | Windows-11-10.0.26200-SP0 / 3.12.10 |
 | 编译器 | gcc (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r1) 16.2.0（`-O2`；电源模式未控制） |
-| 本机 Python 侧一趟开销 | 6.3 ms（单次会话读数，波动约 ±10%；含陪练自己的向量匹配，是上界） |
+| 本机 Python 侧一趟开销 | 5.8 ms（单次会话读数，波动约 ±10%；含陪练自己的向量匹配，是上界） |
 
 > ⚠️ 软件参考实现那个数**随机器变**（CPU / 编译器 / 优化级）。上表是**本机**的读数，
 > 换机器重跑 `python metrics/bottleneck.py` 会变 —— 它不是设计的属性。
