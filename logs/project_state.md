@@ -82,7 +82,7 @@
 > `logs/verification_2026-10-29_A_j07_board.txt`；详见 `project_state_changelog.md` 2026-10-29。
 > 同日：**视频成片已交**（1:12.21 / H.264 / 86 MB，在 `_submission/`，不进 git）；
 > **J06 约束说明**落 `rtl/vivado/constraint_coverage.md`；**位流包**落 `_submission/bitstream/`。
-> 冻结回归：无板部分（refsim 4/4、host 11/11、clean clone 21/21）与真板部分（三档 6/6、count=0 trace 45 次）**全过** —— §10 只剩「冻结 tag + GitHub 镜像同 commit」；**报告 PDF 已放入**（63 页，含 §4.11 真板 135 次更正），签字材料由用户直接提交。
+> 冻结回归：无板部分（refsim 4/4、host 11/11、clean clone 21/21）与真板部分（三档 6/6、count=0 trace 45 次）**全过** —— §10 只剩「冻结 tag + GitHub 镜像同 commit」；**报告 PDF 已放入**（63 页，含 §4.11 真板 135 次更正）；**承诺书已由用户单独提交**，**技术文档未定稿、报名表未交**。
 > 最终提交目录在 `_submission/`（video / bitstream / photos / report / docs + MANIFEST，16 个文件校验通过）。
 
 | | |
