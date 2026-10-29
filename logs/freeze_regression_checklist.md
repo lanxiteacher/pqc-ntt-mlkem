@@ -147,7 +147,7 @@ python refsim/check_clean_clone.py --output logs/clean_clone_freeze.json
 - [x] 指标生成器重跑后与报告一致（2026-10-29 C；`logs/verification_2026-10-29_C_freeze_metrics.txt`）
 - [x] 真板三档各 6/6（含 `#PMUL TIME 1`）（2026-10-29 A；`rtl/vivado/reports/board_pe{1,4,16}_freeze_txn.txt`）
 - [x] trace 三档各 15/15（45 次 / 11520 系数）（2026-10-29 A；`logs/verification_2026-10-29_A_kem_serial_pe{1,4,16}_freeze/`）
-- [x] 报告 PDF 重建、页码已加、图表无破版（2026-10-29 C 两次：白天 63 页 / 8 书签；**晚间按 §4.11 真板 45→135 更正后再次重建，仍 63 页 / 8 书签**，SHA `29dd304b…e05e`；`logs/verification_2026-10-29_C_freeze_report.txt` §二）
+- [x] 报告 PDF 重建、页码已加、图表无破版（2026-10-29 C 三次：白天 63 页 / 8 书签；**晚间按 §4.11 真板 45→135 更正后再建，仍 63 页**；**末次按 B 新增 §3.10.8 / §4.11.4 的源码重建，64 页 / 8 书签**，SHA `a7a348c7…9ce2`；`logs/verification_2026-10-29_C_freeze_report.txt`）
 - [x] `check_clean_clone.py` 通过（2026-10-29 C 两次：`145b689` 21/21 `logs/clean_clone_freeze.json`；
       **HEAD `66d7912` 再跑 22/22**，多出的 `test_board_run_failures` 来自 B 的 `4fc9e9b`，
       跑完工作区无改动 `logs/clean_clone_2026-10-29_66d7912.json`）
@@ -204,7 +204,7 @@ C 已在 `b5d9731` 上重跑四条入口（`logs/verification_2026-10-29_C_refsi
 - **未做（可选）**：§5.5 40 分钟浸泡（10-21 已有 9,233/9,233）、提频位流上的新驱动冒烟、§2b Phase 2 总入口（B 10-21 已跑，本清单不重复）。
 
 > ⚠️ **仍未冻结**：§10 只剩「冻结 tag + GitHub 镜像同 commit」一条。
-> 报告已在 10-29 晚间按「真板 135 次」更正并重建（63 页，SHA `29dd304b…e05e`），
+> 报告已在 10-29 夜间按「真板 135 次」与 B 的 §3.10.8 / §4.11.4 重建（**64 页**，SHA `a7a348c7…9ce2`），
 > `logs/submission_checklist.md` 第 3 行与 `_submission/README.md` 已同步；
 > 剩下的是用户签字材料 + A 打 tag、推 GitHub 同一 commit。
 

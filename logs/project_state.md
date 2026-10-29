@@ -31,6 +31,8 @@
 > **C 当前状态（10-29）**：冻结 §3/§6/§7 已补跑（指标链与报告一致、报告 63 页 / 8 书签、
 > 全新 clone 21/21）；按 A 的修订单把报告与 `docs/evidence_map.md` 的**真板数 45 → 135
 > （34,560 系数）**改齐并**再次重建 63 页**（SHA `29dd304b…`），已复制进 `_submission/report/`。
+> **20:40 末次重建**：按 B 新增 §3.10.8 / §4.11.4 的源码重建 **64 页 / 8 书签**
+> （SHA `a7a348c7…9ce2`），已替换 `_submission/report/design_report.pdf`；两处新节已抽查未破版。
 > 提交清单第 3 行、`_submission/README.md`、冻结清单 §10 行与状态页已同步。
 > **待办**：PDF 还需 A/用户复制进 `E:\submission\report\`（本机无 E 盘）；签字件跟踪。
 > 日志 `report/ai-log/2026-10-29_C.md`；证据 `logs/verification_2026-10-29_C_freeze_*.txt`。
@@ -92,7 +94,7 @@
 > `logs/verification_2026-10-29_A_j07_board.txt`；详见 `project_state_changelog.md` 2026-10-29。
 > 同日：**视频成片已交**（1:12.21 / H.264 / 86 MB，在 `_submission/`，不进 git）；
 > **J06 约束说明**落 `rtl/vivado/constraint_coverage.md`；**位流包**落 `_submission/bitstream/`。
-> 冻结回归：无板部分（refsim 4/4、host 11/11、clean clone 21/21）与真板部分（三档 6/6、count=0 trace 45 次）**全过** —— §10 只剩「冻结 tag + GitHub 镜像同 commit」；**报告 PDF 已放入**（63 页，含 §4.11 真板 135 次更正）；**承诺书已由用户单独提交**，**技术文档未定稿、报名表未交**。
+> 冻结回归：无板部分（refsim 4/4、host 11/11、clean clone 21/21）与真板部分（三档 6/6、count=0 trace 45 次）**全过** —— §10 只剩「冻结 tag + GitHub 镜像同 commit」；**报告 PDF 已放入**（**64 页**，含 §4.11 真板 135 次更正与 B 的 §3.10.8 / §4.11.4）；**承诺书已由用户单独提交**，**技术文档初稿已成、待全员改心得**，**报名表未交**。
 > 最终提交目录在 `_submission/`（video / bitstream / photos / report / docs + MANIFEST，16 个文件校验通过）。
 
 | | |

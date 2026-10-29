@@ -10,7 +10,7 @@
 |---|---|---|---|---|---|
 | 1 | **参赛作品承诺及使用授权书** | 签字/盖章后扫描或 PDF | ✅ **用户 2026-10-29 已单独提交**（签字/盖章版；仓库无留档） | 你 | 根目录模板仅作参考 |
 | 2 | **技术文档** | DOCX/PDF，按模板 | 🔄 **初稿已成（10-29 夜）**：`_submission/docs/technical_document.docx`，**15 页**、五部分齐、4 表 7 图，各部分字数均在上限内；源 `report/tech_doc/technical_document.md`，重建 `python report/tech_doc/build_tech_doc.py`。**心得体会待三人改口吻**，改后重建再交 | C（起草）+ 全员（心得） | 模板五部分；斜 45° 照片 A 已提供 `assets/2026-10-29_A_board_photo_oblique.jpg` |
-| 3 | **设计报告** | PDF，版式固定、离线可开 | ✅ **2026-10-29 重建版已收到并放入** `_submission/report/design_report.pdf`：**63 页**、SHA-256 `29dd304b…e05e`；已含 §4.11 真板 **135 次** 的更正（PDF 内「135 次」5 处、「23,040」2 处）；**页数以打开 PDF 为准** | C | `report/`；构建 `python report/build_report.py`（需 `pymdownx` + `pypdf` + 无头 Edge） |
+| 3 | **设计报告** | PDF，版式固定、离线可开 | ✅ **2026-10-29 夜最终版**：C 按最新源码重建并替换 `_submission/report/design_report.pdf` —— **64 页**、8 书签、SHA-256 `a7a348c7…9ce2`；含 §4.11 真板 **135 次** 更正与 B 新增的 **§3.10.8 / §4.11.4**（B 本机 64 页候选 `919ac7a5…`，跨机构建字节不同、页数一致）；**页数以打开 PDF 为准** | C | `report/`；构建 `python report/build_report.py`（需 `pymdownx` + `pypdf` + 无头 Edge） |
 | 4 | **演示视频** | 官方 2024/2025 口径：**MP4 / AVC(H.264) / ≤3 分钟 / ≤600 MB**；2026 细则「另行通知」 | ✅ **已交付 2026-10-29**：1:12.21 / H.264 / **86 MB** / 1594×1080 / 30 fps / AAC 192k；成片在 `_submission/video/`（**不进 git**） | 用户 + A | 官方原文与链接见 `logs/requirement_2026-10-29_video_spec.md` |
 | 5 | **源码仓库** | 公开可访问（GitHub 或 Gitee） | 🔄 Gitee 私有、GitHub 私有（已试推） | A | 提交前两处都改 **Public**；GitHub 冻结日推冻结版 |
 | 6 | **工程包** | RTL、构建脚本、`.bit`、综合/实现报告、上位机源码、环境说明 | ✅ 仓库内齐；**`.bit` 不在 git**。官网「全部代码」字段用 `_submission/code/pqc-ntt-mlkem_source_20261029.zip`（**62.9 MB**，HEAD `9c2ea2f`，1,235 条目，SHA `5eafd998…`） | A | `rtl/`、`host/`、`rtl/vivado/reports/`；`.bit` 在 `_runs/pe*/`（本机）；压缩包说明 `_submission/code/README.md` |
@@ -60,4 +60,5 @@
 
 ## 2026-10-29 B 后续报告候选（先于最终集成）
 
-B 补入 §3.10.8 板级服务窗口仿真与 §4.11.4 独立卷积/验收证据后已重建 PDF：64 页、8 书签，SHA-256 `919ac7a57eb4a98274b338d74e394ad69817d5d5d30067e9d3b395b5c77658d1`，64 页已渲染检查。文件在 B 工位工作区同级 `B_release_2026-10-29_board_review/report_final/report.pdf`；复核 `logs/verification_2026-10-29_B_pdf_review.json`。C 应按最新源码重建或接收该件并复核，再替换最终提交目录、重算 MANIFEST。上文 63 页 `29dd304b…` 是 A/C 已收到的旧成品身份，不能据此断言新增段落已集成。详见 `team/handoff_2026-10-29_B_closeout.md`。
+B 补入 §3.10.8 板级服务窗口仿真与 §4.11.4 独立卷积/验收证据后已重建 PDF：64 页、8 书签，SHA-256 `919ac7a57eb4a98274b338d74e394ad69817d5d5d30067e9d3b395b5c77658d1`，64 页已渲染检查。文件在 B 工位工作区同级 `B_release_2026-10-29_board_review/report_final/report.pdf`；复核 `logs/verification_2026-10-29_B_pdf_review.json`。
+✅ **C 已于 10-29 20:40 按同一源码在本机重建并替换**：`_submission/report/design_report.pdf` **64 页 / 8 书签**、SHA-256 `a7a348c737b6c41cbb157bf549fcf3ac01500e305a50ffcaa1ac017434939ce2`；两处新节（第 31 / 45 页）已渲染抽查、表格未破版。跨机构建字节不同属正常，**判据是页数与新增节存在**。旧 63 页 `29dd304b…` 仅作历史身份。详见 `team/handoff_2026-10-29_B_closeout.md`。
