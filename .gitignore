@@ -112,3 +112,9 @@ assets/2026-10-15_A_board_uart_five_transactions.mp4
 
 # ===== report 的构建产物（由 report/build_report.py 生成，不进仓库）=====
 report/build/
+
+# ===== 提交包暂存目录（本机组装，不进仓库）=====
+# 报告 PDF / 视频 / .bit / 签字扫描件都汇总到这里再上传官网。
+# 视频与 PDF 都超过 Gitee 单文件上限，且仓库最终要公开 —— 不能进历史。
+# 组装说明见 _submission/README.md 与 logs/submission_checklist.md。
+_submission/
