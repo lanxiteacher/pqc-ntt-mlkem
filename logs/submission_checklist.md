@@ -8,18 +8,18 @@
 
 | # | 提交件 | 格式/要求 | 现状 | 谁 | 路径/备注 |
 |---|---|---|---|---|---|
-| 1 | **参赛作品承诺及使用授权书** | 签字/盖章后扫描或 PDF | ⬜ **模板未填未签** | 你 | 根目录 `参赛作品承诺及使用授权书（模板）.pdf` |
-| 2 | **技术文档** | DOCX/PDF，按模板 | ⬜ **模板未填** | 你 + C | 根目录 `技术文档（模板）.docx` |
-| 3 | **设计报告** | PDF，版式固定、离线可开 | ✅ **2026-10-29 夜重建（§4.11 真板 45→135 后，63 页 / 8 书签）并复制进暂存包** `_submission/report/design_report.pdf`（SHA-256 `29dd304b…e05e`）；页眉/页码/章节书签齐全；已剥离内部状态块、队内代号与生成提示；**页数以打开 PDF 为准，不要抄**。⚠️ 还要由 A/用户把它放进 `E:\submission\report\`（本机无 E 盘） | C | `report/`；构建 `python report/build_report.py`（需 `pymdownx` + `pypdf` + 无头 Edge） |
-| 4 | **演示视频** | 官方 2024/2025 口径：**MP4 / AVC(H.264) / ≤3 分钟 / ≤600 MB**；2026 细则「另行通知」 | ✅ **已交付 2026-10-29**：1:12.21 / H.264 / **86 MB** / 1594×1080 / 30 fps / AAC 192k；成片在 `E:\submission\`（**不进 git**） | 用户 + A | 官方原文与链接见 `logs/requirement_2026-10-29_video_spec.md` |
+| 1 | **参赛作品承诺及使用授权书** | 签字/盖章后扫描或 PDF | ✅ **用户 2026-10-29 报已自行提交**（签字/盖章版；仓库无留档） | 你 | 根目录模板仅作参考 |
+| 2 | **技术文档** | DOCX/PDF，按模板 | 🔄 **用户 2026-10-29 报「签字材料已交」** —— 若含技术文档则已交；请确认，仓库无留档 | 你 + C | 根目录 `技术文档（模板）.docx` |
+| 3 | **设计报告** | PDF，版式固定、离线可开 | ✅ **2026-10-29 重建版已收到并放入** `_submission/report/design_report.pdf`：**63 页**、SHA-256 `29dd304b…e05e`；已含 §4.11 真板 **135 次** 的更正（PDF 内「135 次」5 处、「23,040」2 处）；**页数以打开 PDF 为准** | C | `report/`；构建 `python report/build_report.py`（需 `pymdownx` + `pypdf` + 无头 Edge） |
+| 4 | **演示视频** | 官方 2024/2025 口径：**MP4 / AVC(H.264) / ≤3 分钟 / ≤600 MB**；2026 细则「另行通知」 | ✅ **已交付 2026-10-29**：1:12.21 / H.264 / **86 MB** / 1594×1080 / 30 fps / AAC 192k；成片在 `_submission/video/`（**不进 git**） | 用户 + A | 官方原文与链接见 `logs/requirement_2026-10-29_video_spec.md` |
 | 5 | **源码仓库** | 公开可访问（GitHub 或 Gitee） | 🔄 Gitee 私有、GitHub 私有（已试推） | A | 提交前两处都改 **Public**；GitHub 冻结日推冻结版 |
 | 6 | **工程包** | RTL、构建脚本、`.bit`、综合/实现报告、上位机源码、环境说明 | ✅ 仓库内齐；**`.bit` 不在 git** | A | `rtl/`、`host/`、`rtl/vivado/reports/`；`.bit` 在 `_runs/pe*/`（本机） |
-| 7 | **bitstream + 烧录说明** | 与报告频率对应，单独打包 | ✅ **2026-10-29 已打包**：6 个位流（50 MHz 三档 + 80/75/62.5 MHz 提频三档）+ `BURN.md` + `SHA256SUMS.txt`，在 `E:\submission\bitstream\`（**不进 git**）；脚本 `sh rtl/vivado/package_submission_bits.sh` 可复跑 | A | `rtl/vivado/submission_burn.md`；`rtl/vivado/package_submission_bits.sh` |
+| 7 | **bitstream + 烧录说明** | 与报告频率对应，单独打包 | ✅ **2026-10-29 已打包**：6 个位流（50 MHz 三档 + 80/75/62.5 MHz 提频三档）+ `BURN.md` + `SHA256SUMS.txt`，在 `_submission/bitstream/`（**不进 git**）；脚本 `sh rtl/vivado/package_submission_bits.sh` 可复跑 | A | `rtl/vivado/submission_burn.md`；`rtl/vivado/package_submission_bits.sh` |
 | 8 | **指标汇总表** | `metrics/` 表头按《指南》7 列 | ✅ 已对齐 | C | `metrics/data/metrics.csv` + `README.md` |
 | 9 | **AI 协作记录** | 每人一份，逐日 | ✅ 已入库（**10-29 核对：A 7 / B 4 / C 25 篇，共 36**；以 `git ls-files 'report/ai-log/*.md'` 为准，别抄死数） | 全员 | `report/ai-log/`；10-09～10-17 空档如实说明 |
 | 10 | **技能包** | `skill/` + README（适用范围/用法/失效条件/复用结果） | ✅ 四类齐（4 提示词 / 5 份 34 条踩坑 / 3 脚本 / 4 模板）+ 两份复用结果；PYNQ 候选未验证，**不宣称加分** | C | `skill/README.md` |
-| 11 | **作品照片** | 作品全局 + 开发板高清特写 | ✅ **2026-10-29 已备两张**：开发板俯视全景（3072×4096）+ 作品全局（终端与板子同框，从录屏第 42 秒提取） | A | `assets/2026-10-29_A_board_photo_full_view.jpg` / `..._setup_overview.jpg`；已复制到 `E:\submission\photos\` |
-| 12 | **报名表** | 官网下载/填写 | ⬜ **未办**（2024/2025 通知材料之一；以 2026 提交页为准） | 用户 | — |
+| 11 | **作品照片** | 作品全局 + 开发板高清特写 | ✅ **2026-10-29 已备两张**：开发板俯视全景（3072×4096）+ 作品全局（终端与板子同框，从录屏第 42 秒提取） | A | `assets/2026-10-29_A_board_photo_full_view.jpg` / `..._setup_overview.jpg`；已复制到 `_submission/photos/` |
+| 12 | **报名表** | 官网下载/填写 | ⬜ **未确认**（用户 10-29 报「签字材料已交」，报名表是否在内待确认） | 用户 | — |
 
 ## 二、提交前必做的核对
 
