@@ -1,0 +1,91 @@
+# J07 真板收口 —— 新驱动三档 6/6 + count=1/2 trace 90 次（2026-10-29）
+
+> 目的：把 B 在 10-22 审阅里点名的 J07 补上 —— ① **新正式驱动**（10-21 的写超时 / 去掉无界 flush）
+> 在真板上跑一遍；② B 10-21 新增的 **count=1 / count=2 两份 trace** 逐档送真板。
+> 本文件只记「怎么跑、跑出了什么、边界在哪」，原始证据在 `logs/verification_2026-10-29_A_kat*/`。
+
+## 一、现场与版本
+
+| 项 | 值 |
+|---|---|
+| 日期 | 2026-10-29（本机时间 19:1x–19:3x） |
+| 串口 | **COM9**（`USB-SERIAL CH340`，现查；口号不写死） |
+| JTAG | `localhost:3121/xilinx_tcf/Digilent/210512180081` → `xc7z020_1` |
+| 仓库版本 | `145b689`（2026-10-24） |
+| 位流 | `rtl/vivado/_runs/pe{1,4,16}/ntt_board.bit`（10-07 那三版 50 MHz 基线） |
+| 位流 SHA-256 | pe1 `037f6edd…b944` ／ pe4 `f549882f…8097` ／ pe16 `c7c03e93…46bc` |
+| 频率 | **50 MHz（人工声明）** —— 工具不测实际时钟；`session.json` 只记位流 SHA |
+
+## 二、跑了什么（每档三步，三档同样）
+
+```bash
+# 1) 烧对应档位的 50 MHz 基线位流
+BIT=rtl/vivado/_runs/pe<N>/ntt_board.bit sh rtl/vivado/run_board_prog.sh
+
+# 2) 新正式驱动：探活 + 五条计算事务（6/6）
+PE=<N> TAG=_j07 PORT=COM9 sh rtl/vivado/run_board_txn_report.sh
+
+# 3) B 10-21 新增的两份 trace（各 15 次正向 poly_ntt）
+python refsim/run_kem_board.py --trace logs/verification_2026-10-21_B_kem_trace_1.json \
+  --output logs/verification_2026-10-29_A_kat1_pe<N> --port COM9 --build <N> \
+  --bitstream rtl/vivado/_runs/pe<N>/ntt_board.bit --frequency-mhz 50 --baud 115200
+python refsim/run_kem_board.py --trace logs/verification_2026-10-21_B_kem_trace_2.json \
+  --output logs/verification_2026-10-29_A_kat2_pe<N> --port COM9 --build <N> \
+  --bitstream rtl/vivado/_runs/pe<N>/ntt_board.bit --frequency-mhz 50 --baud 115200
+```
+
+## 三、结果
+
+### 3.1 新驱动回归（`rtl/vivado/reports/board_pe<N>_j07_txn.txt`）
+
+| 档 | 结果 | 报告 |
+|---|---|---|
+| pe1 | **6 / 6**（`#PING` + `#NTT 1` / `#INTT 1` / `#PMUL NTT 1` / `#PMUL TIME 1` / `#PMUL FULL 1`） | `board_pe1_j07_txn.txt` |
+| pe4 | **6 / 6** | `board_pe4_j07_txn.txt` |
+| pe16 | **6 / 6** | `board_pe16_j07_txn.txt` |
+
+⚠️ 报告里「开机行：没收到 `#RDY`」是**预期**：`#RDY` 在 PL 配置完成时发出，而串口是在那之后才打开的
+（§5.2 写的是「尽力而为」的一行）。不是位流旧、也不是 RTL 故障。
+
+### 3.2 count=1 / count=2 trace（六个 session，全 pass）
+
+| 档 | trace | 调用 | 系数 | 结果 | 证据目录 |
+|---|---|---:|---:|---|---|
+| pe1 | count=1 | 15 | 3,840 | **PASS** | `logs/verification_2026-10-29_A_kat1_pe1/` |
+| pe1 | count=2 | 15 | 3,840 | **PASS** | `logs/verification_2026-10-29_A_kat2_pe1/` |
+| pe4 | count=1 | 15 | 3,840 | **PASS** | `logs/verification_2026-10-29_A_kat1_pe4/` |
+| pe4 | count=2 | 15 | 3,840 | **PASS** | `logs/verification_2026-10-29_A_kat2_pe4/` |
+| pe16 | count=1 | 15 | 3,840 | **PASS** | `logs/verification_2026-10-29_A_kat1_pe16/` |
+| pe16 | count=2 | 15 | 3,840 | **PASS** | `logs/verification_2026-10-29_A_kat2_pe16/` |
+
+- 合计新增 **90 次真板调用 / 23,040 系数**；
+- 叠加 10-21 的 count=0（45 次 / 11,520 系数）⇒ 真板累计 **135 次 / 34,560 系数**，
+  与 B 在 `team/handoff_2026-10-21_B_phase2.md` 里写的目标数一致；
+- 每个 `session.json` 的 `trace_sha256` 与 trace 文件一致：kat1 `50094154…77a9`、kat2 `2885ecf7…`；
+  每个 session 的 `bitstream_sha256` 对应本档位流（见 §一）。
+
+## 四、边界（别把这几条读成更强的结论）
+
+1. **50 MHz 是人工声明**，工具不测实际时钟；位流身份靠 SHA-256，不能证明 FPGA 此刻加载的就是它。
+2. 每次 session 只覆盖 **15 次正向 `poly_ntt`**（keygen/encaps/decaps = 6/3/6），**不含** Keccak、采样、编码、拒绝路径。
+3. 「6/6」= **5 条计算 + 1 条 `#PING` 探活**；`#PING` 不比 256 个系数。
+4. 本轮**没有**重跑 921600、提频位流与 40 分钟浸泡（那些是 10-18 / 10-21 的证据，不因本轮失效）。
+5. 新驱动本轮只验证了**基线三档 6 条命令 + 90 次 trace**；提频位流上的新驱动回归未做（可选）。
+
+## 五、与 J07 原文的对应
+
+B 的 J07 要求（`team/review_2026-10-22_B_judge_audit.md` §J07）：
+「A 接板完成新增两份三档回放（90 次）及新正式驱动回归；保留当前提交、位流 SHA、档位/频率/波特率和原始结果。」
+
+| 要求 | 本轮的落点 |
+|---|---|
+| 新增两份 × 三档 = 90 次回放 | §3.2，六个 session 全 pass |
+| 新正式驱动回归 | §3.1，三档各 6/6 |
+| 位流 SHA / 档位 / 频率 / 波特率 | §一 + 每个 session.json |
+| 原始结果 | `logs/verification_2026-10-29_A_kat*/`（session.json、serial/replay.json、stdout/stderr） |
+
+## 六、复跑注意
+
+- 输出目录**不能已存在**；重跑换目录名（B 的规矩：不覆盖旧证据）。
+- 换档必须先烧对应位流；拿错档的症状是「256 个值全错」，不是串口故障。
+- 串口被占用（上一次 python 没退）时表现为「板子没回话」——先查 `GetPortNames()` 与进程。
