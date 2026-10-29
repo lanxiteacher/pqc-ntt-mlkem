@@ -6,7 +6,7 @@
 >
 > 想知道「某个东西该读哪份」，见本文 **§三**。
 
-更新：2026-10-22（C 口径修订 + B 评委视角审阅回填）
+更新：2026-10-29（A：J07 收口 + 视频成片；C 10-24 口径修订仍在）
 
 > ✅ **2026-10-08：§二 已瘦身完毕。** 原先躺在那里的 **30 条已办结 `- [x]`**（357 行）
 > 已整体搬进 `project_state_changelog.md` 的「从 `project_state.md` §二 搬入的已办结条目」
@@ -65,6 +65,14 @@
 > ⚠️ **2026-10-22 B 审阅 J07 订正**：上面「板子已无后续任务」只指 10-21 当晚的交付范围 ——
 > 新增 count=1/2 两份 trace 的三档真板回放（90 次）与**新正式驱动**的真板回归**仍未做**；
 > 旧 40 分钟浸泡对应的是 A 的 no-flush 路径。证据 `team/review_2026-10-22_B_judge_audit.md` §J07。
+>
+> ✅ **2026-10-29 补：J07 已闭。** 新正式驱动三档各 **6/6**（含 `#PMUL TIME 1`）；
+> B 的 count=1/2 两份 trace 三档共 **90 次 / 23,040 系数全过**，累计真板 **135 次 / 34,560 系数**。
+> 证据 `logs/verification_2026-10-29_A_kat*/`、`rtl/vivado/reports/board_pe*_j07_txn.txt`、
+> `logs/verification_2026-10-29_A_j07_board.txt`；详见 `project_state_changelog.md` 2026-10-29。
+> 同日：**视频成片已交**（1:12.21 / H.264 / 86 MB，在 `E:\submission\`，不进 git）；
+> **J06 约束说明**落 `rtl/vivado/constraint_coverage.md`；**位流包**落 `E:\submission\bitstream\`。
+> 冻结回归无板部分全过（refsim 4/4、host 11/11、clean clone 21/21），**冻结 tag 未打**。
 
 | | |
 |---|---|
