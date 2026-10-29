@@ -10,7 +10,7 @@
 |---|---|---|---|---|---|
 | 1 | **参赛作品承诺及使用授权书** | 签字/盖章后扫描或 PDF | ⬜ **模板未填未签** | 你 | 根目录 `参赛作品承诺及使用授权书（模板）.pdf` |
 | 2 | **技术文档** | DOCX/PDF，按模板 | ⬜ **模板未填** | 你 + C | 根目录 `技术文档（模板）.docx` |
-| 3 | **设计报告** | PDF，版式固定、离线可开 | ✅ **2026-10-29 重建（63 页 / 8 书签）并复制进暂存包** `_submission/report/design_report.pdf`（SHA-256 `ce12e358…14db`）；页眉/页码/章节书签齐全；已剥离内部状态块、队内代号与生成提示；**页数以打开 PDF 为准，不要抄** | C | `report/`；构建 `python report/build_report.py`（需 `pymdownx` + `pypdf` + 无头 Edge） |
+| 3 | **设计报告** | PDF，版式固定、离线可开 | ✅ **2026-10-29 重建（63 页 / 8 书签）并复制进暂存包** `_submission/report/design_report.pdf`（SHA-256 `ce12e358…14db`）；页眉/页码/章节书签齐全；已剥离内部状态块、队内代号与生成提示；**页数以打开 PDF 为准，不要抄**。⚠️ **待 C 把 §4.11 真板 45→135 后重建**（重建后页数可能变） | C | `report/`；构建 `python report/build_report.py`（需 `pymdownx` + `pypdf` + 无头 Edge） |
 | 4 | **演示视频** | 官方 2024/2025 口径：**MP4 / AVC(H.264) / ≤3 分钟 / ≤600 MB**；2026 细则「另行通知」 | ✅ **已交付 2026-10-29**：1:12.21 / H.264 / **86 MB** / 1594×1080 / 30 fps / AAC 192k；成片在 `E:\submission\`（**不进 git**） | 用户 + A | 官方原文与链接见 `logs/requirement_2026-10-29_video_spec.md` |
 | 5 | **源码仓库** | 公开可访问（GitHub 或 Gitee） | 🔄 Gitee 私有、GitHub 私有（已试推） | A | 提交前两处都改 **Public**；GitHub 冻结日推冻结版 |
 | 6 | **工程包** | RTL、构建脚本、`.bit`、综合/实现报告、上位机源码、环境说明 | ✅ 仓库内齐；**`.bit` 不在 git** | A | `rtl/`、`host/`、`rtl/vivado/reports/`；`.bit` 在 `_runs/pe*/`（本机） |
