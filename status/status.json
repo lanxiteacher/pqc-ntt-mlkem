@@ -27,7 +27,7 @@
       "scope": "refsim/ ｜ host/",
       "color": 2,
       "git_authors": ["B", "zzp_330183@qq.com"],
-      "now": "✅ **2026-10-29：host 失败证据保留 + B 发布候选检查。** `board_run.py` 保留 CLI 失败证据，新增 `refsim/accept_b_release.py`、`check_independent_polmul.py`、`measure_board_service.py`、`build_source_candidate.py`（提交 4fc9e9b）；顺带把「装载→读出」口径统一为延迟下界 / 吞吐上界（metrics CSV 与报告 §3.10）。10-21 的三 transcript 135 次 RTL 与三档变异 50/51 结论不变。",
+      "now": "✅ **2026-10-29：host 失败证据保留 + B 发布候选检查。** `board_run.py` 保留 CLI 失败证据，新增 `refsim/accept_b_release.py`、`check_independent_polmul.py`、`measure_board_service.py`、`build_source_candidate.py`（提交 4fc9e9b）；顺带把「装载→读出」口径统一为延迟下界 / 吞吐上界（metrics CSV 与报告 §3.10）。10-21 的三 transcript 135 次 RTL 与三档变异 50/51 结论不变。 20:04 又推 `b5d9731`：三个发布验收脚本加 300 s 超时与失败兜底、`accept_b_release.py` 支持复用已完成的核心验收；未写日志，未动四条入口脚本。",
       "next": "① 复核 A 交回的 count=1/2 真板证据并销 J07；② ai-log 自 10-21 起空档，补当日一篇；③ §5.5 三种错误注入确认是否已被负向测试覆盖；④ H10 仍等第二台电脑。",
       "as_of": "2026-10-29",
       "source": "host/proto.md §5.2；logs/project_state.md §一「还差」"
@@ -38,7 +38,7 @@
       "scope": "report/ ｜ demo/ ｜ docs/ ｜ skill/ ｜ metrics/ ｜ assets/",
       "color": 3,
       "git_authors": ["于宸", "yuchen", "C"],
-      "now": "✅ **2026-10-29：冻结 §3/§6/§7 补跑 + 报告按真板 135 次定稿。** ① §3 三生成器 rc=0，与报告一致（4.80 µs / 0.706× / 904·232·69）；② §6 报告重建 63 页 / 8 书签，两次（白天；晚间按 §4.11 真板 45→135 更正后再建），SHA `29dd304b…`；③ §7 全新 clone 21/21（145b689）；④ 报告与 `docs/evidence_map.md` 六处真板数改为 135 次 / 34,560 系数；⑤ 提交暂存 `_submission/`（报告 PDF 已放，README 与提交清单同步）。",
+      "now": "✅ **2026-10-29：冻结 §3/§6/§7 补跑 + 报告按真板 135 次定稿。** ① §3 三生成器 rc=0，与报告一致（4.80 µs / 0.706× / 904·232·69）；② §6 报告重建 63 页 / 8 书签，两次（白天；晚间按 §4.11 真板 45→135 更正后再建），SHA `29dd304b…`；③ §7 全新 clone 145b689 21/21，HEAD 66d7912 再跑 22/22（多出 B 的 test_board_run_failures，跑完无改动）；④ 报告与 `docs/evidence_map.md` 六处真板数改为 135 次 / 34,560 系数；⑤ 提交暂存 `_submission/`（报告 PDF 已放，README 与提交清单同步）。 20:13 在 B 的 b5d9731 上重跑四条 refsim 入口（rc=0、各 16/16）；20:22 换目录 clone 22/22 覆盖 HEAD。",
       "next": "① 报告 PDF 需 A/用户复制到 E 盘提交包的 report/（本机无 E 盘）；② 跟踪承诺书 / 技术文档 / 报名表签字填写；③ 冻结 tag 后按最终 PDF 复核页数与 SHA。",
       "as_of": "2026-10-29",
       "source": "report/build/report.pdf（本机产物）；metrics/data/bottleneck_ref_raw.csv；report/ai-log/2026-10-29_C.md"

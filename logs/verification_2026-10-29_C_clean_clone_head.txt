@@ -1,0 +1,47 @@
+Fresh clone on this PC: C:\Users\24912\AppData\Local\Temp\pqc_clean_clone_8613mzxm\repo
+RUN kat_build
+PASS kat_build (5.31 s)
+RUN kat_1000
+PASS kat_1000 (1.97 s)
+RUN run_fntt_check
+PASS run_fntt_check (11.52 s)
+RUN run_intt_pwm2_check
+PASS run_intt_pwm2_check (39.41 s)
+RUN run_polmul_check
+PASS run_polmul_check (50.84 s)
+RUN run_ntt_layers
+PASS run_ntt_layers (3.66 s)
+RUN run_proto_accept
+PASS run_proto_accept (3.31 s)
+RUN test_board_pipeline
+PASS test_board_pipeline (2.7 s)
+RUN test_board_reports
+PASS test_board_reports (0.22 s)
+RUN test_board_run_failures
+PASS test_board_run_failures (0.77 s)
+RUN test_bulk_pipeline
+PASS test_bulk_pipeline (4.28 s)
+RUN test_citations
+PASS test_citations (0.09 s)
+RUN test_fake_board
+PASS test_fake_board (0.09 s)
+RUN test_fake_board_data
+PASS test_fake_board_data (0.99 s)
+RUN test_host
+PASS test_host (0.23 s)
+RUN test_link
+PASS test_link (0.11 s)
+RUN test_proto
+PASS test_proto (0.09 s)
+RUN test_serial_write_safety
+PASS test_serial_write_safety (0.25 s)
+RUN test_unpack
+PASS test_unpack (0.16 s)
+RUN parameterized_polmul
+PASS parameterized_polmul (146.67 s)
+RUN fntt_wave
+PASS fntt_wave (0.84 s)
+RUN uart_rtl_fast
+PASS uart_rtl_fast (96.8 s)
+Evidence: logs\clean_clone_2026-10-29_66d7912.json; full logs retained at C:\Users\24912\AppData\Local\Temp\pqc_clean_clone_8613mzxm
+PASS: 22 stages from committed remote sources. Second-PC verification remains pending.
