@@ -1,0 +1,31 @@
+冻结回归 · §6 报告重建（C，2026-10-29）
+================================================
+
+机器：C 工位（唯一有 pymdownx + pypdf + 无头 Edge 的机器）
+基线：HEAD = 145b689，正文自 10-24 起无改动
+依赖：markdown 3.11.1 / pypdf 6.21.1 / Edge --headless=new
+
+【命令】
+  python report/build_report.py
+
+【输出】
+  OK  HTML: report/build/report.html
+  OK  PDF : report/build/report.pdf（3818 KB，已加页眉/页码）
+
+【核对】
+  页数           63（pypdf 实读；与 report/README.md 记录的 10-24 构建一致）
+  书签           8 个（pypdf outline）
+  叠层页数       63（overlay.pdf），与正文页数相等 —— 脚本未报「叠层页数 ≠ 正文页数」
+  内部状态块     report.html 中「状态：」「本文件由脚本生成」「报告前置件」均 0 处
+                 （构建时剥离生效；PDF 版面由 HTML 渲染而来）
+  图表           构建无警告；6 张位图 + 4 张矢量图沿用 10-24 版本
+  文件大小       3,909,909 B（10-24 版 3,917,815 B，差异来自分页微调）
+
+【说明】
+  pypdf 抽中文文本为乱码（Edge 导出的字体无 ToUnicode 映射），
+  因此「内部状态块是否印进 PDF」这一项改在中间产物 report.html 上判，判据等价。
+  页数、书签、叠层页数均直接读 PDF 结构，不受字体影响。
+
+【结论】
+  §6 通过：63 页、8 书签、叠层与正文页数一致、无内部状态块。
+  产物 report/build/report.pdf 为提交件源文件（report/build/ 被 .gitignore 挡，需手动复制进提交包）。

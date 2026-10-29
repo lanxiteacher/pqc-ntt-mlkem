@@ -1,0 +1,21 @@
+冻结回归 · §7 换目录 clone 复现（C，2026-10-29）
+================================================
+
+机器：C 工位；工具链 iverilog 12.0（C:\iverilog\bin）+ gcc 16.2.0 + Python 3.12.10
+命令：
+  export PATH="/c/iverilog/bin:$PATH"
+  python refsim/check_clean_clone.py --output logs/clean_clone_freeze.json
+
+结果（读 logs/clean_clone_freeze.json）：
+  commit                    145b689c5cd4fe7bab57e6bda1788435ae486f10（与本地 HEAD、远端一致）
+  passed                    true
+  steps                     21，全部 rc=0
+  tracked_changes_after_run []（跑完克隆工作区无改动）
+  scope                     fresh remote clone on the SAME physical PC;
+                            not H10 second-PC acceptance
+
+覆盖的阶段：KAT 构建与 1000 条、refsim 四条入口、协议验收台、host 全部
+test_*.py、板级/批量链、参数化三档乘法、FNTT 波形、UART RTL +fast。
+
+判据：通过。⚠️ 只证明「同机干净副本」，**不证明换机兼容**（H10 仍缺第二台实体电脑，
+见 team/plan_B_remaining.md）。

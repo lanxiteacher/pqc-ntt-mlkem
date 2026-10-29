@@ -1,0 +1,53 @@
+冻结回归 · §3 指标链复跑（C，2026-10-29）
+================================================
+
+机器：C 工位 Windows 11，D:\FPGA
+工具：node v24.19.0 / Python 3.12.10 / gcc MinGW-W64 16.2.0
+基线：git pull 后 HEAD = 145b689（与 origin/main 一致，无新提交）
+工作区：开始前 git status --porcelain 为空
+
+【命令与退出码】
+  cd metrics
+  node gen_metrics.mjs     rc=0
+  python bottleneck.py     rc=0（默认不追加新会话，只读累计中位）
+  node gen_pareto.mjs      rc=0
+
+【关键输出】
+  指标表自检：
+    三档 LUT  727 / 2000 / 8922（随折叠度单调上升）
+    三档 DSP  1 / 4 / 16（= 蝶形数）
+    三档 IOB  37 / 37 / 37（判据 1：常数）
+    三档 Fmax 168 / 160 / 154 MHz，WNS -0.936 / -1.260 / -1.507 ns
+    实现状态  Routed / Routed / Routed
+    周期数    904 / 232 / 69（与上游逐档相同）
+    metrics/data/metrics.csv 49 行
+
+  bottleneck：
+    #NTT 1 发 1034 B / 收 1090 B ⇒ 184.4 ms @ 115200 bps
+    #PMUL FULL 1 发 2064 B / 收 1108 B ⇒ 275.3 ms
+    poly_ntt() 本轮中位 4.00 µs；跨 5 次会话 15 轮累计中位 4.80 µs（4.70–5.10）
+    metrics/data/bottleneck.csv 11 行
+
+  pareto：
+    pe1  LUT·cycle 657208 (1.000×)  LUT·µs 8215 (1.000×)
+    pe4  LUT·cycle 464000 (0.706×)  LUT·µs 6187 (0.753×)
+    pe16 LUT·cycle 615618 (0.937×)  LUT·µs 9850 (1.199×)
+    链路屋顶：115200 = 5.42 NTT/s，921600 = 43.39 NTT/s
+    ATP 最低：pe4（0.706× pe1）
+    metrics/data/pareto.csv
+
+【与报告的一致性抽查】
+  report/design/03 中出现 4.80 µs 6 处、0.706× 2 处；metrics/README.md 中 0.706 2 处。
+  报告与 CSV 的周期数、三档资源、Fmax 两行口径一致。
+
+【唯一差异与处置】
+  重跑后 git diff 只有一处：metrics/README.md 与 metrics/data/bottleneck.csv 里的
+  「PC 侧软件开销」5.8 → 5.5 ms。
+  - 该项在 metrics/README.md 自己标明「单次会话读数，波动约 ±10%，随机器变」；
+  - 报告正文不引用这个数（只引用 4.80 µs 的 poly_ntt 语义）；
+  - demo/data/gui.js 当前为 5.8，追这个数会连带重生成 GUI，制造无意义改动。
+  处置：git checkout -- 还原这两处，冻结版保持 HEAD 原值；本文件记录该读数仍会漂。
+  判据核对后结论：指标链与报告一致，**无需提交任何改动**。
+
+【结论】
+  §3 通过：三生成器 rc=0，产物与报告引用数一致，工作区还原后仍为空。

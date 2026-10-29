@@ -278,3 +278,12 @@
 
 证据索引：team/handoff_2026-10-21_B_phase2.md；当前独立任务清单：team/plan_B_remaining.md。
 
+## 2026-10-29 C：冻结回归 §3/§6/§7
+
+10/25–27 冻结窗口内无提交；10-29 补跑只有 C 能独立做的三段（清单见 `logs/freeze_regression_checklist.md`）。
+
+- **§3 指标链**：三生成器 rc=0，与报告一致（4.80 µs / pe4 ATP 0.706× / 904·232·69 / 三档资源）。唯一差异 `PC 侧软件开销` 5.8→5.5 ms，文档自标「单次会话、±10%、随机器变」且报告不引用 —— **还原 HEAD、不提交**，避免把噪声冻结进提交版。证据 `logs/verification_2026-10-29_C_freeze_metrics.txt`。
+- **§6 报告**：重建 63 页、8 书签、叠层页数=正文页数；`状态：`/生成提示/`报告前置件` 在 `report/build/report.html` 中均 0 处。⚠️ pypdf 抽中文文本为乱码（Edge 字体无 ToUnicode），此项改判 HTML，避免假阴性。证据 `logs/verification_2026-10-29_C_freeze_report.txt`。
+- **§7 clone**：远端 `145b689` 全新 clone，21/21 rc=0，跑完工作区无改动（同机副本，非 H10）。证据 `logs/clean_clone_freeze.json`。
+- **不构成冻结**：§10 仍有六项未勾（refsim 四条、host 自测、真板三档、trace 45 次、冻结 tag、GitHub 镜像同 commit）；视频仍等 A 的 9 段 WAV。
+

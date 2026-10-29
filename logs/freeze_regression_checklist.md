@@ -144,14 +144,35 @@ python refsim/check_clean_clone.py --output logs/clean_clone_freeze.json
 - [ ] `git status` 干净（允许本机临时项）
 - [ ] refsim 四条 rc=0、各 16/16
 - [ ] host 全部自测 rc=0（个数按 `ls host/src/test_*.py`）
-- [ ] 指标生成器重跑后与报告一致
+- [x] 指标生成器重跑后与报告一致（2026-10-29 C；`logs/verification_2026-10-29_C_freeze_metrics.txt`）
 - [ ] 真板三档各 6/6（含 `#PMUL TIME 1`）
 - [ ] trace 三档各 15/15（45 次 / 11520 系数）
-- [ ] 报告 PDF 重建、页码已加、图表无破版
-- [ ] `check_clean_clone.py` 通过
+- [x] 报告 PDF 重建、页码已加、图表无破版（2026-10-29 C，63 页 / 8 书签；`logs/verification_2026-10-29_C_freeze_report.txt`）
+- [x] `check_clean_clone.py` 通过（2026-10-29 C，21/21；`logs/clean_clone_freeze.json`）
 - [ ] 冻结 tag 已推、GitHub 镜像推的是同一 commit
 
 ---
 
 冻结 commit：`________________`（跑完填）
 冻结日期：`________________`
+
+---
+
+## 2026-10-29 · C 执行记录（缓冲周第 2 天）
+
+10/25–27 的冻结窗口内没有发生任何提交；10-29 由 C 在**本机**补跑只有 C 能跑的三段。
+
+| 段 | 结果 | 证据 |
+|---|---|---|
+| §3 指标链 | ✅ 三生成器 rc=0；与报告一致（4.80 µs / 0.706× / 904·232·69 / 资源三档） | `logs/verification_2026-10-29_C_freeze_metrics.txt` |
+| §6 报告 | ✅ 63 页、8 书签、叠层页数 = 正文页数、HTML 无内部状态块 | `logs/verification_2026-10-29_C_freeze_report.txt`；产物 `report/build/report.pdf` |
+| §7 clone | ✅ 远端 `145b689` 全新 clone，21/21 rc=0，跑完无改动 | `logs/clean_clone_freeze.json` |
+
+**§3 的一处差异与处置**：`PC 侧软件开销` 重测 5.8 → 5.5 ms。该项文档自标「单次会话、
+±10%、随机器变」，报告不引用，且 `demo/data/gui.js` 仍为 5.8。**还原 HEAD、不提交**，
+理由写在证据文件里。
+
+**仍未做（需要板子或全员）**：§0 冻结 tag、§1 refsim 四条、§2 host 自测、
+§2b Phase 2 入口、§4 真板三档、§5 trace 45 次、§5.5 浸泡；
+以及 §10 的 `git status` 干净、GitHub 镜像同 commit 两条。
+⚠️ 本次只跑 §3/§6/§7 **不构成冻结** —— 清单 §10 仍是六个未勾项。
