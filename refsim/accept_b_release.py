@@ -19,6 +19,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--output', type=Path, required=True)
+    ap.add_argument('--reuse-b-current', type=Path,
+                    help='reuse completed source-matching core/host run; only standalone release tools may differ')
     args = ap.parse_args()
     out = args.output.resolve()
     if out == ROOT or ROOT in out.parents:
@@ -38,6 +40,27 @@ def main():
         ('source_package',['refsim/build_source_candidate.py','--ref',commit,'--output',out/'package'],300),
     ]
     try:
+        if args.reuse_b_current:
+            previous = args.reuse_b_current.resolve()
+            prior = json.loads((previous/'acceptance.json').read_text(encoding='utf-8'))
+            assert prior['status']=='pass'
+            # These independent release tools are not invoked by accept_b_current.
+            allowed = {'refsim/accept_b_release.py','refsim/measure_board_service.py',
+                       'refsim/check_independent_polmul.py','refsim/build_source_candidate.py'}
+            changes=[]
+            hashes = dict(prior['source_sha256'])
+            hashes.update(prior['phase2']['source_sha256'])
+            for name,digest in hashes.items():
+                current=hashlib.sha256((ROOT/name).read_bytes()).hexdigest()
+                if current != digest:
+                    assert name in allowed, 'cannot reuse changed core/host input: '+name
+                    changes.append(name)
+            result['reused_b_current']=dict(path=str(previous),
+                acceptance_sha256=hashlib.sha256((previous/'acceptance.json').read_bytes()).hexdigest(),
+                independently_retested_release_tools=changes)
+            (out/'reused_b_current.json').write_bytes((previous/'acceptance.json').read_bytes())
+            result['steps'].append(dict(name='b_current_reused_source_verified',exit_code=0))
+            tasks=tasks[1:]
         for name,argv,timeout in tasks:
             print('RUN '+name,flush=True)
             with (out/(name+'.txt')).open('wb') as log:

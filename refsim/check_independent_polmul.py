@@ -79,6 +79,8 @@ def main():
                 print(f'PASS independent FULL pe{pe}: 4096 coefficients; sign/value/order controls rejected', flush=True)
         result.update(status='pass', total_coefficients=12288)
     finally:
+        if result['status'] != 'pass':
+            result['status'] = 'fail'
         (out/'acceptance.json').write_bytes((json.dumps(result,indent=2)+'\n').encode('utf-8'))
 
 

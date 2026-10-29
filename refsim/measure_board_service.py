@@ -63,7 +63,11 @@ def main():
                 macro = [] if pe == 1 else [f'-DTB_PE{pe}']
                 run([tool('iverilog'),'-g2012','-s','smoke_tb',*macro,'-o',exe,tb,*rtl],work)
                 try:
-                    stdout = run([tool('vvp'),exe],board/'tb')
+                    proc = subprocess.run([tool('vvp'), str(exe)], cwd=board/'tb',
+                                          capture_output=True, encoding='utf-8', errors='replace', timeout=300)
+                    if proc.returncode:
+                        raise RuntimeError(proc.stdout + proc.stderr)
+                    stdout = proc.stdout
                 except subprocess.TimeoutExpired as exc:
                     partial = exc.stdout or b''
                     (out/f'pe{pe}_timeout.txt').write_bytes(partial.encode('utf-8') if isinstance(partial,str) else partial)
@@ -87,6 +91,8 @@ def main():
                 print(f'PASS pe{pe}: NTT service {windows[0]["total"]} cycles',flush=True)
         result['status']='pass'
     finally:
+        if result['status'] != 'pass':
+            result['status'] = 'fail'
         (out/'acceptance.json').write_bytes((json.dumps(result,indent=2)+'\n').encode('utf-8'))
 
 
