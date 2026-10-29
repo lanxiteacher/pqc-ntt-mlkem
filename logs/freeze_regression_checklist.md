@@ -141,20 +141,20 @@ python refsim/check_clean_clone.py --output logs/clean_clone_freeze.json
 
 ## 10. 放行条件（全 ✅ 才能冻结）
 
-- [ ] `git status` 干净（允许本机临时项）
-- [ ] refsim 四条 rc=0、各 16/16
-- [ ] host 全部自测 rc=0（个数按 `ls host/src/test_*.py`）
+- [x] `git status` 干净（允许本机临时项）（2026-10-29 夜；只剩 `_rebuild_logs/` 与两份空白模板）
+- [x] refsim 四条 rc=0、各 16/16（2026-10-29 A；`logs/verification_2026-10-29_A_freeze_refsim.txt`）
+- [x] host 全部自测 rc=0（11/11；`logs/verification_2026-10-29_A_freeze_host.txt`）
 - [x] 指标生成器重跑后与报告一致（2026-10-29 C；`logs/verification_2026-10-29_C_freeze_metrics.txt`）
-- [ ] 真板三档各 6/6（含 `#PMUL TIME 1`）
-- [ ] trace 三档各 15/15（45 次 / 11520 系数）
+- [x] 真板三档各 6/6（含 `#PMUL TIME 1`）（2026-10-29 A；`rtl/vivado/reports/board_pe{1,4,16}_freeze_txn.txt`）
+- [x] trace 三档各 15/15（45 次 / 11520 系数）（2026-10-29 A；`logs/verification_2026-10-29_A_kem_serial_pe{1,4,16}_freeze/`）
 - [x] 报告 PDF 重建、页码已加、图表无破版（2026-10-29 C，63 页 / 8 书签；`logs/verification_2026-10-29_C_freeze_report.txt`）
 - [x] `check_clean_clone.py` 通过（2026-10-29 C，21/21；`logs/clean_clone_freeze.json`）
-- [ ] 冻结 tag 已推、GitHub 镜像推的是同一 commit
+- [ ] 冻结 tag 已推、GitHub 镜像推的是同一 commit（⚠️ 等最终 PDF 与签字材料定稿；若落实 §4.11 的 45→135 更正，需重建 PDF）
 
 ---
 
-冻结 commit：`________________`（跑完填）
-冻结日期：`________________`
+冻结 commit：`d84f177`（A 侧真板与回归跑在这个提交；C 的 §3/§6 跑在 `145b689` 与当时构建产物上；正式 tag 待定）
+冻结日期：`2026-10-29`（回归执行日；正式 `freeze-2026-11-04` tag 尚未打）
 
 ---
 
@@ -176,3 +176,25 @@ python refsim/check_clean_clone.py --output logs/clean_clone_freeze.json
 §2b Phase 2 入口、§4 真板三档、§5 trace 45 次、§5.5 浸泡；
 以及 §10 的 `git status` 干净、GitHub 镜像同 commit 两条。
 ⚠️ 本次只跑 §3/§6/§7 **不构成冻结** —— 清单 §10 仍是六个未勾项。
+
+---
+
+## 2026-10-29 夜 · A 执行记录
+
+按 C 的 `logs/runbook_2026-10-29_freeze_board.md` 补跑 A 侧四段（提交 `d84f177`，串口 COM9，JTAG `xc7z020_1`）。
+
+| 段 | 结果 | 证据 |
+|---|---|---|
+| §1 refsim 四条 | ✅ 四条 rc=0（前三条各 16/16；`run_ntt_layers` 逐层一致） | `logs/verification_2026-10-29_A_freeze_refsim.txt` |
+| §2 host 自测 | ✅ **11/11** 退出 0 | `logs/verification_2026-10-29_A_freeze_host.txt` |
+| §4 真板三档 | ✅ pe1 / pe4 / pe16 各 **6/6**（含 `#PMUL TIME 1`） | `rtl/vivado/reports/board_pe{1,4,16}_freeze_txn.txt` |
+| §5 count=0 trace | ✅ 三档各 15/15、3,840 系数 = **45 次 / 11,520 系数** | `logs/verification_2026-10-29_A_kem_serial_pe{1,4,16}_freeze/` |
+
+- 位流 SHA：pe1 `037f6edd…` / pe4 `f549882f…` / pe16 `c7c03e93…`（50 MHz 基线，10-07 版）。
+- trace 哈希：`e107dc71…`（10-18 交付的 count=0 trace）。
+- 与 10-29 日间 J07 的 count=1/2（90 次 / 23,040 系数）合起来，真板累计 **135 次 / 34,560 系数**。
+- **未做（可选）**：§5.5 40 分钟浸泡（10-21 已有 9,233/9,233）、提频位流上的新驱动冒烟、§2b Phase 2 总入口（B 10-21 已跑，本清单不重复）。
+
+> ⚠️ **仍未冻结**：§10 只剩「冻结 tag + GitHub 镜像同 commit」一条 —— 等 C 的最终 PDF 与用户的签字材料定稿后再打 tag。
+> C 的 runbook §5.4 写「报告不需要重建」的前提是正文不变；若落实 §4.11 的「真板 45 → 135」更正，
+> **报告需要重建 PDF**，本条与提交清单都要相应更新。

@@ -297,4 +297,6 @@
 - **提交包位流打包**：`rtl/vivado/package_submission_bits.sh` + `submission_burn.md` → `E:\submission\bitstream\`（6 个位流 + BURN.md + SHA256SUMS）；50 MHz 三档 SHA 与 J07 的 session 记录一致。
 - **冻结回归（无板部分）**：refsim 四条 rc=0、host 11/11、clean clone 21/21；metrics 生成器重跑无 diff。本机 `bottleneck.py` 因 MinGW `clock_gettime` 链接失败，指标数字仍以 C 的机器为准。
 - **提交清单更新**：视频规格改成官方口径；补「作品照片」「报名表」两行（2024/2025 通知的必交项，此前漏记）；位流行改为已打包。
+- **冻结真板回归（按 C 的 runbook）**：`d84f177` 上跑 §4/§5 —— 三档各 **6/6**（`board_pe*_freeze_txn.txt`）；count=0 trace 三档 **45 次 / 11,520 系数**全 pass（`logs/verification_2026-10-29_A_kem_serial_pe*_freeze/`）。§10 放行条件只剩「冻结 tag + GitHub 镜像同 commit」；§1 refsim 4/4、§2 host 11/11 也一并补齐（此前只有 C 的 §3/§6/§7）。
+- **最终提交目录整理**：`E:\submission\`（不在 git）—— `video/`（成片 + 旁白）、`bitstream/`（6 个位流 + BURN.md + SHA256SUMS）、`photos/`（开发板全景 + 作品全局）、`report/`（待 C 的 PDF）、`docs/`（待签字材料）、`README.md` + `MANIFEST.sha256`（15 个文件校验通过）。
 
