@@ -1,0 +1,1 @@
+PASS: source=serial, transactions=15, coefficients=3840; no frequency or hardware provenance proof

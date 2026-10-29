@@ -1,0 +1,140 @@
+== freeze board run (2026-10-29) ==
+HEAD: d84f177
+PORT: COM9
+
+===== pe1: program =====
+== 板级：烧 bitstream 进 PL ==
+   bit   /e/FPGA/rtl/vivado/_runs/pe1/ntt_board.bit
+   档位   pe1   （读自 /e/FPGA/rtl/vivado/_runs/pe1/ntt_board.pe）
+          ⚠️ 上位机的装载/读出顺序表要按这一档给，三档不一样
+   注意  位流掉电即失，断电后要重烧
+   启动目录 /e/vivado_scratch   （仓库路径含撇号，必须从仓库外启动）
+
+─── 结果 ───
+RESULT prog HW_SERVER OK
+RESULT prog TARGETS 1
+    target: localhost:3121/xilinx_tcf/Digilent/210512180081
+RESULT prog TARGET_OPEN OK
+    device: arm_dap_0
+    device: xc7z020_1
+RESULT prog DEVICE xc7z020_1
+RESULT prog PROGRAMMED E:/FPGA/rtl/vivado/_runs/pe1/ntt_board.bit
+RESULT prog DONE
+   ✅ PL 配置完成（End of startup status: HIGH）
+
+  日志  /e/FPGA/rtl/vivado/_runs/board_prog.log
+
+  下一步：真串口跑一条事务 —— 串口号先查，别写死：
+    powershell -NoProfile -Command "[System.IO.Ports.SerialPort]::GetPortNames()"
+===== pe1: six commands (_freeze) =====
+  #PING        ✅ PASS
+  #NTT 1       ✅ PASS
+  #INTT 1      ✅ PASS
+  #PMUL NTT 1  ✅ PASS
+  #PMUL TIME 1 ✅ PASS
+  #PMUL FULL 1 ✅ PASS
+
+  报告已落：/e/FPGA/rtl/vivado/reports/board_pe1_freeze_txn.txt
+  （6 / 6 条 PASS；行尾 LF。）
+  报告正文是各条命令的**完整原始输出**（比 10-04 那两份长，因为那两份用的是
+  已经不在仓库里的脚本、只留了摘要）。长一点没关系，别为了对齐行数把证据删掉。
+
+===== pe4: program =====
+== 板级：烧 bitstream 进 PL ==
+   bit   /e/FPGA/rtl/vivado/_runs/pe4/ntt_board.bit
+   档位   pe4   （读自 /e/FPGA/rtl/vivado/_runs/pe4/ntt_board.pe）
+          ⚠️ 上位机的装载/读出顺序表要按这一档给，三档不一样
+   注意  位流掉电即失，断电后要重烧
+   启动目录 /e/vivado_scratch   （仓库路径含撇号，必须从仓库外启动）
+
+─── 结果 ───
+RESULT prog HW_SERVER OK
+RESULT prog TARGETS 1
+    target: localhost:3121/xilinx_tcf/Digilent/210512180081
+RESULT prog TARGET_OPEN OK
+    device: arm_dap_0
+    device: xc7z020_1
+RESULT prog DEVICE xc7z020_1
+RESULT prog PROGRAMMED E:/FPGA/rtl/vivado/_runs/pe4/ntt_board.bit
+RESULT prog DONE
+   ✅ PL 配置完成（End of startup status: HIGH）
+
+  日志  /e/FPGA/rtl/vivado/_runs/board_prog.log
+
+  下一步：真串口跑一条事务 —— 串口号先查，别写死：
+    powershell -NoProfile -Command "[System.IO.Ports.SerialPort]::GetPortNames()"
+===== pe4: six commands (_freeze) =====
+  #PING        ✅ PASS
+  #NTT 1       ✅ PASS
+  #INTT 1      ✅ PASS
+  #PMUL NTT 1  ✅ PASS
+  #PMUL TIME 1 ✅ PASS
+  #PMUL FULL 1 ✅ PASS
+
+  报告已落：/e/FPGA/rtl/vivado/reports/board_pe4_freeze_txn.txt
+  （6 / 6 条 PASS；行尾 LF。）
+  报告正文是各条命令的**完整原始输出**（比 10-04 那两份长，因为那两份用的是
+  已经不在仓库里的脚本、只留了摘要）。长一点没关系，别为了对齐行数把证据删掉。
+
+===== pe16: program =====
+== 板级：烧 bitstream 进 PL ==
+   bit   /e/FPGA/rtl/vivado/_runs/pe16/ntt_board.bit
+   档位   pe16   （读自 /e/FPGA/rtl/vivado/_runs/pe16/ntt_board.pe）
+          ⚠️ 上位机的装载/读出顺序表要按这一档给，三档不一样
+   注意  位流掉电即失，断电后要重烧
+   启动目录 /e/vivado_scratch   （仓库路径含撇号，必须从仓库外启动）
+
+─── 结果 ───
+RESULT prog HW_SERVER OK
+RESULT prog TARGETS 1
+    target: localhost:3121/xilinx_tcf/Digilent/210512180081
+RESULT prog TARGET_OPEN OK
+    device: arm_dap_0
+    device: xc7z020_1
+RESULT prog DEVICE xc7z020_1
+RESULT prog PROGRAMMED E:/FPGA/rtl/vivado/_runs/pe16/ntt_board.bit
+RESULT prog DONE
+   ✅ PL 配置完成（End of startup status: HIGH）
+
+  日志  /e/FPGA/rtl/vivado/_runs/board_prog.log
+
+  下一步：真串口跑一条事务 —— 串口号先查，别写死：
+    powershell -NoProfile -Command "[System.IO.Ports.SerialPort]::GetPortNames()"
+===== pe16: six commands (_freeze) =====
+  #PING        ✅ PASS
+  #NTT 1       ✅ PASS
+  #INTT 1      ✅ PASS
+  #PMUL NTT 1  ✅ PASS
+  #PMUL TIME 1 ✅ PASS
+  #PMUL FULL 1 ✅ PASS
+
+  报告已落：/e/FPGA/rtl/vivado/reports/board_pe16_freeze_txn.txt
+  （6 / 6 条 PASS；行尾 LF。）
+  报告正文是各条命令的**完整原始输出**（比 10-04 那两份长，因为那两份用的是
+  已经不在仓库里的脚本、只留了摘要）。长一点没关系，别为了对齐行数把证据删掉。
+
+===== count=0 trace x3 (_freeze) =====
+   串口   COM9（现查/显式给）
+
+==============================================================
+  pe1：烧位流 → 送 15 次 trace
+==============================================================
+RESULT prog PROGRAMMED E:/FPGA/rtl/vivado/_runs/pe1/ntt_board.bit
+PASS: session saved to logs\verification_2026-10-29_A_kem_serial_pe1_freeze; frequency/loaded bitstream remain operator-declared
+
+==============================================================
+  pe4：烧位流 → 送 15 次 trace
+==============================================================
+RESULT prog PROGRAMMED E:/FPGA/rtl/vivado/_runs/pe4/ntt_board.bit
+PASS: session saved to logs\verification_2026-10-29_A_kem_serial_pe4_freeze; frequency/loaded bitstream remain operator-declared
+
+==============================================================
+  pe16：烧位流 → 送 15 次 trace
+==============================================================
+RESULT prog PROGRAMMED E:/FPGA/rtl/vivado/_runs/pe16/ntt_board.bit
+PASS: session saved to logs\verification_2026-10-29_A_kem_serial_pe16_freeze; frequency/loaded bitstream remain operator-declared
+
+三档完成：每档 15 次 / 3840 系数，三档合计 45 次 / 11520 系数。
+输出目录：logs/verification_2026-10-29_A_kem_serial_pe{1,4,16}_freeze/
+交给 B 复核：session.json + stdout/stderr + serial/replay.json（失败目录也保留）。
+ALL_DONE
