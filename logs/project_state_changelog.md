@@ -287,3 +287,14 @@
 - **§7 clone**：远端 `145b689` 全新 clone，21/21 rc=0，跑完工作区无改动（同机副本，非 H10）。证据 `logs/clean_clone_freeze.json`。
 - **不构成冻结**：§10 仍有六项未勾（refsim 四条、host 自测、真板三档、trace 45 次、冻结 tag、GitHub 镜像同 commit）；视频仍等 A 的 9 段 WAV。
 
+---
+
+## 2026-10-29 A：J07 收口（真板）与提交包
+
+- **J07 收口（真板）**：新正式驱动三档各 **6/6**（含 `#PMUL TIME 1`）；B 10-21 的 count=1/2 两份 trace 逐档送板，六个 session 全 pass，新增 **90 次 / 23,040 系数**；叠加 count=0 的 45 次 / 11,520 ⇒ 真板累计 **135 次 / 34,560 系数**，与 B 交接的目标数一致。证据 `logs/verification_2026-10-29_A_kat*/`、`rtl/vivado/reports/board_pe*_j07_txn.txt`、`logs/verification_2026-10-29_A_j07_board.txt`；提交 `bf88a5f`。边界：50 MHz 人工声明；`#RDY` 未捕获属预期（串口在配置完成后才打开）。
+- **J06 约束覆盖说明落盘**：`rtl/vivado/constraint_coverage.md`。核实报告里两个 WNS 不矛盾 —— `sys_clk` 组 **7.339 / 6.547 / 4.789 ns**（三档同步逻辑），总体 **2.490 ns** 来自 `async_default`（复位类 3,471 端点）；`no_input_delay(2)` = `uart_rxd` / `sys_rst_n`，`no_output_delay(1)` = `uart_txd`，均为异步接口，**不做 IO 延迟约束是有意的**；hold 余量 0.020 / 0.016 / 0.062 ns，MET 但很紧。
+- **赛方视频要求核到原文**：`logs/requirement_2026-10-29_video_spec.md`。《选题指南（AMD）》28 页里**没有**视频要求；2024/2025 大赛通知原文为 **MP4 / AVC(H.264) / 3 分钟以内 / 600 MB 以内**，2026 写「另行通知」。仓库里的「5–10 分钟」**无官方出处**。成片 2026-10-29 验收：1:12.21 / H.264 / 86 MB / 1594×1080 / 30 fps，规格合规；在 `E:\submission\`（不进 git）。
+- **提交包位流打包**：`rtl/vivado/package_submission_bits.sh` + `submission_burn.md` → `E:\submission\bitstream\`（6 个位流 + BURN.md + SHA256SUMS）；50 MHz 三档 SHA 与 J07 的 session 记录一致。
+- **冻结回归（无板部分）**：refsim 四条 rc=0、host 11/11、clean clone 21/21；metrics 生成器重跑无 diff。本机 `bottleneck.py` 因 MinGW `clock_gettime` 链接失败，指标数字仍以 C 的机器为准。
+- **提交清单更新**：视频规格改成官方口径；补「作品照片」「报名表」两行（2024/2025 通知的必交项，此前漏记）；位流行改为已打包。
+

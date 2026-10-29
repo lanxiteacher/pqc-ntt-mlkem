@@ -1,0 +1,80 @@
+A → B、C：J07 收口 + 提交前剩下的事（2026-10-29 夜）
+
+一、B 点名的 J07，今晚在真板上做完了
+
+  板子：COM9（USB-SERIAL CH340，口号现查），JTAG 链 xc7z020_1；
+  仓库 bf88a5f；三档 50 MHz 基线位流（10-07 那版，含 #RDY）。
+
+  每档跑了三步（三档同样）：
+    1) 烧 _runs/pe<N>/ntt_board.bit
+    2) 新正式驱动：PE=<N> TAG=_j07 sh rtl/vivado/run_board_txn_report.sh  → 6/6
+    3) count=1 / count=2 两份 trace 各 15 次 → 全 PASS
+
+  结果：
+    pe1 / pe4 / pe16 各 6/6（含 #PMUL TIME 1）
+    新增 90 次真板调用 / 23,040 系数
+    叠加 10-21 的 count=0（45 次 / 11,520）⇒ 累计 135 次 / 34,560 系数
+
+  证据（已提交并推送）：
+    rtl/vivado/reports/board_pe{1,4,16}_j07_txn.txt
+    logs/verification_2026-10-29_A_kat{1,2}_pe{1,4,16}/
+    logs/verification_2026-10-29_A_j07_board.txt   ← 命令、SHA、边界都在这里
+
+  边界（写进证据文件了）：
+  · 50 MHz 是人工声明；session.json 只记位流 SHA；
+  · 「没收到 #RDY」是预期（#RDY 在 PL 配置完成时发出，串口在那之后才打开）；
+  · 6/6 = 5 条计算 + 1 条 #PING。
+
+  B：请复核六个 session.json 与 serial/replay.json，核完就可以销 J07。
+  C：报告 §4.11 现在写的还是「真板 45 次」，需要改成 135 次（45 + 90），
+     并注明 90 次是 10-29 补的、trace 是 10-21 那两份 count=1/2。
+
+二、J06 的约束说明我写了
+
+  rtl/vivado/constraint_coverage.md —— 回答三件事：
+  · 约束了什么：只有 sys_clk 20 ns + 四个引脚 IOSTANDARD；
+    没有 set_input_delay / set_output_delay / false_path / multicycle。
+  · 没约束的 3 个端口是什么：uart_rxd、sys_rst_n（no_input_delay 2），
+    uart_txd（no_output_delay 1）；为什么异步串口/按键不需要 IO 延迟约束。
+  · 时序怎么读：报告里两个 WNS 不是矛盾 —— sys_clk 组 7.339 ns 是我们自己的同步逻辑，
+    总体 2.490 ns 是 async_default（复位类）组；三档 sys_clk WNS 7.339 / 6.547 / 4.789，
+    失败端点 0，hold 余量 0.020 / 0.016 / 0.062（MET 但很紧，不说「充足」）。
+  C：报告 §3.13/§3.14 或 QA 里可以引这份；B 审阅时也请看一眼口径对不对。
+
+三、赛方对视频的要求，我核出了冲突（C 必看）
+
+  《选题指南（AMD）》28 页里**没有**视频要求；视频要求在大赛通知里：
+  2024 / 2025 两届原文是 **MP4 · AVC(H.264) · 3 分钟以内 · 600 MB 以内**，
+  且「切忌做成 PPT 讲解，重点放在作品演示上」。2026 官方写「另行通知」。
+  原文与链接：logs/requirement_2026-10-29_video_spec.md
+
+  用户已按「单条板级录屏 + 旁白」出了成片：1:12.21、H.264、86 MB、1594×1080、30 fps、
+  AAC 192k —— 规格合规。验收记录与逐帧抽检结论我写在同一份文件里。
+  ⚠️ 成片在 E:\submission\ 下（不进 git）。提交清单里「5–10 分钟」要改成官方口径。
+
+四、提交前还缺的（谁做）
+
+  A（本机）：
+  · 位流包已生成：E:\submission\bitstream\（6 个 .bit + BURN.md + SHA256SUMS.txt），
+    脚本 rtl/vivado/package_submission_bits.sh 可复跑；
+  · 冻结回归的无板部分今晚已跑：refsim 4/4、host 11/11、clean clone 21/21、
+    metrics 生成器重跑无 diff（本机 link bottleneck 失败是 MinGW clock_gettime 差异，
+    数字以 C 的机器为准）；
+  · 还需 A 做：Gitee / GitHub 转公开、真板冻结回归（若坚持 _freeze 命名需再跑 6 分钟）。
+
+  用户：
+  · 承诺书（签字/扫描）、技术文档模板、作品照片（全局 + 板卡特写）、报名表；
+  · 4.2 节里的「报名表」和「照片」是 2024/2025 通知的必交项，我们清单里一直没有。
+
+  C：
+  · 最终 PDF 重建（用当前 63 页口径）+ 带哈希的交付 manifest；
+  · §4.11 的 45 → 135；提交清单视频口径；三处过期文案（video_script §一「8 分钟」、
+    「C 负责剪辑」、分镜表段 5「录屏在 A 处」）—— demo/ 是你的目录，我不动。
+
+五、边界
+
+  · 本轮没有重跑 921600、提频位流与 40 分钟浸泡（10-18 / 10-21 证据不失效）。
+  · 提频位流上的新驱动回归未做（可选）。
+  · H10 仍缺第二台实体电脑；同机 clean clone 21/21 只证明干净副本。
+
+—— A，2026-10-29

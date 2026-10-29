@@ -1,0 +1,14 @@
+== host self-tests (freeze check, 2026-10-29) ==
+HEAD: bf88a5f
+PASS test_board_pipeline.py
+PASS test_board_reports.py
+PASS test_bulk_pipeline.py
+PASS test_citations.py
+PASS test_fake_board.py
+PASS test_fake_board_data.py
+PASS test_host.py
+PASS test_link.py
+PASS test_proto.py
+PASS test_serial_write_safety.py
+PASS test_unpack.py
+failures=0

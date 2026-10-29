@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>演示视频 · 制作台（2026-10-29）</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#14161b; --muted:#5c6675;
+    --line:#e2e6ee; --accent:#3454d1; --accent2:#6d28d9;
+    --ok:#0f7b52; --okbg:#e6f5ee;
+    --rec:#a8590a; --recbg:#fdf1e2;
+    --conv:#1d4ed8; --convbg:#e8eefc;
+    --warn:#b91c1c; --warnbg:#fdeaea;
+    --mix:#6d28d9; --mixbg:#f1eafd;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 8px 24px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.65 "Segoe UI","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  code,.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:.92em}
+  code{background:#eef1f7;border:1px solid #e2e6ee;border-radius:5px;padding:1px 5px;color:#243046}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(52,84,209,.28)}
+  a:hover{border-bottom-color:var(--accent)}
+
+  /* ---------- hero ---------- */
+  .hero{background:radial-gradient(1200px 500px at 15% -10%,#2b3f77 0%,transparent 60%),
+                     linear-gradient(135deg,#0e1526 0%,#182444 55%,#213460 100%);
+        color:#fff;padding:42px 0 34px}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 26px}
+  .hero .wrap{padding-bottom:0}
+  .kicker{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#9fb0d6}
+  .hero h1{margin:10px 0 6px;font-size:40px;line-height:1.15;letter-spacing:-.01em}
+  .hero .sub{margin:0;color:#c6d2ea;font-size:15px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+  .stat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+        border-radius:12px;padding:14px 16px}
+  .stat b{display:block;font-size:26px;line-height:1.2;letter-spacing:-.01em}
+  .stat span{display:block;margin-top:4px;font-size:12.5px;color:#b9c7e2}
+  .stat.warn b{color:#ffb4b4}
+  .stat.ok b{color:#8ee6bd}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);
+      backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:9px 26px}
+  nav a{font-size:13.5px;padding:6px 10px;border-radius:999px;border:1px solid transparent;
+        color:#33405a;border-bottom:none}
+  nav a:hover{background:#eef1f7}
+  nav .spacer{flex:1}
+  button{font:inherit}
+  .btn{font-size:13px;padding:7px 12px;border-radius:9px;border:1px solid #cfd6e3;
+       background:#fff;color:#26324a;cursor:pointer}
+  .btn:hover{border-color:#9fb0d6}
+  .btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  /* ---------- sections ---------- */
+  main{padding:34px 0 10px}
+  section{margin:0 0 40px;scroll-margin-top:70px}
+  h2{font-size:24px;margin:0 0 6px;letter-spacing:-.01em}
+  h2 .num{display:inline-block;min-width:34px;color:#93a0b8;font-weight:600}
+  .lead{color:var(--muted);margin:0 0 18px;max-width:900px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+        box-shadow:var(--shadow);padding:22px}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+
+  /* ---------- verdict ---------- */
+  .verdict{display:grid;grid-template-columns:1.15fr 1fr 1fr 1.15fr;gap:16px}
+  .vc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;
+      box-shadow:var(--shadow);border-top:4px solid var(--line)}
+  .vc.red{border-top-color:var(--warn)}
+  .vc.amber{border-top-color:var(--rec)}
+  .vc.blue{border-top-color:var(--accent)}
+  .vc.green{border-top-color:var(--ok)}
+  .vc h3{margin:0 0 8px;font-size:15px;letter-spacing:.02em;color:var(--muted);font-weight:600}
+  .vc p{margin:0;font-size:15.5px}
+  .vc .big{font-size:19px;font-weight:650;display:block;margin-bottom:6px;line-height:1.45}
+
+  /* ---------- timeline ---------- */
+  .tlbar-top{display:flex;gap:10px;align-items:center;justify-content:space-between;
+             flex-wrap:wrap;margin-bottom:14px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;
+            vertical-align:-1px}
+  .row{display:grid;grid-template-columns:52px 1fr;gap:14px;align-items:start;
+       padding:12px 0;border-top:1px dashed var(--line)}
+  .row:first-of-type{border-top:none}
+  .segno{font:600 22px/1 ui-monospace,Consolas,monospace;color:#aeb8c9;padding-top:2px}
+  .seghead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .seghead b{font-size:16.5px}
+  .tc{margin-left:auto;font:13px/1 ui-monospace,Consolas,monospace;color:#6b7686}
+  .chip{font-size:11.5px;padding:2px 8px;border-radius:999px;white-space:nowrap;
+        border:1px solid transparent;font-weight:600}
+  .chip.ok{color:var(--ok);background:var(--okbg);border-color:#bfe6d4}
+  .chip.rec{color:var(--rec);background:var(--recbg);border-color:#f3d7b3}
+  .chip.conv{color:var(--conv);background:var(--convbg);border-color:#c9d7fb}
+  .chip.warn{color:var(--warn);background:var(--warnbg);border-color:#f6c9c9}
+  .chip.mix{color:var(--mix);background:var(--mixbg);border-color:#ddc9fa}
+  .bar{position:relative;height:24px;background:#eef1f6;border-radius:7px;overflow:hidden;margin-top:7px}
+  .bar .fill{position:absolute;inset:0;background:repeating-linear-gradient(135deg,#e3e8f2 0 6px,#eef1f6 6px 12px)}
+  .bar .nar{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#3454d1,#4b6ee0);
+            border-radius:6px 0 0 6px}
+  .meta{font-size:13px;color:var(--muted);margin-top:6px}
+  .meta .fill-n{color:#41506b;font-weight:600}
+  .meta .k{color:#324056}
+  .total{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+         margin-top:16px;padding-top:14px;border-top:2px solid var(--line);font-size:14px}
+  .total b{font-size:18px}
+
+  /* ---------- audit ---------- */
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  .audit th{text-align:left;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+            color:#7a8598;padding:10px 12px;border-bottom:2px solid var(--line);white-space:nowrap}
+  .audit td{padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  .audit tr:last-child td{border-bottom:none}
+  .audit tr:hover td{background:#fafbfe}
+  .sev{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;display:inline-block}
+  .sev.s1{background:#fdeaea;color:#b91c1c;border:1px solid #f6c9c9}
+  .sev.s2{background:#fdf1e2;color:#a8590a;border:1px solid #f3d7b3}
+  .sev.s3{background:#eef1f7;color:#41506b;border:1px solid #dde3ee}
+  .sev.s4{background:#eef7f2;color:#0f7b52;border:1px solid #c9e8d8}
+  .where{font-size:13px;color:#41506b;white-space:nowrap}
+  .quote{display:block;margin-top:6px;padding:8px 10px;background:#f7f8fb;border-left:3px solid #cfd6e3;
+         border-radius:0 6px 6px 0;color:#3a4457;font-size:13.5px}
+  .fix{color:#0f3b2a}
+  .fix b{color:#0b6b47}
+
+  /* ---------- assets ---------- */
+  .assetlist{list-style:none;margin:0;padding:0}
+  .assetlist li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14.5px}
+  .assetlist li:last-child{border-bottom:none}
+  .assetlist .dot{flex:0 0 22px;height:22px;border-radius:50%;display:grid;place-items:center;
+                  font-size:12px;font-weight:700;margin-top:1px}
+  .dot.has{background:var(--okbg);color:var(--ok);border:1px solid #bfe6d4}
+  .dot.miss{background:var(--warnbg);color:var(--warn);border:1px solid #f6c9c9}
+  .dot.todo{background:var(--recbg);color:var(--rec);border:1px solid #f3d7b3}
+  .assetlist small{display:block;color:var(--muted);font-size:12.5px}
+
+  /* ---------- numbers ---------- */
+  .numtable td:first-child{color:#41506b;white-space:nowrap}
+  .numtable td:nth-child(2){font-family:ui-monospace,Consolas,monospace;font-weight:600;white-space:nowrap}
+  .numtable td:last-child{color:var(--muted);font-size:13px}
+  .numtable td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  .numtable tr:last-child td{border-bottom:none}
+
+  /* ---------- steps / redlines ---------- */
+  .step{display:grid;grid-template-columns:38px 1fr;gap:14px;padding:14px 0;border-top:1px dashed var(--line)}
+  .step:first-child{border-top:none}
+  .step .n{width:32px;height:32px;border-radius:10px;background:#eef1f7;color:#3a4a6b;
+           display:grid;place-items:center;font-weight:700;font-size:14px}
+  .step h4{margin:0 0 4px;font-size:15.5px}
+  .step p{margin:0;color:var(--muted);font-size:14px}
+  .red{border-left:4px solid #e9ecf3;padding:14px 16px;background:#fbfcfe;border-radius:0 12px 12px 0}
+  .red h4{margin:0 0 6px;font-size:14.5px}
+  .red p{margin:0;font-size:13.5px;color:#4b566b}
+  .red.hot{border-left-color:var(--warn);background:#fffafa}
+
+  .footnote{color:var(--muted);font-size:13px;margin-top:10px}
+  footer{border-top:1px solid var(--line);margin-top:24px;padding:26px 0 60px;color:var(--muted);font-size:13px}
+
+  @media (max-width:960px){
+    .stats{grid-template-columns:1fr 1fr}
+    .verdict{grid-template-columns:1fr 1fr}
+    .g2,.g3,.g4{grid-template-columns:1fr}
+    .hero h1{font-size:30px}
+  }
+  @media print{
+    nav,.btn{display:none}
+    body{background:#fff}
+    .card,.vc{box-shadow:none}
+    section{break-inside:avoid}
+    .hero{background:#0e1526}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">后量子密码FPGA加速平台 · 初赛实物演示视频</div>
+    <h1>演示视频 · 制作台</h1>
+    <p class="sub">2026-10-29 盘点 · 依据仓库实况（<span class="mono">145b689</span>，2026-10-24）与 <code>assets/</code> 实际文件，不是记忆。</p>
+    <div class="stats">
+      <div class="stat" id="cd-box"><b id="cd">—</b><span>距提交 11-04 18:00</span></div>
+      <div class="stat ok"><b>已有 15 / 需补 6</b><span>素材盘点</span></div>
+      <div class="stat"><b>4:06</b><span>九段旁白合计（883 字）</span></div>
+      <div class="stat warn"><b>1 处硬错</b><span>段 5 数量说错</span></div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="wrap">
+    <a href="#verdict">结论</a>
+    <a href="#timeline">时间轴</a>
+    <a href="#audit">脚本问题 14 条</a>
+    <a href="#assets">素材</a>
+    <a href="#numbers">数字速查</a>
+    <a href="#assemble">怎么拼</a>
+    <a href="#redlines">六条红线</a>
+    <a href="#today">今天做什么</a>
+    <span class="spacer"></span>
+    <button class="btn" onclick="window.print()">打印 / 导出 PDF</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="simple" style="margin-top:18px">
+    <div style="background:#f2fbf6;border:1px solid #bfe6d4;border-left:6px solid #0f7b52;border-radius:14px;padding:20px;box-shadow:var(--shadow)">
+      <div style="font:700 12.5px/1 ui-monospace,Consolas,monospace;letter-spacing:.08em;color:#0f7b52;text-transform:uppercase">推荐做法 · 单条录屏 + 旁白（2026-10-29 用户定）</div>
+      <p style="margin:10px 0 12px;font-size:16px">
+        不切片头 / 问题 / 方案，直接用 10-15 那段板级录屏（<b>1:12</b>）+ 一条旁白讲功能。
+        <b>总长 ≈ 1:15–1:30</b>，无论 2026 细则最终是 3 分钟还是 5–10 分钟都合规。
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div>
+          <h4 style="margin:0 0 8px;font-size:15px;color:#0f5132">旁白（约 60 秒，照读）</h4>
+          <div style="font-size:14.5px;line-height:1.75;color:#233">
+            <p style="margin:0 0 7px"><span style="color:#0f7b52;font-weight:700">〔画面还没开始跑〕</span>这是一块 Zynq-7020 开发板，上面跑的是我们自己写的 NTT 加速核——后量子密码 ML-KEM 里最耗时的一步。</p>
+            <p style="margin:0 0 7px"><span style="color:#0f7b52;font-weight:700">〔发出 PING〕</span>先探活：主机发一条 PING，板子回一行就绪信息。</p>
+            <p style="margin:0 0 7px"><span style="color:#0f7b52;font-weight:700">〔#NTT 1〕</span>第一条，正向 NTT。256 个系数在板上算完回传，电脑这边和黄金向量逐位比——256 个全中。</p>
+            <p style="margin:0 0 7px"><span style="color:#0f7b52;font-weight:700">〔#INTT 1〕</span>第二条，逆向 NTT，同样 256 个全中。</p>
+            <p style="margin:0 0 7px"><span style="color:#0f7b52;font-weight:700">〔#PMUL NTT 1〕</span>第三条，点乘：两路输入都已经在 NTT 域，板子直接逐系数相乘。</p>
+            <p style="margin:0 0 7px"><span style="color:#0f7b52;font-weight:700">〔#PMUL FULL 1〕</span>第四条，完整多项式乘法：两路都在时域，板子做两次 NTT、一次点乘、一次逆 NTT，结果回到时域，256 个全中。</p>
+            <p style="margin:0"><span style="color:#0f7b52;font-weight:700">〔结尾〕</span>屏幕上这一趟约 0.2 秒，几乎全是串口搬运的时间；核本身只要十几微秒。一条探活加四条计算，原始输出都在仓库里。</p>
+          </div>
+        </div>
+        <div>
+          <h4 style="margin:0 0 8px;font-size:15px;color:#0f5132">五步做完（约 40 分钟）</h4>
+          <ol style="margin:0 0 12px;padding-left:20px;font-size:14.5px;line-height:1.8;color:#233">
+            <li>用已入库的 <code>assets/2026-10-15_A_board_uart_five_transactions_1080p.mp4</code>（1:12）。</li>
+            <li>先从头看一遍原片，把上面七段旁白的触发点对上（PING / NTT / INTT / PMUL NTT / PMUL FULL）。</li>
+            <li>一条完整录旁白（手机的录音机就行），读错整条重来，不硬剪。</li>
+            <li>剪映：视频放 V1，人声放 A1，起点对齐；人声归一化；画面等比缩放 + 模糊背景填充（<b>不要裁切</b>，终端和板子都要在）。</li>
+            <li>导出 <b>H.264 / 1080p / 30fps</b>，时长 ≈1:15–1:30，≤600 MB；文件名待官方规则（暂用 <code>demo_video_2026-10-29.mp4</code>）。</li>
+          </ol>
+          <p style="margin:0;font-size:13.5px;color:#5c6675">
+            三条不能错：① 说「<b>四条计算</b>」，不是五条；② 不提 6/6（这一版不涉及 10-18 复跑，更安全）；③ 导出选 H.264，别用 HEVC。
+          </p>
+        </div>
+      </div>
+      <p style="margin:12px 0 0;font-size:13px;color:#5c6675">
+        下面的九段方案是<b>备选</b>：只有在 2026 细则确认允许 5 分钟以上、且我们想把验证链和资源图也放进去时才用。1:12 这条已经覆盖了「真板子 + 真串口 + 四条计算逐位对拍」——初赛视频的核心就这些。
+      </p>
+    </div>
+  </section>
+
+  <section id="spec-warning" style="margin-top:18px">
+    <div style="background:#fff5f5;border:1px solid #f3c2c2;border-left:6px solid #b91c1c;border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)">
+      <div style="font:700 12.5px/1 ui-monospace,Consolas,monospace;letter-spacing:.08em;color:#b91c1c;text-transform:uppercase">2026-10-29 新发现 · 时长口径待确认</div>
+      <p style="margin:10px 0 6px;font-size:16px">
+        <b>《选题指南》里没有视频要求</b>；视频要求写在大赛通知里。能核到的 <b>2024 / 2025 两届</b>原文一致：
+        <b>MP4 · 编码 AVC(H.264) · 3 分钟以内 · 600 MB 以内</b>，且明确「切忌做成 PPT 讲解，重点放在作品演示上」。
+        2026（第九届）官方写的是「<b>作品提交要求（另行通知）</b>」，公开渠道尚未见细则。
+      </p>
+      <p style="margin:0 0 6px;font-size:15px;color:#7f1d1d">
+        ⇒ 本页的 <b>7:40 / 9:50</b> 是按「5–10 分钟」旧假设排的；<b>若 2026 沿用 3 分钟，全片要重排</b>（旁白 4:06 → 约 2:30）。
+        取得 2026 原文前，先按 3 分钟准备一版。
+      </p>
+      <p style="margin:0;font-size:13.5px;color:#5c6675">
+        原文、页码与链接：<a href="../logs/requirement_2026-10-29_video_spec.md">logs/requirement_2026-10-29_video_spec.md</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 1 结论 ============ -->
+  <section id="verdict">
+    <h2><span class="num">01</span>先看这四条</h2>
+    <p class="lead">脚本整体是能用的：分镜、旁白、剪辑单、字幕生成器都在，数字绝大多数对得上报告。问题集中在一处硬错、一处画幅、两处措辞和时长账。</p>
+    <div class="verdict">
+      <div class="vc red">
+        <h3>硬错 · 必须改</h3>
+        <span class="big">段 5 说「PING 加五条计算事务」，录屏里只有四条</span>
+        <p>你 10-15 录的是 <code>#PING</code> + <code>#NTT 1</code> / <code>#INTT 1</code> / <code>#PMUL NTT 1</code> / <code>#PMUL FULL 1</code>；<code>#PMUL TIME 1</code> 当天发不出数据，没录。录旁白前必须改，否则画面和台词打架。</p>
+      </div>
+      <div class="vc amber">
+        <h3>最大缺口</h3>
+        <span class="big">9 段旁白，一条 WAV 都没有</span>
+        <p>其余素材已到齐或可当场录。视频链现在唯一的“人”的阻塞就是你录音；字幕、成片都排在它后面。</p>
+      </div>
+      <div class="vc blue">
+        <h3>时长账</h3>
+        <span class="big">按分镜上限 9:50 剪，离 10 分钟只剩 10 秒</span>
+        <p>段 4 素材 13 秒 + 旁白 22 秒（顺序铺也只要 35 秒），却给了 90 秒；段 8 有 21 秒是静止结尾卡。建议按 <b>7:40 版</b>剪，余量留给自己。<br><span style="color:#b91c1c">⚠️ 前提是「5–10 分钟」口径成立；若 2026 沿用官方 3 分钟，见顶部红框。</span></p>
+      </div>
+      <div class="vc green">
+        <h3>建议</h3>
+        <span class="big">走“重录板级”版：一趟插板，四件事收口</span>
+        <p>J07 本来就要插板跑新驱动；顺手用 <b>1080p 屏幕录制</b>录一段六条命令 6/6，同时解决：手机画幅、缺 TIME、10-18 的 6/6 没有画面、J07 硬证据。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 时间轴 ============ -->
+  <section id="timeline">
+    <h2><span class="num">02</span>时间轴：九段怎么排</h2>
+    <p class="lead">条长 = 该段时长（最长段 120 秒为满格）；深蓝 = 旁白，斜纹 = 画面填充。可切换“建议版”和“分镜上限版”。</p>
+    <div class="card">
+      <div class="tlbar-top">
+        <div>
+          <button class="btn on" data-plan="b">建议版 7:40</button>
+          <button class="btn" data-plan="a">分镜上限 9:50</button>
+        </div>
+        <div class="legend">
+          <span><i style="background:linear-gradient(90deg,#3454d1,#4b6ee0)"></i>旁白</span>
+          <span><i style="background:repeating-linear-gradient(135deg,#e3e8f2 0 6px,#eef1f6 6px 12px);border:1px solid #dde3ee"></i>画面填充</span>
+          <span>总长 <b id="tl-total">7:40</b> · 旁白 <b>4:06</b></span>
+        </div>
+      </div>
+      <div id="timeline-rows"></div>
+      <div class="total">
+        <span>合计：<b id="tl-total2">7:40</b>　（旁白 4:06 + 画面 3:34）</span>
+        <span>下限 5:00 · 上限 10:00 —— <b id="tl-margin">余量 2:20</b></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 脚本问题 ============ -->
+  <section id="audit">
+    <h2><span class="num">03</span>脚本问题清单（逐条核过源文件）</h2>
+    <p class="lead">核的是 <code>demo/video_script.md</code>、<code>demo/narration_teleprompter.md</code>、<code>demo/video_cut_sheet.md</code> 三份，对照报告、板级报告、指标 CSV、10-15 交付信。<b>1 条硬错、5 条应改、6 条建议、2 条可选。</b></p>
+    <div class="card" style="padding:8px 18px 18px">
+      <table class="audit">
+        <thead>
+          <tr><th style="width:88px">级别</th><th style="width:96px">位置</th><th>问题与证据</th><th style="width:38%">改法</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="sev s1">🔴 硬错</span></td>
+            <td class="where">段 5<br>旁白 + 分镜</td>
+            <td><b>「PING 加五条计算事务」——实际只有四条。</b>
+              <span class="quote">现文：「这段录屏拍于 10 月 15 日：PING 加五条计算事务，每条都把 256 个系数逐位比一遍。」<br>
+              实录：<code>#PING</code> / <code>#NTT 1</code> / <code>#INTT 1</code> / <code>#PMUL NTT 1</code> / <code>#PMUL FULL 1</code>；<code>#PMUL TIME 1</code> 发不出数据，未录。<br>
+              证据：<code>logs/letter_2026-10-15_A_to_C_assets.txt</code> §一.3「没录 #PMUL TIME 1」</span></td>
+            <td class="fix"><b>改成「PING 加四条计算事务」</b>，并补一句「第六条 <code>#PMUL TIME</code> 当时卡在向量文件，10 月 18 日才补上」；或者干脆重录这一段。</td>
+          </tr>
+          <tr>
+            <td><span class="sev s2">🟠 应改</span></td>
+            <td class="where">段 5</td>
+            <td><b>「10-18 三档 6/6」只有文字，没有画面。</b>画面是 10-15 的 pe1 五条命令；评委看到的是旧状态，「6/6」只能靠听。
+              <span class="quote">现文：「10 月 18 日复跑，pe1、pe4、pe16 三档，每档六条命令全部 6/6。」</span></td>
+            <td class="fix">加角标/字幕：<b>「10-18 复跑：三档各 6/6（原始报告在仓库 <code>rtl/vivado/reports/board_pe*_txn.txt</code>）」</b>；推荐重录一段真 6/6。</td>
+          </tr>
+          <tr>
+            <td><span class="sev s2">🟠 应改</span></td>
+            <td class="where">段 5<br>画面</td>
+            <td><b>画幅不是 16:9。</b>手机横屏拍屏幕 + 板子，实际 <b>1594×1080</b>（母版同）；直接放进 1920×1080 工程会左右黑边。</td>
+            <td class="fix">放大到铺满（上下各裁约 110 px，先确认终端文字可读），或加暗底/模糊填充；<b>不要拉伸</b>。最好重录屏幕。</td>
+          </tr>
+          <tr>
+            <td><span class="sev s2">🟠 应改</span></td>
+            <td class="where">段 6<br>旁白</td>
+            <td><b>「两个不同的瓶颈」——板级那条不是瓶颈。</b>板级 WNS <b>+7.339 ns（MET）</b>，余量很大；核的 −0.936 ns 是故意收紧 5 ns 约束后的值，也不是“坏”。
+              <span class="quote">现文：「都说『瓶颈是布线不是逻辑』，但是两个不同的瓶颈。」</span></td>
+            <td class="fix">改成「<b>两条最长路径</b>分别在核的蝶形、板级的协议状态机」，结论仍是“布线占大头”，但不说成板级有瓶颈。</td>
+          </tr>
+          <tr>
+            <td><span class="sev s2">🟠 应改</span></td>
+            <td class="where">段 5<br>旁白</td>
+            <td><b>「31 毫秒往返」口径不准。</b>31 ms 是<b>一次</b> <code>#PING</code> 往返；这趟事务的墙钟差额约 <b>55 ms</b>（约 2 个往返，另有重叠）。
+              <span class="quote">现文：「剩下的时间卡在板载 USB 转串口的 31 毫秒往返上。」<br>证据：<code>rtl/vivado/high_baud_demo.md</code> §一</span></td>
+            <td class="fix">「每次 USB 往返约 <b>31 毫秒</b>，这趟实际付了约 <b>55 毫秒</b>」——数字都对得上报告。</td>
+          </tr>
+          <tr>
+            <td><span class="sev s2">🟠 应改</span></td>
+            <td class="where">整片<br>时长</td>
+            <td><b>上限版 9:50 太贴天花板</b>（离 10:00 只剩 10 秒）。段 4 只有 13 秒素材 + 22 秒旁白，却排 90 秒；段 8 旁白 9 秒，却排 30 秒。</td>
+            <td class="fix">按 <b>7:40 版</b>剪：段 4 → 55 s、段 8 → 20 s、段 3 → 75 s；余量 2:20，超时也有得砍。</td>
+          </tr>
+
+          <tr>
+            <td><span class="sev s3">🟡 建议</span></td>
+            <td class="where">段 4</td>
+            <td><b>只提「十六组 4096 个系数」，落后于 Phase 2。</b>现在 NTT 向量已扩到 <b>100 组（100/100）</b>、变异 51 组、trace 三份。段 4 反正还没录。</td>
+            <td class="fix">加一句「后来把 NTT 向量扩到 <b>100 组</b>，也全过」——比只报 16 组有分量。</td>
+          </tr>
+          <tr>
+            <td><span class="sev s3">🟡 建议</span></td>
+            <td class="where">段 6</td>
+            <td><b>「用面积乘周期算，最低的是 pe4」只说了 LUT·cycle。</b>B 的 J03 要求区分 LUT·cycle 与 LUT·µs，并限定“三档里、只计 LUT”。</td>
+            <td class="fix">加半句：「按实际频率算，pe4 也是最低（LUT·µs 0.753×）」；主语说「三档里」。</td>
+          </tr>
+          <tr>
+            <td><span class="sev s3">🟡 建议</span></td>
+            <td class="where">段 6</td>
+            <td><b>「提频多 0.127 W、MMCM 0.116 W」是 pe1 的数。</b>pe4 是 +0.130（MMCM 0.116）、pe16 是 +0.105（MMCM 0.105）。</td>
+            <td class="fix">加「<b>以 pe1 为例</b>」，别让评委以为是三档通用。</td>
+          </tr>
+          <tr>
+            <td><span class="sev s3">🟡 建议</span></td>
+            <td class="where">段 2</td>
+            <td><b>「做到 16 个蝶形要 397 个引脚」缺限定。</b>397 是<b>上游那份实现直接当器件顶层</b>的引脚数；核若接在片内总线，不需要这些引脚。B 的 J05 点过这条。</td>
+            <td class="fix">改成「上游那份 16 蝶形实现直接当顶层，要 <b>397</b> 个引脚，而芯片只有 <b>125</b>」。</td>
+          </tr>
+          <tr>
+            <td><span class="sev s3">🟡 建议</span></td>
+            <td class="where">文档<br>3 处</td>
+            <td><b>同一份文件里有三处过期</b>：① §一「旁白正常语速约 <b>8 分钟</b>」→ 实际 4:06；② 头部「剪辑用系统自带方案」+ §五「<b>C 负责剪辑</b>」→ 已定剪映；③ 分镜表段 5「录屏在 A 处（112 MB，不进仓库）」→ 1080p 版已入库。</td>
+            <td class="fix">三处一起改。⚠️ <code>demo/</code> 是 C 的主责目录，改之前先和 C 对齐（我可以把改法写成一封信）。</td>
+          </tr>
+          <tr>
+            <td><span class="sev s3">🟡 建议</span></td>
+            <td class="where">段 5<br>素材</td>
+            <td><b>「说到 921600 时切数字表/报告截图」——这张图还不存在。</b></td>
+            <td class="fix">从 <code>high_baud_demo.md</code> 的对照表截一张 1920 宽 PNG，或用报告 §3.10.4 页截图。</td>
+          </tr>
+
+          <tr>
+            <td><span class="sev s4">🟢 可选</span></td>
+            <td class="where">段 8</td>
+            <td><b>片尾写「全部开源」，但仓库现在是私有的。</b>地址只给了 Gitee。评委若在评审期点开，会打不开。</td>
+            <td class="fix">提交前把 Gitee（和 GitHub）转 Public；可选补一行镜像地址。</td>
+          </tr>
+          <tr>
+            <td><span class="sev s4">🟢 可选</span></td>
+            <td class="where">段 3/4/7</td>
+            <td><b>画面变化少。</b>段 3 有约 57 秒静止网格，段 4/7 是终端等结果。</td>
+            <td class="fix">段 3 压到 70 秒；段 4 可插 B 的波形图 <code>report/figures/refsim_wave_fntt_compare.png</code> 当 B-roll。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="footnote">说明：以上是审阅结论，<b>没有改动任何脚本文本</b>。红框那条（段 5 数量）改起来只有一句话，但录完音再改就要整段重录。</p>
+  </section>
+
+  <!-- ============ 4 素材 ============ -->
+  <section id="assets">
+    <h2><span class="num">04</span>素材：已有的 / 还缺的</h2>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card">
+        <h3 style="margin:0 0 10px;font-size:17px;color:var(--ok)">✅ 已在仓库，可直接用（15）</h3>
+        <ul class="assetlist">
+          <li><span class="dot has">✓</span><div>九段旁白文本（2026-10-22 冻结）<small><a href="../demo/narration_teleprompter.md">demo/narration_teleprompter.md</a> · 883 字 ≈ 4:06，附读音表</small></div></li>
+          <li><span class="dot has">✓</span><div>分镜表 + 录制流水单 + 实测时长<small><a href="../demo/video_script.md">demo/video_script.md</a> §二 / §四（段 4 = 13 s、段 7 = 121 s）</small></div></li>
+          <li><span class="dot has">✓</span><div>剪映剪辑单（导入 / 对位 / 导出）<small><a href="../demo/video_cut_sheet.md">demo/video_cut_sheet.md</a></small></div></li>
+          <li><span class="dot has">✓</span><div>上板录屏 1080p（1:12，段 5 的核心）<small><a href="../assets/2026-10-15_A_board_uart_five_transactions_1080p.mp4">assets/…_1080p.mp4</a> · 1594×1080 / 30fps / 14.9 MB</small></div></li>
+          <li><span class="dot has">✓</span><div>上板录屏母版（画质更高）<small><code>assets/…_five_transactions.mp4</code> · 112 MB，不进 git，本机</small></div></li>
+          <li><span class="dot has">✓</span><div>片头 / 结尾标题卡静帧<small><a href="../assets/2026-10-21_C_video_title_intro.png">intro</a> · <a href="../assets/2026-10-21_C_video_title_outro.png">outro</a>（1920×1080，已隐藏按钮）</small></div></li>
+          <li><span class="dot has">✓</span><div>GUI 四幕截图 ×5<small><a href="../assets/2026-10-19_C_gui_act2_layer4.png">act2</a> · <a href="../assets/2026-10-19_C_gui_act3_match_all_pass.png">act3 全绿</a> · <a href="../assets/2026-10-19_C_gui_act3_negative_control.png">act3 红格</a> · <a href="../assets/2026-10-19_C_gui_act4_timing_resources.png">act4</a></small></div></li>
+          <li><span class="dot has">✓</span><div>关键路径截图 ×2（板级 / 核）<small><a href="../assets/2026-10-15_A_critical_path_board_pe1.png">board</a> · <a href="../assets/2026-10-15_A_critical_path_core_pe1.png">core</a></small></div></li>
+          <li><span class="dot has">✓</span><div>矢量图 3 张（需转 PNG 或录屏）<small><code>report/figures/architecture.svg</code> · <code>folding_sweep.svg</code> · <code>pareto_atp_roofline.svg</code></small></div></li>
+          <li><span class="dot has">✓</span><div>可交互演示页（录屏源）<small><a href="../demo/gui.html">demo/gui.html</a> 四幕（<code>?auto=1</code> 约 2:22）· <a href="../demo/title.html">title.html</a></small></div></li>
+          <li><span class="dot has">✓</span><div>两条终端命令（已体检全绿）<small><code>sh refsim/run_fntt_check.sh</code>（16/16，13 s）· <code>sh skill/scripts/check_reproducible.sh --from-remote</code>（通过 4 / 失败 0，121 s）</small></div></li>
+          <li><span class="dot has">✓</span><div>字幕生成器 + 9 段预览 SRT<small><a href="../demo/make_video_srt.py">demo/make_video_srt.py</a> → <a href="../demo/subtitles/README.md">demo/subtitles/</a>（当前为预览）</small></div></li>
+          <li><span class="dot has">✓</span><div>逐段时间线表<small><a href="../demo/subtitles/timeline.csv">demo/subtitles/timeline.csv</a>（<code>audio</code> 列现在全是“缺”）</small></div></li>
+          <li><span class="dot has">✓</span><div>板级报告 6/6（三档 × 六条）<small><code>rtl/vivado/reports/board_pe{1,4,16}_txn.txt</code> —— 这是“6/6”的证据，但视频里还没有画面</small></div></li>
+          <li><span class="dot has">✓</span><div>六条口径红线（已写进剪辑单）<small><a href="../demo/video_cut_sheet.md">剪辑单</a> §四 · 提词稿末尾</small></div></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 10px;font-size:17px;color:var(--warn)">⬜ 还缺的（6 项）</h3>
+        <ul class="assetlist">
+          <li><span class="dot miss">1</span><div><b>9 段旁白 WAV</b> —— 整条链的起点<small>A（你）· 30–40 分钟 · 48 kHz / 16-bit / 单声道，每段头尾留 0.5 s 静音<br>命名 <code>assets/2026-10-29_A_video_vo_seg0.wav … seg8.wav</code><br>⚠️ 录之前先把段 5 那句「五条」改掉</small></div></li>
+          <li><span class="dot miss">2</span><div><b>GUI 第②③④幕录屏</b>（段 1 / 3 / 6）<small>现只有静帧。Edge 全屏 1080p，按剪辑单操作：点「自动走完」、点「阴性对照」出 1 个红格</small></div></li>
+          <li><span class="dot miss">3</span><div><b>SVG 转 PNG 或录屏</b>（段 2 / 6）<small>剪映不认 SVG；浏览器全屏放大后录屏，或 Edge 2× 截图转 PNG 加关键帧推拉</small></div></li>
+          <li><span class="dot miss">4</span><div><b>终端录屏 ×2</b>（段 4 / 7）<small>段 4 直接跑 13 s；段 7 的 121 s 剪时提速 2–4×，只留“开始 → 全绿”</small></div></li>
+          <li><span class="dot miss">5</span><div><b>段 5 的 921600 数字表图</b><small>旁白念到 921600 时的落点画面；从 <code>high_baud_demo.md</code> 表截一张</small></div></li>
+          <li><span class="dot miss">6</span><div><b>正式字幕</b><small>WAV 到齐后 <code>python demo/make_video_srt.py</code> 重跑；现在的时间是预览</small></div></li>
+        </ul>
+        <div class="red" style="margin-top:14px">
+          <h4>降级方案（时间不够的保险）</h4>
+          <p>段 1/3/6 全用已有 5 张 GUI 静帧 + 关键帧推拉，段 2 用 SVG 转的 PNG —— 那就<b>只缺 WAV 一件</b>，今天就能出一条合规的 6–7 分钟片。代价是没有“点阴性对照”的动作瞬间。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5 数字 ============ -->
+  <section id="numbers">
+    <h2><span class="num">05</span>关键数字速查（旁白里出现过的）</h2>
+    <p class="lead">录音前扫一眼这张表。每个值都能在报告或 CSV 里找到；旁白说反了就是这几处。</p>
+    <div class="card" style="padding:6px 18px">
+      <table class="numtable">
+        <tbody>
+          <tr><td>NTT 周期数（pe1 / pe4 / pe16）</td><td>904 / 232 / 69</td><td><code>metrics/data/metrics.csv</code> · 折叠度把周期压了 13.1×</td></tr>
+          <tr><td>核延迟 @ 50 MHz</td><td>18.08 / 4.64 / 1.38 µs</td><td>周期数 ÷ 50 MHz；不是端到端</td></tr>
+          <tr><td>核推算 Fmax（非实测）</td><td>168 / 160 / 154 MHz</td><td>5 ns 收紧约束反推，<b>不是板上频率</b></td></tr>
+          <tr><td>板上实跑（MMCM 提频）</td><td>80 / 75 / 62.5 MHz</td><td>三档各 6/6；不是芯片极限</td></tr>
+          <tr><td>LUT（pe1 / pe4 / pe16）</td><td>727 / 2 000 / 8 922</td><td>post-route；折叠度买周期、付面积</td></tr>
+          <tr><td>功耗（估算，非实测）</td><td>0.130 / 0.170 / 0.335 W</td><td>50 MHz；提频版 0.257 / 0.300 / 0.440 W</td></tr>
+          <tr><td>提频增量 / 其中 MMCM</td><td>+0.127 / 0.116 W（pe1）</td><td>pe4 +0.130（0.116）、pe16 +0.105（0.105）</td></tr>
+          <tr><td>CPU 参考实现（<code>poly_ntt</code>）</td><td>4.80 µs</td><td>5 次会话 / 15 轮中位，4.70–5.10；pe1 慢 3.8× / pe4 0.97× / pe16 快 3.5×</td></tr>
+          <tr><td>装载→读出带宽需求</td><td>120.0 / 214.1 / 228.5 MB/s</td><td>模型下限；115200 只给 0.0115 MB/s</td></tr>
+          <tr><td>921600 串口提速</td><td>184.4 → 23.1 ms（8.0×）</td><td>线上时间；墙钟 0.250 → 0.079 s（3.2×）；USB 一次往返 31 ms</td></tr>
+          <tr><td>6/6 的含义</td><td>5 条计算 + 1 条 <code>#PING</code></td><td>探活不算计算事务，别混着说</td></tr>
+          <tr><td>KAT</td><td>1000 / 1000</td><td>社区 FIPS 203 <b>兼容</b>考题，不是 NIST 官方</td></tr>
+          <tr><td>RTL 回归</td><td>16 组 × 4 通路</td><td>4096/4096；Phase 2 另扩 100 组 NTT</td></tr>
+          <tr><td>真板 trace / 浸泡</td><td>45 次 / 11 520 系数；9 233/9 233</td><td>40 分钟 0 超时 / 0 不符 / 0 异常</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 6 拼装 ============ -->
+  <section id="assemble">
+    <h2><span class="num">06</span>最终成品怎么拼（剪映）</h2>
+    <div class="card">
+      <div class="step"><div class="n">1</div><div><h4>备齐人声</h4><p>9 段 WAV 进 <code>assets/</code>，命名 <code>2026-10-29_A_video_vo_segN.wav</code>。录音人是你，不是 C；日期填实际录音日。</p></div></div>
+      <div class="step"><div class="n">2</div><div><h4>先重跑字幕</h4><p><code>python demo/make_video_srt.py</code> —— 有 WAV 时按真实时长切分，覆盖 <code>demo/subtitles/</code>。这一步必须在拼画面之前做，字幕时间跟着人声走。</p></div></div>
+      <div class="step"><div class="n">3</div><div><h4>备画面</h4><p>GUI 录屏 ×3（第②③④幕）、SVG→PNG 或录屏、终端 ×2、921600 数字表图。全部 1080p，命名按段号（建议放本机临时目录，不入库）。</p></div></div>
+      <div class="step"><div class="n">4</div><div><h4>建工程</h4><p>1920×1080 / 30 fps。导入 9 段 WAV、板级录屏、两张标题卡、3 张图/截图、5 段录屏。</p></div></div>
+      <div class="step"><div class="n">5</div><div><h4>轨道</h4><p><code>A1</code> 人声（seg0→seg8，段间 0.3–0.6 s 气口）→ <code>V1</code> 画面（先按人声长度定段长，再用静置/动画补到目标时长）→ <code>T1</code> 字幕（每段导 <code>segN.srt</code>，起点对齐人声）。</p></div></div>
+      <div class="step"><div class="n">6</div><div><h4>段内对位（三处关键）</h4><p>段 1：念到「你看」时点「自动走完」；段 3：念到「现在我把一条期望值故意改坏」时点「阴性对照」，停在 1 个红格；段 5：旁白铺在板级录屏上，说到 921600 时切数字表。</p></div></div>
+      <div class="step"><div class="n">7</div><div><h4>段 5 画幅</h4><p>1594×1080 放进 1920×1080：放大到铺满（裁上下）或留全幅加暗底。别拉伸变形；重录的话直接 1920×1080。</p></div></div>
+      <div class="step"><div class="n">8</div><div><h4>音频与导出</h4><p>人声降噪、统一到约 −16 LUFS；转场只用硬切或 0.2 s 淡入淡出。<b>导出：1080p / 30 fps / H.264 / ≥8 Mbps / AAC 48 kHz。</b></p></div></div>
+      <div class="step"><div class="n">9</div><div><h4>导出自检</h4><p>总长 5–10 分钟；字幕逐段对得上、英文数字不拆行；六条红线一句没说反；无空白段 / 黑屏；片尾仓库地址能打开；段 5 完整。</p></div></div>
+    </div>
+  </section>
+
+  <!-- ============ 7 红线 ============ -->
+  <section id="redlines">
+    <h2><span class="num">07</span>六条口径红线（说反就要重录）</h2>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="red hot"><h4>1 · KAT 是「兼容」</h4><p>说「FIPS 203 兼容考题」，<b>不说「NIST 官方」</b>。1000 条全过锚定的是 C 参考实现。</p></div>
+      <div class="red hot"><h4>2 · 0.2 秒是串口时间</h4><p>0.18–0.27 s 是事务墙钟，核计算占比 &lt;0.1%。<b>不说「我们的 FPGA 只要 0.2 秒」</b>。</p></div>
+      <div class="red hot"><h4>3 · 频率分两行</h4><p>核推算 Fmax 168 / 160 / 154 MHz（非实测）；板上实跑 80 / 75 / 62.5 MHz。<b>不能混着比。</b></p></div>
+      <div class="red"><h4>4 · PWM2 是另一格</h4><p>「PWM2 两 bank 装不同数据」是探针的验证格，<b>不与真板子两条事务合并说</b>。</p></div>
+      <div class="red hot"><h4>5 · 功耗是估算</h4><p>Vivado vectorless，Confidence Medium，只算片内 PL。<b>说「估算」，不说「实测功耗」</b>。</p></div>
+      <div class="red hot"><h4>6 · 8× 是线上时间</h4><p>921600：线上 184 → 23 ms（8.0×）；端到端墙钟 0.250 → 0.079 s（<b>3.2×</b>）。</p></div>
+    </div>
+  </section>
+
+  <!-- ============ 8 今天 ============ -->
+  <section id="today">
+    <h2><span class="num">08</span>今天就能做（按顺序）</h2>
+    <div class="card">
+      <div class="step"><div class="n">①</div><div><h4>改段 5 那一句（5 分钟）</h4><p>「PING 加五条计算事务」→「PING 加四条计算事务」。三份文档（提词稿 / 分镜表 / 剪辑单）同步；<code>demo/</code> 是 C 的主责目录，改之前先跟 C 说一声，或我把改法写成一封信。</p></div></div>
+      <div class="step"><div class="n">②</div><div><h4>录 9 段 WAV（30–40 分钟）</h4><p>照提词稿逐段录。⚠️ 别读 §五 那句「这块板子也在」——那是现场答辩版，提交版念「仓库地址在画面下方」。</p></div></div>
+      <div class="step"><div class="n">③</div><div><h4>决定走哪版（1 分钟）</h4><p><b>省事版</b>：只补 GUI/终端录屏，今天能出片。<b>重录版</b>：插板跑 J07，顺手录 1080p 六条命令 6/6，一并解决画幅、缺 TIME、J07 证据。</p></div></div>
+      <div class="step"><div class="n">④</div><div><h4>WAV 到齐后重跑字幕，再剪</h4><p><code>python demo/make_video_srt.py</code> → 剪映按 §06 拼 → 按 7:40 版出第一版。</p></div></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>本页怎么来的：</b>逐条对照 <code>demo/video_script.md</code>、<code>demo/narration_teleprompter.md</code>、<code>demo/video_cut_sheet.md</code>、<code>demo/subtitles/timeline.csv</code> 与报告 / 指标 CSV / 板级报告 / 10-15 交付信；素材与文件规格按 2026-10-29 本机实况（<code>ffprobe</code> 等不可用，视频规格取自 Windows 文件属性与交付信）。</p>
+    <p><b>本页不改任何东西</b>：只读盘点 + 建议。真正的修改（三份脚本文档）等 C 点头后再做，避免两个会话同时改 <code>demo/</code>。</p>
+    <p>页面：<code>status/video_plan.html</code> ｜ 双击即可看，无需联网 ｜ 生成于 2026-10-29。</p>
+  </div>
+</footer>
+
+<script>
+  const SEGS = [
+    {n:0, t:'片头',            nar:19, a:20,  b:20, cl:'ok',   vis:'标题卡静帧（已入库）',                    note:''},
+    {n:1, t:'问题',            nar:30, a:60,  b:55, cl:'rec',  vis:'GUI 第②幕「自动走完」',                  note:'念到「你看」时点'},
+    {n:2, t:'我们做了什么',    nar:30, a:60,  b:45, cl:'conv', vis:'architecture.svg',                        note:'转 PNG 或录屏'},
+    {n:3, t:'演示页对拍',      nar:33, a:90,  b:75, cl:'rec',  vis:'GUI 第③幕 + 阴性对照 1 红格',             note:'念到「改坏」时点'},
+    {n:4, t:'验证链',          nar:22, a:90,  b:55, cl:'rec',  vis:'终端 run_fntt_check.sh（13 s）',           note:''},
+    {n:5, t:'真板子',          nar:42, a:120, b:95, cl:'warn', vis:'板级录屏 1:12（1594×1080）',              note:'画幅 / 缺 TIME'},
+    {n:6, t:'性能与资源',      nar:46, a:60,  b:55, cl:'mix',  vis:'GUI ④幕 + 3 图 + 2 张截图',                note:'静帧可用，动效待录'},
+    {n:7, t:'可复现',          nar:15, a:60,  b:40, cl:'rec',  vis:'终端 check_reproducible（121 s，提速）',   note:''},
+    {n:8, t:'结尾',            nar:9,  a:30,  b:20, cl:'ok',   vis:'结尾卡静帧（已入库）',                    note:''}
+  ];
+  const MAX = 120;
+  const CHIP = {ok:'已入库', rec:'待录', conv:'待转/录', warn:'有问题', mix:'半成品'};
+
+  function fmt(s){ const m = Math.floor(s/60), r = s%60; return m + ':' + String(r).padStart(2,'0'); }
+
+  function render(plan){
+    const key = plan === 'a' ? 'a' : 'b';
+    let acc = 0, html = '';
+    let narSum = 0;
+    SEGS.forEach(s => {
+      const sec = s[key];
+      const start = acc; acc += sec; narSum += s.nar;
+      const barW = Math.max(8, sec / MAX * 100);
+      const narW = Math.min(100, s.nar / sec * 100);
+      html += `
+      <div class="row">
+        <div class="segno">${String(s.n).padStart(2,'0')}</div>
+        <div>
+          <div class="seghead">
+            <b>${s.t}</b>
+            <span class="chip ${s.cl}">${CHIP[s.cl]}</span>
+            ${s.note ? `<span class="meta" style="margin:0">${s.note}</span>` : ''}
+            <span class="tc">${fmt(start)}–${fmt(acc)} · ${sec}s</span>
+          </div>
+          <div class="bar" style="width:${barW}%">
+            <div class="fill"></div>
+            <div class="nar" style="width:${narW}%"></div>
+          </div>
+          <div class="meta"><span class="k">旁白</span> ${s.nar}s · <span class="k">填充</span> ${sec - s.nar}s　|　<span class="k">画面：</span>${s.vis}</div>
+        </div>
+      </div>`;
+    });
+    document.getElementById('timeline-rows').innerHTML = html;
+    document.getElementById('tl-total').textContent = fmt(acc);
+    document.getElementById('tl-total2').textContent = fmt(acc);
+    document.getElementById('tl-margin').textContent =
+      acc < 600 ? ('距上限还有 ' + fmt(600 - acc)) : '已超 10 分钟';
+    document.querySelectorAll('[data-plan]').forEach(b =>
+      b.classList.toggle('on', b.dataset.plan === key));
+  }
+
+  document.querySelectorAll('[data-plan]').forEach(btn => {
+    btn.addEventListener('click', () => render(btn.dataset.plan));
+  });
+  render('b');
+
+  // 倒计时：2026-11-04 18:00 +08:00
+  (function countdown(){
+    const target = new Date('2026-11-04T18:00:00+08:00').getTime();
+    const el = document.getElementById('cd');
+    function tick(){
+      const ms = target - Date.now();
+      if (ms <= 0) { el.textContent = '已截止'; return; }
+      const d = Math.floor(ms / 86400000);
+      const h = Math.floor(ms % 86400000 / 3600000);
+      const m = Math.floor(ms % 3600000 / 60000);
+      el.textContent = d + ' 天 ' + h + ' 小时 ' + m + ' 分';
+    }
+    tick(); setInterval(tick, 30000);
+  })();
+</script>
+
+</body>
+</html>
