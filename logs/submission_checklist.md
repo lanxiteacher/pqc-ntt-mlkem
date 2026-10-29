@@ -14,7 +14,7 @@
 | 4 | **演示视频** | 官方 2024/2025 口径：**MP4 / AVC(H.264) / ≤3 分钟 / ≤600 MB**；2026 细则「另行通知」 | ✅ **已交付 2026-10-29**：1:12.21 / H.264 / **86 MB** / 1594×1080 / 30 fps / AAC 192k；成片在 `_submission/video/`（**不进 git**） | 用户 + A | 官方原文与链接见 `logs/requirement_2026-10-29_video_spec.md` |
 | 5 | **源码仓库** | 公开可访问（GitHub 或 Gitee） | 🔄 Gitee 私有、GitHub 私有（已试推） | A | 提交前两处都改 **Public**；GitHub 冻结日推冻结版 |
 | 6 | **工程包** | RTL、构建脚本、`.bit`、综合/实现报告、上位机源码、环境说明 | ✅ 仓库内齐；**`.bit` 不在 git**。官网「全部代码」字段用 `_submission/code/pqc-ntt-mlkem_source_20261029.zip`（**62.9 MB**，HEAD `9c2ea2f`，1,235 条目，SHA `5eafd998…`） | A | `rtl/`、`host/`、`rtl/vivado/reports/`；`.bit` 在 `_runs/pe*/`（本机）；压缩包说明 `_submission/code/README.md` |
-| 7 | **bitstream + 烧录说明** | 与报告频率对应，单独打包 | ✅ **2026-10-29 已打包**：6 个位流（50 MHz 三档 + 80/75/62.5 MHz 提频三档）+ `BURN.md` + `SHA256SUMS.txt`，在 `_submission/bitstream/`（**不进 git**）；脚本 `sh rtl/vivado/package_submission_bits.sh` 可复跑 | A | `rtl/vivado/submission_burn.md`；`rtl/vivado/package_submission_bits.sh` |
+| 7 | **bitstream + 烧录说明** | 与报告频率对应，单独打包 | ✅ **2026-10-29 已打包**：6 个位流（50 MHz 三档 + 80/75/62.5 MHz 提频三档）+ `BURN.md` + `SHA256SUMS.txt`，在 `_submission/bitstream/`（**不进 git**）；脚本 `sh rtl/vivado/package_submission_bits.sh` 可复跑。⚠️ **UART CDC 修复后 6 只位流正在重出**，新包生成前该目录仍是旧位流 | A | `rtl/vivado/submission_burn.md`；`rtl/vivado/package_submission_bits.sh` |
 | 8 | **指标汇总表** | `metrics/` 表头按《指南》7 列 | ✅ 已对齐 | C | `metrics/data/metrics.csv` + `README.md` |
 | 9 | **AI 协作记录** | 每人一份，逐日 | ✅ 已入库（**10-29 核对：A 7 / B 4 / C 25 篇，共 36**；以 `git ls-files 'report/ai-log/*.md'` 为准，别抄死数） | 全员 | `report/ai-log/`；10-09～10-17 空档如实说明 |
 | 10 | **技能包** | `skill/` + README（适用范围/用法/失效条件/复用结果） | ✅ 四类齐（4 提示词 / 5 份 34 条踩坑 / 3 脚本 / 4 模板）+ 两份复用结果；PYNQ 候选未验证，**不宣称加分** | C | `skill/README.md` |
@@ -40,6 +40,8 @@
 4. **GitHub 网络不稳定**（10-21 已遇到间歇性掐断）—— 冻结日提前推，留重试时间。
 5. **2026 视频细则仍「另行通知」** —— 成片按 2024/2025 的 3 分钟口径做的（1:12），
    若 2026 放宽/收紧都不受影响；但命名规则要等官方。
+6. **UART CDC 修复后的位流真板复验未做** —— 6 只位流重出中；三档 6/6 与 trace 复跑完成前，
+   不打冻结 tag、不更新 `_submission/bitstream/` 与代码压缩包。
 
 ## 四、建议时间
 

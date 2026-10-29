@@ -96,6 +96,8 @@
 > **J06 约束说明**落 `rtl/vivado/constraint_coverage.md`；**位流包**落 `_submission/bitstream/`。
 > 冻结回归：无板部分（refsim 4/4、host 11/11、clean clone 21/21）与真板部分（三档 6/6、count=0 trace 45 次）**全过** —— §10 只剩「冻结 tag + GitHub 镜像同 commit」；**报告 PDF 已放入**（**64 页**，含 §4.11 真板 135 次更正与 B 的 §3.10.8 / §4.11.4）；**承诺书已由用户单独提交**，**技术文档初稿已成、待全员改心得**，**报名表未交**。
 > 最终提交目录在 `_submission/`（video / bitstream / photos / report / docs + MANIFEST，16 个文件校验通过）。
+> ⚠️ **2026-10-29 夜：B 审阅的 UART CDC 风险已修** —— `rtl/uart_rx.v` 起始沿改用 `rxd_s2/rxd_s1`（第一级不再进组合逻辑，s0/s1 加 `ASYNC_REG`）；UART 全套 TB **274/274** 过（`logs/verification_2026-10-29_A_uart_cdc_fix.txt`）。**6 只位流重出中，真板复验待板子插上** —— 完成前不打冻结 tag。
+> 技术文档初稿已查（五部分 / 15 页 / 数字一致；一处「真板 4096 系数」应改 256，见 `logs/letter_2026-10-29_A_to_C_techdoc_check.txt`）。
 
 | | |
 |---|---|
