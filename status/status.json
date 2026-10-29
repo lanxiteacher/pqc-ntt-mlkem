@@ -39,7 +39,7 @@
       "color": 3,
       "git_authors": ["于宸", "yuchen", "C"],
       "now": "✅ **2026-10-29：冻结 §3/§6/§7 补跑 + 报告按真板 135 次定稿。** ① §3 三生成器 rc=0，与报告一致（4.80 µs / 0.706× / 904·232·69）；② §6 报告重建 63 页 / 8 书签，两次（白天；晚间按 §4.11 真板 45→135 更正后再建），SHA `29dd304b…`；③ §7 全新 clone 145b689 21/21，HEAD 66d7912 再跑 22/22（多出 B 的 test_board_run_failures，跑完无改动）；④ 报告与 `docs/evidence_map.md` 六处真板数改为 135 次 / 34,560 系数；⑤ 提交暂存 `_submission/`（报告 PDF 已放，README 与提交清单同步）。 20:13 在 B 的 b5d9731 上重跑四条 refsim 入口（rc=0、各 16/16）；20:22 换目录 clone 22/22 覆盖 HEAD。",
-      "next": "① 报告 PDF 需 A/用户复制到 E 盘提交包的 report/（本机无 E 盘）；② 跟踪承诺书 / 技术文档 / 报名表签字填写；③ 冻结 tag 后按最终 PDF 复核页数与 SHA。",
+      "next": "① 报告 PDF 已由 A 收入 `_submission/report/`（63 页 / SHA `29dd304b…`）；② **技术文档按模板起草（A 10-29 20:21 划归 C）**，完成后放 `_submission/docs/`；承诺书已由用户单独提交，报名表仍未交；③ 冻结 tag 后按最终 PDF 复核页数与 SHA。",
       "as_of": "2026-10-29",
       "source": "report/build/report.pdf（本机产物）；metrics/data/bottleneck_ref_raw.csv；report/ai-log/2026-10-29_C.md"
     }
