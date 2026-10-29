@@ -48,6 +48,8 @@
 """
 
 import argparse
+import json
+from pathlib import Path
 import sys
 import time
 
@@ -240,9 +242,34 @@ def do_check(command, txn, build=unpack.DEFAULT_BUILD, build_src="默认"):
 
 # ---------------------------------------------------------------- 主流程
 
-def main(argv):
+class _ObservedLink:
+    """Count completed transport calls; a failed write's delivered prefix is unknown."""
+
+    def __init__(self, wrapped, session):
+        self.wrapped, self.session = wrapped, session
+        session.update(write_attempts=0, completed_write_bytes=0, received_lines=0)
+
+    def __getattr__(self, name):
+        return getattr(self.wrapped, name)
+
+    def write(self, data):
+        self.session.update(io_operation="write", attempted_write_bytes=len(data))
+        self.session["write_attempts"] += 1
+        self.wrapped.write(data)
+        self.session["completed_write_bytes"] += len(data)
+
+    def read_line(self, max_wait):
+        self.session["io_operation"] = "read"
+        row = self.wrapped.read_line(max_wait)
+        if row is not None:
+            self.session["received_lines"] += 1
+        return row
+
+
+def _main(argv, session):
     ap = argparse.ArgumentParser(
         description="在真板子（或陪练）上跑一条事务。见本文件头的「怎么用」。")
+    ap.add_argument("--result-json", type=Path, help="保存本次成功或失败摘要（不含原始系数）")
     ap.add_argument("command", nargs="?", help='命令正文，形如 "#NTT 1"')
     ap.add_argument("--list", action="store_true", help="只列本机串口，不跑事务")
     ap.add_argument("--loopback", action="store_true", help="拿陪练当对端，不碰硬件")
@@ -267,6 +294,7 @@ def main(argv):
                          "这取决于烧进去的位流。")
     ap.add_argument("--verbose", action="store_true", help="把每次重试 / 容错实时打出来")
     args = ap.parse_args(argv)
+    session.update(command=args.command, result_path=args.result_json, stage="open", link=None)
     if args.physical_order and not args.loopback:
         ap.error("--physical-order 必须与 --loopback 一起使用")
 
@@ -293,6 +321,7 @@ def main(argv):
         try:
             lk = link.open_link("serial", port=args.port, baud=args.baud)
         except SystemExit as e:            # 打不开串口 / 没装 pyserial：报人话，不是栈
+            session.update(error_type=type(e).__name__, error=str(e))
             print(e)
             return 1
         where = "真串口 %s（%d-8N1）" % (lk.port, lk.baud)
@@ -300,7 +329,8 @@ def main(argv):
     # ---- 吃掉开机那一行 `#RDY`（若在）------------------------------------
     # ⚠️ 必须在**发第一条命令之前**读掉：板子复位释放后不等命令就自发这一行，
     #    不吃它的话第一条命令读到的会是 `#RDY` 而不是 `#OK`，之后全体错位一格。
-    hst = host.Host(lk, verbose=args.verbose)
+    session.update(link=lk, stage="handshake")
+    hst = host.Host(_ObservedLink(lk, session), verbose=args.verbose)
     got_rdy = hst.handshake()
 
     print("插座：%s" % where)
@@ -317,8 +347,8 @@ def main(argv):
         if args.check:
             print("⚠️ 探活类命令没有标准答案向量，`--check` 用不上，已忽略。")
         print("")
+        session["stage"] = "probe"
         rc = report_probe(hst, args.command)
-        lk.close()
         return rc
 
     # ---- 折叠度：人给的 > `#RDY` 认的 > 默认 ------------------------------
@@ -333,11 +363,13 @@ def main(argv):
     else:
         build, build_src = unpack.DEFAULT_BUILD, "没收到 `#RDY`，退回默认的"
 
+    session["stage"] = "prepare"
+    session.update(build=build, build_source=build_src)
     try:
         data, _ = build_data(args.command, build)
     except SystemExit as e:
+        session.update(error_type="SystemExit", error=str(e))
         print(e)
-        lk.close()
         return 1
 
     print("命令：%s   数据行：%d" % (args.command, len(data)))
@@ -357,7 +389,9 @@ def main(argv):
     #    不含打开串口。2026-10-18 加它是为了 921600 演示模式能给出可复现的
     #    「184 ms → 23 ms」数字；进程外 Measure-Command 会把启动的 0.4 s 也算进去。
     t0 = time.monotonic()
+    session["stage"] = "transaction"
     txn = hst.run(args.command, data, expect_rows=vectors.GROUP_LEN)
+    session.update(outcome=txn.outcome, received_rows=len(txn.rows), transaction_log=txn.log)
     txn_s = time.monotonic() - t0
 
     print("")
@@ -382,9 +416,45 @@ def main(argv):
         print("")
         print("结论：这条事务成功。（要按数值对拍，加 `--check`。）")
     else:
+        session["stage"] = "check"
         rc = do_check(args.command, txn, build, build_src)
 
-    lk.close()
+    return rc
+
+
+def main(argv):
+    """Own the connection lifetime; never retry an interrupted transport write."""
+    session = dict(stage="arguments", link=None, close_attempted=False, closed=False)
+    rc = 1
+    try:
+        rc = _main(argv, session)
+    except SystemExit as exc:
+        rc = exc.code if isinstance(exc.code, int) else 1
+        if rc:
+            session.update(error_type="SystemExit", error=str(exc))
+    except (Exception, KeyboardInterrupt) as exc:
+        session.update(error_type=type(exc).__name__, error=str(exc))
+        rc = 130 if isinstance(exc, KeyboardInterrupt) else 1
+    finally:
+        lk = session.pop("link", None)
+        if lk is not None:
+            session["close_attempted"] = True
+            try:
+                lk.close()
+                session["closed"] = True
+            except Exception as exc:
+                session.update(close_error_type=type(exc).__name__, close_error=str(exc))
+                rc = 1
+        path = session.pop("result_path", None)
+        session.update(status="pass" if rc == 0 else "fail", exit_code=rc)
+        if path is not None:
+            try:
+                path.write_bytes((json.dumps(session, ensure_ascii=False, indent=2)+"\n").encode("utf-8"))
+            except OSError as exc:
+                session.update(status="fail", exit_code=1, evidence_error=str(exc))
+                rc = 1
+        if rc:
+            print("BOARD_RUN_RESULT " + json.dumps(session, ensure_ascii=False), file=sys.stderr)
     return rc
 
 
