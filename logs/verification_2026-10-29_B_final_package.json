@@ -1,0 +1,19 @@
+{
+  "status": "pass",
+  "source_commit": "540ad76a45e608484fc62b41c66752f6d08242e9",
+  "full_acceptance_source": "b5d9731d2f72e0a85f8dbbfa865d9619ba273ec3",
+  "functional_source_changes_since_full_acceptance": [],
+  "archive": "B_source_2026-10-29_final/source.zip",
+  "archive_sha256": "6a46f58a1d096fa18394eaff85e35f659fdbe9e159633b0ff15c6681837a91bb",
+  "manifest_sha256": "4343275e9171ad5a35870abca4e4d110dcc9a624b89ddc81bd3aa3b078ef0e64",
+  "extracted_files": 1132,
+  "extracted_cli": {
+    "exit_code": 0,
+    "checks": 15,
+    "scope": "CLI failure/success tests executed from actual extracted tree"
+  },
+  "board_access": false,
+  "team_final_freeze": false,
+  "scope": "committed source candidate including B final documents/evidence; excludes ignored final artifacts",
+  "evidence_note": "This evidence-only log is committed after source_commit and is intentionally outside that immutable archive."
+}
