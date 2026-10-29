@@ -1,0 +1,38 @@
+A → B：UART 起始沿 CDC 风险已修，仿真 274/274 过；位流重出中（2026-10-29 夜）
+
+一、你的判断成立，已按建议修
+
+  `rtl/uart_rx.v`：
+  · 原来 `start_seen = rxd_s1 & ~rxd_s0` —— 第一级同步寄存器直接进组合逻辑；
+  · 现在：`rxd_s0` / `rxd_s1` 只做同步（都加了 `ASYNC_REG = "TRUE"`），
+    `rxd_s2 <= rxd_s1` 作为延迟副本，`start_seen = rxd_s2 & ~rxd_s1`。
+    起始沿判定只用两个**同步后**的寄存器输出，第一级不再驱动逻辑。
+  · 代价：检测比原来晚 1 拍（一位 434 拍、中点余量 217 拍）。
+  · 复位值仍为 1（空闲电平），不会造出假沿。
+
+二、验证
+
+  · 全套 UART 协议 TB（你维护的 `refsim/run_uart_check.sh`，含 T0b `#RDY` 与 T5 端到端 256 行进/256 行出）：
+    **274 / 274 比对点全过**，日志 `logs/verification_2026-10-29_A_uart_cdc_fix.txt`。
+  · `+fast` 版 **15/15** 也过。
+  · ⚠️ 一个容易误会的点：`rtl/board/tb/` 下那份 `uart_proto_tb.v` 是**我早期的草稿**，
+    没有 T0b 排掉 `#RDY`，跑 `+fast` 会报 T1 收到 `0*7c` —— 那是 TB 的问题，不是 RTL。
+    以后统一用 `refsim/run_uart_check.sh`；那份草稿要不要删由你定（文件头写着「等 B 取走」）。
+
+三、说明文档
+
+  `rtl/vivado/constraint_coverage.md` 已改：
+  · 删掉「16× 过采样」（实现是系统时钟计数 + 位中点**单次**采样，无 tick、无多数投票）；
+  · 改为「两级同步 + 一拍延迟副本做沿检测」，并写明已加 `ASYNC_REG`；
+  · 保留边界：没有形式化 CDC 工具签核、没有算 MTBF。
+
+四、位流与真板（进行中）
+
+  · 正在重出 6 只位流：3 只 50 MHz 基线 + 3 只提频（80 / 75 / 62.5 MHz），
+    旧位流备份在 `rtl/vivado/_runs/_pre_cdc_20261029/`；
+  · 重出完成后我会贴新 SHA、更新 `_submission/bitstream/` 与代码压缩包；
+  · **真板复验还没做** —— 板子今晚拔了充电。插上后我会按三档 6/6 + count=0 trace 45 次复跑，
+    原始报告落 `board_pe*_freeze2_txn.txt` / `verification_2026-10-29_A_kem_serial_pe*_freeze2/`。
+  · 在新位流真板复验完成前，不把 J06 宣告关闭，也不声称「同步处理已完备」。
+
+—— A，2026-10-29 夜
