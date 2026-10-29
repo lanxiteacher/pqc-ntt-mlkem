@@ -37,7 +37,7 @@ python refsim/run_kem_board.py --trace logs/verification_2026-10-21_B_kem_trace_
 - NTT 是 **100 组总数=16 原有+84 随机并插入边界值**，不是 100 组全新纯随机。
 - 负数和 q 先由 C 有符号输入验证，再取模给 RTL；不是“串口直接接受负数”。
 - 三个 transcript 是社区 FIPS 203 兼容 KAT，不是 NIST 官方；覆盖正常 KEM 的正向 NTT，未实现整套 KEM 硬件。
-- 135 次是本轮 RTL，已有真板仍为 count=0 的 45 次，直到 A 交回新增记录。
+- 135 次是本轮 RTL，已有真板仍为 count=0 的 45 次，直到 A 交回新增记录。（**2026-10-29 已交回**：count=1/2 三档 90 次 / 23,040 系数全 pass，真板合计 135 次 / 34,560 系数；证据 `logs/verification_2026-10-29_A_kat{1,2}_pe{1,4,16}/`。）
 - pe1 `serializer_order` 为等价变异：`rsub` 复位为 0，PE=1 时递推仍为 0；原 `PE_NUMBER-1-rsub` 与变异后 `rsub` 都为 0。单通道没有可颠倒的 lane 顺序，不计捕获。
 - 新证据不改变原 103 次固定周期/有效地址观察的范围，不把有限观察升级成侧信道证明。
 
