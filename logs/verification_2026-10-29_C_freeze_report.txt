@@ -29,3 +29,39 @@
 【结论】
   §6 通过：63 页、8 书签、叠层与正文页数一致、无内部状态块。
   产物 report/build/report.pdf 为提交件源文件（report/build/ 被 .gitignore 挡，需手动复制进提交包）。
+
+
+======================================================================
+二、晚间重建：§4.11 真板 45 → 135 更正后（2026-10-29 19:54）
+
+【改了什么】（A 的 letter_2026-10-29_A_to_C_report135.txt 指定三处，实改六处）
+  report/design/04_functional_correctness.md:309   §4.9 边界表「真实 trace 送板」行
+  report/design/04_functional_correctness.md:367-370 §4.11 末「边界」段
+  report/design/04_functional_correctness.md:401   §4.11.3 表「三个 transcript」范围列（A 说 399 行
+                                                   「不要动」，但该行第三列是真板状态，已过期 → 只改这一格）
+  docs/evidence_map.md:61                          证据表「ML-KEM transcript replay（仿真 + 真板）」
+  docs/evidence_map.md:108                         出彩组合 #3「当前」列
+  docs/evidence_map.md:135 / :137                   Phase 2 增量表「已有真板 45 次」「新驱动待 A」
+  report/design/06_appendix.md:58                 10-21 B 行末加「（10-29 已补）」，不改历史叙述
+
+【构建】
+  python report/build_report.py（无警告）
+  OK  PDF : report/build/report.pdf（3911860 B，已加页眉/页码）
+
+【核对】
+  页数           63（pypdf 实读；与白天构建相同，加字未导致分页变化）
+  书签           8
+  页脚           末页「第 63 页 / 共 63 页」
+  内部状态块     report.html 中「状态：」「本文件由脚本生成」「报告前置件」均 0 处
+  新数入版       report.html 中「34,560」4 处、「135 次」5 处、「count=1/2」3 处
+  SHA-256        29dd304bde771d37401511bc50b9efe2d07d9017a60be3f8df0d914abb44e05e
+
+【同步】
+  _submission/report/design_report.pdf       已覆盖，SHA 与 build 产物一致
+  _submission/README.md                      SHA 行、页数、视频/位流/照片状态
+  logs/submission_checklist.md 第 3 行 / §三 风险 2   页数、SHA、待办状态
+  logs/freeze_regression_checklist.md §10 报告行 / tag 行 / 结语
+
+【边界】
+  50 MHz 与 COM9 仍是 A 的人工声明 / 现场值，本文件不重测。
+  真板 135 次 = 10-21 count=0 的 45 次 + 10-29 count=1/2 的 90 次；RTL 侧 135 次是另一条路，别混。

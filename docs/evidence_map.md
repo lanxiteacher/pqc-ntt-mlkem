@@ -58,7 +58,7 @@
 | 参数化三档单运算 | `../rtl/probes/README.md` §判据 3 | `sh rtl/probes/run_probes.sh` | 3 运算 × 3 档，各 **4096 / 4096**（多重集） | 判据是多重集；读出顺序单独量，不并入 |
 | 改造前后逐拍等价 | `../rtl/probes/README.md`（`ag_equiv_tb.v` / `core_equiv_tb.v`） | 同上 | 三档逐拍全等（端口 + 内部状态） | 「等价 + 老核已验」才继承结论 |
 | 三档完整乘法（FULL/HALF） | `../refsim/check_polmul_param.py`、`../logs/verification_2026-10-17_B_clean_clone.json` | `sh refsim/run_polmul_param_check.sh`；`python refsim/check_polmul_param.py --negative-controls` | **24,576 个系数**（3 档 × 2 模式 × 16 组 × 256）；多重集与 τ 顺序全过 | 对象是 `rtl/ntt_core`；不能替代上板 |
-| ML-KEM transcript replay（仿真 + 真板） | `../logs/verification_2026-10-18_B_kem_delivery*.json`、`../refsim/accept_trace_delivery.py`、`../logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/` | `python refsim/accept_trace_delivery.py --output <目录>`；真板：`sh rtl/vivado/run_kem_trace_boards.sh` | 仿真：三档 RTL 各 15 次、共 45 次 / 11,520 系数全对；**真板（10-21，COM9）：三档各 15 次 / 3,840 系数，合计 45 次 / 11,520 系数全 PASS** | 回放的是 KEM 里的 15 次正向 NTT，**不是板上跑完整 KEM**；50 MHz 为人工声明、位流身份靠 SHA；trace 基于社区兼容 KAT，非官方认证 |
+| ML-KEM transcript replay（仿真 + 真板） | `../logs/verification_2026-10-18_B_kem_delivery*.json`、`../refsim/accept_trace_delivery.py`、`../logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`、`../logs/verification_2026-10-29_A_kat{1,2}_pe{1,4,16}/` | `python refsim/accept_trace_delivery.py --output <目录>`；真板：`sh rtl/vivado/run_kem_trace_boards.sh` | 仿真：三档 RTL 各 15 次、共 45 次 / 11,520 系数全对（B 另扩 count=0/1/2 共 135 次 / 34,560 系数）；**真板（COM9）：count=0 45 次 / 11,520 系数（10-21）+ count=1/2 90 次 / 23,040 系数（10-29），合计 135 次 / 34,560 系数全 PASS** | 回放的是 KEM 里的 15 次正向 NTT，**不是板上跑完整 KEM**；50 MHz 为人工声明、位流身份靠 SHA；trace 基于社区兼容 KAT，非官方认证 |
 | 变异测试 + 固定周期 | `../refsim/accept_strengthening.py`、`../team/handoff_2026-10-18_B_strengthening.md` | `python refsim/accept_strengthening.py --output <目录>` | 17/17 变异体被捕获（16 数值 + 1 输出 X）；三档各 103 次输入（100 随机 + 3 边界）周期恒定，核 **904 / 232 / 69** 拍 | 10-18 这轮只覆盖 **pe4 / FULL**，10-21 扩展见本文件末尾；不称全档全运算覆盖率；固定延迟不是侧信道安全证明 |
 | 阴性对照 | `../report/design/04_functional_correctness.md` §4.7 | 同上 + 探针负向控制 | 改坏一处必被抓（如 4095/4096、334/4096、FATAL） | 不同守卫的失败阶段不同（编译 / `vvp` 启动） |
 | 真板子端到端 | `../rtl/vivado/reports/board_pe{1,4,16}_txn.txt`（提频版 `..._f{80,75,62.5}_txn.txt`） | `sh rtl/vivado/run_board_txn_report.sh` | 三档各 **6/6**（PING + 五条计算事务，各 256 系数零差异） | 10-15 的 5/6 是向量变长格式，旧报告留底；PING 不做系数比较 |
@@ -105,7 +105,7 @@
 |---|---|---|---|---|---|
 | 1 | 板级收口（当前驱动 + 提频版） | A | 三档各 6/6（含 `#PMUL TIME 1`） | — | ✅ 10-18 |
 | 2 | 921600 演示模式 | A+B | 184 → 23 ms，0 误码 | 10/22 | ✅ 10-18（A）：线上 8.0×；墙钟 3.2×，差额是 CH340 的 31 ms 往返（`../rtl/vivado/high_baud_demo.md`、`reports/board_pe1_b921600_txn.txt`） |
-| 3 | ML-KEM transcript replay | B | 全部 NTT 逐位一致 | 10/22 | ✅ **10-21 完成**：无板侧（B，10-18）三档 RTL 各 15 次 / 45 次 11,520 系数全对；**真板（A，10-21）三档各 15 次 / 3840 系数、合计 45 次 / 11,520 系数全 PASS**（COM9，50 MHz 基线，逐档烧录；`../logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`） |
+| 3 | ML-KEM transcript replay | B | 全部 NTT 逐位一致 | 10/22 | ✅ **10-21 完成**：无板侧（B，10-18）三档 RTL 各 15 次 / 45 次 11,520 系数全对；**真板（A）count=0 三档 45 次 / 11,520 系数（10-21）+ count=1/2 三档 90 次 / 23,040 系数（10-29），合计 135 次 / 34,560 系数全 PASS**（COM9，50 MHz 基线，逐档烧录；`../logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`、`../logs/verification_2026-10-29_A_kat{1,2}_pe{1,4,16}/`） |
 | 4 | 变异测试 + 常数时间 | B | 变异体全捕获；周期恒 904/232/69 | 10/24 | ✅ 10-18（B）：17/17 被捕获；103 组输入三档周期恒定；边界只到 pe4/FULL（`../team/handoff_2026-10-18_B_strengthening.md`） |
 | 5 | 现场演示 GUI + 一键脚本 | C | 双击可跑；无板回放；3 分钟 | 10/24 | ✅ 10-19（`demo/gui.html` + `run_gui.cmd`；无头 Edge 实测） |
 | 6 | 证据地图 + 口径统一 | C+A | 报告/QA/metrics/视频四处一致 | 10/21 | ✅ 10-19（本文件）；报告随正文重建（**2026-10-24 构建 63 页，已加页码/页眉/书签**；**页数以打开 PDF 为准**） |
@@ -132,8 +132,8 @@
 | 文件 | 复跑命令 | 结果 | 边界 |
 |---|---|---|---|
 | `../logs/verification_2026-10-21_B_phase2_ntt100.json` | `python refsim/accept_b_current.py --output <新目录>` | 三档各 100 组 / 25,600 系数；负向各恰好一处 | 16 原有 + 84 随机带边界；负数先经 C 验证再取模给 RTL |
-| `../logs/verification_2026-10-21_B_phase2_traces.json` | 同上 | 三个不同 transcript，135 次 / 34,560 系数 RTL | 社区兼容 KAT、正向 NTT；已有真板 45 次，新增 90 次待 A |
+| `../logs/verification_2026-10-21_B_phase2_traces.json` | 同上 | 三个不同 transcript，135 次 / 34,560 系数 RTL | 社区兼容 KAT、正向 NTT；真板 10-29 已同步 135 次（`../logs/verification_2026-10-29_A_kat{1,2}_pe{1,4,16}/`） |
 | `../logs/verification_2026-10-21_B_phase2_mutations.json` 与 `_mutations.md` | 同上 | 三档变异共 50/51 捕获（pe1/pe4/pe16=16/17/17），另 1 项 pe1 serializer_order 等价，不计捕获。 | FULL、每组合 16 组，未扩至 HALF 或全故障空间 |
-| `../logs/verification_2026-10-21_B_host_safety.json` | `python host/src/test_serial_write_safety.py`（局部）或统一入口 | 正式发送有限写超时、无 flush、短写不重试；11 本机脚本通过 | 新正式驱动真板待 A；旧 no-flush 浸泡不是新代码实测 |
+| `../logs/verification_2026-10-21_B_host_safety.json` | `python host/src/test_serial_write_safety.py`（局部）或统一入口 | 正式发送有限写超时、无 flush、短写不重试；11 本机脚本通过 | 新正式驱动 10-29 已真板实测（`../logs/verification_2026-10-29_A_j07_board.txt`）；旧 no-flush 浸泡不是新代码实测 |
 
 报告对应 §4.11.3。旧样本数据仍为历史证据，不累计成更多独立样本；详情与 A/C 操作见 `../team/handoff_2026-10-21_B_phase2.md`。

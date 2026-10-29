@@ -6,7 +6,7 @@
 >
 > 想知道「某个东西该读哪份」，见本文 **§三**。
 
-更新：2026-10-29（A：J07 收口 + 视频成片；C 10-24 口径修订仍在）
+更新：2026-10-29（A：J07 收口 + 冻结真板；B：host 发布候选检查；C：报告 45→135 重建 + 冻结 §3/§6/§7）
 
 > ✅ **2026-10-08：§二 已瘦身完毕。** 原先躺在那里的 **30 条已办结 `- [x]`**（357 行）
 > 已整体搬进 `project_state_changelog.md` 的「从 `project_state.md` §二 搬入的已办结条目」
@@ -18,13 +18,19 @@
 
 ## 一、一屏现状
 
-> **B 当前状态（10-21）**：本机 Phase 2 已交付：三档各 100 组 NTT；三份 transcript 共 135 次 RTL；三档变异共 50/51 捕获（pe1/pe4/pe16=16/17/17），另 1 项 pe1 serializer_order 等价，不计捕获。 A 原 count=0 真板 45 次已离线核对。正式 Host 去掉无界 flush、增加写超时/短写检测，11 自测与送板兼容验收通过；新驱动真板复测、新两份 trace 上板待 A。H10 仍需第二台电脑。证据与操作见 `team/handoff_2026-10-21_B_phase2.md`；完整清单 `team/plan_B_remaining.md`。
+> **B 当前状态（10-29）**：Host 保留 CLI 失败证据（`board_run.py`），新增发布候选检查
+> `refsim/accept_b_release.py`、`check_independent_polmul.py`、`measure_board_service.py`、
+> `build_source_candidate.py`（提交 `4fc9e9b`）；「装载→读出」口径统一为延迟下界 / 吞吐上界。
+> 10-21 交付不变：三档各 100 组 NTT、三份 transcript 135 次 RTL、三档变异 50/51 捕获。
+> A 的 count=0 45 次已离线核对；count=1/2 的 90 次真板（10-29）待 B 复核销 J07。
+> ai-log 自 10-21 起空档；§5.5 三种错误注入待确认；H10 仍需第二台电脑。
 >
-> **C 当前状态（10-24）**：报告按提交口径收口并重建 **63 页**（构建时剥离每章内部状态块、
-> 封面去掉内部路径与队内代号、正文 A/B/C 改中性表述）；指标链三件复跑与报告一致，
-> 修掉 `demo/data/gui.js` 停在 4.82 µs 的漂移（重生成 4.80、自检 32/32）。
-> 视频改由**剪映**剪辑（用户决定），C 交素材清单 + 时间线 + SRT；A 的 9 段 WAV 未入库。
-> 日志 `report/ai-log/2026-10-24_C.md`。
+> **C 当前状态（10-29）**：冻结 §3/§6/§7 已补跑（指标链与报告一致、报告 63 页 / 8 书签、
+> 全新 clone 21/21）；按 A 的修订单把报告与 `docs/evidence_map.md` 的**真板数 45 → 135
+> （34,560 系数）**改齐并**再次重建 63 页**（SHA `29dd304b…`），已复制进 `_submission/report/`。
+> 提交清单第 3 行、`_submission/README.md`、冻结清单 §10 行与状态页已同步。
+> **待办**：PDF 还需 A/用户复制进 `E:\submission\report\`（本机无 E 盘）；签字件跟踪。
+> 日志 `report/ai-log/2026-10-29_C.md`；证据 `logs/verification_2026-10-29_C_freeze_*.txt`。
 >
 > **A 当前状态（10-18 下午，板子已插）**：**两件事当天全闭环。**
 > ① **H6 收口**：当前驱动在真板上跑三档 × 六条命令（`#PING` + 五条计算事务），
@@ -72,8 +78,8 @@
 > `logs/verification_2026-10-29_A_j07_board.txt`；详见 `project_state_changelog.md` 2026-10-29。
 > 同日：**视频成片已交**（1:12.21 / H.264 / 86 MB，在 `E:\submission\`，不进 git）；
 > **J06 约束说明**落 `rtl/vivado/constraint_coverage.md`；**位流包**落 `E:\submission\bitstream\`。
-> 冻结回归：无板部分（refsim 4/4、host 11/11、clean clone 21/21）与真板部分（三档 6/6、count=0 trace 45 次）**全过** —— §10 只剩「冻结 tag + GitHub 镜像同 commit」，等最终 PDF 与签字材料。
-> 最终提交目录已整理在 `E:\submission\`（video / bitstream / photos / report / docs + MANIFEST），报告 PDF 与签字材料待放入。
+> 冻结回归：无板部分（refsim 4/4、host 11/11、clean clone 21/21）与真板部分（三档 6/6、count=0 trace 45 次）**全过**；C 侧 §3/§6/§7 也已补跑、报告 10-29 夜按真板 135 次重建 —— §10 只剩「冻结 tag + GitHub 镜像同 commit」。
+> 最终提交目录已整理在 `E:\submission\`（video / bitstream / photos / report / docs + MANIFEST）；**报告 PDF 已由 C 放进 `_submission/report/`，还需复制进 E 盘**；签字材料待放入。
 
 | | |
 |---|---|
@@ -231,7 +237,7 @@
 |---|---|---|---|---|
 | 1 | A | 板级收口：当前驱动 + 提频版各五条事务 | ✅ 10-18 三档各 6/6（含 `#PMUL TIME 1`） | 已完成 |
 | 2 | A+B | 921600 演示模式：`UART_BPS` + host `--baud` | ✅ **10-18 已做**：线上 **184 → 23 ms（8.0×）**、0 误码；⚠️ 事务墙钟 0.250 → 0.079 s（3.2×），差值是 CH340 的 31 ms USB 往返（`#PING` 两种波特率都是 0.031 s）。证据 `rtl/vivado/high_baud_demo.md` + `reports/board_pe1_b921600_txn.txt` | 已完成 |
-| 3 | B | ML-KEM transcript replay：✅ B 无板链已完成，C/陪练及三档实际RTL45次/11520系数通过；固定trace、批量路径测试及送板工具已交付。✅ **A 10-21 真板已跑**：三档各 15 次 / 3840 系数全过，合计 **45 次 / 11520 系数**；证据 `logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/` | ✅ 全部 NTT 已送板逐位一致；待 B 复核 session/replay | 已完成 |
+| 3 | B | ML-KEM transcript replay：✅ B 无板链已完成，C/陪练及三档实际RTL45次/11520系数通过；固定trace、批量路径测试及送板工具已交付。✅ **A 10-21 真板已跑**：count=0 三档 45 次 / 11,520 系数；**10-29 再补 count=1/2 三档 90 次 / 23,040 系数** —— 真板合计 **135 次 / 34,560 系数**；证据 `logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`、`logs/verification_2026-10-29_A_kat{1,2}_pe{1,4,16}/` | ✅ 全部 NTT 已送板逐位一致；待 B 复核 session/replay | 已完成 |
 | 4 | B | 变异测试 + 固定周期：✅ **10-18 AI 自动验收通过**，17/17 被捕获；三档各 100 随机 + 3 边界输入，C 输出及有效地址一致。首次闲置写地址差异已注明；非完整侧信道证明。用户手动验收已截图确认 | 904/232/69；证据与范围见 `team/handoff_2026-10-18_B_strengthening.md` | 自动完成 |
 | 5 | C | 现场演示 GUI + 一键脚本 | ✅ **10-19 已做**：`demo/gui.html`（四幕：输入 / 逐层 / 对拍 / 计时资源）+ `demo/run_gui.cmd`；无板回放 + `?auto=1` 自动演示；无头 Edge 实测自检 32/32、对拍 256/256、阴性对照 1 个红格 | 已完成 |
 | 6 | C+A | 证据地图 + 口径统一：核 Fmax 168/160/154 与板级实测 80/75/62.5 分两行。<br>✅ **C 侧 10-18 已完成**：`docs/evidence_map.md` + 报告/QA/metrics/视频四处改齐（10-19 加 §3.10.6 后重建；2026-10-21 并入 A 的 Phase 1 改动再次重建，**页数以打开 PDF 为准**）。✅ **A 侧 10-18 已复核**：抽查 01/02/03、metrics、docs —— 两行口径一致；顺手修了一处旧句「板上跑不到 154 MHz」→「板级未以 154 MHz 运行，提频实跑 62.5」 | 报告/QA/metrics/视频四处一致 | 10/21 |

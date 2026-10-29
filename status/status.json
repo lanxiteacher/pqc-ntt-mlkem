@@ -1,6 +1,6 @@
 {
   "_how": "本文件只放「机器判不出来」的东西：下一步、卡点、里程碑、人的判断。每条都要写 as_of（这条是几号核的）与 source（出处）。能自动抓的数字不要写进来 —— 见 gen_status.mjs 的 AUTO 段。",
-  "updated": "2026-10-23",
+  "updated": "2026-10-29",
 
   "countdown": {
     "submission": "2026-11-04",
@@ -16,9 +16,9 @@
       "scope": "rtl/ ｜ 综合 ｜ 板子（本机）",
       "color": 1,
       "git_authors": ["lanxiteacher"],
-      "now": "✅ **2026-10-21：A 侧出彩组合仍全部收口，另补两件。** ① 上板录屏交付版入库：`assets/2026-10-15_A_board_uart_five_transactions_1080p.mp4`（1080p / 14.9 MB，母版 112 MB 留本机）—— C 的剪辑阻塞解除。② ML-KEM trace **真板回放已跑完**：三档各 15 次 / 3840 系数，合计 **45 次 / 11520 系数全 PASS**（COM9，20:01–20:02）；证据 `logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`，trace SHA `e107dc71…`。A 侧 entry `rtl/vivado/run_kem_trace_boards.sh`（逐档烧位流 + B 的 `run_kem_board.py`）。10-18 的板级 6/6、提频 6/6、921600（8.0×）、功耗估算、全量回归结论不变。晚间板级浸泡 40 分钟 / **9,233 次 #NTT 0 错**；评委视角审计 Phase 1 口径已改（分档比 CPU、能量/NTT、作品边界）；视频旁白定 A 真人配音。**23:10 收工，main 与远端一致。**",
-      "next": "① 交回 B 复核 45 次真板证据（已写信）；② 每天补 ai-log；③ 配合 C 的视频剪辑（素材已入库）与 10/25–27 冻结后复跑、镜像。",
-      "as_of": "2026-10-18",
+      "now": "✅ **2026-10-29：冻结回归 A 侧全绿 + J07 收口。** ① J07：新正式驱动（10-21 的有限写超时 / 去无界 flush）真板实测，三档各 6/6；count=1/2 两份 trace 三档共 **90 次 / 23,040 系数** 全 PASS（`logs/verification_2026-10-29_A_kat{1,2}_pe{1,4,16}/`、`rtl/vivado/reports/board_pe{1,4,16}_j07_txn.txt`）。② 冻结 §1/§2/§4/§5：refsim 四条 16/16、host 11/11、真板三档各 6/6、count=0 trace 三档各 15/15 = **45 次 / 11,520 系数**（`_freeze` 证据，提交 d84f177）。真板累计 **135 次 / 34,560 系数**。③ 提交包：视频成片 1:12.21 / 86 MB、6 个位流 + BURN.md + SHA256SUMS、两张作品照片，均在 E 盘 `submission/`。",
+      "next": "① 打 freeze-2026-11-04 tag 并推 GitHub 同一 commit（冻结清单 §10 最后一条）；② Gitee 与 GitHub 两个仓库转 Public 并验证匿名可开；③ 把 C 重建的 PDF 放进 E 盘提交包的 report/。",
+      "as_of": "2026-10-29",
       "source": "logs/project_state.md §一；rtl/vivado/folding_comparison.md §9.1；host/proto.md §5.2"
     },
     {
@@ -27,9 +27,9 @@
       "scope": "refsim/ ｜ host/",
       "color": 2,
       "git_authors": ["B", "zzp_330183@qq.com"],
-      "now": "✅ **2026-10-21：KEM trace 真板回放已由 A 跑完** —— 三档各 15 次 / 3840 系数，合计 **45 次 / 11520 系数全 PASS**（COM9，50 MHz 基线位流）；证据 `logs/verification_2026-10-21_A_kem_serial_pe{1,4,16}/`。B 无板部分（10-18）与三档完整乘法（10-17）、H5、向量补零、全新 clone 18/18 均已交。",
-      "next": "① 复核 A 交回的真板 45 次证据（session.json / replay.json）并销 #3；② 变异测试 15–20 个；③ 常数时间证据；④ H10 仍等第二台电脑。",
-      "as_of": "2026-10-18",
+      "now": "✅ **2026-10-29：host 失败证据保留 + B 发布候选检查。** `board_run.py` 保留 CLI 失败证据，新增 `refsim/accept_b_release.py`、`check_independent_polmul.py`、`measure_board_service.py`、`build_source_candidate.py`（提交 4fc9e9b）；顺带把「装载→读出」口径统一为延迟下界 / 吞吐上界（metrics CSV 与报告 §3.10）。10-21 的三 transcript 135 次 RTL 与三档变异 50/51 结论不变。",
+      "next": "① 复核 A 交回的 count=1/2 真板证据并销 J07；② ai-log 自 10-21 起空档，补当日一篇；③ §5.5 三种错误注入确认是否已被负向测试覆盖；④ H10 仍等第二台电脑。",
+      "as_of": "2026-10-29",
       "source": "host/proto.md §5.2；logs/project_state.md §一「还差」"
     },
     {
@@ -38,10 +38,10 @@
       "scope": "report/ ｜ demo/ ｜ docs/ ｜ skill/ ｜ metrics/ ｜ assets/",
       "color": 3,
       "git_authors": ["于宸", "yuchen", "C"],
-      "now": "✅ **2026-10-24：提交口径收口 + 指标链复跑。** ① 报告重建 **63 页**：构建时剥离每章标题下的内部状态块（「骨架/初稿」不再印进 PDF），封面去掉内部路径与队内代号，正文 01–05 的「A/B/C 的…」改为中性表述，附录补代号定义。② 指标链三件重跑：`gen_metrics` / `bottleneck` / `gen_pareto` 与报告一致；发现 `demo/data/gui.js` 的 CPU 参考值停在 **4.82 µs**（报告 4.80），已重生成并自检 32/32。③ 证据地图与提交清单的页数同步。④ 剪映剪辑单 + SRT 生成器已交（字幕当前为预览，等 A 的 WAV）；提词稿字数按实际文本重算为约 880 汉字。⑤ 换目录 clone **21/21** 通过（远端 5ddccfb，同机副本）。日志 `report/ai-log/2026-10-24_C.md`。",
-      "next": "① 视频改为用户用剪映剪辑，C 已交素材清单 / 时间线 / SRT 预览，等 A 的 9 段 WAV 后重跑字幕；② A 回传新真板回归后回填 J07；③ 冻结前按最终包重建 PDF / 核对 manifest（J11）。",
-      "as_of": "2026-10-24",
-      "source": "report/build/report.pdf（本机产物）；metrics/data/bottleneck_ref_raw.csv；report/ai-log/2026-10-24_C.md"
+      "now": "✅ **2026-10-29：冻结 §3/§6/§7 补跑 + 报告按真板 135 次定稿。** ① §3 三生成器 rc=0，与报告一致（4.80 µs / 0.706× / 904·232·69）；② §6 报告重建 63 页 / 8 书签，两次（白天；晚间按 §4.11 真板 45→135 更正后再建），SHA `29dd304b…`；③ §7 全新 clone 21/21（145b689）；④ 报告与 `docs/evidence_map.md` 六处真板数改为 135 次 / 34,560 系数；⑤ 提交暂存 `_submission/`（报告 PDF 已放，README 与提交清单同步）。",
+      "next": "① 报告 PDF 需 A/用户复制到 E 盘提交包的 report/（本机无 E 盘）；② 跟踪承诺书 / 技术文档 / 报名表签字填写；③ 冻结 tag 后按最终 PDF 复核页数与 SHA。",
+      "as_of": "2026-10-29",
+      "source": "report/build/report.pdf（本机产物）；metrics/data/bottleneck_ref_raw.csv；report/ai-log/2026-10-29_C.md"
     }
   ],
 
@@ -87,7 +87,11 @@
     {"id": "—", "when": "2026-10-24", "label": "★ 出彩组合：变异测试 + 常数时间（B）", "owner": "B", "state": "todo", "source": "logs/letter_2026-10-18_A_to_BC_plan.txt §三"},
     {"id": "—", "when": "2026-10-24", "label": "★ 出彩组合：Pareto/ATP/roofline（C）", "owner": "C", "state": "todo", "source": "logs/letter_2026-10-18_A_to_BC_plan.txt §三"},
     {"id": "—", "when": "2026-10-24", "label": "★ 出彩组合：功耗估算（A）—— ✅ 10-18 完成：六版位流 report_power（50 MHz 0.130/0.170/0.335 W；提频 0.257/0.300/0.440 W；MMCM 占 0.105–0.116 W）", "owner": "A", "state": "done", "source": "rtl/vivado/power_estimate.md；报告 §3.10.5"},
-    {"id": "—", "when": "2026-10-18", "label": "板级当前驱动三档 6/6：pe1 / pe4 / pe16 各五条计算事务（含 `#PMUL TIME 1`）全过；旧 5/6 报告留底", "owner": "A", "state": "done", "source": "rtl/vivado/reports/board_pe{1,4,16}_txn.txt"}
+    {"id": "—", "when": "2026-10-18", "label": "板级当前驱动三档 6/6：pe1 / pe4 / pe16 各五条计算事务（含 `#PMUL TIME 1`）全过；旧 5/6 报告留底", "owner": "A", "state": "done", "source": "rtl/vivado/reports/board_pe{1,4,16}_txn.txt"},
+    { "id": "—", "when": "2026-10-29", "label": "冻结回归全绿：refsim 16/16、host 11/11、真板三档 6/6、trace 45 次、指标链一致、报告 63 页、clone 21/21（仅余 tag）", "owner": "全员", "state": "done", "source": "logs/freeze_regression_checklist.md §10" },
+    { "id": "—", "when": "2026-10-29", "label": "J07 收口：新驱动真板三档 6/6 + count=1/2 trace 90 次 / 23,040 系数全 PASS", "owner": "A", "state": "done", "source": "logs/verification_2026-10-29_A_j07_board.txt；rtl/vivado/reports/board_pe*_j07_txn.txt" },
+    { "id": "—", "when": "2026-10-29", "label": "报告 §4.11 真板数 45 → 135（与 RTL 135 同口径），重建 63 页", "owner": "C", "state": "done", "source": "report/design/04_functional_correctness.md；docs/evidence_map.md" },
+    { "id": "—", "when": "2026-10-29", "label": "演示视频成片交付（1:12.21 / H.264 / 86 MB）；位流包与作品照片一并进 E 盘提交包", "owner": "A + 用户", "state": "done", "source": "logs/submission_checklist.md §一 4/7/11" }
   ],
 
   "gantt": {
@@ -108,7 +112,7 @@
       { "track": "A", "week": "W2", "label": "板级 wrapper · 上板", "state": "done", "critical": true, "note": "协议已冻结、无等待项。10-04 直接做到板级三档全通（原文排在 W4 的活，提前两周）", "source": "rtl/vivado/reports/board_pe*_txn.txt" },
       { "track": "A", "week": "W3", "label": "板子这趟（全结）", "state": "done", "critical": true, "note": "**2026-10-15 更新：板子这趟做了一半。** ✅ `#RDY` 落进 proto_fsm + 冒烟台补 S0（10-07）、三档位流重出（10-07）、H6 代码侧复核（10-08，B 的 `671a91b`）；**10-15 当天插板跑完全部六条命令，H6 办结 —— 5/6 PASS**（`rtl/vivado/reports/board_pe1_txn.txt`），途中还查出并修掉 `board_run.py` 少「装载序」一列的缺陷（`KNOWN_ISSUES.md` B7，改前 `#PMUL NTT 1` 在 pe1 上 252/256 错）。✅ **②③ 当晚一并办结** —— 录屏 `assets/2026-10-15_A_board_uart_five_transactions.mp4`（112 MB，超过 Gitee 单文件上限，**不进仓库**）＋ 两张关键路径截图 `assets/2026-10-15_A_critical_path_board_pe1.png` / `..._core_pe1.png`。**W3 收口，本格无欠账。**⚠️ 另：唯一那条 ❌（`#PMUL TIME 1`）卡在向量文件格式，是 B 的决定，**不算本格的欠账**", "source": "rtl/vivado/reports/board_pe1_txn.txt；host/KNOWN_ISSUES.md B7" },
       { "track": "A", "week": "W4", "label": "板级收口 · 921600 · 提频 · 功耗 · 回归", "state": "done", "critical": false, "note": "✅ **2026-10-15：本周 A 已有提交**（`0accf29` 改 `host/src/` 装载序 + `KNOWN_ISSUES.md`；`807a882` 改 `rtl/vivado/` 上板报告与产出脚本 + `logs/`）。① 板子这趟（**W3 那根的欠账，本格只写「做完它」，不重复记账**）：✅ H6 那部分 10-15 已办结，本格只剩**补录素材**（段 5 / 段 6）+ 核对旁白数字 ② 最后一次全量回归（refsim 四条脚本 + 板级冒烟台三档，结果存进 logs/）③ ✅ **不等板子那件已于 10-15 办完**：给 C 贴《指南》原文（**四处**，见 `logs/guideline_excerpts_2026-10-15.md`）④ ★ **新增（2026-10-15）· 上板提频** —— 例化 MMCM 提 50 MHz，三档重综合取新 WNS，五笔事务重跑，出「优化前 vs 优化后」对比表。物理可行已查实（**U18 是 MRCC**、`IS_CLK_CAPABLE=1`；xc7z020 有 4 MMCM / 4 PLL / 32 BUFG），§3.10.1 那条「板上无 MMCM/PLL」是错的，见 `report/design/03` 改判。✅ **2026-10-18 收工：本格全部办结** —— ② 全量回归 refsim **4/4** + 冒烟台三档各 **521 点 / 0 失败**；④ 提频 **80 / 75 / 62.5 MHz** 三档上板各 **6/6**；另加 921600（线上 **8.0×**、0 误码）与功耗估算（提频增量里 MMCM 占 **0.116 W**）。", "source": "logs/schedule_plain.md §三 W4；logs/verification_2026-10-18_A_*；rtl/vivado/{board_freq_sweep,high_baud_demo,power_estimate}.md" },
-      { "track": "A", "week": "W5", "label": "冻结 RTL", "state": "todo", "critical": false, "note": "冻结，不再改 RTL；配合组装提交包与提交演练。**（2026-10-08 新增）镜像到 GitHub** —— 冻结版一次性推上去、日常不做同步（两个独立 remote，别配成一次推两边）", "source": "logs/schedule_plain.md §三 W5" },
+      { "track": "A", "week": "W5", "label": "冻结 RTL", "state": "done", "critical": false, "note": "✅ 2026-10-29：代码侧未再改（d84f177 之后只有证据与文档）；tag 与 GitHub 同 commit 待 A（§10 最后一条）", "source": "logs/freeze_regression_checklist.md §10" },
       { "track": "A", "week": "W6", "label": "缓冲 · 提交", "state": "todo", "critical": false, "note": "不排新活：W3–W5 任何一项没做完的在这里收口。11/04 18:00 截止", "source": "logs/schedule_plain.md §三 缓冲" },
 
       { "track": "B", "week": "W0", "label": "验证台扩到四条通路", "state": "done", "critical": false, "note": "验证台从「只能验 NTT」扩到 INTT／点乘／完整乘法都能验；建 Gitee 仓库并推送", "source": "team/guide_B.md §四 W0 行" },
@@ -124,7 +128,7 @@
       { "track": "C", "week": "W2", "label": "演示页补两页 · 性能章", "state": "done", "critical": false, "note": "报告五章初稿 + 封面摘要骨架、skill/ 四子目录、metrics/ 指标表、demo/ 三页、figures 三张", "source": "report/README.md §三" },
     { "track": "C", "week": "W3", "label": "报告补缺口（已办结）", "state": "done", "critical": false, "note": "报告三处缺口 —— ① 上板真实 Fmax **依赖 A 那趟板子**（已逾期）② 端到端延迟 ③ Vivado 2020.2 口径；`skill/` 四类逐项过四问**仍未做**。✅ 装 gcc/iverilog/python3 跑 **H10 独立复现** 已于 10-05 办结（`--from-remote` 通过 4 ／ 失败 0）", "source": "report/README.md §三；report/ai-log/2026-10-05_C.md" },
       { "track": "C", "week": "W4", "label": "GUI · Pareto · 证据地图", "state": "doing", "critical": false, "note": "**2026-10-15：已提前开工** —— 缩略语表、参考文献书目补全（缺口 20 余处 → 3 处）、附录逐日索引、PYNQ 取舍、配图与引用链体检、分段录制流水单 + 录制前体检全绿。✅ **2026-10-21：三件输入已解**（指南原文已贴 / 板子 1080p 已入库 / 旁白定 A 真人配音）；仅剩剪辑。报告主体成文、排版、配图（用 A 的 H4 + B 的 H5）；剪演示视频（5–10 分钟）", "source": "logs/schedule_plain.md §三 W4" },
-      { "track": "C", "week": "W5", "label": "报告定稿 · 提交包", "state": "todo", "critical": false, "note": "报告定稿、视频定稿、按《指南》§3.2.5 逐项组装提交包", "source": "logs/schedule_plain.md §三 W5" },
+      { "track": "C", "week": "W5", "label": "报告定稿 · 提交包", "state": "doing", "critical": false, "note": "✅ 报告 10-29 夜定稿（63 页，真板 135 次口径）；提交包只剩签字件与 E 盘合并", "source": "logs/submission_checklist.md" },
       { "track": "C", "week": "W6", "label": "缓冲 · 提交", "state": "todo", "critical": false, "note": "不排新活，收口用", "source": "logs/schedule_plain.md §三 缓冲" }
     ],
     "handoffs": [
@@ -189,7 +193,11 @@
     {"owner": "C", "text": "★ 2026-10-24 提交口径收口 —— ✅ 构建时剥离内部状态块、封面去内部路径/队内代号、正文 A/B/C 改中性表述；重建 63 页（页眉/页码/8 书签/无空白页）", "state": "done", "as_of": "2026-10-24", "source": "report/build_report.py；report/ai-log/2026-10-24_C.md"},
     {"owner": "C", "text": "★ 2026-10-24 指标链复跑 —— ✅ 三生成器与报告一致；发现 GUI 数据停在 4.82 µs，已重生成 4.80 并自检 32/32", "state": "done", "as_of": "2026-10-24", "source": "metrics/data/bottleneck.csv；demo/data/gui.js"},
     {"owner": "C", "text": "★ 2026-10-24 换目录 clone 复现 —— ✅ 远端 5ddccfb 全新 clone，21/21 阶段 rc=0，跑完工作区无改动（同机副本，非 H10 换机）", "state": "done", "as_of": "2026-10-24", "source": "logs/verification_2026-10-24_C_clean_clone.json"},
-    {"owner": "C", "text": "★ 演示视频：文本 10-22 已冻结；剪辑改用剪映（用户决定）；C 先交素材清单/时间线/SRT，等 A 的 9 段 WAV", "state": "doing", "as_of": "2026-10-24", "source": "logs/letter_2026-10-22_C_to_A_voiceover.txt"}
+    {"owner": "C", "text": "★ 演示视频：文本 10-22 已冻结；剪辑改用剪映（用户决定）；C 先交素材清单/时间线/SRT，等 A 的 9 段 WAV", "state": "doing", "as_of": "2026-10-24", "source": "logs/letter_2026-10-22_C_to_A_voiceover.txt"},
+    { "owner": "A", "text": "★ 冻结 tag + 仓库公开 —— 打 freeze-2026-11-04 并推 GitHub 同一 commit；Gitee / GitHub 转 Public 后验证匿名可开", "state": "todo", "as_of": "2026-10-29", "source": "logs/freeze_regression_checklist.md §10" },
+    { "owner": "用户", "text": "★ 签字件三件 —— 承诺书（签字扫描）、技术文档（按模板填写）、报名表；填完放进 E 盘提交包的 forms/", "state": "todo", "as_of": "2026-10-29", "source": "logs/submission_checklist.md §一 1/2/12" },
+    { "owner": "用户 + A", "text": "★ 把 C 重建的 report/design_report.pdf 复制进 E 盘提交包 report/（现为空），核对 SHA 29dd304b…", "state": "todo", "as_of": "2026-10-29", "source": "logs/submission_checklist.md 第 3 行" },
+    { "owner": "B", "text": "ai-log 自 10-21 起空档；§5.5 三种错误注入是否已被负向测试覆盖待确认；H10 第二台电脑仍缺", "state": "todo", "as_of": "2026-10-29", "source": "report/ai-log/；team/todo_AB.md §二·2" }
   ],
 
   "manual_numbers": [

@@ -300,3 +300,14 @@
 - **冻结真板回归（按 C 的 runbook）**：`d84f177` 上跑 §4/§5 —— 三档各 **6/6**（`board_pe*_freeze_txn.txt`）；count=0 trace 三档 **45 次 / 11,520 系数**全 pass（`logs/verification_2026-10-29_A_kem_serial_pe*_freeze/`）。§10 放行条件只剩「冻结 tag + GitHub 镜像同 commit」；§1 refsim 4/4、§2 host 11/11 也一并补齐（此前只有 C 的 §3/§6/§7）。
 - **最终提交目录整理**：`E:\submission\`（不在 git）—— `video/`（成片 + 旁白）、`bitstream/`（6 个位流 + BURN.md + SHA256SUMS）、`photos/`（开发板全景 + 作品全局）、`report/`（待 C 的 PDF）、`docs/`（待签字材料）、`README.md` + `MANIFEST.sha256`（15 个文件校验通过）。
 
+
+---
+
+## 2026-10-29 C（晚）：报告真板数 45 → 135，PDF 重建
+
+- **报告口径改齐**：按 A 的修订单（`logs/letter_2026-10-29_A_to_C_report135.txt`）把**真板** trace 回放数改为 count=0 的 45 次 + count=1/2 的 90 次 = **135 次 / 34,560 系数**。A 点名三处；全仓 grep 另扫出四处同样过期的（`docs/evidence_map.md` 证据表行与 Phase 2 增量两行、「新正式驱动真板待 A」、附录 10-21 B 行的「仍待 A」），一并改；附录历史行只在句末加「（10-29 已补）」，不改原叙述。
+- **限定词逐处核对**：RTL 侧 135 次（B 10-21 三 transcript）与真板侧 135 次（10-21 + 10-29）数同义不同 —— 每处都保留「RTL / 真板」前缀，不混写。
+- **重建 PDF**：63 页 / 8 书签 / 叠层页数 = 正文页数，内部状态块 0 处；SHA-256 `29dd304b…e05e`。复制进 `_submission/report/design_report.pdf`（两份 hash 相同）；提交清单第 3 行、`_submission/README.md`、冻结清单 §10 行同步。⚠️ PDF 还需 A/用户复制进 `E:\submission\report\`（本机无 E 盘）。
+- **冻结清单**：§10 报告行补「晚间第二次重建」；A 的 W5 改 done（代码侧 d84f177 之后未变，只有证据与文档）；tag 行只剩「签字材料 + A 打 tag」。
+- **状态页**：`status/status.json` 的 updated 与三人 now/next/as_of 更新到 10-29，补 4 条里程碑、4 条待办（tag/Public、签字件、PDF 进 E 盘、B 侧 open items），重新生成 `index.html`；`project_state.md` §一 的 B/C 状态与冻结结语同步。
+- **B 当日提交纳入**：`4fc9e9b`（host 失败证据保留 + 发布候选检查，口径改延迟下界/吞吐上界）已含在本次重建的正文与 PDF 中。
