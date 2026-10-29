@@ -154,8 +154,12 @@ python refsim/check_clean_clone.py --output logs/clean_clone_freeze.json
 ---
 
 冻结 commit：A 侧真板与回归跑在 `d84f177`；C 的 §3/§6 跑在 `145b689` 与当时构建产物上。
-`d84f177` 之后只有证据报告与文档改动，**`rtl/ host/ refsim/ metrics/ demo/` 一行未变** ——
-正式 tag 打在最终文档提交上，与代码提交等价。
+`d84f177` 之后到 `b5d9731` 的改动只有三类：① 证据文件（`rtl/vivado/reports/*.txt`、`logs/`）；
+② 文档与状态页；③ B 的 `b5d9731` 改了 `refsim/` 三个**发布验收脚本**（`accept_b_release.py` /
+`check_independent_polmul.py` / `measure_board_service.py`，加超时与失败兜底）。
+**§1 的四条入口脚本不引用这三个文件，报告与证据地图也不引用** —— 16/16 与 PDF 数字均不受影响；
+C 已在 `b5d9731` 上重跑四条入口（`logs/verification_2026-10-29_C_refsim_after_b.txt`）。
+`host/ metrics/ demo/` 未变。正式 tag 打在最终文档提交上。
 冻结日期：`2026-10-29`（回归执行日；正式 `freeze-2026-11-04` tag 尚未打）
 
 ---

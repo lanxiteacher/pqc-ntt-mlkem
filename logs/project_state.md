@@ -21,6 +21,8 @@
 > **B 当前状态（10-29）**：Host 保留 CLI 失败证据（`board_run.py`），新增发布候选检查
 > `refsim/accept_b_release.py`、`check_independent_polmul.py`、`measure_board_service.py`、
 > `build_source_candidate.py`（提交 `4fc9e9b`）；「装载→读出」口径统一为延迟下界 / 吞吐上界。
+> **20:04 又推 `b5d9731`**：三个发布验收脚本加 300 s 超时与失败兜底、`accept_b_release.py` 支持
+> 复用已完成的核心验收；**未写日志**，未动 §1 的四条入口脚本，报告不引用它们。
 > 10-21 交付不变：三档各 100 组 NTT、三份 transcript 135 次 RTL、三档变异 50/51 捕获。
 > A 的 count=0 45 次已离线核对；count=1/2 的 90 次真板（10-29）待 B 复核销 J07。
 > ai-log 自 10-21 起空档；§5.5 三种错误注入待确认；H10 仍需第二台电脑。
@@ -31,6 +33,8 @@
 > 提交清单第 3 行、`_submission/README.md`、冻结清单 §10 行与状态页已同步。
 > **待办**：PDF 还需 A/用户复制进 `E:\submission\report\`（本机无 E 盘）；签字件跟踪。
 > 日志 `report/ai-log/2026-10-29_C.md`；证据 `logs/verification_2026-10-29_C_freeze_*.txt`。
+> **20:13 追补**：在 B 的 `b5d9731` 上重跑四条 refsim 入口（全 rc=0、各 16/16），
+> 并修正冻结清单里「`d84f177` 之后 refsim 一行未变」的过期表述。
 >
 > **A 当前状态（10-18 下午，板子已插）**：**两件事当天全闭环。**
 > ① **H6 收口**：当前驱动在真板上跑三档 × 六条命令（`#PING` + 五条计算事务），
