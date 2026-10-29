@@ -1,0 +1,57 @@
+{
+  "status": "pass",
+  "commit": "b5d9731d2f72e0a85f8dbbfa865d9619ba273ec3",
+  "board_access": false,
+  "executor": "AI automatic execution; not B personal manual acceptance",
+  "date": "2026-10-29T12:04:43.483034+00:00",
+  "steps": [
+    {
+      "name": "b_current_reused_source_verified",
+      "exit_code": 0
+    },
+    {
+      "name": "independent_math",
+      "exit_code": 0
+    },
+    {
+      "name": "board_service",
+      "exit_code": 0
+    },
+    {
+      "name": "clean_clone",
+      "exit_code": 0
+    },
+    {
+      "name": "source_package",
+      "exit_code": 0
+    },
+    {
+      "name": "extracted_cli",
+      "exit_code": 0
+    }
+  ],
+  "reused_b_current": {
+    "path": "C:\\Users\\lenovo\\Desktop\\FPGA\\B_release_2026-10-29_01\\b_current",
+    "acceptance_sha256": "9213e6de3b5c38fb2a8cf09019509475ad9703a193543be37329e281270036a4",
+    "independently_retested_release_tools": [
+      "refsim/accept_b_release.py",
+      "refsim/check_independent_polmul.py",
+      "refsim/measure_board_service.py"
+    ]
+  },
+  "pending_external": [
+    "new hardware replay and formal host regression",
+    "A constraint coverage note",
+    "second physical PC H10",
+    "team final freeze and artifacts",
+    "B personal manual acceptance",
+    "final mirror/publication"
+  ],
+  "output_sha256": {
+    "board_service.txt": "7343aa9f1436fc5a4abac79fe47aed911f3849ddfd17db73ef61823c4f8124a7",
+    "clean_clone.txt": "dda2d2b54a03b1cc7f863ec48707e51e5bc89a45453a495a1b68ad413a066e72",
+    "extracted_cli.txt": "890d3f961f7e468e2d9f5200930879e7b699e020e4139c06a27a3a5d10f9c0de",
+    "independent_math.txt": "c633f03ab1c01b3cf5432a1540c0a77910d9c4bb40bee27cb328ba2fc50b303d",
+    "source_package.txt": "9acbf2e8012bcbf4505dcdf831c7d6954283251dc6881928553da324090dd730"
+  }
+}

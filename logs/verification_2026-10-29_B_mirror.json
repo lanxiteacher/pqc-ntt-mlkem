@@ -1,0 +1,5 @@
+{
+  "scope": "read-only mirror check; no push or visibility change",
+  "exit_code": 128,
+  "status": "not_verified_network_or_credentials"
+}

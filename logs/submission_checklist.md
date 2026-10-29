@@ -57,3 +57,7 @@
 每项放什么、来源在哪，见 `_submission/README.md`。
 
 ⚠️ 该目录**只在本机存在**，不进仓库；换机器组装要重新建。
+
+## 2026-10-29 B 后续报告候选（先于最终集成）
+
+B 补入 §3.10.8 板级服务窗口仿真与 §4.11.4 独立卷积/验收证据后已重建 PDF：64 页、8 书签，SHA-256 `919ac7a57eb4a98274b338d74e394ad69817d5d5d30067e9d3b395b5c77658d1`，64 页已渲染检查。文件在 B 工位工作区同级 `B_release_2026-10-29_board_review/report_final/report.pdf`；复核 `logs/verification_2026-10-29_B_pdf_review.json`。C 应按最新源码重建或接收该件并复核，再替换最终提交目录、重算 MANIFEST。上文 63 页 `29dd304b…` 是 A/C 已收到的旧成品身份，不能据此断言新增段落已集成。详见 `team/handoff_2026-10-29_B_closeout.md`。

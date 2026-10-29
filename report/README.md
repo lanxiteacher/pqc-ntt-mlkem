@@ -144,3 +144,7 @@ PDF 在这两点上最稳；Markdown 留在仓库里承担「可复现、可核�
 ## 2026-10-21 B 增量：待 C 重建 PDF
 
 功能正确性 §4.11.3 已加入 Phase 2 的 NTT100、三份 transcript 和三档变异结果；附录加当日 B 日志索引。证据与操作见 `../team/handoff_2026-10-21_B_phase2.md`。本次只更新 Markdown 与证据索引，尚未重建 PDF，之前 59 页记录不含此次新增段落。
+
+## 2026-10-29 B 后续报告候选（先于最终集成）
+
+B 补入 §3.10.8 板级服务窗口仿真与 §4.11.4 独立卷积/验收证据后已重建 PDF：64 页、8 书签，SHA-256 `919ac7a57eb4a98274b338d74e394ad69817d5d5d30067e9d3b395b5c77658d1`，64 页已渲染检查。文件在 B 工位工作区同级 `B_release_2026-10-29_board_review/report_final/report.pdf`；复核 `logs/verification_2026-10-29_B_pdf_review.json`。C 应按最新源码重建或接收该件并复核，再替换最终提交目录、重算 MANIFEST。上文 63 页 `29dd304b…` 是 A/C 已收到的旧成品身份，不能据此断言新增段落已集成。详见 `team/handoff_2026-10-29_B_closeout.md`。

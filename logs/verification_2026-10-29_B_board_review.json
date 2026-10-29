@@ -1,0 +1,214 @@
+{
+  "status": "pass",
+  "scope": "offline review of A archived board results; no hardware accessed by B",
+  "new_transactions": 90,
+  "new_coefficients": 23040,
+  "total_transactions_including_count0": 135,
+  "total_coefficients": 34560,
+  "sessions": [
+    {
+      "kat": 1,
+      "pe": 1,
+      "transactions": 15,
+      "coefficients": 3840,
+      "trace_sha256": "500941546824aa440180238f6cd356ffc77d3860bca73aa4b9c3d9b83d5077a9",
+      "session_sha256": "015c2db2cd8fe8968dd7e108733ada41f8b3fff98f3ec54f2cdb701666b74ac9",
+      "replay_sha256": "c4fe07521fdc3f45ba21a214f2652e1ede7c5af177fd692160683857bda4c29e",
+      "bitstream_sha256": "037f6edd1f37f545203de339c1fb5017267f525e26aed4878db8967e6770b944",
+      "tested_git": "145b689c5cd4fe7bab57e6bda1788435ae486f10"
+    },
+    {
+      "kat": 1,
+      "pe": 4,
+      "transactions": 15,
+      "coefficients": 3840,
+      "trace_sha256": "500941546824aa440180238f6cd356ffc77d3860bca73aa4b9c3d9b83d5077a9",
+      "session_sha256": "fb95f92f883c26a952f6508b19a80c7a95af2d538706f622aa6b49a1a9dfa6f0",
+      "replay_sha256": "b4d9875cade9a19d0ae96166f9c91ff3b2ec933555cd2bc6a92363d3b7d3243f",
+      "bitstream_sha256": "f549882f543f9c436bb1962951acf131857f02944e0b3022594241d51b568097",
+      "tested_git": "145b689c5cd4fe7bab57e6bda1788435ae486f10"
+    },
+    {
+      "kat": 1,
+      "pe": 16,
+      "transactions": 15,
+      "coefficients": 3840,
+      "trace_sha256": "500941546824aa440180238f6cd356ffc77d3860bca73aa4b9c3d9b83d5077a9",
+      "session_sha256": "d14c6457435870a88930293e0a23f105202760434d6ce39961dabc59ddf3cfd9",
+      "replay_sha256": "232948bbbce2e26161f5d9f11aea0886fcc871f80214011f271000d76eb36bfe",
+      "bitstream_sha256": "c7c03e939988998889b2f7cce1ca38149b0af4f5fe1dca3329bd687afc0546bc",
+      "tested_git": "145b689c5cd4fe7bab57e6bda1788435ae486f10"
+    },
+    {
+      "kat": 2,
+      "pe": 1,
+      "transactions": 15,
+      "coefficients": 3840,
+      "trace_sha256": "2885ecf7561220baf8bad1fa55631286299252fedba5386517cafc7d21c779dc",
+      "session_sha256": "67221d00129eebb299a8817b6338b95888297c78f2e982c01a34c41881af5716",
+      "replay_sha256": "a672468d9d104815151fbbdeacf0306a51acb1b80576f627a8258806eac6b9a2",
+      "bitstream_sha256": "037f6edd1f37f545203de339c1fb5017267f525e26aed4878db8967e6770b944",
+      "tested_git": "145b689c5cd4fe7bab57e6bda1788435ae486f10"
+    },
+    {
+      "kat": 2,
+      "pe": 4,
+      "transactions": 15,
+      "coefficients": 3840,
+      "trace_sha256": "2885ecf7561220baf8bad1fa55631286299252fedba5386517cafc7d21c779dc",
+      "session_sha256": "2410f7226f5d70a91f600869db78c553cc5948f92540ba4419fb2f5c44d32048",
+      "replay_sha256": "e67e1c30009c7b16475a8998bc79c523191268ea5116bc64740732b1c24c5c67",
+      "bitstream_sha256": "f549882f543f9c436bb1962951acf131857f02944e0b3022594241d51b568097",
+      "tested_git": "145b689c5cd4fe7bab57e6bda1788435ae486f10"
+    },
+    {
+      "kat": 2,
+      "pe": 16,
+      "transactions": 15,
+      "coefficients": 3840,
+      "trace_sha256": "2885ecf7561220baf8bad1fa55631286299252fedba5386517cafc7d21c779dc",
+      "session_sha256": "0399719247400b45c43180544815297ecd839cb20d1661c371b894f054196b9a",
+      "replay_sha256": "6a23f38c554117c7ff3a2a527b27febecb8f9e8711a545545e49c95678dfe7bf",
+      "bitstream_sha256": "c7c03e939988998889b2f7cce1ca38149b0af4f5fe1dca3329bd687afc0546bc",
+      "tested_git": "145b689c5cd4fe7bab57e6bda1788435ae486f10"
+    }
+  ],
+  "formal_host_reports": [
+    {
+      "status": "pass",
+      "declared_build": 1,
+      "declared_tag": "_j07 BAUD=115200",
+      "hardware_provenance_verified": false,
+      "frequency_verified": false,
+      "coefficients_recomputed": false,
+      "commands": [
+        {
+          "command": "#PING",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#NTT 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#INTT 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#PMUL NTT 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#PMUL TIME 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#PMUL FULL 1",
+          "status": "pass",
+          "reasons": []
+        }
+      ],
+      "issues": [],
+      "file": "C:\\Users\\lenovo\\Desktop\\FPGA\\pqc-ntt-mlkem\\rtl\\vivado\\reports\\board_pe1_j07_txn.txt",
+      "sha256": "fbc49510f74bfb08e19e2008153e224f039fda1fe201d842371251a1d9657ff8"
+    },
+    {
+      "status": "pass",
+      "declared_build": 4,
+      "declared_tag": "_j07 BAUD=115200",
+      "hardware_provenance_verified": false,
+      "frequency_verified": false,
+      "coefficients_recomputed": false,
+      "commands": [
+        {
+          "command": "#PING",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#NTT 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#INTT 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#PMUL NTT 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#PMUL TIME 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#PMUL FULL 1",
+          "status": "pass",
+          "reasons": []
+        }
+      ],
+      "issues": [],
+      "file": "C:\\Users\\lenovo\\Desktop\\FPGA\\pqc-ntt-mlkem\\rtl\\vivado\\reports\\board_pe4_j07_txn.txt",
+      "sha256": "860e2822c384dd74edd3cf2e222316ade6f1d60f70290a2e512f0a8c0f6fb482"
+    },
+    {
+      "status": "pass",
+      "declared_build": 16,
+      "declared_tag": "_j07 BAUD=115200",
+      "hardware_provenance_verified": false,
+      "frequency_verified": false,
+      "coefficients_recomputed": false,
+      "commands": [
+        {
+          "command": "#PING",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#NTT 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#INTT 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#PMUL NTT 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#PMUL TIME 1",
+          "status": "pass",
+          "reasons": []
+        },
+        {
+          "command": "#PMUL FULL 1",
+          "status": "pass",
+          "reasons": []
+        }
+      ],
+      "issues": [],
+      "file": "C:\\Users\\lenovo\\Desktop\\FPGA\\pqc-ntt-mlkem\\rtl\\vivado\\reports\\board_pe16_j07_txn.txt",
+      "sha256": "0abc95634ee8a68b0db1406957cdbff1127fcff514d3672f96bb0b16429c33be"
+    }
+  ],
+  "limits": [
+    "frequency declared, not measured",
+    "loaded bitstream identity not independently measured",
+    "board_run CLI lifetime patch 4fc9e9b postdates A board run; byte protocol unchanged",
+    "no new 40-minute soak"
+  ],
+  "raw_serial_rows_independently_unpacked": true
+}

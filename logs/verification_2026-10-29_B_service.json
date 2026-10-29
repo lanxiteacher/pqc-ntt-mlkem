@@ -1,0 +1,126 @@
+{
+  "status": "pass",
+  "board_access": false,
+  "clock_hz": 50000000,
+  "uart_simulation_baud": 5000000,
+  "runs": [
+    {
+      "pe": 1,
+      "ntt": [
+        {
+          "load": 260,
+          "compute_control": 909,
+          "read": 263,
+          "total": 1432,
+          "load_entry": 108345
+        },
+        {
+          "load": 260,
+          "compute_control": 909,
+          "read": 263,
+          "total": 1432,
+          "load_entry": 325321
+        }
+      ],
+      "pwm": {
+        "load": 520,
+        "compute_control": 652,
+        "read": 263,
+        "total": 1435,
+        "load_entry": 645717
+      },
+      "repeated_ntt_load_entry_interval": 216976,
+      "interval_scope": "synthetic 5 Mbaud UART with smoke TB pacing; not real board throughput"
+    },
+    {
+      "pe": 4,
+      "ntt": [
+        {
+          "load": 263,
+          "compute_control": 237,
+          "read": 269,
+          "total": 769,
+          "load_entry": 108345
+        },
+        {
+          "load": 263,
+          "compute_control": 237,
+          "read": 269,
+          "total": 769,
+          "load_entry": 324658
+        }
+      ],
+      "pwm": {
+        "load": 526,
+        "compute_control": 172,
+        "read": 269,
+        "total": 967,
+        "load_entry": 644391
+      },
+      "repeated_ntt_load_entry_interval": 216313,
+      "interval_scope": "synthetic 5 Mbaud UART with smoke TB pacing; not real board throughput"
+    },
+    {
+      "pe": 16,
+      "ntt": [
+        {
+          "load": 275,
+          "compute_control": 74,
+          "read": 293,
+          "total": 642,
+          "load_entry": 108449
+        },
+        {
+          "load": 275,
+          "compute_control": 74,
+          "read": 293,
+          "total": 642,
+          "load_entry": 324635
+        }
+      ],
+      "pwm": {
+        "load": 550,
+        "compute_control": 52,
+        "read": 293,
+        "total": 895,
+        "load_entry": 644241
+      },
+      "repeated_ntt_load_entry_interval": 216186,
+      "interval_scope": "synthetic 5 Mbaud UART with smoke TB pacing; not real board throughput"
+    }
+  ],
+  "source_sha256": {
+    "refsim/measure_board_service.py": "ced3fc7f0a8f87768db6a54d4d53a949dffc3febacc9e1670023934425fc00b0",
+    "rtl/board/tb/smoke_tb.v": "4df6c827a32a1145646f933f2615455d8c354e978f596b635b8919cf396946d1",
+    "rtl/board/cmd_parse.v": "d96421e2b48a58b93b38c159f01aa0b770dd8b33b02be4d047d30d696477f300",
+    "rtl/board/hex3.v": "ce6da64c41f4b1372cdc8d1fc70f723bdf40e57af3463e4afc15e4cc1e808ac1",
+    "rtl/board/ntt_board_top.v": "6f2c3b99f287930f5e506e7571d5679ff15180c7aaf5af004a6219379baecb18",
+    "rtl/board/ntt_board_top_mmcm.v": "3600a20ac26afde2c04cde5bdd6fecf1511f1a52c8de5ae7a3f5c7a0e9dc861a",
+    "rtl/board/poly_buf.v": "4e8af56bf9486827f9a62cd9ee2880196e0e1ca45ed0c1b50cd72528d44b8eff",
+    "rtl/board/proto_fsm.v": "7fa8c1140981ef546fc0af0a3350292ce21dda05f30c9645acd9714b2fe191fe",
+    "rtl/board/tx_line.v": "b411e20b10bd3c93c59470ed6e812ff0dab24a83161a3efb9692417a1b4c214b",
+    "rtl/board/uart_line_rx.v": "4806029e4506af0a966002a8348143d40cb0807f4b549a4a009d53c7f6c19beb",
+    "rtl/uart_rx.v": "e30300bc2d06455553e4c810247f3b8de3b6f2601bd272d7bce74212b41d3ee4",
+    "rtl/uart_tx.v": "1a2339a68da4a3de209dec4b31101b080f01ee1710bd5892633700812e51249b",
+    "rtl/ntt_core/addressgenerator.v": "a14e1fdc146aa9cdf388da14d37b46d14008dad2291e90992fe3f6baae59f1c2",
+    "rtl/ntt_core/BRAM.v": "86cb66d50eb1ed5e066748b6d0d7fc083d83200dfa4160b9b464b4b8af06ac4f",
+    "rtl/ntt_core/BROM.v": "a71ffbcce028df87507f7f61b78a2768b40d8fdd70784fbc1b61ae09d6b6a8de",
+    "rtl/ntt_core/butterfly.v": "2c7418eb5a76d0731896ee9685422e77f46b4e64c3da22c6e433ec465009691c",
+    "rtl/ntt_core/div2.v": "472c728cc6a434395a2bbeda78bf57dc65906314ccd9a73df0899271739613ab",
+    "rtl/ntt_core/dt0.v": "55f8e8022a3e81fa7f97e0ae9ea23adfbd8680b1c7f12007c435eefd17e74840",
+    "rtl/ntt_core/dt1.v": "3a5b657035dfd1430ba2d2a28bcc56ca2b6c638c9b3a8675787c7871b7b48c62",
+    "rtl/ntt_core/dt2.v": "0f668fa7c08cffc79fd0058ca988a142691aab95bf4976466763f8669455e22d",
+    "rtl/ntt_core/dt3.v": "70bdbc983376257cf9a1fd198db597296dc9feef4b96b65b5ab6d33b6cb2a16c",
+    "rtl/ntt_core/FA.v": "68cf0a68d1209312e8e4e0b177113c5830b0042e8278fee8ddb579323f1bccc5",
+    "rtl/ntt_core/HA.v": "b5f81a67ce63f25ae517d31b4ed0dcfdfe0627782f3be141e13db3e43252254e",
+    "rtl/ntt_core/intmul.v": "8f5d4e0fe5c7f95be43b52d7917662ea4ef13879c11f41ec97a51f07c2439cb5",
+    "rtl/ntt_core/KyberHPMNTT.v": "bdfeb69691417267390c4916b034e563ccecdc3a1d2bb0c57462bafa8a198a11",
+    "rtl/ntt_core/KyberHPMNTT_top.v": "e9f48addc51dd4347df93d9e35386422ea8b8b560b4c38398eac182d2143d602",
+    "rtl/ntt_core/modadd.v": "58c1149e71baacb94861a80a5f93778493004a30f213da2de091eee17e2d5df0",
+    "rtl/ntt_core/modmul.v": "0d76fe46c9e22af7c93175fdc26cb913ec7eb0c28f5541beac081262094ad342",
+    "rtl/ntt_core/modred.v": "e31cf559e4c7d08af5c4f7c5c2a464db982ff39155a5072713ae467048d15d87",
+    "rtl/ntt_core/modsub.v": "2f08fbbb2f8d5f2cefc8f8587a79982faa9a46cc5e570464134c63dcbc0cbefd",
+    "rtl/ntt_core/shiftreg.v": "603bcb568022b2c475e42d2ef418b9f4d30a0bca8659d419e789ded5f84bc773"
+  },
+  "generated_tb_sha256": "fea7a6e2589f545f806273104678914318a2782676801ec0eb621972b4f5effb"
+}

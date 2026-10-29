@@ -207,3 +207,18 @@ C 已在 `b5d9731` 上重跑四条入口（`logs/verification_2026-10-29_C_refsi
 > 报告已在 10-29 晚间按「真板 135 次」更正并重建（63 页，SHA `29dd304b…e05e`），
 > `logs/submission_checklist.md` 第 3 行与 `_submission/README.md` 已同步；
 > 剩下的是用户签字材料 + A 打 tag、推 GitHub 同一 commit。
+
+## 2026-10-29 B 收尾补充（后续于上述 A/C 执行记录）
+
+- `b5d9731` 源码候选自动验收通过；核心/Host 回归来源 `4fc9e9b`，复用前逐一核对源码哈希，
+  仅独立交付工具变化另行执行。完整 B 回归：100 组/三 trace/51 变异、12 Host 自测、送板兼容全部通过。
+- 同候选远端干净 clone **22 阶段**通过，跟踪文件无变化；源码候选解压 1109 文件哈希通过，包内 CLI 检查通过。
+- 独立 FULL 卷积 12,288 系数通过；实际板级服务窗口 1432/769/642 拍。
+- A 的 10-29 J07 六个 session 与三档正式日志、冻结重复 count=0 已离线复核；不重复增加独立样本数。
+- 说明、报告与证据地图已补本次结果，须使用本轮之后重建的 PDF，不能只按旧页数或 SHA 沿用旧成品。
+- 新发现 UART 起始沿使用第一级同步寄存器，见 `team/review_2026-10-29_B_uart_cdc.md`。
+  该风险未靠正常数字仿真关闭，A 需处理或明确记录接受；若改 RTL，重新生成并验证位流。
+- 以上只构成源码候选通过；人工签收、H10、最终 tag/镜像公开、签字件及最终完整包仍分别验收。
+
+证据 `logs/verification_2026-10-29_B_{current,release,math,service,clean_clone,board_review,freeze_board_review}.json`；
+交接 `team/handoff_2026-10-29_B_closeout.md`。自动执行不替代 B 本人操作。

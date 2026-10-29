@@ -137,3 +137,14 @@
 | `../logs/verification_2026-10-21_B_host_safety.json` | `python host/src/test_serial_write_safety.py`（局部）或统一入口 | 正式发送有限写超时、无 flush、短写不重试；11 本机脚本通过 | 新正式驱动 10-29 已真板实测（`../logs/verification_2026-10-29_A_j07_board.txt`）；旧 no-flush 浸泡不是新代码实测 |
 
 报告对应 §4.11.3。旧样本数据仍为历史证据，不累计成更多独立样本；详情与 A/C 操作见 `../team/handoff_2026-10-21_B_phase2.md`。
+
+## 2026-10-29 B 收尾补充
+
+| 项目 | 证据 | 边界 |
+|---|---|---|
+| 三档独立 FULL 卷积 | `../logs/verification_2026-10-29_B_math.json` | 12,288 系数；不依赖 C NTT 算法作答案 |
+| 实际装载到读出窗口 | `../logs/verification_2026-10-29_B_service.json` | 1432/769/642 拍；UART 仅在仿真加速，不是整机吞吐 |
+| 新增真板记录复核 | `../logs/verification_2026-10-29_B_board_review.json` 与 `_freeze_board_review.json` | 原始行重解包；不新增 B 真板执行；重复输入不加样本数 |
+| CLI 失败留证 | `../host/cli_failure_evidence.md`、`../host/src/test_board_run_failures.py` | 15 项；模拟驱动，不是拔线实测 |
+| 源码候选验收 | `../logs/verification_2026-10-29_B_release.json` 与 `_clean_clone.json` | 干净 clone 22 阶段、解压包检查；不等于本人/H10/最终公开提交 |
+| 约束说明后续审阅 | `../team/review_2026-10-29_B_uart_cdc.md` | 起始沿使用第一级同步寄存器的风险归 A 处理，不冒充已修复 |

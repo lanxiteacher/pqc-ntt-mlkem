@@ -404,3 +404,22 @@ PC → 串口 → 板级 wrapper（协议状态机 + 行组装）→ NTT 核 →
 pe1 的 `serializer_order` 修改输出 lane 选择式，但单 lane 的 `rsub` 恒为 0，原式和变异后都选 lane 0；因此属于等价项。不能写成 51/51 捕获。
 
 独立 JSON 见 `../../logs/verification_2026-10-21_B_phase2_{ntt100,traces,mutations}.json`；逐项故障表见同前缀 `_mutations.md`；原始命令、仿真输出、输入与源快照见 `../../logs/verification_2026-10-21_B_phase2.zip` 及 `_manifest.json`。复跑：`python refsim/accept_b_current.py --output <新目录>`。本轮未新增板卡执行；固定周期与侧信道结论维持 §4.11.2 的有限边界。
+
+### 4.11.4 独立数学复核与本机收尾（2026-10-29）
+
+新增 `refsim/check_independent_polmul.py`，直接用整数双重循环计算模 `x^256+1`、
+模 3329 的卷积，不调用 C NTT、basemul 或逆变换作为答案。16 组输入覆盖零、单位元、
+最高次单项式绕回负号、q−1 及固定种子随机多项式；三档实际 FULL RTL 共
+**12,288 系数全部一致**，改坏一个值、绕回符号及输出顺序均被检出。
+FULL 的结果为规范时域值，读出按既有 tau 排列还原；不扩张 HALF、完整 KEM 或侧信道结论。
+证据：`../../logs/verification_2026-10-29_B_math.json`。
+
+同日复跑完整 B 验收：三档各 100 组 NTT、三份 trace、51 个变异组合，仍为
+**50 个检出、1 个等价项**；全部 **12 个 Host 自测**与送板编排检查通过。
+干净远端克隆另跑 **22 阶段**全部通过，源码候选实际解压并逐文件校验哈希后，
+包内 CLI 检查通过。自动执行不替代本人手动验收或第二台实体电脑验收。
+
+验证侧另核对六个新增真板 session 的 trace 哈希、原始数据重新解包、逐项期望值及位流身份，
+新增 90 次记录通过；冻结 count=0 的重复回放另列，不累计成更多独立样本。
+对应 `../../logs/verification_2026-10-29_B_board_review.json` 与 `_freeze_board_review.json`。
+本日后续 CLI 关闭/摘要修补有本机检查，不能追认成较早真板运行的提交。

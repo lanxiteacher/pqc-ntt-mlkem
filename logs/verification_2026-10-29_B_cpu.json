@@ -1,0 +1,46 @@
+{
+  "status": "pass",
+  "scope": "B PC portable C timing; independent rerun, does not replace C machine report numbers",
+  "cpu": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "compiler": "gcc (GCC) 16.2.0",
+  "command": [
+    "gcc",
+    "-O2",
+    "-Iresearch/kyber_ref",
+    "metrics/bottleneck_ref_timing.c",
+    "research/kyber_ref/ntt.c",
+    "research/kyber_ref/reduce.c",
+    "-o",
+    "C:\\Users\\lenovo\\Desktop\\FPGA\\B_release_2026-10-29_board_review\\cpu\\timing.exe"
+  ],
+  "power_mode": "uncontrolled",
+  "rounds": [
+    {
+      "iterations": 200000,
+      "prep_s": 0.0032815,
+      "total_s": 0.92412,
+      "net_us": 4.6041925,
+      "checksum": "12255335580397223033",
+      "bad": 0
+    },
+    {
+      "iterations": 200000,
+      "prep_s": 0.0032408,
+      "total_s": 0.9265036,
+      "net_us": 4.616314,
+      "checksum": "12255335580397223033",
+      "bad": 0
+    },
+    {
+      "iterations": 200000,
+      "prep_s": 0.0032579,
+      "total_s": 0.9295983,
+      "net_us": 4.631702,
+      "checksum": "12255335580397223033",
+      "bad": 0
+    }
+  ],
+  "median_net_us": 4.616314,
+  "source_sha256": "ea9aee0fe211df08aca093977a50fc8ad9e33f7f4f05d444b11c1982950e4723"
+}

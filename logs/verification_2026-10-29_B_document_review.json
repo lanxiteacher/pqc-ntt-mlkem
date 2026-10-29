@@ -1,0 +1,15 @@
+{
+  "status": "pass",
+  "tracked_path_violations": [],
+  "credential_pattern_hits": [],
+  "credential_scope": "limited text-pattern scan; not a comprehensive secret/security audit",
+  "pareto_cycles_and_lut_cycle_recomputed": true,
+  "report_fixes": {
+    "J01": "conditional estimate; no cross-device efficiency conclusion",
+    "J02": "three scopes; model vs measurement separated; actual service supplement pending",
+    "J03": "LUT-cycle and LUT-us separate",
+    "J04": "same semantic task, bounded inputs, checksum; B independent timing archived",
+    "J05": "397/37/4 boundaries distinguished",
+    "J11": "current entry corrections present; final package/freeze still pending"
+  }
+}

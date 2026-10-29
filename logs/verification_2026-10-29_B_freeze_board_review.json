@@ -1,0 +1,159 @@
+{
+  "status": "pass",
+  "scope": "offline review of archived A freeze rerun; not additional independent inputs",
+  "runs": [
+    {
+      "pe": 1,
+      "transactions": 15,
+      "coefficients": 3840,
+      "tested_git": "d84f177d7dd19fea90e5fb9e44c2d0a0a2c669a0",
+      "session_sha256": "e6c5979933692f5028e4d66311159ab216616f697507ea88d4353916bc2f64c8",
+      "replay_sha256": "655360cae8e8c935486052795aa520595901611d4df4e366715e674e25753a6d",
+      "report": {
+        "status": "pass",
+        "declared_build": 1,
+        "declared_tag": "_freeze BAUD=115200",
+        "hardware_provenance_verified": false,
+        "frequency_verified": false,
+        "coefficients_recomputed": false,
+        "commands": [
+          {
+            "command": "#PING",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#NTT 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#INTT 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#PMUL NTT 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#PMUL TIME 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#PMUL FULL 1",
+            "status": "pass",
+            "reasons": []
+          }
+        ],
+        "issues": [],
+        "file": "C:\\Users\\lenovo\\Desktop\\FPGA\\pqc-ntt-mlkem\\rtl\\vivado\\reports\\board_pe1_freeze_txn.txt",
+        "sha256": "a5409cbd031b600d56df07f2ba2177c0091288f77f4401102caae41ac9b493ba"
+      }
+    },
+    {
+      "pe": 4,
+      "transactions": 15,
+      "coefficients": 3840,
+      "tested_git": "d84f177d7dd19fea90e5fb9e44c2d0a0a2c669a0",
+      "session_sha256": "ed4a01bef00e8d0bb5889d6b0f6bf13b017686153d5fd9bdb3a8c7274a4cc845",
+      "replay_sha256": "16b8485559091e53d14dfc3ee9bfc92adedbde20179ca615053b60dea8d0d25d",
+      "report": {
+        "status": "pass",
+        "declared_build": 4,
+        "declared_tag": "_freeze BAUD=115200",
+        "hardware_provenance_verified": false,
+        "frequency_verified": false,
+        "coefficients_recomputed": false,
+        "commands": [
+          {
+            "command": "#PING",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#NTT 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#INTT 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#PMUL NTT 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#PMUL TIME 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#PMUL FULL 1",
+            "status": "pass",
+            "reasons": []
+          }
+        ],
+        "issues": [],
+        "file": "C:\\Users\\lenovo\\Desktop\\FPGA\\pqc-ntt-mlkem\\rtl\\vivado\\reports\\board_pe4_freeze_txn.txt",
+        "sha256": "3786ea7326d898d419b1f349896275cbd6070b680a354e1b03d674feb5788a68"
+      }
+    },
+    {
+      "pe": 16,
+      "transactions": 15,
+      "coefficients": 3840,
+      "tested_git": "d84f177d7dd19fea90e5fb9e44c2d0a0a2c669a0",
+      "session_sha256": "3c9053ffa0ce724391a7cc1c9929ba9ebd444bea3e98ab43a2a9b32f0407374c",
+      "replay_sha256": "3297467a083c96857df2e0c4358fada5af56b97cee17252cd54e9fa09fb12a97",
+      "report": {
+        "status": "pass",
+        "declared_build": 16,
+        "declared_tag": "_freeze BAUD=115200",
+        "hardware_provenance_verified": false,
+        "frequency_verified": false,
+        "coefficients_recomputed": false,
+        "commands": [
+          {
+            "command": "#PING",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#NTT 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#INTT 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#PMUL NTT 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#PMUL TIME 1",
+            "status": "pass",
+            "reasons": []
+          },
+          {
+            "command": "#PMUL FULL 1",
+            "status": "pass",
+            "reasons": []
+          }
+        ],
+        "issues": [],
+        "file": "C:\\Users\\lenovo\\Desktop\\FPGA\\pqc-ntt-mlkem\\rtl\\vivado\\reports\\board_pe16_freeze_txn.txt",
+        "sha256": "6332ef3b941b2909e413c1721df0ca89fbe4086400d86ec1b61aa24c91d0b45c"
+      }
+    }
+  ]
+}

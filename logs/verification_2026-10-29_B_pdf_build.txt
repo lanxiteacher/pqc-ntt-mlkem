@@ -1,0 +1,3 @@
+OK  HTML: C:\Users\lenovo\Desktop\FPGA\B_release_2026-10-29_board_review\report_final\report.html
+   调用： C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf=C:\Users\lenovo\Desktop\FPGA\B_release_2026-10-29_board_review\report_final\report.pdf file:///C:/Users/lenovo/Desktop/FPGA/B_release_2026-10-29_board_review/report_final/report.html
+OK  PDF : C:\Users\lenovo\Desktop\FPGA\B_release_2026-10-29_board_review\report_final\report.pdf (3841 KB，已加页眉/页码)

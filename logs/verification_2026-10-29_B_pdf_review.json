@@ -1,0 +1,26 @@
+{
+  "status": "pass",
+  "pages": 64,
+  "bookmarks": 8,
+  "rendered_pages": 64,
+  "selected_pages": [
+    31,
+    45
+  ],
+  "sha256": "919ac7a57eb4a98274b338d74e394ad69817d5d5d30067e9d3b395b5c77658d1",
+  "scope": "B rebuilt report candidate; visual QA recorded separately; not final signed submission",
+  "visual_review": {
+    "contact_sheets_reviewed": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "enlarged_pages_reviewed": [
+      31,
+      45
+    ],
+    "result": "no observed clipping or missing figures; dense existing layout retained",
+    "date": "2026-10-29"
+  }
+}

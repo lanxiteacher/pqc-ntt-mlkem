@@ -1,0 +1,48 @@
+{
+  "status": "pass",
+  "board_access": false,
+  "seed": 20261029,
+  "oracle": "integer schoolbook negacyclic convolution modulo x^256+1 and 3329",
+  "groups": 16,
+  "runs": [
+    {
+      "pe": 1,
+      "matched": 4096,
+      "negative_controls": 3
+    },
+    {
+      "pe": 4,
+      "matched": 4096,
+      "negative_controls": 3
+    },
+    {
+      "pe": 16,
+      "matched": 4096,
+      "negative_controls": 3
+    }
+  ],
+  "source_sha256": {
+    "refsim/check_independent_polmul.py": "bfc42438d33a111ece49eca8314f129dd8abdac95654b6bf7c7b6b9674e13d44",
+    "refsim/polmul_param_tb.v": "4ba6cd9297a8fe62409f4ddb4c53792226a1c5fc85e43cfe0ca91a60964ed4c4",
+    "rtl/ntt_core/addressgenerator.v": "a14e1fdc146aa9cdf388da14d37b46d14008dad2291e90992fe3f6baae59f1c2",
+    "rtl/ntt_core/BRAM.v": "86cb66d50eb1ed5e066748b6d0d7fc083d83200dfa4160b9b464b4b8af06ac4f",
+    "rtl/ntt_core/BROM.v": "a71ffbcce028df87507f7f61b78a2768b40d8fdd70784fbc1b61ae09d6b6a8de",
+    "rtl/ntt_core/butterfly.v": "2c7418eb5a76d0731896ee9685422e77f46b4e64c3da22c6e433ec465009691c",
+    "rtl/ntt_core/div2.v": "472c728cc6a434395a2bbeda78bf57dc65906314ccd9a73df0899271739613ab",
+    "rtl/ntt_core/dt0.v": "55f8e8022a3e81fa7f97e0ae9ea23adfbd8680b1c7f12007c435eefd17e74840",
+    "rtl/ntt_core/dt1.v": "3a5b657035dfd1430ba2d2a28bcc56ca2b6c638c9b3a8675787c7871b7b48c62",
+    "rtl/ntt_core/dt2.v": "0f668fa7c08cffc79fd0058ca988a142691aab95bf4976466763f8669455e22d",
+    "rtl/ntt_core/dt3.v": "70bdbc983376257cf9a1fd198db597296dc9feef4b96b65b5ab6d33b6cb2a16c",
+    "rtl/ntt_core/FA.v": "68cf0a68d1209312e8e4e0b177113c5830b0042e8278fee8ddb579323f1bccc5",
+    "rtl/ntt_core/HA.v": "b5f81a67ce63f25ae517d31b4ed0dcfdfe0627782f3be141e13db3e43252254e",
+    "rtl/ntt_core/intmul.v": "8f5d4e0fe5c7f95be43b52d7917662ea4ef13879c11f41ec97a51f07c2439cb5",
+    "rtl/ntt_core/KyberHPMNTT.v": "bdfeb69691417267390c4916b034e563ccecdc3a1d2bb0c57462bafa8a198a11",
+    "rtl/ntt_core/KyberHPMNTT_top.v": "e9f48addc51dd4347df93d9e35386422ea8b8b560b4c38398eac182d2143d602",
+    "rtl/ntt_core/modadd.v": "58c1149e71baacb94861a80a5f93778493004a30f213da2de091eee17e2d5df0",
+    "rtl/ntt_core/modmul.v": "0d76fe46c9e22af7c93175fdc26cb913ec7eb0c28f5541beac081262094ad342",
+    "rtl/ntt_core/modred.v": "e31cf559e4c7d08af5c4f7c5c2a464db982ff39155a5072713ae467048d15d87",
+    "rtl/ntt_core/modsub.v": "2f08fbbb2f8d5f2cefc8f8587a79982faa9a46cc5e570464134c63dcbc0cbefd",
+    "rtl/ntt_core/shiftreg.v": "603bcb568022b2c475e42d2ef418b9f4d30a0bca8659d419e789ded5f84bc773"
+  },
+  "total_coefficients": 12288
+}
